@@ -1,6 +1,6 @@
 # Codex Work Mode On-Demand Control Lifecycle Migration Plan
 
-Status: Director-authorized; Planning accepted
+Status: Director-authorized; Planning accepted and implementation accepted
 
 Owner: Wenfu Planning
 
@@ -9,6 +9,9 @@ Date: 2026-08-02
 Repository: `/Users/jimmy1768/Projects/shengfukung-wenfu`
 
 Canonical main base: `74b2ada2bc8db5187540798b159d75cf0dd2380a`
+
+Implementation accepted on canonical main:
+`33444ab7afd94d73dce0202d70d82c7c9f5cfcea`
 
 ## Purpose
 
@@ -114,6 +117,19 @@ Control must provide evidence that:
 No product test suite, deployment, provider action, or broad regression suite
 is required for this documentation-governance migration absent an observed
 failure in the frozen criteria.
+
+## Completion And Planning Acceptance
+
+Wenfu Control A first integrated the active-governance migration in
+`4a27db8ad13ed559310f7c6787571670c411b0a0`, then corrected the direct
+ephemeral-Implementer return and remaining legacy default-lane wording in
+`33444ab7afd94d73dce0202d70d82c7c9f5cfcea`.
+
+Planning independently verified the final source truth, both focused lifecycle
+and residue scans, `git diff --check`, and clean empty staging at the accepted
+HEAD. The frozen criteria are accepted. Control A remains visible and idle; it
+is not automatically archived. Any future archive remains Strategy-owned and
+requires the complete idle gate plus an exact current snapshot record.
 
 ## Planning Scope And Linkage
 
