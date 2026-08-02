@@ -61,15 +61,18 @@ blocker rather than silently substituted.
 
 ## Return And Acceptance Boundary
 
-The Implementer writes its authoritative terminal return in its own task and
-then sends one minimal terminal wake signal to its Control as its final tool
-action. The signal contains only the Implementer task ID, terminal status, and
-instruction to read the terminal return once; it is not the return body.
+The default ephemeral Implementer returns directly to its parent Control
+through the parent-agent return. It does not send cross-task terminal messages,
+own a cross-task terminal-return or wake workflow, or use a heartbeat. Control
+independently reviews the diff and evidence and records acceptance or retry. An
+Implementer never accepts its own work.
 
-The explicit wake is primary. A workload-sized heartbeat is fallback only when
-the wake fails or the task becomes unreachable. Control reads the return only
-after terminal status, independently reviews the diff and evidence, and records
-acceptance or retry. An Implementer never accepts its own work.
+Only an exceptional persistent Handoff uses the cross-task terminal-return,
+minimal terminal wake, and fallback heartbeat workflow. Its authoritative
+terminal return is written in its own task, and its final wake signal contains
+only the Handoff task ID, terminal status, and instruction to read that return
+once; it is not the return body. That workflow is permitted only for the
+recorded-reason one-packet continuity mechanism described above.
 
 When a handoff, return, acceptance, execution, friction, or eval record exists
 as a repository file, chat points to the absolute file path instead of copying

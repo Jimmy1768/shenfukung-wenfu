@@ -69,17 +69,20 @@ implementation packet.
 The normal dispatch is exactly one ephemeral Implementer. Control supervises
 the work, reviews the return and frozen-plan conformance, locally integrates
 accepted work into canonical `main`, and sends exactly one terminal packet to
-Planning. The Implementer writes its terminal return in its own task and, after
-all mutations and checks, sends one minimal wake signal containing its task ID,
-terminal status, and instruction to read that return once. The wake is not the
-return. A workload-sized heartbeat is fallback recovery only if that wake fails
-or the task becomes unreachable.
+Planning. The ephemeral Implementer returns directly to its parent Control
+through the parent-agent return. It does not send cross-task terminal messages,
+own a cross-task terminal-return or wake workflow, or use a heartbeat.
 
 A persistent Handoff may be used only exceptionally as a one-packet continuity
 mechanism with a recorded qualifying continuity reason. It is never a permanent
-Control pairing. Legacy numbered Controls and permanent-pair task IDs are
-non-authoritative, receive no new work, and are preserved without cleanup or
-reconciliation of unsafe or dirty lanes.
+Control pairing. Only this exceptional persistent Handoff may write its
+authoritative terminal return in its own task, then send a minimal cross-task
+terminal wake containing its task ID, terminal status, and instruction to read
+that return once; the wake is not the return. A workload-sized heartbeat is
+fallback recovery only if that wake fails or the Handoff becomes unreachable.
+Legacy numbered Controls and permanent-pair task IDs are non-authoritative,
+receive no new work, and are preserved without cleanup or reconciliation of
+unsafe or dirty lanes.
 
 After Planning accepts its terminal packet, Control remains visible and idle.
 It is not automatically archived; any later Strategy archive requires the
@@ -94,8 +97,10 @@ substituting it.
 
 ## Authority
 
-Shengfukung Wenfu uses manual Wenfu Control/Handoff coordination in this lane
-unless a later owner decision upgrades the permission model.
+Shengfukung Wenfu uses the on-demand Control lifecycle in this lane: Strategy
+creates Control A after Planning's valid Control-ready request, Control
+normally dispatches one ephemeral Implementer, and only the recorded-reason
+persistent Handoff exception uses cross-task coordination.
 
 This folder does not authorize automation, release promotion, deployment,
 server changes, secret access, payment changes, account changes, destructive
@@ -124,7 +129,7 @@ Implementation returns should include:
 
 ## Acceptance
 
-Wenfu Handoff tasks report evidence. They do not decide acceptance.
+Implementers report evidence to Control. They do not decide acceptance.
 
 Acceptance records should use one of:
 
