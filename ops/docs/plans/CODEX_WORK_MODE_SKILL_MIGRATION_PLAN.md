@@ -1,6 +1,6 @@
 # Codex Work Mode Skill Migration Plan
 
-Status: Director-authorized corrected-v1 propagation; Planning criteria frozen
+Status: Director-authorized corrected-v1 propagation; Planning accepted
 
 Owner: Wenfu Planning
 
@@ -105,8 +105,13 @@ or mutate an external system.
 
 ## Planning Acceptance
 
-Planning will independently review the Control A terminal evidence, changed
-paths, hashes, focused checks, YAML, and clean integration before recording
-local acceptance and sending Strategy one concise terminal propagation packet.
+Control A integrated the corrected v1 propagation at
+`1d88b01e7e133634bb55b030d4ef94bb085afbf6` from Planning base
+`4dfc771783be9083b75df7e8f4765ddf921adaa4`. Planning independently verified
+the exact three hashes and committed OperatorKit-byte comparisons; the
+seven-path scope; unchanged `AGENTS.md` and `agents/openai.yaml`; the
+deterministic verifier; protocol YAML; and diff checks with clean empty
+staging. The frozen criteria are accepted.
+
 Control A remains visible and idle after acceptance; it is not automatically
 archived.
