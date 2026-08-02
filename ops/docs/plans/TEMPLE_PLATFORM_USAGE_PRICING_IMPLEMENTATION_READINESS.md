@@ -183,6 +183,22 @@ snapshot and adjustment record without developer intervention.
 Prepare the one-time setup charge and recurring platform collection path only
 after a separate provider-change approval.
 
+Current beta-catalog status (2026-08-02): the confirmed SourceGrid Stripe test
+catalog contains inactive `TempleMate Platform Setup` and `TempleMate
+Registration Platform` products. Their inactive lookup keys are
+`templemate_platform_setup_twd_once_v1` and
+`templemate_registration_platform_twd_monthly_v1`. The setup price is
+NT$10,000. The graduated monthly price has a NT$1,500 flat first tier through
+500 registrations, then NT$1.00 through 2,000, NT$1.25 through 10,000, and
+NT$1.50 above 10,000. No customer, subscription, invoice, or charge was
+created.
+
+The same live catalog has not been created: the connected live restricted key
+lacks product-create permission. The next provider action requires a live
+SourceGrid Stripe key or Dashboard role with catalog-write permission. Do not
+substitute the test price IDs for a live environment or work around the
+permission boundary.
+
 - Define the provider adapter contract for setup charge, recurring collection,
   provider-event verification, idempotency, failures, cancellation, and
   rollback/reconciliation.
