@@ -1,6 +1,6 @@
 # Codex Work Mode Skill Migration Plan
 
-Status: Director-authorized; Planning accepted
+Status: Director-authorized; Planning accepted and implementation accepted
 
 Owner: Wenfu Planning
 
@@ -9,6 +9,9 @@ Date: 2026-08-02
 Repository: `/Users/jimmy1768/Projects/shengfukung-wenfu`
 
 Canonical main base: `ddaab24df5f08b16fd2efce8bc2376456f2d6eaf`
+
+Implementation accepted on canonical main:
+`64a72f9b38f07aaf9856ea7c83b5fe7ed8450e39`
 
 ## Purpose And Phase
 
@@ -115,3 +118,16 @@ repository from this packet. Do not rewrite historical handoffs, sends,
 acceptances, execution records, evals, or friction records. Do not push,
 deploy, publish, access providers or secrets, resolve approvals, or mutate an
 external system.
+
+## Completion And Planning Acceptance
+
+Wenfu Control A locally integrated the exact package and local source-map work
+in `3261683332578125aa00b3f94a5dd806d1534e21`, then integrated the narrow
+package-boundary and deterministic-verifier correction in
+`64a72f9b38f07aaf9856ea7c83b5fe7ed8450e39`.
+
+Planning independently verified the exact manifest and payload SHA-256 values,
+the installed skill invocation and source map, the local reference/protocol/
+template/snapshot agreement, the deterministic verifier, focused residue scans,
+`git diff --check`, and clean empty staging. The frozen criteria are accepted.
+Control A remains visible and idle; it is not automatically archived.
