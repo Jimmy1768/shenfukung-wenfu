@@ -77,6 +77,9 @@ packet is required before changing any billing model, pricing configuration,
 Stripe/ECPay integration, registration behavior, invoices, customer notices,
 or workflow freeze rules.
 
+The pre-implementation findings and required rollout gates are recorded in
+`ops/docs/plans/TEMPLE_PLATFORM_USAGE_PRICING_IMPLEMENTATION_READINESS.md`.
+
 That packet must include tenant-isolated metering, a reproducible monthly
 statement, owner-visible usage reporting, adjustment handling, grace-period
 interaction, payment-failure behavior, rollback, and focused tests. It must
