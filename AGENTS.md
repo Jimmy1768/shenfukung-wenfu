@@ -28,8 +28,13 @@ these Wenfu-local sources in order:
 8. `ops/docs/handoffs/codex_work_mode_current.md` — current local coordination
    and product-roadmap pointers.
 
-The source map contains Wenfu repository paths only. Do not install or copy
-OperatorKit into this repository.
+The source map contains Wenfu repository paths only. The already manifested
+three-file portable package at `.agents/skills/codex-work-mode` is the sole
+authorized exception to the general prohibition on copying OperatorKit into
+this repository. It may consist only of
+`codex_work_mode_skill_package_manifest.yml`, `SKILL.md`, and
+`agents/openai.yaml`; no other OperatorKit source, local path, product/runtime
+rule, or repository content may be copied.
 
 ## Wenfu Authority And Terminology
 
@@ -65,6 +70,4 @@ local or stubbed evidence.
 
 Keep Rails, Vue, Expo, deployment, temple, account/admin, authority, payment,
 and documentation ownership explicit in every bounded packet and return.
-Preserve tenant isolation, owner/admin authority, secret handling, payment and
-accounting semantics, user-work protections, and the assisted-onboarding
-operating model unless an authorized plan explicitly changes them.
+Preserve tenant isolation, owner/admin authority, secret handling, payment and accounting semantics, user-work protections, and the assisted-onboarding operating model unless an authorized plan explicitly changes them.

@@ -19,6 +19,14 @@ require_text() {
   grep -Fqx -- "$needle" "$file" >/dev/null || fail "missing required text in $file: $needle"
 }
 
+require_contains() {
+  local boundary="$1"
+  local needle="$2"
+  local file="$3"
+  grep -F -- "$needle" "$file" >/dev/null || \
+    fail "AGENTS boundary missing ($boundary): $needle"
+}
+
 require_file '.agents/skills/codex-work-mode/SKILL.md'
 require_file '.agents/skills/codex-work-mode/agents/openai.yaml'
 require_file '.agents/skills/codex-work-mode/codex_work_mode_skill_package_manifest.yml'
@@ -48,6 +56,42 @@ require_text '    sha256: f79867a4869ff4cc5c6638955346f43d3e84f1c54c7a1d42fa9f14
 
 agents='AGENTS.md'
 require_file "$agents"
+require_contains 'builder-governance/product-runtime separation' \
+  'builder coordination only; it does not define or change Wenfu product/runtime' \
+  "$agents"
+require_contains 'sole authorized OperatorKit package exception' \
+  'three-file portable package at `.agents/skills/codex-work-mode` is the sole' \
+  "$agents"
+require_contains 'sole authorized OperatorKit package files' \
+  '`codex_work_mode_skill_package_manifest.yml`, `SKILL.md`, and' \
+  "$agents"
+require_contains 'OperatorKit copy prohibition' \
+  'no other OperatorKit source, local path, product/runtime' \
+  "$agents"
+require_contains 'no-push/deploy/publish/external-mutation safety' \
+  'do not push, deploy, publish, mutate external' \
+  "$agents"
+require_contains 'separately gated ECPay/provider boundary' \
+  'Payment-provider work is separately gated. Do not access real ECPay' \
+  "$agents"
+require_contains 'tenant isolation' \
+  'Preserve tenant isolation' \
+  "$agents"
+require_contains 'owner/admin authority' \
+  'owner/admin authority' \
+  "$agents"
+require_contains 'secret handling' \
+  'secret handling' \
+  "$agents"
+require_contains 'payment/accounting semantics' \
+  'payment and accounting semantics' \
+  "$agents"
+require_contains 'user-work protection' \
+  'user-work protections' \
+  "$agents"
+require_contains 'assisted-onboarding operating model' \
+  'assisted-onboarding' \
+  "$agents"
 for source_path in \
   'AGENTS.md' \
   '$codex-work-mode' \
