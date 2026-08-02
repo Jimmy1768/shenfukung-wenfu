@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_05_25_000020) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_02_000021) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -506,6 +506,72 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_25_000020) do
     t.index ["temple_id"], name: "index_payment_webhook_logs_on_temple_id"
   end
 
+  create_table "platform_billing_adjustments", force: :cascade do |t|
+    t.bigint "platform_billing_statement_id", null: false
+    t.bigint "source_platform_billing_statement_id", null: false
+    t.bigint "platform_billing_usage_record_id", null: false
+    t.bigint "temple_id", null: false
+    t.bigint "temple_registration_id", null: false
+    t.string "reason", null: false
+    t.integer "registration_count_delta", default: -1, null: false
+    t.integer "amount_cents", null: false
+    t.datetime "recognized_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["platform_billing_statement_id", "platform_billing_usage_record_id"], name: "idx_platform_billing_adjustments_statement_usage_record", unique: true
+    t.index ["platform_billing_statement_id"], name: "idx_on_platform_billing_statement_id_06b3046824"
+    t.index ["platform_billing_usage_record_id"], name: "idx_on_platform_billing_usage_record_id_cafa5732c9"
+    t.index ["source_platform_billing_statement_id"], name: "idx_on_source_platform_billing_statement_id_9b215baf10"
+    t.index ["temple_id"], name: "index_platform_billing_adjustments_on_temple_id"
+    t.index ["temple_registration_id"], name: "index_platform_billing_adjustments_on_temple_registration_id"
+  end
+
+  create_table "platform_billing_statements", force: :cascade do |t|
+    t.bigint "temple_id", null: false
+    t.datetime "period_start_at", null: false
+    t.datetime "period_end_at", null: false
+    t.string "pricing_policy_version", null: false
+    t.string "currency", default: "TWD", null: false
+    t.string "status", default: "closed", null: false
+    t.string "idempotency_key", null: false
+    t.integer "registration_count", default: 0, null: false
+    t.integer "included_registration_count", default: 0, null: false
+    t.integer "band_one_registration_count", default: 0, null: false
+    t.integer "band_two_registration_count", default: 0, null: false
+    t.integer "band_three_registration_count", default: 0, null: false
+    t.integer "base_fee_cents", default: 0, null: false
+    t.integer "band_one_fee_cents", default: 0, null: false
+    t.integer "band_two_fee_cents", default: 0, null: false
+    t.integer "band_three_fee_cents", default: 0, null: false
+    t.integer "usage_total_cents", default: 0, null: false
+    t.integer "adjustment_total_cents", default: 0, null: false
+    t.integer "total_cents", default: 0, null: false
+    t.datetime "closed_at", null: false
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["idempotency_key"], name: "index_platform_billing_statements_on_idempotency_key", unique: true
+    t.index ["temple_id", "period_start_at"], name: "idx_platform_billing_statements_period", unique: true
+    t.index ["temple_id"], name: "index_platform_billing_statements_on_temple_id"
+  end
+
+  create_table "platform_billing_usage_records", force: :cascade do |t|
+    t.bigint "platform_billing_statement_id", null: false
+    t.bigint "temple_id", null: false
+    t.bigint "temple_registration_id", null: false
+    t.datetime "registration_created_at", null: false
+    t.integer "unit_fee_cents", default: 0, null: false
+    t.jsonb "eligibility_snapshot", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["platform_billing_statement_id", "temple_registration_id"], name: "idx_platform_billing_usage_records_statement_registration", unique: true
+    t.index ["platform_billing_statement_id"], name: "idx_on_platform_billing_statement_id_26e0862d2b"
+    t.index ["temple_id", "temple_registration_id"], name: "idx_platform_billing_usage_records_temple_registration"
+    t.index ["temple_id"], name: "index_platform_billing_usage_records_on_temple_id"
+    t.index ["temple_registration_id"], name: "index_platform_billing_usage_records_on_temple_registration_id"
+  end
+
   create_table "privacy_requests", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.bigint "operator_user_id"
@@ -791,6 +857,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_25_000020) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["registrable_type", "registrable_id"], name: "index_temple_registrations_on_registrable"
+    t.index ["temple_id", "created_at"], name: "idx_temple_registrations_temple_created_at"
     t.index ["temple_id", "expires_at"], name: "idx_temple_registrations_on_temple_and_expires_at"
     t.index ["temple_id", "fulfillment_status"], name: "idx_temple_registrations_on_fulfillment_status"
     t.index ["temple_id", "payment_status"], name: "idx_temple_registrations_on_payment_status"
@@ -952,6 +1019,15 @@ ActiveRecord::Schema[7.1].define(version: 2026_05_25_000020) do
   add_foreign_key "notifications", "users"
   add_foreign_key "oauth_identities", "users"
   add_foreign_key "payment_webhook_logs", "temples"
+  add_foreign_key "platform_billing_adjustments", "platform_billing_statements"
+  add_foreign_key "platform_billing_adjustments", "platform_billing_statements", column: "source_platform_billing_statement_id"
+  add_foreign_key "platform_billing_adjustments", "platform_billing_usage_records"
+  add_foreign_key "platform_billing_adjustments", "temple_registrations"
+  add_foreign_key "platform_billing_adjustments", "temples"
+  add_foreign_key "platform_billing_statements", "temples"
+  add_foreign_key "platform_billing_usage_records", "platform_billing_statements"
+  add_foreign_key "platform_billing_usage_records", "temple_registrations"
+  add_foreign_key "platform_billing_usage_records", "temples"
   add_foreign_key "privacy_requests", "users"
   add_foreign_key "privacy_requests", "users", column: "operator_user_id"
   add_foreign_key "privacy_settings", "users"

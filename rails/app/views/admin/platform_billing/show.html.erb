@@ -1,0 +1,74 @@
+<div class="admin-stack">
+  <div class="admin-stack__row">
+    <section class="card stack-item stack-item--xl stack-item--with-gutter">
+      <header class="admin-section-header">
+        <div>
+          <p class="muted">Platform billing</p>
+          <h1>Monthly registration usage</h1>
+          <p class="muted">Preview for <%= @current_usage.period_start_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m") %>. This local view does not create a charge.</p>
+        </div>
+      </header>
+
+      <% quote = @current_usage.quote %>
+      <div class="billing-facts-grid">
+        <article class="billing-fact-card">
+          <span class="billing-fact-card__label">Completed active registrations</span>
+          <strong><%= quote.registration_count %></strong>
+        </article>
+        <article class="billing-fact-card">
+          <span class="billing-fact-card__label">Included registrations</span>
+          <strong><%= quote.included_registration_count %></strong>
+        </article>
+        <article class="billing-fact-card">
+          <span class="billing-fact-card__label">Projected platform fee</span>
+          <strong><%= Currency::Symbols.format_amount(quote.usage_total_cents, Billing::PlatformPricingPolicy::CURRENCY) %></strong>
+        </article>
+        <article class="billing-fact-card billing-fact-card--wide">
+          <span class="billing-fact-card__label">Pricing policy</span>
+          <strong><%= Billing::PlatformPricingPolicy::VERSION %></strong>
+          <p>NT$1,500 base includes 500 registrations. Progressive usage begins at registration 501; payment value and donations are not used.</p>
+        </article>
+      </div>
+    </section>
+  </div>
+
+  <div class="admin-stack__row">
+    <section class="card stack-item stack-item--fluid admin-table-card">
+      <header class="admin-section-header">
+        <div>
+          <h2>Closed statements</h2>
+          <p class="muted">Statements are local historical evidence. Provider collection remains separately gated.</p>
+        </div>
+      </header>
+
+      <% if @statements.any? %>
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>Period</th>
+              <th>Registrations</th>
+              <th>Usage fee</th>
+              <th>Credits</th>
+              <th>Total</th>
+              <th>Closed</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% @statements.each do |statement| %>
+              <tr>
+                <td><%= statement.period_start_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m") %></td>
+                <td><%= statement.registration_count %></td>
+                <td><%= Currency::Symbols.format_amount(statement.usage_total_cents, statement.currency) %></td>
+                <td><%= Currency::Symbols.format_amount(statement.adjustment_total_cents, statement.currency) %></td>
+                <td><strong><%= Currency::Symbols.format_amount(statement.total_cents, statement.currency) %></strong></td>
+                <td><%= statement.closed_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m-%d") %></td>
+              </tr>
+            <% end %>
+          </tbody>
+        </table>
+      <% else %>
+        <p class="muted">No statement has been closed yet.</p>
+      <% end %>
+    </section>
+  </div>
+</div>

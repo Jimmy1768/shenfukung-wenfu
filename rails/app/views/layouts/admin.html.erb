@@ -110,6 +110,11 @@
                 <div class="nav-user-dropdown" role="menu" data-profile-menu-panel>
                   <div class="nav-dropdown-group">
                     <% if can_manage_admins_for_current_temple? %>
+                      <%= link_to admin_platform_billing_path,
+                            class: "nav-dropdown-item",
+                            role: "menuitem" do %>
+                        <span class="nav-dropdown-title">Platform usage billing</span>
+                      <% end %>
                       <%= link_to admin_payment_methods_path,
                             class: "nav-dropdown-item",
                             role: "menuitem" do %>

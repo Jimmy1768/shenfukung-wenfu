@@ -99,6 +99,7 @@ Rails.application.routes.draw do
       post :start_billing_setup
       get :billing_setup_return
     end
+    resource :platform_billing, controller: "platform_billing", only: :show
     resources :assistance_requests, only: :index do
       member do
         post :close

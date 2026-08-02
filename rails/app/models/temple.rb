@@ -34,6 +34,12 @@ class Temple < ApplicationRecord
     dependent: :destroy
   has_many :temple_payments,
     through: :temple_registrations
+  has_many :platform_billing_statements,
+    dependent: :restrict_with_exception
+  has_many :platform_billing_usage_records,
+    dependent: :restrict_with_exception
+  has_many :platform_billing_adjustments,
+    dependent: :restrict_with_exception
   has_many :admin_permissions,
     dependent: :destroy
   has_many :temple_news_posts,
