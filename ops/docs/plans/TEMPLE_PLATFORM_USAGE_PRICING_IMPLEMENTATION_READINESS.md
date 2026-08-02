@@ -121,49 +121,95 @@ refunds, or customer records may be accessed or changed under this plan.
 Stage validation and production activation require separate, explicit
 authorization.
 
-## Required Local Design
+## Phased Implementation Plan
 
-The implementation packet must specify and test the following before provider
-collection is considered:
+Each phase has a narrow acceptance gate. Completing a phase does not authorize
+the next one; in particular, no phase below authorizes a provider or production
+change unless that authorization is explicitly granted.
 
-1. A versioned platform-pricing policy, including the setup fee, base allowance,
-   progressive bands, currency, effective date, and grandfathering/migration
-   rule for existing temples.
-2. A temple-scoped billing period with Asia/Taipei start/end timestamps,
-   idempotency key, immutable registration-count snapshot, amount breakdown,
-   adjustment links, and statement status.
-3. A separately named platform-billing invoice/charge record; it must never be
-   a `TemplePayment`, a temple patron payment, or temple financial revenue.
-4. An owner-visible monthly usage and statement view showing included usage,
-   each incremental band, credits, current balance, and close date. Staff
-   visibility must follow existing owner/admin authority rather than silently
-   expanding financial access.
-5. A monthly close and adjustment workflow that is deterministic, retry-safe,
-   tenant-isolated, and preserves the historical evidence of the original
-   statement.
-6. Provider adapters for a one-time setup charge and recurring platform
-   collection, including provider-event verification, idempotency, failures,
-   cancellation, and rollback/reconciliation behavior.
-7. Explicit initial-grace, overdue-grace, payment-failure, notice, and freeze
-   rules. The freeze must remain narrow: it must not delete, alter, or hide
-   historical temple, registration, account, payment, or accounting records.
-8. Focused tests for free and paid registrations; cancellations, failures, and
-   refunds before and after close; tenant isolation; boundaries at 500, 2,000,
-   and 10,000; Asia/Taipei month close; duplicate/retried close; authorization;
-   and provider-event replay.
+### Phase 0 — Policy and Migration Decisions
 
-## Recommended Delivery Sequence
+Freeze the durable local rules before building the meter.
 
-1. Build and locally test metering, period close, adjustments, and owner-visible
-   statements without provider calls or customer charges.
-2. Review statements against synthetic temples at low, boundary, and high
-   volumes; confirm count semantics and notices.
-3. Add the provider collection adapter and verified event reconciliation behind
-   a separate provider-change approval.
-4. Perform stage-only verification with the exact provider account, callbacks,
-   rollback, monitoring, and approval boundaries.
-5. Consider production activation only through a separate deployment and
-   production-data workflow.
+- Define a versioned platform-pricing policy: setup fee, base allowance,
+  progressive bands, currency, effective date, and grandfathering/migration
+  rule for existing temples.
+- Confirm the count rule above, including that a registration record counts
+  once rather than using `quantity` as a participant multiplier.
+- Specify Asia/Taipei calendar boundaries, statement close timing, adjustment
+  timing, initial-onboarding grace, overdue grace, notices, and the narrow
+  freeze behavior.
+- Define platform-billing roles: owner access by default, explicitly scoped
+  staff visibility where needed, and no expansion of temple financial access.
+
+Acceptance gate: the policy can price synthetic examples at 500, 2,000, 10,000,
+and 15,000 registrations without a revenue-based variable or a pricing cliff.
+
+### Phase 1 — Local Metering and Historical Statements
+
+Build the local, tenant-isolated evidence model without any provider calls or
+customer charges.
+
+- Add a temple-scoped billing period with Asia/Taipei start/end timestamps,
+  idempotency key, immutable registration-count snapshot, amount breakdown,
+  adjustment links, and statement status.
+- Add a composite `(temple_id, created_at)` registration index for the meter.
+- Add a separately named platform-billing statement/invoice record. It must
+  never be a `TemplePayment`, a temple patron payment, or temple financial
+  revenue.
+- Implement deterministic, retry-safe monthly close and next-period credits for
+  after-close cancellation, failure, or refund adjustments.
+
+Acceptance gate: focused local tests prove tenant isolation, free and paid
+eligibility, exclusions, boundary pricing, Asia/Taipei close, retry safety,
+and immutable historical statements.
+
+### Phase 2 — Owner Visibility and Synthetic Review
+
+Make the local calculation understandable before attempting collection.
+
+- Provide an owner-visible usage and statement view: included usage, each
+  incremental band, credits, current balance, and close date.
+- Keep staff visibility within existing owner/admin authority; do not silently
+  grant financial access.
+- Review low, boundary, and high-volume synthetic temples with the agreed
+  count semantics and customer notices.
+
+Acceptance gate: an owner can reconcile every displayed amount to a statement
+snapshot and adjustment record without developer intervention.
+
+### Phase 3 — Provider Collection Design and Local Adapter Work
+
+Prepare the one-time setup charge and recurring platform collection path only
+after a separate provider-change approval.
+
+- Define the provider adapter contract for setup charge, recurring collection,
+  provider-event verification, idempotency, failures, cancellation, and
+  rollback/reconciliation.
+- Verify that a returned Checkout session belongs to the intended temple and
+  that its subscription/invoice is in an acceptable state before recording a
+  billing method or payment truth.
+- Keep billing setup, current, overdue, grace, and frozen as distinct auditable
+  states; do not use a payment-method flag as invoice-payment truth.
+- Test provider-event replay and failed-payment behavior using local fixtures
+  only.
+
+Acceptance gate: local tests demonstrate no cross-temple association, no
+duplicate charge record on replay, and no change to temple patron payments or
+accounting semantics.
+
+### Phase 4 — Stage Verification and Production Gate
+
+This phase is not authorized by this document. It is a future separate workflow
+for the exact provider account and deployment target.
+
+- Stage-only verification requires the exact credentials boundary, callback
+  routes, rollback, monitoring, approval, and reconciliation evidence.
+- Production activation requires a separate production/deployment workflow and
+  may proceed only after the stage acceptance evidence is reviewed.
+
+Acceptance gate: explicit written authorization; no local plan or test result
+is a substitute for it.
 
 ## Boundaries
 
