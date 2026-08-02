@@ -1,0 +1,26 @@
+schema: shengfukung_wenfu_codex_work_mode:v1
+scope: builder_governance_only
+source_map:
+  authority: AGENTS.md
+  reusable_procedure: .agents/skills/codex-work-mode/SKILL.md
+  local_reference: ops/docs/reference/codex_work_mode.md
+  packet_template: ops/docs/handoffs/templates/codex_control_implementation.md
+  current_snapshot: ops/docs/handoffs/codex_work_mode_current.md
+routing:
+  ordinary: Planning -> authoritative Control A/B -> one ephemeral Implementer
+  cross_repository: Planning -> Strategy -> affected Planning
+  strategy_lifecycle_conditions:
+    - no_authoritative_control
+    - control_requires_thread_refresh
+    - genuinely_independent_work_requires_control_b
+roles:
+  planning: freezes_accepted_plan_and_criteria
+  control: owns_packet_review_acceptance_and_local_integration
+  implementer: edits_packet_owned_paths_runs_checks_and_returns_to_control
+handoff:
+  default: ephemeral_implementer_direct_return
+  persistent: exceptional_recorded_reason_one_packet_continuity
+boundaries:
+  controls_do_not_coordinate_cross_repository_architecture: true
+  historical_records_are_preserved: true
+  external_actions_require_explicit_authorization: true

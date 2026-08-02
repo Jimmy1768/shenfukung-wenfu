@@ -1,0 +1,4 @@
+interface:
+  display_name: "Codex Work Mode"
+  short_description: "Run the OperatorKit builder workflow safely"
+  default_prompt: "Use $codex-work-mode to execute this accepted repository work through the correct Planning, Control, and Implementer roles."

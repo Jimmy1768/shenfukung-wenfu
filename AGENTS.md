@@ -1,109 +1,64 @@
 # Shengfukung Wenfu Agent Instructions
 
-These instructions apply to the entire repository.
+These instructions apply to the entire repository. Codex Work Mode governs
+builder coordination only; it does not define or change Wenfu product/runtime
+phase integrity, temple, account, payment, deployment, Worker, Incarnation,
+Route, Step, Receipt, reincarnation, or other product/runtime lifecycle
+semantics.
 
-Shengfukung Wenfu is built with Codex Work Mode. These rules govern Codex
-builder coordination only. They do not define temple, account, payment,
-deployment, Worker, Incarnation, Route, Step, Receipt, reincarnation, or other
-product/runtime lifecycle semantics. Do not install or copy OperatorKit into
-this repository.
+## Required Source Map
 
-## Repository Authority And Lifecycle
+For Codex Work Mode builder-governance work, invoke `$codex-work-mode` and read
+these Wenfu-local sources in order:
 
-Strategy is the single owner of workspace cross-repository coordination,
-durable task creation, and Thread Refresh. It creates or refreshes Wenfu
-Control A only when no authoritative Control exists and after receiving one
-valid task-lifecycle request from Wenfu Planning.
+1. `AGENTS.md` — Wenfu-local authority, safety, phase, and product/runtime
+   boundaries.
+2. `$codex-work-mode` at `.agents/skills/codex-work-mode/SKILL.md` — reusable
+   builder procedure.
+3. `ops/docs/plans/CODEX_WORK_MODE_SKILL_MIGRATION_PLAN.md` and
+   `ops/docs/plans/CODEX_WORK_MODE_ON_DEMAND_CONTROL_LIFECYCLE_MIGRATION_PLAN.md`
+   — accepted local governance and frozen criteria.
+4. `ops/docs/plans/FINAL_WEB_READINESS_AND_EXPO_GATE_PLAN.md` and
+   `ops/docs/plans/DEPLOYMENT_READINESS.md` — separate Wenfu product-roadmap
+   pointers.
+5. `ops/docs/reference/codex_work_mode.md` — Wenfu-local boundary reference.
+6. `ops/protocol/codex_work_mode.yml` — deterministic local contract.
+7. `ops/docs/handoffs/templates/codex_control_implementation.md` —
+   Control-owned implementation-packet template.
+8. `ops/docs/handoffs/codex_work_mode_current.md` — current local coordination
+   and product-roadmap pointers.
 
-Planning is one unnumbered repository task. It freezes accepted plans and
-acceptance criteria, then sends them directly to the authoritative Wenfu
-Control for ordinary repository work. Planning sends Strategy a task-lifecycle
-request only when no authoritative Control exists, a Control needs Thread
-Refresh, or a genuinely independent Control B must be created. Planning does
-not choose an implementation branch, execution mode, model or reasoning, owned
-paths, checks, or an implementation packet.
+The source map contains Wenfu repository paths only. Do not install or copy
+OperatorKit into this repository.
 
-Control A is the default repository Control. Strategy creates or refreshes
-Control B only when Planning proves genuinely independent parallel work;
-Control B is neither a standing partner nor a replacement slot and does not
-require Control A to be active. Control owns repository-local reasoning, packet
-construction, acceptance review, approvals, Git state, and local integration.
-It selects the branch, execution mode, implementation model and reasoning,
-exact owned paths, and required checks, then freezes one bounded implementation
-packet.
+## Wenfu Authority And Terminology
 
-Control normally dispatches and supervises exactly one ephemeral Implementer.
-The Implementer edits only packet-owned paths, runs required checks, and
-returns exact evidence; it does not decide acceptance, stage, commit, merge,
-push, deploy, resolve approvals, broaden scope, or mutate external systems.
-Control independently reviews frozen-plan conformance and the evidence, locally
-integrates accepted work into canonical `main`, and then sends exactly one
-terminal packet to Planning.
+Ordinary repository work routes `Planning -> authoritative Control A/B -> one ephemeral Implementer`. Strategy owns only task-lifecycle actions and
+cross-repository routing. Cross-repository contract, architecture, sequencing,
+and authority questions route `Planning -> Strategy -> affected Planning`;
+Controls do not coordinate that work directly. A persistent Handoff is an
+exceptional, recorded-reason, one-packet continuity mechanism.
 
-Planning does not monitor Implementer activity. It remains available for
-repository planning, readiness, plan maintenance, and sequencing while the
-owning Control supervises the active build.
+Planning owns accepted plans and criteria. Control owns the bounded
+implementation packet, repository integration, and acceptance decision.
+Implementers edit only packet-owned paths, run the required checks, and return
+evidence directly to Control. When durable evidence exists, chat points to its
+absolute repository path; historical records remain evidence and are not
+rewritten to change their meaning.
 
-A persistent Handoff is exceptional: it may be used only as a one-packet
-continuity mechanism with a recorded qualifying continuity reason. It is never
-a permanent Control pairing. Legacy numbered Controls and permanent-pair task
-IDs are non-authoritative, receive no new work, and remain preserved without
-deleting, cleaning, resetting, archiving, or otherwise reconciling unsafe or
-dirty historical lanes.
-
-After Planning accepts Control A's terminal packet, Control A remains visible
-and idle; it is not automatically archived. Any later Strategy archive requires
-an explicit Director archival instruction, the complete idle gate, and an exact
-current snapshot record.
-
-SourceGrid remains the cross-repository and product coordinator of record.
-Cross-repository contract, architecture, sequencing, and authority questions
-route Wenfu Planning to Strategy and then to the affected repository Planning
-tasks. Controls do not coordinate cross-repository architecture Control-to-
-Control or freely interrupt another Planning task. Kernel architecture and
-authority-boundary changes must not be silently absorbed into Wenfu work.
-
-## Model Allocation
-
-Strategy explicitly selects the model and reasoning for each durable task it
-creates. For every implementation packet, Control selects the lowest sufficient
-Implementer configuration and records the model, reasoning, and selection
-reason in the packet and dispatch. An Implementer cannot select or escalate its
-own configuration; an unavailable selected configuration is reported as a
-blocker rather than silently substituted.
-
-## Return And Acceptance Boundary
-
-The default ephemeral Implementer returns directly to its parent Control
-through the parent-agent return. It does not send cross-task terminal messages,
-own a cross-task terminal-return or wake workflow, or use a heartbeat. Control
-independently reviews the diff and evidence and records acceptance or retry. An
-Implementer never accepts its own work.
-
-Only an exceptional persistent Handoff uses the cross-task terminal-return,
-minimal terminal wake, and fallback heartbeat workflow. Its authoritative
-terminal return is written in its own task, and its final wake signal contains
-only the Handoff task ID, terminal status, and instruction to read that return
-once; it is not the return body. That workflow is permitted only for the
-recorded-reason one-packet continuity mechanism described above.
-
-When a handoff, return, acceptance, execution, friction, or eval record exists
-as a repository file, chat points to the absolute file path instead of copying
-the full record.
-
-## Repository And Runtime Safety
+## Safety, Phase, And Product Boundaries
 
 Without explicit authorization, do not push, deploy, publish, mutate external
 systems, access or rotate secrets, alter accounts, perform destructive actions,
-or inspect or change production data.
+or inspect or change production data. Local or prototype acceptance does not
+authorize release promotion.
 
-Local or prototype acceptance does not authorize production promotion. Release
-promotion, deployment, server, DNS, TLS, proxy, Nginx, systemd, queue, cron,
-production migration, or production-data work requires a separate explicit
-production workflow with the exact target, commit, plan, rollback, impact,
-verification, approval, and monitoring boundaries.
+Deployment, server, DNS, TLS, proxy, Nginx, systemd, queue, cron, production
+migration, and production-data work require a separate explicit production
+workflow with the exact target, commit, plan, rollback, impact, verification,
+approval, and monitoring boundaries.
 
-Payment-provider work remains separately gated. Do not access real ECPay
+Payment-provider work is separately gated. Do not access real ECPay
 credentials, change merchant configuration, move money, issue real refunds, or
 claim legal, accounting, tax, invoice, settlement, or regulatory finality from
 local or stubbed evidence.
@@ -111,14 +66,5 @@ local or stubbed evidence.
 Keep Rails, Vue, Expo, deployment, temple, account/admin, authority, payment,
 and documentation ownership explicit in every bounded packet and return.
 Preserve tenant isolation, owner/admin authority, secret handling, payment and
-accounting semantics, and the assisted-onboarding operating model unless an
-authorized plan explicitly changes them.
-
-## Linked Repository Guidance
-
-Detailed Wenfu record formats, historical binding evidence, pointer-only chat
-rules, and operational references remain in `docs/operator/README.md` and
-`ops/docs/`. Where linked guidance conflicts with this file on the current
-Codex builder lifecycle, this root file is current. Do not rewrite historical
-handoffs, returns, acceptances, or execution evidence to make them appear
-current.
+accounting semantics, user-work protections, and the assisted-onboarding
+operating model unless an authorized plan explicitly changes them.
