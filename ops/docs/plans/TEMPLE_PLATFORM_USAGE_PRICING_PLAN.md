@@ -18,14 +18,27 @@ production billing, provider configuration, payments, or temple data.
 | Component | Amount | Basis |
 | --- | ---: | --- |
 | Initial setup | NT$10,000 once | Assisted onboarding, configuration, training, and launch setup. |
-| Platform base | NT$3,000/month | Includes the first 500 completed registrations in the billing month. |
-| Usage band 1 | NT$1.50 each | Registrations 501–2,000 in the billing month. |
-| Usage band 2 | NT$1.00 each | Registrations 2,001–10,000 in the billing month. |
-| Usage band 3 | NT$0.50 each | Registrations above 10,000; enterprise support/cap may be agreed separately. |
+| Platform base | NT$1,500/month | Includes the first 500 completed registrations in the billing month. |
+| Usage band 1 | NT$1.00 each | Registrations 501–2,000 in the billing month. |
+| Usage band 2 | NT$1.25 each | Registrations 2,001–10,000 in the billing month. |
+| Usage band 3 | NT$1.50 each | Registrations above 10,000; enterprise support/cap may be agreed separately. |
 
 This is not revenue sharing, a percentage of donations, or a percentage of
 payment value. The platform fee is based on workload, not the amount a temple
 collects.
+
+Rates increase only for the incremental registrations in each band, so there
+is no sudden pricing cliff. This deliberately makes the entry point accessible
+to smaller temples while asking high-volume operations to contribute more for
+the capacity, support, monitoring, and operational load they create.
+
+| Monthly completed registrations | Monthly platform fee |
+| ---: | ---: |
+| 500 | NT$1,500 |
+| 1,000 | NT$2,000 |
+| 2,000 | NT$3,000 |
+| 10,000 | NT$13,000 |
+| 15,000 | NT$20,500 |
 
 ## What Counts
 
@@ -48,9 +61,9 @@ meter query before any invoice or charge is created.
 
 The present platform-billing direction remains an NT$3,000 monthly-equivalent
 fee with a 30-day grace period before online payment and registration workflows
-freeze. This plan replaces its flat-fee-only commercial model with the base plus
-usage structure above; it does not itself change the current code or grace
-enforcement.
+freeze. This plan replaces its flat-fee-only commercial model with the lower
+base plus progressive-usage structure above; it does not itself change the
+current code or grace enforcement.
 
 Payment-provider processing fees remain separate pass-through operating costs.
 They must not determine the platform usage price or be represented as a
