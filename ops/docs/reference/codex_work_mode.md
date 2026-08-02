@@ -29,6 +29,30 @@ Controls do not coordinate cross-repository architecture directly. A persistent
 Handoff is an exceptional, recorded-reason, one-packet continuity mechanism;
 the default Implementer returns evidence directly to its Control.
 
+## Evidence, Authority, And Allocation
+
+Evidence precedes concrete repository URL, port, command, environment,
+deployment, configuration, or live-process assertions. Name the canonical
+source and distinguish configured, documented, observed, and unknown state.
+Incident correction normally creates no persistent governance: use the proper
+configuration, reference, skill, or test-hook surface. An `AGENTS.md` incident
+edit requires explicit Director authorization.
+
+Planning may report evidence, but cannot recommend, approve, or redefine
+canonical Codex Work Mode. Strategy owns cross-repository policy and the
+Director accepts it. Active allocation is Strategy `gpt-5.6-sol/high`, Planning
+`gpt-5.6-terra/high`, and Control `gpt-5.6-terra/high`; Sol/high for Control
+requires exceptional Strategy authorization. Normal ephemeral Implementers are
+`gpt-5.6-terra/medium`; deeper bounded work requires a justified
+`gpt-5.6-terra/high`. Luna is never an ephemeral Implementer and legacy 5.5 is
+not an active allocation.
+
+Persistent Handoff eligibility comes before model selection and is limited to
+exceptional recorded continuity. Only after eligibility may certified
+mechanical work use `gpt-5.6-luna/medium`; otherwise use Terra medium or,
+where justified, Terra high. Luna availability, cost, mechanical simplicity,
+or rejection never creates a Handoff or changes the allocation.
+
 ## Local Records
 
 Control uses `ops/docs/handoffs/templates/codex_control_implementation.md` to

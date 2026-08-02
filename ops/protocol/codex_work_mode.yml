@@ -14,12 +14,38 @@ routing:
     - control_requires_thread_refresh
     - genuinely_independent_work_requires_control_b
 roles:
-  planning: freezes_accepted_plan_and_criteria
+  planning: reports_evidence_and_freezes_accepted_repository_local_criteria_only
   control: owns_packet_review_acceptance_and_local_integration
   implementer: edits_packet_owned_paths_runs_checks_and_returns_to_control
+evidence:
+  concrete_assertions_require_canonical_source: true
+  concrete_assertion_categories: [repository_url, port, command, environment, deployment, configuration, live_process]
+  state_labels: [configured, documented, observed, unknown]
+incident_correction:
+  persistent_governance_default: false
+  proper_surfaces: [configuration, reference, skill, test_hook]
+  agents_edit_requires_explicit_director_authorization: true
+authority:
+  planning_cannot_recommend_approve_or_redefine_canonical_policy: true
+  strategy_owns_cross_repository_policy: true
+  director_accepts_cross_repository_policy: true
+allocation:
+  strategy: gpt-5.6-sol/high
+  planning: gpt-5.6-terra/high
+  control: gpt-5.6-terra/high
+  control_sol_high_requires_exceptional_strategy_authorization: true
+  normal_ephemeral_implementer: gpt-5.6-terra/medium
+  deeper_bounded_ephemeral_implementer: justified_gpt-5.6-terra/high
+  luna_ephemeral_implementer_allowed: false
+  gpt_5_5_active_allocation_allowed: false
 handoff:
   default: ephemeral_implementer_direct_return
   persistent: exceptional_recorded_reason_one_packet_continuity
+  eligibility_before_model_selection: true
+  certified_mechanical_after_eligibility: gpt-5.6-luna/medium
+  normal_after_eligibility: gpt-5.6-terra/medium
+  deeper_bounded_after_eligibility: justified_gpt-5.6-terra/high
+  luna_availability_cost_mechanical_simplicity_or_rejection_qualifies: false
 boundaries:
   controls_do_not_coordinate_cross_repository_architecture: true
   historical_records_are_preserved: true

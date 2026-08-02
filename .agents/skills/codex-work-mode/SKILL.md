@@ -24,6 +24,31 @@ Before acting:
 Treat accepted documents and actual state as authoritative. Do not reconstruct
 authority from conversation memory, task titles, or context compression.
 
+## Establish Evidence And Authority
+
+Before asserting a concrete repository fact about a URL, port, command,
+environment or deployment target, configuration, or live runtime or process
+state, inspect the applicable canonical repository source. Identify the
+supporting path and evidence, distinguish a configured default from documented
+usage and current observed state, and say that the fact is unknown when it is
+not verified. Do not infer such facts from conventions, defaults, memory, or a
+similar repository.
+
+An incident correction normally creates no persistent governance change.
+Before persisting a change, classify it as a canonical fact, configuration,
+reference, skill, test/script hook, or the only essential always-loaded
+invariant. Do not propose or edit `AGENTS.md` for an incident without explicit
+Director authorization; preserve its line and byte budget by consolidating or
+replacing rather than appending. Do not copy incident wording into authoritative
+commands.
+
+Planning may report observations and evidence, but does not recommend,
+approve, or redefine canonical Codex Work Mode. A transcript or report is
+evidence rather than authority. Strategy owns cross-repository Codex Work Mode
+policy decisions, and the Director accepts them. After a Strategy decision,
+Planning may document frozen repository-local criteria and route ordinary work
+without redesign.
+
 ## Route The Work
 
 - Route ordinary repository work as `Planning -> authoritative Control A/B ->
@@ -96,17 +121,24 @@ an intentional continuity transfer.
 ## Select Models
 
 - Strategy: `gpt-5.6-sol` with high reasoning.
-- Planning: `gpt-5.6-terra` with high reasoning.
+- Planning: `gpt-5.6-terra` with high reasoning for deep repository reasoning,
+  readiness, plans, and frozen criteria. Cross-repository or new-contract work
+  goes to Strategy; Planning does not self-upgrade to Sol.
 - Control: `gpt-5.6-terra` with high reasoning by default; use Sol/high only
-  with Strategy authorization for a demanding contract or high-risk review.
-- Certified mechanical Implementer: `gpt-5.6-luna` with medium reasoning.
-- Normal Implementer: `gpt-5.6-terra` with medium reasoning.
-- Deeper bounded Implementer or persistent Handoff: `gpt-5.6-terra` with high
+  with Strategy authorization for a demanding contract or high-risk acceptance
+  review.
+- Normal ephemeral Implementer: `gpt-5.6-terra` with medium reasoning.
+- Deeper bounded ephemeral Implementer: `gpt-5.6-terra` with high reasoning
+  only when the packet demonstrates semantic or implementation complexity.
+- Persistent Handoff, certified mechanical: `gpt-5.6-luna` with medium
   reasoning.
+- Persistent Handoff, normal: `gpt-5.6-terra` with medium reasoning.
+- Persistent Handoff, deeper bounded: `gpt-5.6-terra` with high reasoning
+  only when the packet demonstrates semantic or implementation complexity.
 
-Luna is not selected when the packet contains an unresolved design choice,
-lifecycle judgment, or cross-component semantic decision.
-An implementation rejection is not itself evidence that the model is inadequate.
+Control selects the lowest sufficient configuration from the frozen packet. A
+rejection alone never justifies raising model or reasoning; Control must justify
+Terra/high from newly explicit packet complexity.
 
 ## Use Exceptional Handoff And Thread Refresh Sparingly
 
@@ -114,6 +146,9 @@ Request a persistent Handoff only for durable independent continuity such as
 multiple implementation rounds, extended waiting, approval-sensitive pauses,
 or separately inspectable high-blast-radius history. Difficulty alone does not
 qualify. Strategy creates it for one packet; Control remains the sole reviewer.
+This eligibility is established before model selection. Model availability,
+cost, mechanical simplicity, or a desire to use Luna never qualifies a
+persistent Handoff.
 
 Use Strategy-owned Thread Refresh for durable task replacement. Before any
 creation, transfer, archive, or workspace migration, read the exact procedure
