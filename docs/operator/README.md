@@ -1,7 +1,7 @@
 # Shengfukung Wenfu Operator Workflow
 
-This folder holds Shengfukung Wenfu-local handoff records used by Wenfu Control
-and Wenfu Handoff tasks.
+This folder holds Shengfukung Wenfu-local implementation-packet and evidence
+records used by Wenfu Planning, Control, and Implementer tasks.
 
 SourceGrid remains the cross-repo and product coordinator of record. These files
 coordinate Shengfukung Wenfu-internal Rails, Vue, Expo, deployment, and docs
@@ -15,10 +15,9 @@ OperatorKit, and no OperatorKit kernel is installed into Codex for this repo.
 - `docs/operator/workflows/`
   Active or durable local workflow packets.
 - `docs/operator/handoffs/`
-  Detailed Wenfu Control handoffs for Shengfukung Wenfu implementation,
-  research, or docs tasks.
+  Detailed Control implementation packets for Shengfukung Wenfu work.
 - `docs/operator/returns/`
-  Detailed implementation or research returns from Wenfu Handoff tasks.
+  Detailed implementation or research returns from Implementer tasks.
 - `docs/operator/acceptances/`
   Wenfu Control acceptance, retry, rejection, blocked, or route-onward
   decisions.
@@ -50,70 +49,48 @@ Do not paste the full handoff or return in chat if the file exists.
 
 Do not ask the receiving thread to infer the file path.
 
-Do not let Handoff tasks decide acceptance. Acceptance belongs to Wenfu
-Control only.
+Do not let Implementer tasks decide acceptance. Acceptance belongs to Control
+only.
 
-## Dispatch
+## On-Demand Control Lifecycle
 
-Wenfu Control dispatches work only to an exact-idle Wenfu Handoff task. It does
-not queue new work behind an active task.
+Strategy alone coordinates cross-repository work, creates durable tasks, and
+performs Thread Refresh. It creates Control A only after Planning sends one
+valid Control-ready request. Planning is one unnumbered repository task: it
+freezes the plan and acceptance criteria, but does not select implementation
+packet details.
 
-## Control/Handoff Binding
+Control A is the default repository Control. Control B may be created only for
+genuinely independent parallel work, not as a standing partner or replacement
+slot. Control selects the branch, execution mode, Implementer model and
+reasoning, exact owned paths, and required checks, then freezes one bounded
+implementation packet.
 
-The active Wenfu Control/Handoff binding is one-to-one:
+The normal dispatch is exactly one ephemeral Implementer. Control supervises
+the work, reviews the return and frozen-plan conformance, locally integrates
+accepted work into canonical `main`, and sends exactly one terminal packet to
+Planning. The Implementer writes its terminal return in its own task and, after
+all mutations and checks, sends one minimal wake signal containing its task ID,
+terminal status, and instruction to read that return once. The wake is not the
+return. A workload-sized heartbeat is fallback recovery only if that wake fails
+or the task becomes unreachable.
 
-- owner Control task: `019f5518-af59-74f3-af7f-a37241bf418d`;
-- exclusive Handoff task: `019f55bd-3447-74f3-8225-eabfdc511e64`.
+A persistent Handoff may be used only exceptionally as a one-packet continuity
+mechanism with a recorded qualifying continuity reason. It is never a permanent
+Control pairing. Legacy numbered Controls and permanent-pair task IDs are
+non-authoritative, receive no new work, and are preserved without cleanup or
+reconciliation of unsafe or dirty lanes.
 
-Wenfu Control must never target a Handoff owned by another Control. Retired
-Control `019e5f01-c434-70c2-8225-5bc71dd83b8d` and retired Handoff
-`019f5442-186d-7a61-8cf8-ebaf17ede89c` must never be targeted. Handoff
-`019f5519-0f72-7273-b50e-65739e5a2a36` was archived after an interrupted,
-unavailable job and must also never be targeted.
+After Planning accepts its terminal packet, Control remains visible and idle.
+It is not automatically archived; any later Strategy archive requires the
+complete idle gate and an exact current snapshot record.
 
-The Handoff writes its terminal return in its own task and stops. Return does
-not deliver across tasks. After all mutations and checks, Handoff sends one
-minimal terminal wake signal to its bound Control as its final tool action. The
-signal contains only `handoff_thread_id`, terminal status, and the instruction
-to read the Handoff terminal return once; it is not the return itself.
-
-The explicit terminal wake signal is the primary continuation path. The
-workload-sized Heartbeat remains fallback recovery if the wake fails or the
-task becomes unreachable. Control never polls, reads an active transcript,
-narrates Handoff progress, or sends status steering.
-
-Control and Handoff are a long-lived pair. Completed, blocked, and failed end a
-bounded job, not the Handoff task. After Control review, the healthy Handoff
-returns to idle and is reused. Archive it only when the task itself is
-unresponsive, unreachable, corrupted, retired, or in system error, and create
-a replacement only after that archival.
-
-Mirrored Codex Work Mode source truth: OperatorKit commits `5f011c4e`,
-`9854262d`, `b5175f8d`, and `859bf872`.
-
-Wenfu Control's requested repository-Control profile is GPT-5.6-sol / high.
-Wenfu Control owns repo-local planning, readiness, Handoff construction,
-acceptance review, approvals, and Git state. Kernel architecture,
-cross-repository contracts, and authority-boundary analysis route
-Control-to-Control to OperatorKit Control instead of increasing Wenfu Control
-to xhigh. This requested profile is configuration evidence, not runtime
-telemetry proof.
-
-Handoff has no permanent model or reasoning classification. Control selects a
-profile for every bounded job and records `requested_model`,
-`requested_reasoning`, `execution_profile`, and `selection_reason` in both the
-packet and dispatch override. The same bound Handoff may use different profiles
-for serial jobs.
-
-Profile baselines:
-
-- mechanical docs, tests, and fixtures: GPT-5.4-mini / medium;
-- ordinary bounded implementation: GPT-5.4 / medium;
-- architecture, persistence, authority, security, or cross-contract-sensitive
-  implementation: GPT-5.4 / high.
-
-Requested model and reasoning are configuration evidence, not proof of actual
-runtime telemetry.
+Strategy explicitly selects model and reasoning for durable tasks. Control
+selects the lowest sufficient Implementer configuration for each packet and
+records the selected model, reasoning, and selection reason in the packet and
+dispatch. An Implementer cannot self-select or escalate; if the selected
+configuration is unavailable, Control reports a blocker rather than silently
+substituting it.
 
 ## Authority
 
@@ -171,5 +148,5 @@ This repo also has `ops/docs/` for operational commands, plans, references,
 tickets, and deployment-oriented notes. Do not move that history into
 `docs/operator/`.
 
-Use `docs/operator/` only for OperatorKit handoff, return, acceptance,
-execution, friction, eval, and workflow records.
+Use `docs/operator/` only for Wenfu-local Codex implementation-packet, return,
+acceptance, execution, friction, eval, and workflow records.
