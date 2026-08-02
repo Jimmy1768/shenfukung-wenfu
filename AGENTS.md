@@ -11,20 +11,26 @@ this repository.
 ## Repository Authority And Lifecycle
 
 Strategy is the single owner of workspace cross-repository coordination,
-durable task creation, and Thread Refresh. It creates Wenfu Control A only
-after receiving one valid Control-ready request from Wenfu Planning.
+durable task creation, and Thread Refresh. It creates or refreshes Wenfu
+Control A only when no authoritative Control exists and after receiving one
+valid task-lifecycle request from Wenfu Planning.
 
 Planning is one unnumbered repository task. It freezes accepted plans and
-acceptance criteria, then sends the Control-ready request to Strategy. Planning
-does not choose an implementation branch, execution mode, model or reasoning,
-owned paths, checks, or an implementation packet.
+acceptance criteria, then sends them directly to the authoritative Wenfu
+Control for ordinary repository work. Planning sends Strategy a task-lifecycle
+request only when no authoritative Control exists, a Control needs Thread
+Refresh, or a genuinely independent Control B must be created. Planning does
+not choose an implementation branch, execution mode, model or reasoning, owned
+paths, checks, or an implementation packet.
 
-Control A is the default repository Control. Strategy creates Control B only
-for genuinely independent parallel work; it is neither a standing partner nor a
-replacement slot. Control owns repository-local reasoning, packet construction,
-acceptance review, approvals, Git state, and local integration. It selects the
-branch, execution mode, implementation model and reasoning, exact owned paths,
-and required checks, then freezes one bounded implementation packet.
+Control A is the default repository Control. Strategy creates or refreshes
+Control B only when Planning proves genuinely independent parallel work;
+Control B is neither a standing partner nor a replacement slot and does not
+require Control A to be active. Control owns repository-local reasoning, packet
+construction, acceptance review, approvals, Git state, and local integration.
+It selects the branch, execution mode, implementation model and reasoning,
+exact owned paths, and required checks, then freezes one bounded implementation
+packet.
 
 Control normally dispatches and supervises exactly one ephemeral Implementer.
 The Implementer edits only packet-owned paths, runs required checks, and
@@ -33,6 +39,10 @@ push, deploy, resolve approvals, broaden scope, or mutate external systems.
 Control independently reviews frozen-plan conformance and the evidence, locally
 integrates accepted work into canonical `main`, and then sends exactly one
 terminal packet to Planning.
+
+Planning does not monitor Implementer activity. It remains available for
+repository planning, readiness, plan maintenance, and sequencing while the
+owning Control supervises the active build.
 
 A persistent Handoff is exceptional: it may be used only as a one-packet
 continuity mechanism with a recorded qualifying continuity reason. It is never
@@ -43,12 +53,15 @@ dirty historical lanes.
 
 After Planning accepts Control A's terminal packet, Control A remains visible
 and idle; it is not automatically archived. Any later Strategy archive requires
-the complete idle gate and an exact current snapshot record.
+an explicit Director archival instruction, the complete idle gate, and an exact
+current snapshot record.
 
 SourceGrid remains the cross-repository and product coordinator of record.
-Cross-repository work routes through Strategy to the owning repository Control.
-Kernel architecture, cross-repository contracts, and authority-boundary changes
-route to the owning Control instead of being silently absorbed into Wenfu work.
+Cross-repository contract, architecture, sequencing, and authority questions
+route Wenfu Planning to Strategy and then to the affected repository Planning
+tasks. Controls do not coordinate cross-repository architecture Control-to-
+Control or freely interrupt another Planning task. Kernel architecture and
+authority-boundary changes must not be silently absorbed into Wenfu work.
 
 ## Model Allocation
 

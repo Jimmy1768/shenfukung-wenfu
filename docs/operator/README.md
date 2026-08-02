@@ -55,16 +55,20 @@ only.
 ## On-Demand Control Lifecycle
 
 Strategy alone coordinates cross-repository work, creates durable tasks, and
-performs Thread Refresh. It creates Control A only after Planning sends one
-valid Control-ready request. Planning is one unnumbered repository task: it
-freezes the plan and acceptance criteria, but does not select implementation
-packet details.
+performs Thread Refresh. It creates or refreshes Control A only when no
+authoritative Control exists and Planning sends a valid task-lifecycle request.
+Planning is one unnumbered repository task: it freezes the plan and acceptance
+criteria, then sends them directly to the authoritative Control for ordinary
+repository work. It sends Strategy a lifecycle request only when no Control
+exists, a Control needs Thread Refresh, or a genuinely independent Control B
+must be created. Planning does not select implementation-packet details.
 
-Control A is the default repository Control. Control B may be created only for
-genuinely independent parallel work, not as a standing partner or replacement
-slot. Control selects the branch, execution mode, Implementer model and
-reasoning, exact owned paths, and required checks, then freezes one bounded
-implementation packet.
+Control A is the default repository Control. Control B may be created or
+refreshed only for genuinely independent parallel work, not as a standing
+partner or replacement slot; it does not require Control A to be active.
+Control selects the branch, execution mode, Implementer model and reasoning,
+exact owned paths, and required checks, then freezes one bounded implementation
+packet.
 
 The normal dispatch is exactly one ephemeral Implementer. Control supervises
 the work, reviews the return and frozen-plan conformance, locally integrates
@@ -72,6 +76,8 @@ accepted work into canonical `main`, and sends exactly one terminal packet to
 Planning. The ephemeral Implementer returns directly to its parent Control
 through the parent-agent return. It does not send cross-task terminal messages,
 own a cross-task terminal-return or wake workflow, or use a heartbeat.
+Planning does not monitor Implementer activity while the owning Control
+supervises the active build.
 
 A persistent Handoff may be used only exceptionally as a one-packet continuity
 mechanism with a recorded qualifying continuity reason. It is never a permanent
@@ -86,7 +92,13 @@ unsafe or dirty lanes.
 
 After Planning accepts its terminal packet, Control remains visible and idle.
 It is not automatically archived; any later Strategy archive requires the
-complete idle gate and an exact current snapshot record.
+explicit Director archival instruction, complete idle gate, and exact current
+snapshot record.
+
+Cross-repository contract, architecture, sequencing, and authority questions
+route from Wenfu Planning to Strategy and then to the affected repository
+Planning tasks. Controls do not coordinate cross-repository architecture
+Control-to-Control or freely interrupt another Planning task.
 
 Strategy explicitly selects model and reasoning for durable tasks. Control
 selects the lowest sufficient Implementer configuration for each packet and
@@ -97,10 +109,12 @@ substituting it.
 
 ## Authority
 
-Shengfukung Wenfu uses the on-demand Control lifecycle in this lane: Strategy
-creates Control A after Planning's valid Control-ready request, Control
-normally dispatches one ephemeral Implementer, and only the recorded-reason
-persistent Handoff exception uses cross-task coordination.
+Shengfukung Wenfu uses the on-demand Control lifecycle in this lane: Planning
+sends ordinary frozen work directly to the authoritative Control; Strategy
+handles only the lifecycle request when no Control exists, a Control needs
+Thread Refresh, or independent Control B work is needed. Control normally
+dispatches one ephemeral Implementer, and only the recorded-reason persistent
+Handoff exception uses cross-task coordination.
 
 This folder does not authorize automation, release promotion, deployment,
 server changes, secret access, payment changes, account changes, destructive
