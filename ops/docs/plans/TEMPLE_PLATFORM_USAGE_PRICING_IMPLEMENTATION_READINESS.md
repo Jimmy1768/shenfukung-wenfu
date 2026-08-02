@@ -194,10 +194,34 @@ NT$1.50 above 10,000. No customer, subscription, invoice, or charge was
 created.
 
 The same live catalog has not been created: the connected live restricted key
-lacks product-create permission. The next provider action requires a live
-SourceGrid Stripe key or Dashboard role with catalog-write permission. Do not
-substitute the test price IDs for a live environment or work around the
-permission boundary.
+lacks product-create permission. Do not substitute the test price IDs for a
+live environment or work around the permission boundary.
+
+### SourceGrid Catalog Ownership And Future Binding Gate
+
+SourceGrid Planning recorded the parent-company ownership decision at
+SourceGrid commit `74f3f4dd508c291bf81b3bd3ed62250a2a1c70ec` in
+`ops/docs/plans/SOURCEGRID_PLATFORM_STRIPE_CATALOG_AND_TAX_POLICY_PLAN.md`.
+SourceGrid owns TempleMate's future first-party Stripe Product/Price catalog
+governance, provider binding, merchant-of-record posture, tax-classification
+review, and authorization of every live-provider mutation. TempleMate/Wenfu
+retains product semantics, registration-count meaning, local customer workflow,
+and runtime fulfillment; it receives neither SourceGrid Stripe secrets nor
+direct catalog-write authority.
+
+The test catalog above is cross-repository evidence only, not a live SourceGrid
+binding, customer-offer acceptance, or provider authorization. A future live
+catalog operation requires separate Director authorization, then a
+SourceGrid-local TempleMate manifest/binding plan with distinct immutable keys,
+metadata, and binding plus preservation proof for AppRelay, DojoMate, credits,
+and Enterprise catalogs. The future credential must be SourceGrid-owned and
+least-privilege: only Stripe-supported Products/Prices create-and-read access;
+never customer, Checkout, Payment Link, subscription, invoice, payment,
+refund, payout, webhook, key/account, tax-activation, connected-account, or
+unrelated-catalog access. Exact provider permission labels and role availability
+are unknown until a separately approved read-only provider-permission
+inspection. A broad secret-key substitute or permission-boundary bypass is not
+allowed.
 
 - Define the provider adapter contract for setup charge, recurring collection,
   provider-event verification, idempotency, failures, cancellation, and
