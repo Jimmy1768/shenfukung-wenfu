@@ -193,9 +193,11 @@ NT$10,000. The graduated monthly price has a NT$1,500 flat first tier through
 NT$1.50 above 10,000. No customer, subscription, invoice, or charge was
 created.
 
-The same live catalog has not been created: the connected live restricted key
-lacks product-create permission. Do not substitute the test price IDs for a
-live environment or work around the permission boundary.
+On 2026-08-02, the connected live restricted key rejected a product-create
+attempt for insufficient permission; that attempt changed no live catalog
+object. The separately approved completed live catalog evidence is recorded
+below. Do not substitute the test price IDs for a live environment or work
+around the permission boundary.
 
 ### SourceGrid Catalog Ownership And Future Binding Gate
 
