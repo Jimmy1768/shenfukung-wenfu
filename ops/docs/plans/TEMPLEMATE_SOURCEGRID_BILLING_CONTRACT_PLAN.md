@@ -18,6 +18,10 @@ SourceGrid has completed the catalog work. Wenfu uses the recorded active setup
 and monthly graduated Price IDs as configuration inputs only; it does not
 create, alter, or administer those Products or Prices.
 
+Stripe is only for the TempleMate platform-billing flow: temple to TempleMate.
+ECPay remains the separate patron-to-temple flow and is not used for setup or
+monthly platform collection.
+
 ## Starting Point
 
 Wenfu already has a versioned Taipei-calendar meter, immutable monthly
@@ -42,7 +46,7 @@ payment method as present. Phase 3 must close all three gaps.
 
 ## Delivery Plan
 
-### 1. Bind Configuration To The Existing Catalog
+### 3A.1 Bind Configuration To The Existing Catalog
 
 Add explicit environment configuration for the Stripe account and the two
 TempleMate Price IDs. Validate presence, mode, currency, and the distinction
@@ -50,7 +54,7 @@ between setup and monthly usage before enabling billing. Keep secrets in the
 approved runtime configuration only; never store them in the database, source,
 fixtures, or client HTML.
 
-### 2. Close Billing Periods Automatically
+### 3A.2 Close Billing Periods Automatically
 
 Add an idempotent scheduled job that closes each eligible temple's prior
 Asia/Taipei calendar month after the chosen close time. It must use the existing
@@ -58,7 +62,7 @@ statement closer, record failures for operator follow-up, and never issue a
 provider request itself. Statement delivery begins only after this local close
 succeeds.
 
-### 3. Replace Annual Setup With Payment-Method Collection
+### 3B. Replace Annual Setup With Payment-Method Collection
 
 For a newly onboarded temple, collect a Stripe payment method using a setup
 flow, verify that the returned customer/payment method belongs to that temple,
@@ -68,7 +72,7 @@ was collected. Remove the legacy admin checkbox as a way to declare a payment
 method present; only a verified setup result may set that state for a new
 platform-billing temple.
 
-### 4. Deliver Each Closed Monthly Statement For Collection
+### 3C. Deliver Each Closed Monthly Statement For Collection
 
 Create a durable platform-billing delivery record for a closed statement. It
 must include the statement ID, temple, billing period, policy version, currency,
@@ -82,7 +86,7 @@ contract test before enabling it. The mechanism must bill the progressive
 NT$1,500/500-registration schedule once per closed period and never re-close or
 recalculate the statement.
 
-### 5. Reconcile Provider Events Into Billing State
+### 3D. Reconcile Provider Events Into Billing State
 
 Accept only authenticated, temple-matched provider events. Record a clear
 platform billing state for setup, current, overdue, grace, and frozen; derive
@@ -95,7 +99,7 @@ platform billing through the existing patron-payment webhook pipeline, which
 updates registration payments and currently supports only fake and ECPay
 providers.
 
-### 6. Make The Result Visible And Operable
+### 3E. Make The Result Visible And Operable
 
 Extend the owner billing view with the linked statement, collection status,
 amount, due date, and visible adjustment history. Keep the existing owner/admin
@@ -103,7 +107,7 @@ authority boundary. Add operator-safe reconciliation information without
 exposing payment credentials, full card details, or one temple's billing data to
 another.
 
-### 7. Validate Before Release
+### 4. Validate Before Release
 
 Use local Stripe fixtures/stubs to prove the setup flow, statement delivery,
 progressive quantity mapping, replay handling, failed payment, grace transition,

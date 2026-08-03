@@ -1,88 +1,61 @@
-# Temple Platform Usage Pricing Plan
+# TempleMate Platform Usage Pricing Plan
 
-Status: Director pricing direction captured; implementation deferred
+Status: Commercial policy accepted; Stripe platform-billing implementation planned
 
 Owner: Shengfukung Wenfu
 
-Date: 2026-08-02
+Date: 2026-08-03
 
-## Purpose
+## Two Separate Money Flows
 
-Define a predictable platform price that reflects operational system load
-without taking a share of a temple's revenue, donations, or payment volume.
-This document is a commercial-policy decision, not an authorization to change
-production billing, provider configuration, payments, or temple data.
+| Flow | Payer → recipient | Provider | What it covers |
+| --- | --- | --- | --- |
+| Temple transactions | Patron → temple | ECPay | A temple's offerings, registrations, refunds, receipts, and temple accounting. |
+| Platform billing | Temple → TempleMate | Stripe | TempleMate setup and the monthly platform fee based on qualifying registrations. |
+
+ECPay is never used to collect TempleMate's platform fee. Stripe is never the
+source of truth for a temple registration, patron refund, or temple accounting
+entry. Payment-provider processing fees remain separate from the platform price.
 
 ## Pricing Decision
 
 | Component | Amount | Basis |
 | --- | ---: | --- |
 | Initial setup | NT$10,000 once | Assisted onboarding, configuration, training, and launch setup. |
-| Platform base | NT$1,500/month | Includes the first 500 completed registrations in the billing month. |
-| Usage band 1 | NT$1.00 each | Registrations 501–2,000 in the billing month. |
-| Usage band 2 | NT$1.25 each | Registrations 2,001–10,000 in the billing month. |
-| Usage band 3 | NT$1.50 each | Registrations above 10,000; enterprise support/cap may be agreed separately. |
+| Platform base | NT$1,500/month | Includes the first 500 qualifying registrations. |
+| Usage band 1 | NT$1.00 each | Registrations 501–2,000. |
+| Usage band 2 | NT$1.25 each | Registrations 2,001–10,000. |
+| Usage band 3 | NT$1.50 each | Registrations above 10,000. |
 
-This is not revenue sharing, a percentage of donations, or a percentage of
-payment value. The platform fee is based on workload, not the amount a temple
-collects.
+The price is based on operating workload, never temple revenue, donations,
+ticket value, payment volume, price, quantity, or payment-provider fees. Tiers
+are progressive: 600 registrations cost NT$1,600, not NT$2,100.
 
-Rates increase only for the incremental registrations in each band, so there
-is no sudden pricing cliff. This deliberately makes the entry point accessible
-to smaller temples while asking high-volume operations to contribute more for
-the capacity, support, monitoring, and operational load they create.
+## Qualifying Registration Rule
 
-| Monthly completed registrations | Monthly platform fee |
-| ---: | ---: |
-| 500 | NT$1,500 |
-| 1,000 | NT$2,000 |
-| 2,000 | NT$3,000 |
-| 10,000 | NT$13,000 |
-| 15,000 | NT$20,500 |
+One registration record counts once when it falls in the Asia/Taipei billing
+period, is not cancelled, and is either free or paid. Failed, duplicate,
+cancelled, and refunded registrations do not count. A post-close cancellation,
+failure, or refund produces a visible credit in a later period; it never
+rewrites the closed statement.
 
-## What Counts
+## Delivery Phases
 
-A billable usage unit is one completed, active registration/action record in
-the billing month, regardless of whether it is paid or free.
+1. **Policy and local foundation — committed.** Versioned pricing, the
+   Asia/Taipei meter, immutable statements/credits, and owner-only billing view
+   are local Wenfu behavior.
+2. **Stripe platform billing — planned.** Bind the existing TempleMate Stripe
+   Prices, collect a platform payment method, close and deliver monthly usage,
+   reconcile platform events, and show platform billing status. See
+   `ops/docs/plans/TEMPLEMATE_SOURCEGRID_BILLING_CONTRACT_PLAN.md`.
+3. **Stage and production release — separately gated.** Validate the exact
+   Stripe account/configuration in stage, then obtain a separate release
+   decision before production collection.
 
-- Paid registrations count.
-- Free gathering registrations count.
-- A registration counts once; do not multiply it by its price, quantity, or
-  payment attempts.
-- Failed checkout attempts, duplicate records, cancelled registrations, and
-  refunded registrations do not count. Any adjustment discovered after a
-  monthly close is credited in the next billing cycle.
+## Boundaries
 
-The eventual implementation must define the authoritative registration states,
-cutoff time zone, de-duplication rule, adjustment report, and tenant-scoped
-meter query before any invoice or charge is created.
-
-## Existing Billing Direction
-
-The present platform-billing direction remains an NT$3,000 monthly-equivalent
-fee with a 30-day grace period before online payment and registration workflows
-freeze. This plan replaces its flat-fee-only commercial model with the lower
-base plus progressive-usage structure above; it does not itself change the
-current code or grace enforcement.
-
-Payment-provider processing fees remain separate pass-through operating costs.
-They must not determine the platform usage price or be represented as a
-platform revenue share. Provider fee schedules, live credentials, settlement,
-tax, and merchant terms require separate verification and authorization.
-
-## Implementation Boundary
-
-No implementation is authorized by this plan. A separate accepted engineering
-packet is required before changing any billing model, pricing configuration,
-Stripe/ECPay integration, registration behavior, invoices, customer notices,
-or workflow freeze rules.
-
-The pre-implementation findings and required rollout gates are recorded in
-`ops/docs/plans/TEMPLE_PLATFORM_USAGE_PRICING_IMPLEMENTATION_READINESS.md`.
-
-That packet must include tenant-isolated metering, a reproducible monthly
-statement, owner-visible usage reporting, adjustment handling, grace-period
-interaction, payment-failure behavior, rollback, and focused tests. It must
-preserve the assisted-onboarding model, owner/admin authority, secret handling,
-payment/accounting semantics, and all provider/deployment/production-data
-boundaries.
+No plan or local test authorizes provider credentials, customer creation,
+subscriptions, invoices, charges, refunds, catalog changes, deployment, or
+production-data changes. Preserve tenant isolation, owner/admin authority,
+assisted onboarding, secret handling, user-work protections, temple accounting,
+and historical records throughout every phase.
