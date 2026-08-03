@@ -1,0 +1,17 @@
+# Enqueues TempleMate overdue/grace lifecycle advancement through Rails.
+# This unit only enqueues platform-billing work.
+
+[Unit]
+Description={{project_name}} platform billing lifecycle enqueue
+After=network.target
+StartLimitIntervalSec=1h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=jimmy1768_user
+WorkingDirectory=/home/jimmy1768_user/Projects/{{project_slug}}/rails
+EnvironmentFile=/etc/default/{{project_slug}}-env
+ExecStart=/usr/bin/bash -lc 'bundle exec rails runner "PlatformBillingLifecycleJob.perform_later"'
+Restart=on-failure
+RestartSec=5min

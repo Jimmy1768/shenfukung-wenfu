@@ -1,0 +1,17 @@
+# Enqueues the idempotent prior-month TempleMate platform close through Rails.
+# This unit only enqueues platform-billing work.
+
+[Unit]
+Description={{project_name}} platform billing monthly-close enqueue
+After=network.target
+StartLimitIntervalSec=1h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=jimmy1768_user
+WorkingDirectory=/home/jimmy1768_user/Projects/{{project_slug}}/rails
+EnvironmentFile=/etc/default/{{project_slug}}-env
+ExecStart=/usr/bin/bash -lc 'bundle exec rails runner "PlatformBillingMonthlyCloseJob.perform_later"'
+Restart=on-failure
+RestartSec=5min
