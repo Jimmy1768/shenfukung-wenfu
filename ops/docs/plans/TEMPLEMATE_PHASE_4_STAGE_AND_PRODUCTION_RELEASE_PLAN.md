@@ -58,6 +58,28 @@ These are repository facts, not permission to change a runtime:
    Stripe account, or a configured stage provider credential. Those states are
    unknown until an explicitly authorized stage preflight inspects them.
 
+## Approved Credential Boundary
+
+The TempleMate runtime may use a newly created, TempleMate-specific restricted
+Stripe API key in the protected Wenfu droplet environment. It must not copy or
+reuse SourceGrid's broad account-level secret key. The platform webhook secret
+must be generated for TempleMate's dedicated webhook endpoint and must not be
+reused from another application.
+
+The following non-secret catalog inputs are fixed in the Wenfu runtime
+configuration:
+
+```dotenv
+STRIPE_TEMPLEMATE_PLATFORM_ACCOUNT_ID=acct_1TFRmE7ZKypwRK7g
+STRIPE_TEMPLEMATE_SETUP_PRICE_ID=price_1U0Ix77ZKypwRK7gI1x3IngL
+STRIPE_TEMPLEMATE_MONTHLY_PRICE_ID=price_1U0J5S7ZKypwRK7gRvFaJd4D
+```
+
+The user/operator installs the restricted API key, publishable key, and
+dedicated endpoint secret manually in the protected droplet environment. No
+secret value belongs in repository files, chat packets, logs, fixtures, or
+command output.
+
 ## Phase 4A — Stage-Readiness Preparation
 
 Before a staging run, complete a bounded local/runtime-preparation packet that:
