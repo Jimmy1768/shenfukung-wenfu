@@ -1,6 +1,6 @@
 # TempleMate Platform Usage Pricing Plan
 
-Status: Commercial policy accepted; Stripe platform-billing implementation planned
+Status: Phase 3 locally integrated; Phase 4 stage-and-release planning ready
 
 Owner: Shengfukung Wenfu
 
@@ -54,14 +54,15 @@ rewrites the closed statement.
 1. **Policy and local foundation — committed.** Versioned pricing, the
    Asia/Taipei meter, immutable statements/credits, and owner-only billing view
    are local Wenfu behavior.
-2. **Stripe platform billing — planned.** Bind the existing TempleMate Stripe
-   Prices, collect a platform payment method, close the registration-usage
-   statement, collect its finalized amount, reconcile platform events, and show
-   platform billing status. See
+2. **Stripe platform billing — locally integrated.** The existing TempleMate
+   Prices are bound through fixture-only configuration, with platform payment
+   method setup, closed registration-usage statement delivery, collection,
+   event reconciliation, and owner status. See
    `ops/docs/plans/TEMPLEMATE_SOURCEGRID_BILLING_CONTRACT_PLAN.md`.
-3. **Stage and production release — separately gated.** Validate the exact
-   Stripe account/configuration in stage, then obtain a separate release
-   decision before production collection.
+3. **Stage and production release — planned.** Complete the configuration and
+   scheduler preparation, validate the exact stage account/configuration and
+   callback, then make a separate production release decision. See
+   `ops/docs/plans/TEMPLEMATE_PHASE_4_STAGE_AND_PRODUCTION_RELEASE_PLAN.md`.
 
 ## Boundaries
 

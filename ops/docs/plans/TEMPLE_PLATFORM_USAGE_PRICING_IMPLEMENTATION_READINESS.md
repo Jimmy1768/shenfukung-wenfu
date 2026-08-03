@@ -1,6 +1,6 @@
 # TempleMate Platform Billing Implementation Readiness
 
-Status: Local foundation committed; Stripe platform-billing phase planned
+Status: Phase 3 locally integrated and cleaned up; Phase 4 stage planning ready
 
 Owner: Shengfukung Wenfu
 
@@ -61,10 +61,15 @@ Temple owners can view current usage and closed local statements. The view is
 read-only billing evidence; it does not show a Stripe payment result or permit
 a billing charge.
 
-## Phase 3 — Stripe Platform Billing (Planned)
+## Phase 3 — Stripe Platform Billing (Locally Integrated)
 
 The detailed Phase 3 plan is
 `ops/docs/plans/TEMPLEMATE_SOURCEGRID_BILLING_CONTRACT_PLAN.md`.
+
+Implementation is locally integrated at
+`330568601b297988da99f1bff21c7d8451648ac5`, with lifecycle cleanup at
+`003f0e840b3292cfbf1a0b51dab5c5520391a0a6`. All Stripe behavior remains
+fixture/stub-only.
 
 ### 3A. Configuration And Period Lifecycle
 
@@ -102,20 +107,20 @@ credentials, card details, or cross-temple data.
 
 ## Phase 4 — Stage And Production Gate
 
-Run local fixture/stub tests first. Stage validation then requires the exact
-Stripe configuration, callback target, rollback, monitoring, and approval
-boundary. Production collection requires a separate release decision.
+The executable Phase 4 plan is
+`ops/docs/plans/TEMPLEMATE_PHASE_4_STAGE_AND_PRODUCTION_RELEASE_PLAN.md`.
+It defines the remaining scheduler/configuration preparation, controlled stage
+validation, monitoring and rollback proof, and the separate production-release
+decision.
 
 ## Current Readiness Gaps
 
-- The existing Stripe path creates a fixed annual subscription rather than
-  TempleMate setup and monthly usage billing.
-- There is no automatic monthly-close trigger or billing-delivery record.
-- The existing payment webhook pipeline is for patron payments and supports
-  fake/ECPay, not Stripe platform billing.
-- The legacy form can manually set `payment_method_on_file`.
-- Stripe account and both TempleMate Price IDs are not explicit runtime
-  configuration yet.
+- The Stage 4 plan must document the four new TempleMate Stripe environment
+  key names in `ops/env/template.temple.env`; values must remain outside source
+  control.
+- The monthly-close and lifecycle jobs have no configured scheduler/cadence.
+- A deployed stage callback URL, stage account configuration, and runtime
+  credential boundary are unverified.
 
 ## Boundaries
 

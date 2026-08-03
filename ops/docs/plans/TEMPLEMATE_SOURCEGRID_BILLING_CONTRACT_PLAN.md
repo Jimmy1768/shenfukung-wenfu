@@ -1,6 +1,6 @@
 # TempleMate Phase 3 Stripe Billing Integration Plan
 
-Status: Planned; implementation awaits an explicit provider-integration packet
+Status: Locally integrated; Phase 4 stage-and-release planning follows
 
 Owner: Wenfu Planning
 
@@ -139,12 +139,15 @@ credentials. Production activation remains a separate release decision.
    history, and legacy annual records remain unchanged unless a separate
    migration explicitly covers them.
 
-## First Implementation Blocker
+## Phase 4 Handoff
 
-This plan needs an explicit provider-integration implementation packet with the
-approved runtime credential/configuration boundary and the chosen Stripe
-collection mechanism. The catalog is ready; no further SourceGrid work is
-requested.
+Phase 3 is locally integrated at
+`330568601b297988da99f1bff21c7d8451648ac5`, with cleanup at
+`003f0e840b3292cfbf1a0b51dab5c5520391a0a6`. Phase 4 planning is at
+`ops/docs/plans/TEMPLEMATE_PHASE_4_STAGE_AND_PRODUCTION_RELEASE_PLAN.md`.
+The first Phase 4 packet must resolve the scheduler cadence and secure runtime
+configuration documentation before staging validation. No further SourceGrid
+work is requested.
 
 ## Boundaries
 
