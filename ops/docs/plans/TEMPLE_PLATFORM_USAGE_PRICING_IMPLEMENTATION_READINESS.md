@@ -1,6 +1,6 @@
 # Temple Platform Usage Pricing Implementation Readiness
 
-Status: Readiness scan complete; implementation deferred
+Status: Local usage-billing foundation committed; contract and provider phases deferred
 
 Owner: Shengfukung Wenfu
 
@@ -249,11 +249,12 @@ recurring Stripe Price neither counts registrations nor closes a billing period.
 Catalog existence is not a customer subscription, invoice, charge, payment,
 entitlement, usage report, or completed Wenfu billing integration.
 
-The next Wenfu-local planning need is an explicit cross-repository billing
-contract that defines how Wenfu supplies a finalized immutable period total to
-the SourceGrid-owned billing path. It is not yet authorized for implementation.
-The first blocker is the absence of that accepted billing contract; no new
-provider action follows from this evidence.
+The next Wenfu-local planning need is frozen in
+`ops/docs/plans/TEMPLEMATE_SOURCEGRID_BILLING_CONTRACT_PLAN.md`: an explicit
+cross-repository billing contract that defines how Wenfu supplies a finalized
+immutable period total to the SourceGrid-owned billing path. It is not yet
+authorized for implementation. The first blocker is the absence of that
+accepted billing contract; no new provider action follows from this evidence.
 
 - Define the provider adapter contract for setup charge, recurring collection,
   provider-event verification, idempotency, failures, cancellation, and
