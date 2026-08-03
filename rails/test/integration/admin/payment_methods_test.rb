@@ -187,6 +187,23 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     refute temple.online_payments_frozen?
   end
 
+  test "payment methods display the persisted overdue platform billing state" do
+    temple = create_temple(payment_provider_settings: {
+      "ecpay" => { "merchant_id" => "2000132", "hash_key" => "key", "hash_iv" => "iv", "environment" => "stage" },
+      "billing" => { "stripe_payment_method_id" => "pm_1" }
+    })
+    temple.platform_billing_deliveries.create!(kind: "monthly", status: "overdue", currency: "TWD", idempotency_key: "overdue-display",
+      due_at: 1.day.from_now, grace_deadline_at: 31.days.from_now)
+    owner = create_admin_user(temple: temple, role: "owner")
+
+    sign_in_admin(owner)
+    get admin_payment_methods_path
+
+    assert_response :success
+    assert_includes response.body, "帳務逾期"
+    refute_includes response.body, "寬限期剩餘 30 天"
+  end
+
   test "non-owner is redirected away from payment methods" do
     temple = create_temple
     admin = create_admin_user(temple: temple, role: "admin")

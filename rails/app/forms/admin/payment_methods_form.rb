@@ -109,10 +109,19 @@ module Admin
 
     def online_payments_state
       return :setup_needed unless ecpay_configured?
-      return :active if temple.platform_billing_state == "current"
-      return :frozen if online_payments_frozen?
 
-      :grace_period
+      case temple.platform_billing_state
+      when "current"
+        :active
+      when "overdue"
+        :overdue
+      when "grace"
+        :grace_period
+      when "frozen"
+        :frozen
+      else
+        :setup_needed
+      end
     end
 
     def billing_payment_method_on_file?
@@ -125,8 +134,10 @@ module Admin
         "setup_incomplete"
       when :active
         "active"
-      when :frozen
+      when :overdue
         "billing_overdue"
+      when :frozen
+        "frozen"
       else
         "grace_period"
       end

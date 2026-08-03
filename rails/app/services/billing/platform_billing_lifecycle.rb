@@ -5,12 +5,17 @@ module Billing
     OVERDUE_WINDOW = 7.days
     GRACE_WINDOW = 30.days
 
+    def self.record_success!(...) = new(...).record_success!
     def self.record_failure!(...) = new(...).record_failure!
     def self.advance!(...) = new(...).advance!
 
     def initialize(delivery:, now: Time.current)
       @delivery = delivery
       @now = now
+    end
+
+    def record_success!
+      transition!("paid", grace_deadline_at: nil)
     end
 
     def record_failure!

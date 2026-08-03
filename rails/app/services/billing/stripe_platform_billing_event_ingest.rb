@@ -38,20 +38,12 @@ module Billing
     def transition!(delivery, type)
       case type
       when "checkout.session.completed", "invoice.paid", "invoice.payment_succeeded"
-        transition_delivery!(delivery, "paid", grace_deadline_at: nil)
+        PlatformBillingLifecycle.record_success!(delivery:, now:)
       when "invoice.payment_failed", "invoice.payment_action_required"
         PlatformBillingLifecycle.record_failure!(delivery:, now:)
       end
       SystemAuditLogger.log!(action: "platform_billing.event_processed", target: delivery, temple: delivery.temple,
         metadata: { delivery_id: delivery.id, event_type: type, status: delivery.status })
-    end
-    def transition_delivery!(delivery, status, attributes = {})
-      return if delivery.status == status
-
-      from = delivery.status
-      delivery.update!(**attributes.merge(status:))
-      SystemAuditLogger.log!(action: "platform_billing.delivery_transition", target: delivery, temple: delivery.temple,
-        metadata: { delivery_id: delivery.id, from:, to: status, reference_time: now.iso8601 })
     end
     def sanitized_payload(object, metadata)
       { object_id: object.respond_to?(:id) ? object.id : object["id"], customer: object.respond_to?(:customer) ? object.customer : nil,

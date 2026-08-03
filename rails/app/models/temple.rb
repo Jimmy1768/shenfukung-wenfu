@@ -175,13 +175,11 @@ class Temple < ApplicationRecord
     ActiveModel::Type::Boolean.new.cast(billing_settings["payment_method_on_file"])
   end
 
-  def platform_billing_state(reference_time = Time.current)
+  def platform_billing_state(_reference_time = Time.current)
     delivery = platform_billing_deliveries.monthly.order(created_at: :desc).first
     return "setup_needed" unless billing_settings["stripe_payment_method_id"].present?
     return "current" if delivery.blank? || delivery.paid?
-    return "frozen" if delivery.grace_deadline_at.present? && delivery.grace_deadline_at <= reference_time
-    return "grace" if delivery.grace_deadline_at.present?
-    return "overdue" if delivery.overdue?
+    return delivery.status if %w[overdue grace frozen].include?(delivery.status)
 
     "current"
   end
