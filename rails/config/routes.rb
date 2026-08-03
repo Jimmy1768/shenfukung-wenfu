@@ -9,6 +9,7 @@ Rails.application.routes.draw do
       resources :demo_contacts, only: :create
       post "temples/:slug/contact_temple_requests", to: "contact_temple_requests#create"
       post "payments/webhooks/:provider", to: "payment_webhooks#create", as: :payment_webhook
+      post "platform_billing/webhooks", to: "platform_billing_webhooks#create", as: :platform_billing_webhook
       resources :temples, only: :show, param: :slug
       get "temples/:slug/news", to: "temple_news#index"
       get "temples/:slug/archive", to: "temple_galleries#index"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_02_000021) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_03_000022) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -527,6 +527,47 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_02_000021) do
     t.index ["temple_registration_id"], name: "index_platform_billing_adjustments_on_temple_registration_id"
   end
 
+  create_table "platform_billing_deliveries", force: :cascade do |t|
+    t.bigint "temple_id", null: false
+    t.bigint "platform_billing_statement_id"
+    t.string "kind", null: false
+    t.string "status", default: "pending", null: false
+    t.datetime "period_start_at"
+    t.datetime "period_end_at"
+    t.string "pricing_policy_version"
+    t.string "currency", default: "TWD", null: false
+    t.integer "registration_count", default: 0, null: false
+    t.integer "adjustment_total_cents", default: 0, null: false
+    t.integer "total_cents", default: 0, null: false
+    t.string "provider_customer_id"
+    t.string "provider_payment_method_id"
+    t.string "provider_reference"
+    t.string "idempotency_key", null: false
+    t.datetime "due_at"
+    t.datetime "grace_deadline_at"
+    t.jsonb "metadata", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["idempotency_key"], name: "index_platform_billing_deliveries_on_idempotency_key", unique: true
+    t.index ["platform_billing_statement_id"], name: "idx_on_platform_billing_statement_id_3fba7f3667"
+    t.index ["platform_billing_statement_id"], name: "idx_platform_billing_deliveries_statement_unique", unique: true
+    t.index ["temple_id", "kind"], name: "index_platform_billing_deliveries_on_temple_id_and_kind"
+    t.index ["temple_id"], name: "index_platform_billing_deliveries_on_temple_id"
+  end
+
+  create_table "platform_billing_events", force: :cascade do |t|
+    t.bigint "temple_id", null: false
+    t.bigint "platform_billing_delivery_id"
+    t.string "provider_event_id", null: false
+    t.string "event_type", null: false
+    t.jsonb "payload", default: {}, null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["platform_billing_delivery_id"], name: "index_platform_billing_events_on_platform_billing_delivery_id"
+    t.index ["provider_event_id"], name: "index_platform_billing_events_on_provider_event_id", unique: true
+    t.index ["temple_id"], name: "index_platform_billing_events_on_temple_id"
+  end
+
   create_table "platform_billing_statements", force: :cascade do |t|
     t.bigint "temple_id", null: false
     t.datetime "period_start_at", null: false
@@ -1024,6 +1065,10 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_02_000021) do
   add_foreign_key "platform_billing_adjustments", "platform_billing_usage_records"
   add_foreign_key "platform_billing_adjustments", "temple_registrations"
   add_foreign_key "platform_billing_adjustments", "temples"
+  add_foreign_key "platform_billing_deliveries", "platform_billing_statements"
+  add_foreign_key "platform_billing_deliveries", "temples"
+  add_foreign_key "platform_billing_events", "platform_billing_deliveries"
+  add_foreign_key "platform_billing_events", "temples"
   add_foreign_key "platform_billing_statements", "temples"
   add_foreign_key "platform_billing_usage_records", "platform_billing_statements"
   add_foreign_key "platform_billing_usage_records", "temple_registrations"

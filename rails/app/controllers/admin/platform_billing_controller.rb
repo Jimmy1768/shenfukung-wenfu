@@ -7,7 +7,7 @@ module Admin
     def show
       @current_usage = Billing::PlatformUsage.for_month(temple: current_temple)
       @statements = current_temple.platform_billing_statements
-        .includes(:platform_billing_adjustments)
+        .includes(:platform_billing_adjustments, :platform_billing_delivery)
         .order(period_start_at: :desc)
     end
 

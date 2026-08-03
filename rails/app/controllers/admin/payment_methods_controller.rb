@@ -61,8 +61,7 @@ module Admin
         :ecpay_merchant_id,
         :ecpay_hash_key,
         :ecpay_hash_iv,
-        :ecpay_environment,
-        :billing_payment_method_on_file
+        :ecpay_environment
       )
     end
   end

@@ -37,7 +37,7 @@
       <header class="admin-section-header">
         <div>
           <h2>Closed statements</h2>
-          <p class="muted">Statements are local historical evidence. Provider collection remains separately gated.</p>
+          <p class="muted">Statements and their TempleMate collection evidence.</p>
         </div>
       </header>
 
@@ -51,6 +51,7 @@
               <th>Credits</th>
               <th>Total</th>
               <th>Closed</th>
+              <th>Collection</th>
             </tr>
           </thead>
           <tbody>
@@ -62,6 +63,7 @@
                 <td><%= Currency::Symbols.format_amount(statement.adjustment_total_cents, statement.currency) %></td>
                 <td><strong><%= Currency::Symbols.format_amount(statement.total_cents, statement.currency) %></strong></td>
                 <td><%= statement.closed_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m-%d") %></td>
+                <td><%= statement.platform_billing_delivery&.status&.titleize || "Pending" %><% if statement.platform_billing_delivery&.due_at %> · due <%= statement.platform_billing_delivery.due_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m-%d") %><% end %></td>
               </tr>
             <% end %>
           </tbody>

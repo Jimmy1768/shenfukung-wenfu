@@ -5,101 +5,49 @@ require "cgi"
 module Billing
   class StripePaymentMethodSetup
     Result = Struct.new(:session_id, :url, :payload, keyword_init: true)
+    class LegacyAnnualStripeBillingRecordError < StandardError; end
 
-    def self.start(...)
-      new(...).start
-    end
-
-    def self.complete(...)
-      new(...).complete
-    end
+    def self.start(...) = new(...).start
+    def self.complete(...) = new(...).complete
 
     def initialize(temple:, admin:, success_url: nil, cancel_url: nil, checkout_session_id: nil)
-      @temple = temple
-      @admin = admin
-      @success_url = success_url
-      @cancel_url = cancel_url
-      @checkout_session_id = checkout_session_id
+      @temple, @admin, @success_url, @cancel_url, @checkout_session_id = temple, admin, success_url, cancel_url, checkout_session_id
     end
 
     def start
-      ensure_configured!
-
-      session = Stripe::Checkout::Session.create({
-        mode: "subscription",
-        customer: billing_settings["stripe_customer_id"].presence,
-        customer_email: billing_settings["stripe_customer_id"].present? ? nil : admin.email,
-        client_reference_id: temple.id.to_s,
-        success_url: append_checkout_session_id(success_url),
-        cancel_url: cancel_url,
-        line_items: [line_item],
-        subscription_data: {
-          metadata: metadata
-        },
-        metadata: metadata
-      }.compact)
-
+      reject_legacy_annual_stripe_billing_record!
+      configuration.validate!
+      delivery = temple.platform_billing_deliveries.find_or_create_by!(kind: "setup", status: "pending") do |record|
+        record.assign_attributes(currency: "TWD", total_cents: 1_000_000, idempotency_key: "platform-setup:#{temple.id}")
+      end
+      session = Stripe::Checkout::Session.create({ mode: "payment", customer: temple.billing_settings["stripe_customer_id"].presence,
+        customer_email: temple.billing_settings["stripe_customer_id"].present? ? nil : admin.email,
+        client_reference_id: temple.id.to_s, success_url: append_checkout_session_id(success_url), cancel_url: cancel_url,
+        line_items: [{ price: configuration.setup_price_id, quantity: 1 }], payment_intent_data: { setup_future_usage: "off_session", metadata: metadata(delivery) },
+        metadata: metadata(delivery) }.compact, configuration.stripe_options.merge(idempotency_key: delivery.idempotency_key))
+      delivery.update!(provider_reference: session.id)
       Result.new(session_id: session.id, url: session.url, payload: session.to_hash)
     end
 
     def complete
-      ensure_configured!
-
-      session = Stripe::Checkout::Session.retrieve(
-        id: checkout_session_id,
-        expand: [
-          "customer",
-          "customer.invoice_settings.default_payment_method",
-          "subscription",
-          "subscription.default_payment_method"
-        ]
-      )
-      subscription = session.respond_to?(:subscription) ? session.subscription : nil
+      reject_legacy_annual_stripe_billing_record!
+      configuration.validate!
+      session = Stripe::Checkout::Session.retrieve({ id: checkout_session_id, expand: ["customer", "payment_intent.payment_method"] }, configuration.stripe_options)
+      raise ArgumentError, "Stripe setup payment was not paid" unless session.payment_status == "paid" && session.mode == "payment"
+      raise ArgumentError, "Stripe setup belongs to another temple" unless session.client_reference_id.to_s == temple.id.to_s && session.metadata["purpose"] == "templemate_platform_setup"
       customer = session.customer
-      payment_method = extract_payment_method(subscription, customer)
-      card = payment_method&.card
-
-      raise ArgumentError, "Stripe did not return a subscription" if subscription.blank?
-
-      payment_settings = temple.payment_provider_settings.is_a?(Hash) ? temple.payment_provider_settings.deep_dup : {}
-      payment_settings["billing"] = billing_settings.merge(
-        "payment_method_on_file" => true,
-        "provider" => "stripe",
-        "stripe_customer_id" => customer.respond_to?(:id) ? customer.id : session.customer,
-        "stripe_subscription_id" => subscription.respond_to?(:id) ? subscription.id : session.subscription,
-        "stripe_payment_method_id" => payment_method&.id,
-        "card_brand" => card&.brand,
-        "card_last4" => card&.last4,
-        "card_exp_month" => card&.exp_month,
-        "card_exp_year" => card&.exp_year,
-        "monthly_fee_cents" => Admin::PaymentMethodsForm::DEFAULT_BILLING_MONTHLY_FEE_CENTS,
-        "billing_interval" => "year",
-        "billing_interval_months" => Admin::PaymentMethodsForm::DEFAULT_BILLING_INTERVAL_MONTHS,
-        "annual_fee_cents" => Admin::PaymentMethodsForm::DEFAULT_BILLING_MONTHLY_FEE_CENTS * Admin::PaymentMethodsForm::DEFAULT_BILLING_INTERVAL_MONTHS,
-        "grace_days" => Admin::PaymentMethodsForm::DEFAULT_BILLING_GRACE_DAYS,
-        "grace_started_at" => nil,
-        "last_setup_at" => Time.current.iso8601,
-        "last_stripe_checkout_session_id" => session.id
-      ).compact
-
+      payment_method = session.payment_intent.payment_method
+      raise ArgumentError, "Stripe did not return a payment method" unless customer.respond_to?(:id) && payment_method.respond_to?(:id)
+      delivery = temple.platform_billing_deliveries.find_by!(kind: "setup", provider_reference: session.id)
+      settings = temple.payment_provider_settings.is_a?(Hash) ? temple.payment_provider_settings.deep_dup : {}
+      settings["billing"] = temple.billing_settings.merge("provider" => "stripe", "stripe_customer_id" => customer.id,
+        "stripe_payment_method_id" => payment_method.id, "last_setup_at" => Time.current.iso8601, "last_stripe_checkout_session_id" => session.id)
       Temple.transaction do
-        temple.update!(payment_provider_settings: payment_settings)
-        SystemAuditLogger.log!(
-          action: "admin.payment_methods.billing_setup_completed",
-          admin: admin,
-          target: temple,
-          temple: temple,
-          metadata: {
-            provider: "stripe",
-            stripe_customer_id: payment_settings.dig("billing", "stripe_customer_id"),
-            stripe_subscription_id: payment_settings.dig("billing", "stripe_subscription_id"),
-            stripe_payment_method_id: payment_method&.id,
-            card_brand: card&.brand,
-            card_last4: card&.last4
-          }.compact
-        )
+        temple.update!(payment_provider_settings: settings)
+        delivery.update!(status: "paid", provider_customer_id: customer.id, provider_payment_method_id: payment_method.id)
+        SystemAuditLogger.log!(action: "admin.payment_methods.platform_setup_completed", admin:, target: temple, temple:,
+          metadata: { provider: "stripe", setup_delivery_id: delivery.id, provider_reference: session.id })
       end
-
       Result.new(session_id: session.id, url: nil, payload: session.to_hash)
     end
 
@@ -107,68 +55,23 @@ module Billing
 
     attr_reader :temple, :admin, :success_url, :cancel_url, :checkout_session_id
 
-    def ensure_configured!
-      raise ArgumentError, "STRIPE_SECRET_KEY is not configured" if Rails.configuration.x.stripe.secret_key.blank?
+    def reject_legacy_annual_stripe_billing_record!
+      billing = temple.billing_settings
+      has_legacy_subscription_reference = billing["stripe_subscription_id"].present? || billing["stripe_subscription_reference"].present?
+      has_legacy_annual_terms = billing["billing_interval"] == "year" ||
+        (billing["billing_interval_months"].to_i == 12 && billing["annual_fee_cents"].present?)
+
+      return unless has_legacy_subscription_reference && has_legacy_annual_terms
+
+      raise LegacyAnnualStripeBillingRecordError,
+        "Legacy annual Stripe billing records cannot use the platform setup flow"
     end
 
-    def billing_settings
-      @billing_settings ||= temple.billing_settings
-    end
-
-    def metadata
-      {
-        temple_id: temple.id,
-        temple_slug: temple.slug,
-        admin_id: admin.id,
-        purpose: "templemate_platform_subscription",
-        monthly_fee_cents: Admin::PaymentMethodsForm::DEFAULT_BILLING_MONTHLY_FEE_CENTS,
-        annual_fee_cents: Admin::PaymentMethodsForm::DEFAULT_BILLING_MONTHLY_FEE_CENTS * Admin::PaymentMethodsForm::DEFAULT_BILLING_INTERVAL_MONTHS,
-        billing_interval: "year"
-      }
-    end
-
-    def line_item
-      if ENV["STRIPE_TEMPLEMATE_PLATFORM_PRICE_ID"].present?
-        return {
-          price: ENV.fetch("STRIPE_TEMPLEMATE_PLATFORM_PRICE_ID"),
-          quantity: 1
-        }
-      end
-
-      {
-        quantity: 1,
-        price_data: {
-          currency: "twd",
-          unit_amount: Admin::PaymentMethodsForm::DEFAULT_BILLING_MONTHLY_FEE_CENTS * Admin::PaymentMethodsForm::DEFAULT_BILLING_INTERVAL_MONTHS,
-          recurring: { interval: "year" },
-          product_data: {
-            name: "TempleMate Platform",
-            description: "NT$3,000 per month, billed yearly"
-          }
-        }
-      }
-    end
-
-    def extract_payment_method(subscription, customer)
-      subscription_payment_method =
-        subscription.default_payment_method if subscription.respond_to?(:default_payment_method)
-      return subscription_payment_method if subscription_payment_method.respond_to?(:id)
-
-      invoice_settings = customer.invoice_settings if customer.respond_to?(:invoice_settings)
-      customer_payment_method =
-        invoice_settings.default_payment_method if invoice_settings.respond_to?(:default_payment_method)
-      customer_payment_method if customer_payment_method.respond_to?(:id)
-    end
-
+    def configuration = TemplemateStripeConfiguration.new
+    def metadata(delivery) = { temple_id: temple.id.to_s, delivery_id: delivery.id.to_s, purpose: "templemate_platform_setup" }
     def append_checkout_session_id(url)
-      uri = URI.parse(url)
-      params = CGI.parse(uri.query.to_s).transform_values { |values| values.last }
-      params["checkout_session_id"] = "{CHECKOUT_SESSION_ID}"
-      uri.query = params.map do |key, value|
-        encoded_key = CGI.escape(key.to_s)
-        encoded_value = value.to_s == "{CHECKOUT_SESSION_ID}" ? value.to_s : CGI.escape(value.to_s)
-        "#{encoded_key}=#{encoded_value}"
-      end.join("&")
+      uri = URI.parse(url); params = CGI.parse(uri.query.to_s).transform_values(&:last); params["checkout_session_id"] = "{CHECKOUT_SESSION_ID}"
+      uri.query = params.map { |key, value| "#{CGI.escape(key.to_s)}=#{value == "{CHECKOUT_SESSION_ID}" ? value : CGI.escape(value.to_s)}" }.join("&")
       uri.to_s
     end
   end

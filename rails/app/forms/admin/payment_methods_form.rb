@@ -15,7 +15,6 @@ module Admin
     attribute :ecpay_hash_key, :string
     attribute :ecpay_hash_iv, :string
     attribute :ecpay_environment, :string
-    attribute :billing_payment_method_on_file, :boolean, default: false
 
     validates :ecpay_environment, inclusion: { in: ECPAY_ENVIRONMENTS }, allow_blank: true
 
@@ -45,7 +44,7 @@ module Admin
           metadata: {
             changed_fields: changed_fields(previous_snapshot, snapshot_for_audit),
             ecpay_configured: ecpay_configured?,
-            billing_payment_method_on_file: billing_payment_method_on_file?
+            platform_billing_state: temple.platform_billing_state
           }
         )
       end
@@ -62,10 +61,6 @@ module Admin
 
     def ecpay_configured?
       ecpay_merchant_id.present? && ecpay_hash_key.present? && ecpay_hash_iv.present?
-    end
-
-    def billing_payment_method_on_file?
-      ActiveModel::Type::Boolean.new.cast(billing_payment_method_on_file)
     end
 
     def stripe_billing_configured?
@@ -85,7 +80,7 @@ module Admin
     end
 
     def billing_monthly_fee_cents
-      temple.billing_monthly_fee_cents
+      150_000
     end
 
     def billing_monthly_fee_label
@@ -93,7 +88,7 @@ module Admin
     end
 
     def billing_annual_fee_cents
-      billing_monthly_fee_cents * DEFAULT_BILLING_INTERVAL_MONTHS
+      1_000_000
     end
 
     def billing_annual_fee_label
@@ -109,15 +104,19 @@ module Admin
     end
 
     def online_payments_frozen?
-      temple.online_payments_frozen?
+      temple.platform_billing_state == "frozen"
     end
 
     def online_payments_state
       return :setup_needed unless ecpay_configured?
-      return :active if billing_payment_method_on_file?
+      return :active if temple.platform_billing_state == "current"
       return :frozen if online_payments_frozen?
 
       :grace_period
+    end
+
+    def billing_payment_method_on_file?
+      temple.billing_settings["stripe_payment_method_id"].present?
     end
 
     def online_payments_status_i18n_key
@@ -174,7 +173,6 @@ module Admin
         ecpay_hash_key: ecpay["hash_key"],
         ecpay_hash_iv: ecpay["hash_iv"],
         ecpay_environment: ecpay["environment"].presence || Rails.configuration.x.ecpay.environment.to_s,
-        billing_payment_method_on_file: temple.billing_payment_method_on_file?
       }
     end
 
@@ -190,24 +188,11 @@ module Admin
         "hash_iv" => ecpay_hash_iv,
         "environment" => ecpay_environment
       )
-      base["billing"] = compact_hash(
-        "payment_method_on_file" => billing_payment_method_on_file?,
-        "portal_url" => temple.billing_portal_url,
-        "monthly_fee_cents" => DEFAULT_BILLING_MONTHLY_FEE_CENTS,
-        "billing_interval" => "year",
-        "billing_interval_months" => DEFAULT_BILLING_INTERVAL_MONTHS,
-        "annual_fee_cents" => DEFAULT_BILLING_MONTHLY_FEE_CENTS * DEFAULT_BILLING_INTERVAL_MONTHS,
-        "grace_days" => DEFAULT_BILLING_GRACE_DAYS,
-        "grace_started_at" => billing_grace_started_at_value
-      )
       base
     end
 
     def billing_grace_started_at_value
-      return nil unless ecpay_configured?
-      return nil if billing_payment_method_on_file?
-
-      temple.billing_grace_started_at&.iso8601 || Time.current.iso8601
+      temple.billing_grace_started_at&.iso8601
     end
 
     def compact_hash(hash)
@@ -227,16 +212,7 @@ module Admin
           "hash_iv" => ecpay_hash_iv,
           "environment" => ecpay_environment
         ),
-        billing: compact_hash(
-          "payment_method_on_file" => billing_payment_method_on_file?,
-          "portal_url" => temple.billing_portal_url,
-          "monthly_fee_cents" => DEFAULT_BILLING_MONTHLY_FEE_CENTS,
-          "billing_interval" => "year",
-          "billing_interval_months" => DEFAULT_BILLING_INTERVAL_MONTHS,
-          "annual_fee_cents" => DEFAULT_BILLING_MONTHLY_FEE_CENTS * DEFAULT_BILLING_INTERVAL_MONTHS,
-          "grace_days" => DEFAULT_BILLING_GRACE_DAYS,
-          "grace_started_at" => billing_grace_started_at_value
-        )
+        billing: temple.billing_settings
       }
     end
 

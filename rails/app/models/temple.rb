@@ -40,6 +40,8 @@ class Temple < ApplicationRecord
     dependent: :restrict_with_exception
   has_many :platform_billing_adjustments,
     dependent: :restrict_with_exception
+  has_many :platform_billing_deliveries, dependent: :restrict_with_exception
+  has_many :platform_billing_events, dependent: :restrict_with_exception
   has_many :admin_permissions,
     dependent: :destroy
   has_many :temple_news_posts,
@@ -171,6 +173,17 @@ class Temple < ApplicationRecord
 
   def billing_payment_method_on_file?
     ActiveModel::Type::Boolean.new.cast(billing_settings["payment_method_on_file"])
+  end
+
+  def platform_billing_state(reference_time = Time.current)
+    delivery = platform_billing_deliveries.monthly.order(created_at: :desc).first
+    return "setup_needed" unless billing_settings["stripe_payment_method_id"].present?
+    return "current" if delivery.blank? || delivery.paid?
+    return "frozen" if delivery.grace_deadline_at.present? && delivery.grace_deadline_at <= reference_time
+    return "grace" if delivery.grace_deadline_at.present?
+    return "overdue" if delivery.overdue?
+
+    "current"
   end
 
   def billing_monthly_fee_cents

@@ -1,105 +1,106 @@
-# frozen_string_literal: true
-
 require "test_helper"
 
 class Billing::StripePaymentMethodSetupTest < ActiveSupport::TestCase
-  FakeSession = Struct.new(:id, :url, :subscription, :customer, keyword_init: true) do
-    def to_hash
-      {
-        "id" => id,
-        "url" => url,
-        "subscription" => subscription.respond_to?(:id) ? subscription.id : subscription,
-        "customer" => customer.respond_to?(:id) ? customer.id : customer
-      }.compact
-    end
-  end
+  Session = Struct.new(:id, :url, :mode, :payment_status, :client_reference_id, :metadata, :customer, :payment_intent, keyword_init: true) { def to_hash = { "id" => id } }
+  Ref = Struct.new(:id, :payment_method, keyword_init: true)
 
-  FakePaymentMethod = Struct.new(:id, :card, keyword_init: true)
-  FakeCard = Struct.new(:brand, :last4, :exp_month, :exp_year, keyword_init: true)
-  FakeCustomer = Struct.new(:id, :invoice_settings, keyword_init: true)
-  FakeSubscription = Struct.new(:id, :default_payment_method, keyword_init: true)
-
-  test "start creates a Stripe subscription checkout session" do
-    temple = create_temple(slug: "stripe-temple")
-    admin = create_admin_user(temple: temple, role: "owner")
-    captured_args = nil
-    fake_session = FakeSession.new(id: "cs_setup_123", url: "https://checkout.stripe.com/c/cs_setup_123")
-
-    with_stripe_secret do
-      without_stripe_price_id do
-        Stripe::Checkout::Session.stub(:create, ->(args) { captured_args = args; fake_session }) do
-          result = Billing::StripePaymentMethodSetup.start(
-            temple: temple,
-            admin: admin,
-            success_url: "https://example.test/admin/payment_methods/billing_setup_return",
-            cancel_url: "https://example.test/admin/payment_methods"
-          )
-
-          assert_equal "cs_setup_123", result.session_id
-          assert_equal fake_session.url, result.url
-        end
+  test "setup uses the one-time setup price, never a subscription" do
+    temple = create_temple; admin = create_admin_user(temple:)
+    with_configuration do
+      Stripe::Checkout::Session.stub(:create, ->(args, options) { @args = args; @options = options; Session.new(id: "cs_1", url: "https://checkout.test") }) do
+        Billing::StripePaymentMethodSetup.start(temple:, admin:, success_url: "https://example.test/ok", cancel_url: "https://example.test/no")
       end
     end
-
-    assert_equal "subscription", captured_args[:mode]
-    assert_equal admin.email, captured_args[:customer_email]
-    assert_includes captured_args[:success_url], "checkout_session_id={CHECKOUT_SESSION_ID}"
-    assert_equal "stripe-temple", captured_args[:metadata][:temple_slug]
-    assert_equal 3_600_000, captured_args[:line_items].first.dig(:price_data, :unit_amount)
-    assert_equal "year", captured_args[:line_items].first.dig(:price_data, :recurring, :interval)
+    assert_equal "payment", @args[:mode]
+    assert_equal "price_setup", @args[:line_items].first[:price]
+    assert_equal "acct_test", @options[:stripe_account]
+    refute @args.key?(:subscription_data)
   end
 
-  test "complete saves Stripe billing method details on temple" do
+  test "setup completion retrieves through the configured Stripe account" do
     temple = create_temple
-    admin = create_admin_user(temple: temple, role: "owner")
-    card = FakeCard.new(brand: "visa", last4: "4242", exp_month: 12, exp_year: 2030)
-    payment_method = FakePaymentMethod.new(id: "pm_123", card: card)
-    subscription = FakeSubscription.new(id: "sub_123", default_payment_method: payment_method)
-    fake_session = FakeSession.new(
-      id: "cs_setup_123",
-      subscription: subscription,
-      customer: FakeCustomer.new(id: "cus_123")
-    )
+    admin = create_admin_user(temple:)
+    temple.platform_billing_deliveries.create!(kind: "setup", status: "pending", currency: "TWD", total_cents: 1_000_000, idempotency_key: "platform-setup:#{temple.id}", provider_reference: "cs_complete")
+    session = Session.new(id: "cs_complete", mode: "payment", payment_status: "paid", client_reference_id: temple.id.to_s,
+      metadata: { "purpose" => "templemate_platform_setup" }, customer: Ref.new(id: "cus_1"), payment_intent: Ref.new(payment_method: Ref.new(id: "pm_1")))
 
-    with_stripe_secret do
-      Stripe::Checkout::Session.stub(:retrieve, ->(_args) { fake_session }) do
-        Billing::StripePaymentMethodSetup.complete(
-          temple: temple,
-          admin: admin,
-          checkout_session_id: "cs_setup_123"
-        )
+    with_configuration do
+      Stripe::Checkout::Session.stub(:retrieve, ->(_args, options) { @retrieve_options = options; session }) do
+        Billing::StripePaymentMethodSetup.complete(temple:, admin:, checkout_session_id: "cs_complete")
       end
     end
 
-    billing = temple.reload.billing_settings
-    assert temple.billing_payment_method_on_file?
-    assert_equal "stripe", billing["provider"]
-    assert_equal "cus_123", billing["stripe_customer_id"]
-    assert_equal "sub_123", billing["stripe_subscription_id"]
-    assert_equal "pm_123", billing["stripe_payment_method_id"]
-    assert_equal "visa", billing["card_brand"]
-    assert_equal "4242", billing["card_last4"]
-    assert_equal 300_000, billing["monthly_fee_cents"]
-    assert_equal 3_600_000, billing["annual_fee_cents"]
-    assert_equal "year", billing["billing_interval"]
-    assert_equal 12, billing["billing_interval_months"]
-    assert_nil billing["grace_started_at"]
+    assert_equal "acct_test", @retrieve_options[:stripe_account]
+    assert_equal "pm_1", temple.reload.billing_settings["stripe_payment_method_id"]
+  end
+
+  test "legacy annual Stripe record rejects setup start without side effects" do
+    temple = legacy_annual_stripe_temple
+    admin = create_admin_user(temple:)
+
+    assert_legacy_record_is_unchanged(temple) do
+      Stripe::Checkout::Session.stub(:create, ->(*) { flunk "Stripe Checkout create must not be invoked" }) do
+        error = assert_raises(Billing::StripePaymentMethodSetup::LegacyAnnualStripeBillingRecordError) do
+          Billing::StripePaymentMethodSetup.start(temple:, admin:, success_url: "https://example.test/ok", cancel_url: "https://example.test/no")
+        end
+
+        assert_match "Legacy annual Stripe billing records", error.message
+      end
+    end
+  end
+
+  test "legacy annual Stripe record rejects setup completion without side effects" do
+    temple = legacy_annual_stripe_temple
+    admin = create_admin_user(temple:)
+
+    assert_legacy_record_is_unchanged(temple) do
+      Stripe::Checkout::Session.stub(:retrieve, ->(*) { flunk "Stripe Checkout retrieve must not be invoked" }) do
+        error = assert_raises(Billing::StripePaymentMethodSetup::LegacyAnnualStripeBillingRecordError) do
+          Billing::StripePaymentMethodSetup.complete(temple:, admin:, checkout_session_id: "cs_legacy_annual")
+        end
+
+        assert_match "Legacy annual Stripe billing records", error.message
+      end
+    end
   end
 
   private
 
-  def with_stripe_secret
-    original_secret = Rails.configuration.x.stripe.secret_key
-    Rails.configuration.x.stripe.secret_key = "sk_test_123"
-    yield
-  ensure
-    Rails.configuration.x.stripe.secret_key = original_secret
+  def legacy_annual_stripe_temple
+    create_temple(payment_provider_settings: {
+      "billing" => {
+        "provider" => "stripe",
+        "stripe_customer_id" => "cus_legacy_annual",
+        "stripe_subscription_id" => "sub_legacy_annual",
+        "stripe_payment_method_id" => "pm_legacy_annual",
+        "payment_method_on_file" => true,
+        "monthly_fee_cents" => 300_000,
+        "annual_fee_cents" => 3_600_000,
+        "billing_interval" => "year",
+        "billing_interval_months" => 12,
+        "grace_days" => 30,
+        "grace_started_at" => "2026-08-01T00:00:00+08:00"
+      }
+    })
   end
 
-  def without_stripe_price_id
-    original_price_id = ENV.delete("STRIPE_TEMPLEMATE_PLATFORM_PRICE_ID")
+  def assert_legacy_record_is_unchanged(temple)
+    legacy_settings = temple.payment_provider_settings.deep_dup
+    counts = [PlatformBillingDelivery.count, PlatformBillingEvent.count, SystemAuditLog.count]
+
+    yield
+
+    temple.reload
+    assert_equal legacy_settings, temple.payment_provider_settings
+    assert_equal counts, [PlatformBillingDelivery.count, PlatformBillingEvent.count, SystemAuditLog.count]
+  end
+
+  def with_configuration
+    c = Rails.configuration.x.stripe
+    old = [c.platform_account_id, c.platform_setup_price_id, c.platform_monthly_price_id]
+    c.platform_account_id, c.platform_setup_price_id, c.platform_monthly_price_id = "acct_test", "price_setup", "price_monthly"
     yield
   ensure
-    ENV["STRIPE_TEMPLEMATE_PLATFORM_PRICE_ID"] = original_price_id if original_price_id.present?
+    c.platform_account_id, c.platform_setup_price_id, c.platform_monthly_price_id = old
   end
 end

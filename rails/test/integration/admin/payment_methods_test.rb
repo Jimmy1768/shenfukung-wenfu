@@ -17,7 +17,7 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "ECPay"
     assert_includes response.body, "帳務設定"
-    assert_includes response.body, "NT$36,000"
+    assert_includes response.body, "NT$10,000"
     refute_includes response.body, "%{annual_amount}"
 
     assert_difference -> { SystemAuditLog.where(action: "admin.payment_methods.updated").count }, 1 do
@@ -26,8 +26,7 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
           ecpay_merchant_id: "2000132",
           ecpay_hash_key: "hash-key-value",
           ecpay_hash_iv: "hash-iv-value",
-          ecpay_environment: "stage",
-          billing_payment_method_on_file: "1"
+          ecpay_environment: "stage"
         }
       }
     end
@@ -36,11 +35,7 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     temple.reload
     assert_equal "2000132", temple.payment_gateway_settings_for(:ecpay)["merchant_id"]
     assert_equal "stage", temple.payment_gateway_settings_for(:ecpay)["environment"]
-    assert temple.billing_payment_method_on_file?
-    assert_equal 300_000, temple.billing_settings["monthly_fee_cents"]
-    assert_equal 3_600_000, temple.billing_settings["annual_fee_cents"]
-    assert_equal "year", temple.billing_settings["billing_interval"]
-    assert_nil temple.billing_settings["grace_started_at"]
+    refute temple.billing_payment_method_on_file?
   end
 
   test "stored ecpay secrets do not render back into html" do
@@ -79,8 +74,7 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
         ecpay_merchant_id: "2000132",
         ecpay_hash_key: "hash-key-value",
         ecpay_hash_iv: "hash-iv-value",
-        ecpay_environment: "stage",
-        billing_payment_method_on_file: "1"
+        ecpay_environment: "stage"
       }
     }
 
@@ -111,15 +105,14 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
         ecpay_merchant_id: "2000132",
         ecpay_hash_key: "hash-key-value",
         ecpay_hash_iv: "hash-iv-value",
-        ecpay_environment: "stage",
-        billing_payment_method_on_file: "1"
+        ecpay_environment: "stage"
       }
     }
 
     assert_redirected_to admin_payment_methods_path
   end
 
-  test "saving without payment method starts grace period" do
+  test "updating ECPay preserves legacy billing settings without asserting a method" do
     temple = create_temple
     owner = create_admin_user(temple: temple, role: "owner")
 
@@ -138,8 +131,7 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_payment_methods_path
     temple.reload
     refute temple.billing_payment_method_on_file?
-    assert_equal 30, temple.billing_grace_days
-    assert temple.billing_grace_started_at.present?
+    assert_nil temple.billing_grace_started_at
   end
 
   test "owner can start Stripe billing setup" do
@@ -185,8 +177,7 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
         ecpay_merchant_id: "",
         ecpay_hash_key: "",
         ecpay_hash_iv: "",
-        ecpay_environment: "stage",
-        billing_payment_method_on_file: "0"
+        ecpay_environment: "stage"
       }
     }
 

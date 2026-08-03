@@ -4,6 +4,7 @@ class PlatformBillingStatement < ApplicationRecord
   belongs_to :temple
   has_many :platform_billing_usage_records, dependent: :restrict_with_exception
   has_many :platform_billing_adjustments, dependent: :restrict_with_exception
+  has_one :platform_billing_delivery, dependent: :restrict_with_exception
 
   validates :status, inclusion: { in: STATUSES }
   validates :pricing_policy_version, :currency, :idempotency_key, :period_start_at,
