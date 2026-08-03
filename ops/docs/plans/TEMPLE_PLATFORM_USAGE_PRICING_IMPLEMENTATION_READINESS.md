@@ -183,7 +183,7 @@ snapshot and adjustment record without developer intervention.
 Prepare the one-time setup charge and recurring platform collection path only
 after a separate provider-change approval.
 
-Current beta-catalog status (2026-08-02): the confirmed SourceGrid Stripe test
+Historical beta-catalog evidence (2026-08-02): the confirmed SourceGrid Stripe test
 catalog contains inactive `TempleMate Platform Setup` and `TempleMate
 Registration Platform` products. Their inactive lookup keys are
 `templemate_platform_setup_twd_once_v1` and
@@ -210,8 +210,8 @@ and runtime fulfillment; it receives neither SourceGrid Stripe secrets nor
 direct catalog-write authority.
 
 The test catalog above is cross-repository evidence only, not a live SourceGrid
-binding, customer-offer acceptance, or provider authorization. A future live
-catalog operation requires separate Director authorization, then a
+binding, customer-offer acceptance, or provider authorization. Any subsequent
+live catalog operation requires separate Director authorization, then a
 SourceGrid-local TempleMate manifest/binding plan with distinct immutable keys,
 metadata, and binding plus preservation proof for AppRelay, DojoMate, credits,
 and Enterprise catalogs. The future credential must be SourceGrid-owned and
@@ -222,6 +222,36 @@ unrelated-catalog access. Exact provider permission labels and role availability
 are unknown until a separately approved read-only provider-permission
 inspection. A broad secret-key substitute or permission-boundary bypass is not
 allowed.
+
+### SourceGrid-Verified Live Catalog Evidence (2026-08-03)
+
+SourceGrid Planning reports that a separately approved SourceGrid-owned live
+Stripe catalog operation completed for account `acct_1TFRmE7ZKypwRK7g`.
+Wenfu did not independently access Stripe or its credentials; the following
+facts are SourceGrid Planning's verified evidence, not Wenfu provider authority:
+
+| Entry | Product | Price | Terms |
+| --- | --- | --- | --- |
+| TempleMate Platform Setup | `prod_V0JaalvBLyIxI8` | `price_1U0Ix77ZKypwRK7gI1x3IngL` | Active, TWD NT$10,000 one-time |
+| TempleMate Registration Platform | `prod_V0Ji2ksvSabvoF` | `price_1U0J5S7ZKypwRK7gRvFaJd4D` | Active, monthly graduated TWD; lookup key `templemate_registration_platform_twd_monthly_v1` |
+
+The registration price is progressive, not cumulative flat blocks: NT$1,500
+through 500 qualifying registrations, then NT$1.00 for registrations 501–2,000,
+NT$1.25 for 2,001–10,000, and NT$1.50 thereafter. For 600 qualifying
+registrations the fee is NT$1,600 (`NT$1,500 + 100 × NT$1.00`), not NT$2,100.
+
+SourceGrid continues to own the live Stripe Product/Price catalog and provider
+binding. Wenfu alone owns authoritative registration/refund event semantics,
+monthly net-count computation, and the closed immutable period statement. The
+recurring Stripe Price neither counts registrations nor closes a billing period.
+Catalog existence is not a customer subscription, invoice, charge, payment,
+entitlement, usage report, or completed Wenfu billing integration.
+
+The next Wenfu-local planning need is an explicit cross-repository billing
+contract that defines how Wenfu supplies a finalized immutable period total to
+the SourceGrid-owned billing path. It is not yet authorized for implementation.
+The first blocker is the absence of that accepted billing contract; no new
+provider action follows from this evidence.
 
 - Define the provider adapter contract for setup charge, recurring collection,
   provider-event verification, idempotency, failures, cancellation, and
