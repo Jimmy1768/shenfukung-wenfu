@@ -22,6 +22,13 @@ Stripe is only for the TempleMate platform-billing flow: temple to TempleMate.
 ECPay remains the separate patron-to-temple flow and is not used for setup or
 monthly platform collection.
 
+TempleMate's monthly charge is registration-usage billing, not cloud/API-usage
+billing. Wenfu's qualifying registration and refund events are the sole meter;
+after Wenfu closes a Taipei-calendar period, its immutable statement provides
+the registration quantity and final progressive amount for Stripe collection.
+Stripe does not count registrations and Stripe usage-reporting is not
+authoritative.
+
 ## Starting Point
 
 Wenfu already has a versioned Taipei-calendar meter, immutable monthly
@@ -80,11 +87,12 @@ registration count, adjustment total, final total, provider request reference,
 and idempotency key.
 
 Use the monthly graduated Price with the closed statement's qualifying
-registration count. Select and document the exact Stripe collection mechanism
-(subscription quantity, metered usage, or invoice item) through a provider
-contract test before enabling it. The mechanism must bill the progressive
-NT$1,500/500-registration schedule once per closed period and never re-close or
-recalculate the statement.
+registration count and final progressive amount. Select and document the exact
+Stripe collection mechanism through a provider contract test before enabling
+it. It consumes Wenfu's finalized period input; it must not create a separate
+cloud/API-usage meter or treat Stripe usage reporting as authoritative. The
+mechanism must bill the progressive NT$1,500/500-registration schedule once per
+closed period and never re-close or recalculate the statement.
 
 ### 3D. Reconcile Provider Events Into Billing State
 

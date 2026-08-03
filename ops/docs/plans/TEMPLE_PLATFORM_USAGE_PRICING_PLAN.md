@@ -17,6 +17,16 @@ ECPay is never used to collect TempleMate's platform fee. Stripe is never the
 source of truth for a temple registration, patron refund, or temple accounting
 entry. Payment-provider processing fees remain separate from the platform price.
 
+## Registration Usage Meter
+
+TempleMate's monthly fee is **usage billing**: the usage unit is a qualifying
+registration. It is not cloud/API-usage billing. Wenfu's authoritative
+registration and refund events form the meter; Wenfu closes the Taipei-calendar
+period and calculates the final progressive amount. Stripe receives that
+finalized billing input only to collect the platform fee. Stripe does not
+receive or author a registration meter, and no Stripe usage-reporting API is
+the source of truth for this plan.
+
 ## Pricing Decision
 
 | Component | Amount | Basis |
@@ -45,8 +55,9 @@ rewrites the closed statement.
    Asia/Taipei meter, immutable statements/credits, and owner-only billing view
    are local Wenfu behavior.
 2. **Stripe platform billing — planned.** Bind the existing TempleMate Stripe
-   Prices, collect a platform payment method, close and deliver monthly usage,
-   reconcile platform events, and show platform billing status. See
+   Prices, collect a platform payment method, close the registration-usage
+   statement, collect its finalized amount, reconcile platform events, and show
+   platform billing status. See
    `ops/docs/plans/TEMPLEMATE_SOURCEGRID_BILLING_CONTRACT_PLAN.md`.
 3. **Stage and production release — separately gated.** Validate the exact
    Stripe account/configuration in stage, then obtain a separate release

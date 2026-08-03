@@ -44,7 +44,9 @@ catalog-management task:
 The monthly Price is NT$1,500 through 500 qualifying registrations, then
 NT$1.00 through 2,000, NT$1.25 through 10,000, and NT$1.50 thereafter. It does
 not count registrations, close Wenfu periods, create a subscription, or grant
-entitlement by itself.
+entitlement by itself. This is registration-usage billing, not cloud/API-usage
+billing: Wenfu is the sole meter and sends Stripe only the finalized period
+input for collection. Stripe usage-reporting is not the source of truth.
 
 ## Phase 1 — Local Metering And Statements (Committed)
 
@@ -80,9 +82,11 @@ admin checkbox must not claim that a Stripe payment method exists.
 ### 3C. Monthly Usage Collection
 
 For each closed statement, create exactly one replay-safe platform billing
-delivery. Select and contract-test the Stripe mechanism that applies the
-graduated monthly Price to the statement's qualifying-registration quantity.
-Keep setup and recurring usage distinct.
+delivery. The closed Wenfu statement supplies the qualifying-registration
+quantity and final progressive amount; Stripe only collects that finalized
+period input. Select and contract-test the matching Stripe collection mechanism
+without introducing a cloud/API-usage meter or treating Stripe usage reporting
+as authoritative. Keep setup and recurring registration usage distinct.
 
 ### 3D. Stripe Events And Billing State
 
