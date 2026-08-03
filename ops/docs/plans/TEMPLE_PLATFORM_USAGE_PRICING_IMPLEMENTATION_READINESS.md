@@ -250,12 +250,11 @@ Catalog existence is not a customer subscription, invoice, charge, payment,
 entitlement, usage report, or completed Wenfu billing integration.
 
 The next Wenfu-local planning need is frozen in
-`ops/docs/plans/TEMPLEMATE_SOURCEGRID_BILLING_CONTRACT_PLAN.md`: local Phase 3
-billing-handoff readiness, with the completed SourceGrid catalog retained as
-evidence only. It requests no SourceGrid action and is not yet authorized for
-implementation. The first blocker is the absence of user authorization for a
-bounded local Phase 3 implementation; no new provider action follows from this
-evidence.
+`ops/docs/plans/TEMPLEMATE_SOURCEGRID_BILLING_CONTRACT_PLAN.md`: Phase 3
+Stripe billing integration using the completed catalog as a configuration input.
+It requests no SourceGrid action and awaits a separate provider-integration
+implementation packet. No new provider action follows from this planning
+evidence alone.
 
 - Define the provider adapter contract for setup charge, recurring collection,
   provider-event verification, idempotency, failures, cancellation, and
