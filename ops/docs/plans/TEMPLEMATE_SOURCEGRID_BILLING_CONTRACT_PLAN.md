@@ -34,6 +34,12 @@ phase replaces that behavior for new platform billing only; it does not alter
 existing temple patron payments, accounting records, or historical billing
 settings without an explicit migration decision.
 
+Readiness scan at `e13dcbebfa28f74b10ec7751a1c63afdc974a0be` passed the
+focused local billing suite (20 runs, 122 assertions). It also found that the
+statement closer has no production trigger, the existing webhook path supports
+only patron-payment providers, and the legacy admin form can manually mark a
+payment method as present. Phase 3 must close all three gaps.
+
 ## Delivery Plan
 
 ### 1. Bind Configuration To The Existing Catalog
@@ -44,15 +50,25 @@ between setup and monthly usage before enabling billing. Keep secrets in the
 approved runtime configuration only; never store them in the database, source,
 fixtures, or client HTML.
 
-### 2. Replace Annual Setup With Payment-Method Collection
+### 2. Close Billing Periods Automatically
+
+Add an idempotent scheduled job that closes each eligible temple's prior
+Asia/Taipei calendar month after the chosen close time. It must use the existing
+statement closer, record failures for operator follow-up, and never issue a
+provider request itself. Statement delivery begins only after this local close
+succeeds.
+
+### 3. Replace Annual Setup With Payment-Method Collection
 
 For a newly onboarded temple, collect a Stripe payment method using a setup
 flow, verify that the returned customer/payment method belongs to that temple,
 and store only the allowed provider references. Charge the one-time setup Price
 only through the approved platform-billing workflow—not merely because a card
-was collected.
+was collected. Remove the legacy admin checkbox as a way to declare a payment
+method present; only a verified setup result may set that state for a new
+platform-billing temple.
 
-### 3. Deliver Each Closed Monthly Statement For Collection
+### 4. Deliver Each Closed Monthly Statement For Collection
 
 Create a durable platform-billing delivery record for a closed statement. It
 must include the statement ID, temple, billing period, policy version, currency,
@@ -66,7 +82,7 @@ contract test before enabling it. The mechanism must bill the progressive
 NT$1,500/500-registration schedule once per closed period and never re-close or
 recalculate the statement.
 
-### 4. Reconcile Provider Events Into Billing State
+### 5. Reconcile Provider Events Into Billing State
 
 Accept only authenticated, temple-matched provider events. Record a clear
 platform billing state for setup, current, overdue, grace, and frozen; derive
@@ -74,7 +90,12 @@ that state from the matching platform invoice/payment outcome, not from a
 payment-method flag. Make duplicate events, retries, cancellations, and late
 refund/cancellation adjustments idempotent and auditable.
 
-### 5. Make The Result Visible And Operable
+Use a dedicated platform-billing webhook handler and event log. Do not route
+platform billing through the existing patron-payment webhook pipeline, which
+updates registration payments and currently supports only fake and ECPay
+providers.
+
+### 6. Make The Result Visible And Operable
 
 Extend the owner billing view with the linked statement, collection status,
 amount, due date, and visible adjustment history. Keep the existing owner/admin
@@ -82,7 +103,7 @@ authority boundary. Add operator-safe reconciliation information without
 exposing payment credentials, full card details, or one temple's billing data to
 another.
 
-### 6. Validate Before Release
+### 7. Validate Before Release
 
 Use local Stripe fixtures/stubs to prove the setup flow, statement delivery,
 progressive quantity mapping, replay handling, failed payment, grace transition,
@@ -94,13 +115,15 @@ credentials. Production activation remains a separate release decision.
 
 1. A closed Wenfu statement produces at most one durable billing delivery for a
    period and retries do not duplicate a provider collection request.
-2. A 600-registration closed statement maps to NT$1,600, not NT$2,100; late
+2. The scheduled close processes an eligible prior Taipei month exactly once,
+   records failures, and makes no provider call.
+3. A 600-registration closed statement maps to NT$1,600, not NT$2,100; late
    corrections remain separate statement adjustments.
-3. Provider references and events are bound to the intended temple; no
+4. Provider references and events are bound to the intended temple; no
    cross-temple read, charge, or status change is possible.
-4. Setup, invoice/payment, overdue, grace, and frozen state remain distinct and
+5. Setup, invoice/payment, overdue, grace, and frozen state remain distinct and
    auditable. No local statement or catalog object alone grants entitlement.
-5. Existing temple patron payments, ECPay behavior, platform accounting
+6. Existing temple patron payments, ECPay behavior, platform accounting
    history, and legacy annual records remain unchanged unless a separate
    migration explicitly covers them.
 
