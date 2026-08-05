@@ -97,6 +97,13 @@
   * run the Vue `build` script, and
   * sync `vue/dist/` into `/var/www/<client-slug>` (override with `DEPLOY_DIR=/opt/www`) via `rsync --delete`.
 - Vite public-content calls are tenant-local, relative `/api/v1/temple` paths. Local Vite development proxies them to Rails on `3001`; live production uses `3000` and live staging uses `3002` behind Nginx. Do not configure a public API-base URL, `localhost`, or a raw application port into a Vue build.
+- Branch promotion follows the same split: `main` is the verified integration
+  and optional staging candidate, while `release/current` is the isolated live
+  branch. A staging-droplet check from `main` is optional after sufficient
+  local Rails and production-artifact evidence; when used, it follows the
+  `3002` convention. Promote the exact accepted `main` commit to
+  `release/current` only after confirmation, then deploy the live Rails/Vue
+  release through the `3000` production path.
 - Expo builds read their own `EXPO_PROJECT_SLUG`, `EXPO_PROJECT_SCHEME`, `EXPO_ANDROID_PACKAGE`, and `EXPO_IOS_BUNDLE_IDENTIFIER` env vars; set those per tenant so dev/prod bundle IDs stay isolated while Rails/Vue continue using the canonical `PROJECT_SLUG`. `mobile/app/lib/app_constants/project.js` falls back to the shared keys when the Expo-specific ones are missing, so older env files keep working.
 - Example: `bin/deploy_vue sourcegrid-labs` builds the SPA and installs it into `/var/www/sourcegrid-labs`; rerun for every client clone after editing Vue content.
 - When copying the template, update `{{project_slug}}` placeholders inside `ops/nginx/template/golden-template.conf`; `bin/stage_ops_configs` will render the active client config to `ops/nginx/<client>.conf` without the training `#` characters.

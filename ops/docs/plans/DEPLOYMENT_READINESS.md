@@ -153,8 +153,15 @@ Current interpretation after production Google OAuth validation and shared-DB cl
 - Current post-hardening contract: each tenant deployment must smoke-test its
   own `https://<tenant-domain>/api/v1/temple` endpoint. The deployment manifest
   and `PROJECT_SLUG` choose server/deployment metadata only; no browser or
-  public API URL includes a slug. A future Phase 4 release requires its own
-  explicit release workflow and public verification.
+  public API URL includes a slug.
+- Tenant-local API completion (2026-08-05): the verified `main` commit
+  `c1c725dbbb00196672d6f618dc9d38c24d2bf958` was promoted to
+  `release/current` and deployed to the live `3000` path after local focused
+  Rails and Vue-artifact evidence. The live singular endpoint returned `200`,
+  the retired plural endpoint returned `404`, and the owner confirmed the Vue
+  site worked online. The optional `main` staging-droplet check was skipped;
+  this is evidence for this narrow routing/build fix, not blanket approval to
+  skip staging for future changes.
 - [x] Manual checks:
   - public site and temple API load from the staging domain
   - `/api/v1/temples/shengfukung-wenfu` returns `200`
