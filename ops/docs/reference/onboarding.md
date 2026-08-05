@@ -39,7 +39,7 @@ Use this when you need representative data locally or on staging:
 >
 > - Use `ops/env/template.temple.env` as your non-secret checklist template.
 > - Keep third-party credentials out of git: local goes in `.env.development`; production goes in `/etc/default/<slug>-env`.
-> - Load a specific temple’s secrets by prefixing any command with `bin/load_temple_env <slug> -- <command>`. Example: `bin/load_temple_env shengfukung-wenfu -- (cd rails && bundle exec rails server -p 3002)`.
+> - Load a specific temple’s secrets by prefixing any command with `bin/load_temple_env <slug> -- <command>`. For local development, use `bin/load_temple_env shengfukung-wenfu -- (cd rails && bundle exec rails server -p 3001)`.
 > - The loader sources `.env`, `.env.<env>`, then `/etc/default/<slug>-env` when readable (falling back to `.env.development`), so Vue/Expo builds and Rails share the same credential set for the active temple.
 
 ### Generate + Deploy Env Files
@@ -58,6 +58,9 @@ Use this workflow whenever you onboard a new temple slug.
 Slug convention:
 
 - `PROJECT_SLUG` is the app/deploy slug. Follow the temple-client naming convention here (for example `shengfukung-wenfu`). Use it for repo naming, env filenames, systemd service names, and deploy scripts.
+- `PROJECT_SLUG` is resolved by the tenant's Rails deployment for its singular
+  public `/api/v1/temple` routes. It is deployment metadata, never a browser
+  URL/query/body selector.
 - `AUTH_TENANT_SLUG` is the central auth tenant identifier. Keep it client-level and stable (for example `shengfukung`) unless central auth explicitly needs a more granular split.
 - Do not assume `PROJECT_SLUG == AUTH_TENANT_SLUG`. They may match for simple cases, but they serve different scopes and should be configured deliberately.
 
@@ -70,6 +73,8 @@ Slug convention:
   VITE_TEMPLE_THEME=temple-1
   ```
   Layout defaults to `classic` until new templates are shipped; themes map to palette IDs defined in `shared/design-system/themes.json`.
+- `VITE_TEMPLE_SLUG` may support tenant-local presentation metadata during a
+  build, but it must not select a public API tenant or be added to public URLs.
 - Run Vue/Rails/Expo commands through `bin/load_temple_env <slug> -- …` so the same env file powers every surface. Example: `bin/load_temple_env shengfukung-wenfu -- (cd vue && npm run build)`.
 - When onboarding a new temple, confirm the slug + theme combo works locally:
   1. `bin/load_temple_env <slug> -- (cd vue && npm install && npm run dev)`

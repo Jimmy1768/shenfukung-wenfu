@@ -146,6 +146,15 @@ Current interpretation after production Google OAuth validation and shared-DB cl
   SMOKE_BASE_URL=https://shengfukung.com.tw bin/run_smoke_tests
   ```
 - [x] Smoke result: `https://shengfukung.com.tw/api/v1/temples/shengfukung-wenfu` returned `200` and `bin/run_smoke_tests` completed successfully.
+- Historical evidence note: the preceding plural/slug result and the following
+  checked plural endpoint record the route that existed during the 2026-03
+  staging rollout. They are not current release guidance and must not be
+  replayed after tenant-local API hardening.
+- Current post-hardening contract: each tenant deployment must smoke-test its
+  own `https://<tenant-domain>/api/v1/temple` endpoint. The deployment manifest
+  and `PROJECT_SLUG` choose server/deployment metadata only; no browser or
+  public API URL includes a slug. A future Phase 4 release requires its own
+  explicit release workflow and public verification.
 - [x] Manual checks:
   - public site and temple API load from the staging domain
   - `/api/v1/temples/shengfukung-wenfu` returns `200`

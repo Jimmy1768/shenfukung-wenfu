@@ -142,7 +142,9 @@ bin/expo_prebuild <dev|prod> [-- --platform android]
 # Expo/EAS build wrapper with presets (dev-client/apk/aab/ipa/custom)
 bin/expo_build <preset> [-- extra eas args]
 
-# Smoke tests: curl /api/v1/temples/:slug for every manifest entry (set SMOKE_BASE_URL for staging/prod)
+# Smoke tests: curl each tenant deployment's /api/v1/temple endpoint.
+# The manifest selects deployment base URLs only; a browser/API URL never includes a slug.
+# Set SMOKE_BASE_URL for one selected local, staging, or production deployment.
 bin/run_smoke_tests
 
 # Registration period key governance (Phase B)

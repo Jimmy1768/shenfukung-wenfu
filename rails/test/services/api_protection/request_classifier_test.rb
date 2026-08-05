@@ -24,7 +24,7 @@ class ApiProtectionRequestClassifierTest < ActiveSupport::TestCase
   end
 
   test "classifies api contact temple write as api.account.write" do
-    request = ActionDispatch::Request.new(Rack::MockRequest.env_for("/api/v1/temples/demo/contact_temple_requests", method: "POST"))
+    request = ActionDispatch::Request.new(Rack::MockRequest.env_for("/api/v1/temple/contact_temple_requests", method: "POST"))
     assert_equal "api.account.write", ApiProtection::RequestClassifier.classify(request)
   end
 end

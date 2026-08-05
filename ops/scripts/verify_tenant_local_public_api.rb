@@ -61,6 +61,62 @@ development = read("rails/config/environments/development.rb")
 verify!(development.include?("port: 3001") && development.include?("ws://localhost:3001/cable"),
         "development mailer and Cable defaults must use port 3001")
 
+app_origins = read("rails/app/lib/app_constants/origins.rb")
+verify!(app_origins.include?("DEV_ADMIN_ORIGIN = \"http://localhost:3001/marketing/admin\""),
+        "Rails development admin origin must use port 3001")
+verify!(!app_origins.include?("localhost:3002"),
+        "Rails development admin origin must not use the staging port")
+
+smoke_script = read("bin/run_smoke_tests")
+verify!(smoke_script.include?("SMOKE_DEFAULT_BASE_URL:-http://localhost:3001"),
+        "smoke script default must use the local-development port")
+verify!(smoke_script.include?("${base_url%/}/api/v1/temple"),
+        "smoke script must use the singular tenant-local endpoint")
+verify!(!smoke_script.match?(%r{/api/v1/temples/}),
+        "smoke script must not construct plural slug routes")
+
+active_docs = {
+  "commands" => "ops/docs/commands.md",
+  "deployment reference" => "ops/docs/reference/deployment_notes.md",
+  "onboarding reference" => "ops/docs/reference/onboarding.md",
+  "inquiry reference" => "ops/docs/reference/inquiry_support_workflows.md",
+  "admin portal reference" => "ops/docs/reference/admin_portal.md"
+}
+active_docs.each do |label, path|
+  contents = read(path)
+  verify!(contents.include?("/api/v1/temple"), "#{label} must document the singular tenant-local endpoint")
+  verify!(!contents.match?(%r{/api/v1/temples(?:/|:)}), "#{label} must not document a plural public route")
+end
+
+deployment_readiness = read("ops/docs/plans/DEPLOYMENT_READINESS.md")
+verify!(deployment_readiness.include?("Historical evidence note:"),
+        "deployment readiness must label its retained historical plural-route evidence")
+verify!(deployment_readiness.include?("Current post-hardening contract:"),
+        "deployment readiness must state the current singular-route contract")
+
+Dir.mktmpdir("wenfu-tenant-local-smoke-") do |directory|
+  curl_path = File.join(directory, "curl")
+  File.write(curl_path, <<~SH)
+    #!/usr/bin/env bash
+    set -euo pipefail
+    printf '%s\\n' "$*" >> "$SMOKE_CURL_LOG"
+    printf '200'
+  SH
+  File.chmod(0o755, curl_path)
+  curl_log = File.join(directory, "curl.log")
+  stdout, stderr, status = Open3.capture3(
+    { "PATH" => "#{directory}:#{ENV.fetch('PATH')}", "SMOKE_BASE_URL" => "http://tenant.test", "SMOKE_CURL_LOG" => curl_log },
+    "bash", "bin/run_smoke_tests",
+    chdir: ROOT_DIR
+  )
+  verify!(status.success?, "controlled smoke contract failed: #{stderr.empty? ? stdout : stderr}")
+  requests = File.read(curl_log)
+  verify!(requests.include?("http://tenant.test/api/v1/temple"),
+          "controlled smoke contract must request the singular endpoint")
+  verify!(!requests.match?(%r{/api/v1/temples/}),
+          "controlled smoke contract must not request a plural endpoint")
+end
+
 Dir.mktmpdir("wenfu-tenant-local-api-") do |output_dir|
   stdout, stderr, status = Open3.capture3(
     { "VITE_API_BASE_URL" => nil, "VITE_DEV_API_PROXY" => nil },

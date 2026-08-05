@@ -27,7 +27,9 @@ This document intentionally groups multiple related workflows under one topic in
 
 - Footer `Email Us` CTA lives in the footer contact block near phone/contact links.
 - CTA opens the reusable Vue `ContactDrawer` modal.
-- Submit target: `POST /api/v1/temples/:slug/contact_temple_requests`
+- Submit target: `POST /api/v1/temple/contact_temple_requests`. The deployed
+  server resolves its own `PROJECT_SLUG`; the browser does not provide a temple
+  selector.
 - Success closes the modal and shows a lightweight footer confirmation message.
 
 ### Request Payloads

@@ -9,7 +9,7 @@ if [ ! -f "$MANIFEST_FILE" ]; then
   exit 1
 fi
 
-DEFAULT_FALLBACK_URL="${SMOKE_DEFAULT_BASE_URL:-http://localhost:3002}"
+DEFAULT_FALLBACK_URL="${SMOKE_DEFAULT_BASE_URL:-http://localhost:3001}"
 EXPECTED_STATUS="${SMOKE_EXPECTED_STATUS:-200}"
 
 mapfile -t TEMPLES < <(ruby - "$MANIFEST_FILE" <<'RUBY'
@@ -32,9 +32,9 @@ FAILURES=0
 for entry in "${TEMPLES[@]}"; do
   IFS="|" read -r slug public_url <<<"$entry"
   base_url="${SMOKE_BASE_URL:-${public_url:-$DEFAULT_FALLBACK_URL}}"
-  api_url="${base_url%/}/api/v1/temples/${slug}"
+  api_url="${base_url%/}/api/v1/temple"
 
-  echo "Checking ${slug} at ${api_url}"
+  echo "Checking ${slug} tenant deployment at ${api_url}"
   status="$(curl -s -o /dev/null -w "%{http_code}" "$api_url" || true)"
   if [ "$status" = "$EXPECTED_STATUS" ]; then
     echo "  ✅ API reachable"

@@ -63,18 +63,29 @@ This document captures what exists in the admin portal today so future work can 
 
 ## Public API Surface
 
-- `/api/v1/temples/:slug` exposes profile, news, archive, events, and services payloads. Serializers (`TempleEventSerializer`, `TempleServiceSerializer`) include the metadata Vue/Expo require.
-- These endpoints mirror what the cache payloads provide for admin/account flows, keeping mobile/web consumers in sync.
+- `/api/v1/temple` and its singular child paths expose the deployment's profile,
+  news, archive, events, and services payloads. Serializers
+  (`TempleEventSerializer`, `TempleServiceSerializer`) include the metadata
+  Vue/Expo require. The server resolves this deployment's `PROJECT_SLUG`; the
+  public URL does not carry a temple selector.
+- These endpoints mirror what the cache payloads provide for admin/account flows,
+  keeping mobile/web consumers in sync.
 
 ## Vue Frontend Integration
 
-- The Vue app reads `VITE_TEMPLE_SLUG`, bootstraps `useTempleContent`, and hydrates hero/news/archive/events/services views from the Rails APIs.
+- The Vue app bootstraps `useTempleContent` and hydrates
+  hero/news/archive/events/services views from same-origin tenant-local Rails
+  APIs. Tenant layout/theme metadata may be loaded from the deployment
+  environment, but it must not choose a public API tenant.
 - Events and Services pages now consume the new feeds, while the home page highlights the first two upcoming events instead of hardcoded placeholders.
 
 ## Deployment & Onboarding
 
 - Each temple uses per-slug credentials (local `.env.development`, production `/etc/default/<slug>-env`), alongside systemd units and `bin/load_temple_env` so scripts/deployments run with the right values.
-- Deploy helpers (`bin/deploy_vue`, `bin/deploy_vue_all`, `bin/expo_prebuild`, `bin/expo_build`) automatically source the slug env. Smoke tests (`bin/run_smoke_tests`) hit the per-slug API to verify deployments.
+- Deploy helpers (`bin/deploy_vue`, `bin/deploy_vue_all`, `bin/expo_prebuild`,
+  `bin/expo_build`) automatically source the deployment env. Smoke tests
+  (`bin/run_smoke_tests`) hit each deployment's singular tenant-local API to
+  verify it.
 - `DEPLOYMENT_READINESS.md` outlines the droplet/nginx rollout plan once a temple graduates to production.
 
 ## Mobile Alignment
