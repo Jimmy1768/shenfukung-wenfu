@@ -90,9 +90,6 @@ class TempleContextResolver
 
   def public_candidates
     [
-      [:request_temple_slug, params[:temple_slug]],
-      [:request_tenant_slug, params[:tenant_slug]],
-      [:route_slug, params[:slug]],
       [:project_default, AppConstants::Project.slug]
     ]
   end

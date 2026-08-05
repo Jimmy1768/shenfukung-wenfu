@@ -3,10 +3,30 @@
 require "test_helper"
 
 class ControllerNamespaceGuardrailsTest < ActionDispatch::IntegrationTest
-  test "public and account programmatic endpoints route under api v1" do
+  test "tenant-local public and account programmatic endpoints route under api v1" do
     assert_equal(
-      { format: :json, controller: "api/v1/temples", action: "show", slug: "demo" },
-      Rails.application.routes.recognize_path("/api/v1/temples/demo", method: :get)
+      { format: :json, controller: "api/v1/temples", action: "show" },
+      Rails.application.routes.recognize_path("/api/v1/temple", method: :get)
+    )
+
+    assert_equal(
+      { format: :json, controller: "api/v1/temple_news", action: "index" },
+      Rails.application.routes.recognize_path("/api/v1/temple/news", method: :get)
+    )
+
+    assert_equal(
+      { format: :json, controller: "api/v1/temple_events", action: "show", event_slug: "summer-festival" },
+      Rails.application.routes.recognize_path("/api/v1/temple/events/summer-festival", method: :get)
+    )
+
+    assert_equal(
+      { format: :json, controller: "api/v1/temple_services", action: "show", service_slug: "prayer-service" },
+      Rails.application.routes.recognize_path("/api/v1/temple/services/prayer-service", method: :get)
+    )
+
+    assert_equal(
+      { format: :json, controller: "api/v1/contact_temple_requests", action: "create" },
+      Rails.application.routes.recognize_path("/api/v1/temple/contact_temple_requests", method: :post)
     )
 
     assert_equal(
@@ -18,6 +38,24 @@ class ControllerNamespaceGuardrailsTest < ActionDispatch::IntegrationTest
       { format: :json, controller: "api/v1/account/payment_statuses", action: "show", reference: "ABC123" },
       Rails.application.routes.recognize_path("/api/v1/account/payment_statuses/ABC123", method: :get)
     )
+  end
+
+  test "plural public temple routes are not routable" do
+    [
+      ["/api/v1/temples/another-temple", :get],
+      ["/api/v1/temples/another-temple/news", :get],
+      ["/api/v1/temples/another-temple/archive", :get],
+      ["/api/v1/temples/another-temple/events", :get],
+      ["/api/v1/temples/another-temple/events/festival", :get],
+      ["/api/v1/temples/another-temple/services", :get],
+      ["/api/v1/temples/another-temple/services/prayer", :get],
+      ["/api/v1/temples/another-temple/gatherings", :get],
+      ["/api/v1/temples/another-temple/contact_temple_requests", :post]
+    ].each do |path, method|
+      assert_raises(ActionController::RoutingError, path) do
+        Rails.application.routes.recognize_path(path, method:)
+      end
+    end
   end
 
   test "legacy account api routes are not routable" do

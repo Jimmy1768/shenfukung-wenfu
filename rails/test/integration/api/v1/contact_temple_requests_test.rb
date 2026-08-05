@@ -12,11 +12,11 @@ class Api::V1::ContactTempleRequestsTest < ActionDispatch::IntegrationTest
   end
 
   test "public site visitor can submit contact temple request" do
-    temple = create_temple
+    temple = create_temple(slug: AppConstants::Project.slug)
     fake_client = FakeBrevoClient.new([])
 
     Notifications::BrevoClient.stub(:new, fake_client) do
-      post "/api/v1/temples/#{temple.slug}/contact_temple_requests",
+      post "/api/v1/temple/contact_temple_requests",
         params: {
           name: "Public Visitor",
           email: "visitor@example.com",
@@ -34,11 +34,11 @@ class Api::V1::ContactTempleRequestsTest < ActionDispatch::IntegrationTest
   end
 
   test "public site falls back to global support email when temple email missing" do
-    temple = create_temple
+    temple = create_temple(slug: AppConstants::Project.slug)
     fake_client = FakeBrevoClient.new([])
 
     Notifications::BrevoClient.stub(:new, fake_client) do
-      post "/api/v1/temples/#{temple.slug}/contact_temple_requests",
+      post "/api/v1/temple/contact_temple_requests",
         params: {
           name: "Public Visitor",
           email: "visitor@example.com",
@@ -54,11 +54,11 @@ class Api::V1::ContactTempleRequestsTest < ActionDispatch::IntegrationTest
   end
 
   test "public site invalid payload returns validation error" do
-    temple = create_temple
+    temple = create_temple(slug: AppConstants::Project.slug)
     fake_client = FakeBrevoClient.new([])
 
     Notifications::BrevoClient.stub(:new, fake_client) do
-      post "/api/v1/temples/#{temple.slug}/contact_temple_requests",
+      post "/api/v1/temple/contact_temple_requests",
         params: {
           name: "",
           email: "not-an-email",
@@ -75,7 +75,7 @@ class Api::V1::ContactTempleRequestsTest < ActionDispatch::IntegrationTest
   end
 
   test "public site request is blocked by shared api protection when IP is blacklisted" do
-    temple = create_temple
+    temple = create_temple(slug: AppConstants::Project.slug)
     fake_client = FakeBrevoClient.new([])
     ip = "198.51.100.19"
     BlacklistEntry.create!(
@@ -87,7 +87,7 @@ class Api::V1::ContactTempleRequestsTest < ActionDispatch::IntegrationTest
     )
 
     Notifications::BrevoClient.stub(:new, fake_client) do
-      post "/api/v1/temples/#{temple.slug}/contact_temple_requests",
+      post "/api/v1/temple/contact_temple_requests",
         params: {
           name: "Public Visitor",
           email: "visitor@example.com",

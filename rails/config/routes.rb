@@ -7,17 +7,17 @@ Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     namespace :v1 do
       resources :demo_contacts, only: :create
-      post "temples/:slug/contact_temple_requests", to: "contact_temple_requests#create"
+      post "temple/contact_temple_requests", to: "contact_temple_requests#create"
       post "payments/webhooks/:provider", to: "payment_webhooks#create", as: :payment_webhook
       post "platform_billing/webhooks", to: "platform_billing_webhooks#create", as: :platform_billing_webhook
-      resources :temples, only: :show, param: :slug
-      get "temples/:slug/news", to: "temple_news#index"
-      get "temples/:slug/archive", to: "temple_galleries#index"
-      get "temples/:slug/events", to: "temple_events#index"
-      get "temples/:slug/events/:event_slug", to: "temple_events#show"
-      get "temples/:slug/services", to: "temple_services#index"
-      get "temples/:slug/services/:service_slug", to: "temple_services#show"
-      get "temples/:slug/gatherings", to: "temple_gatherings#index"
+      get "temple", to: "temples#show"
+      get "temple/news", to: "temple_news#index"
+      get "temple/archive", to: "temple_galleries#index"
+      get "temple/events", to: "temple_events#index"
+      get "temple/events/:event_slug", to: "temple_events#show"
+      get "temple/services", to: "temple_services#index"
+      get "temple/services/:service_slug", to: "temple_services#show"
+      get "temple/gatherings", to: "temple_gatherings#index"
 
       namespace :account do
         resources :registrations, only: :index

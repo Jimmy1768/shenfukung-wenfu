@@ -36,20 +36,23 @@ class TempleContextResolverTest < ActiveSupport::TestCase
     assert_equal :request_temple_slug, result.source
   end
 
-  test "public resolver uses route slug but not generic temple form params" do
-    route_temple = create_temple(slug: "route-temple")
-    create_temple(slug: AppConstants::Project.slug)
+  test "public resolver uses only the configured project slug" do
+    project_temple = create_temple(slug: AppConstants::Project.slug)
+    requested_temple = create_temple(slug: "requested-temple")
 
     result = TempleContextResolver.new(
       params: ActionController::Parameters.new(
-        slug: route_temple.slug,
-        temple: { name: "Not a context slug" }
+        temple_slug: requested_temple.slug,
+        tenant_slug: requested_temple.slug,
+        slug: requested_temple.slug,
+        temple: requested_temple.slug
       ),
       session: {},
       surface: :public
     ).resolve
 
-    assert_equal route_temple, result.temple
-    assert_equal :route_slug, result.source
+    assert_equal project_temple, result.temple
+    assert_equal project_temple.slug, result.slug
+    assert_equal :project_default, result.source
   end
 end
