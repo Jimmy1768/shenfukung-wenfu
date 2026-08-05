@@ -1,6 +1,6 @@
 # Tenant-Local Public API Hardening Plan
 
-Status: accepted planning criteria; implementation not yet dispatched
+Status: readiness scanned; phased implementation criteria accepted; implementation not yet dispatched
 
 Owner: Wenfu Planning
 
@@ -42,6 +42,22 @@ The following observations establish the correction scope:
   `shengfukung-wenfu` record is the only configured deployment tenant.
 - The observed production listener is Puma on port `3000`, with Nginx exposed
   on `80` and `443`.
+
+## Readiness Scan — 2026-08-05
+
+| Surface | Evidence | Readiness |
+| --- | --- | --- |
+| Current regression | The served bundle and a disposable build from current source have the identical SHA-256 `83b4d45df856c606fc9dcb19cf17996cee8f005af5a2c094dcd1ef22087f9a8a`. It contains `localhost:3002`. | Correction is reproducible; not a transient host failure. |
+| Server routing | The public API is concentrated in `rails/config/routes.rb`; its controllers already obtain `current_temple` through `TempleContext`. The public resolver currently allows `params[:slug]` before `PROJECT_SLUG`. | Ready for a bounded route/resolver patch; no schema or data migration is needed. |
+| Browser client | `vue/src/app/templeApi.js`, `theme.js`, `utils/accountLinks.js`, and the Vite proxy contain browser-visible `localhost` or tenant-selection behavior. `DemoShowcase.vue` also accepts the obsolete API-base variable. | All known client surfaces are identified and must be corrected together. |
+| Port convention | Puma's current development default and several CORS/origin/docs references still use `3002` for local work. Production on the observed host is explicitly configured as `3000`. | Ready for a configuration/reference alignment; do not infer a live staging host change. |
+| Test baseline | `bundle check` passed. Focused routing, public-contact, and tenant-context tests passed: 11 runs, 30 assertions, no failures/errors/skips. | Existing Rails coverage is a viable base for route-removal tests. |
+| Build baseline | `npm exec vite build -- --outDir /tmp/wenfu-tenant-api-readiness-build` passed using local dependencies. | A disposable production-artifact scan can be a required deterministic check. |
+| External state | No provider, credential, host, database, Nginx, or deployment mutation is needed for local implementation. | Local patch is ready; release remains separately gated. |
+
+The only local check issue was sandbox isolation from PostgreSQL; the same
+focused Rails suite passed once run against the local test database. It is not
+a repository or product blocker.
 
 ## Fixed Environment-Port Convention
 
@@ -117,15 +133,73 @@ copy cannot silently reintroduce a cross-tenant public contract.
   and distinguish the internal `3000/3001/3002` convention from public HTTPS
   URLs.
 
+## Phased Implementation Plan
+
+### Phase 1 — Server-side tenant boundary
+
+Replace the public route family with the singular paths in this plan. Make the
+public resolver select only the server-configured `PROJECT_SLUG`; public route,
+query, form, or body values cannot override it. Remove every plural public
+route rather than forwarding it.
+
+Required evidence:
+
+- singular profile/content/contact routes return the deployed tenant's data;
+- public supplied slugs cannot switch the resolved tenant; and
+- every former plural/slug endpoint deterministically returns `404`.
+
+No database, tenant-record, account/admin, payment, or provider behavior is
+changed in this phase.
+
+### Phase 2 — Browser and environment hardening
+
+Make every tenant public build call relative same-origin paths. This includes
+the content API client, the theme helper, and the account-login link: account
+links must not append a `temple` selector. Keep any separately authorized
+account-origin integration distinct from tenant selection.
+
+Remove `VITE_API_BASE_URL` from tenant public configuration and from the
+template. Change the Vite development proxy default to `localhost:3001`, then
+align the local Puma default, development CORS/origin helpers, and local
+commands with the fixed port convention. A staging listener uses `3002` only
+through its selected server configuration; it is never a browser URL.
+
+Required evidence:
+
+- an artifact built without public API-base configuration has no `localhost`,
+  raw application port, plural `/temples`, or tenant slug public-content URL;
+- development proxying targets `3001`; and
+- production/staging browser paths remain relative and same-origin.
+
+### Phase 3 — Operational contract and regression coverage
+
+Update `bin/run_smoke_tests`, active deployment/command/reference documents,
+and only non-historical route examples to the singular API. Retain historical
+records as evidence, annotated only where necessary to avoid treating an old
+endpoint as active guidance.
+
+Add focused Rails routing/integration and frontend artifact checks. The checks
+must fail if a plural public route, public tenant selector, browser-visible
+`localhost`, or public raw application port returns.
+
+### Phase 4 — Explicit tenant release
+
+This phase begins only under a separate, explicit release workflow after local
+integration. Build the selected tenant's Vue distribution with its own
+environment, install that distribution on the intended host, and inspect the
+public browser/network result. Do not bundle host changes, Nginx changes,
+provider actions, secrets, or a release into Phases 1–3.
+
 ## Implementation Scope
 
 Control owns the exact packet, paths, branch, execution mode, and checks. The
 expected bounded surfaces are:
 
-- Rails public route declarations and API controllers/tenant-context tests;
-- Vue public API client and Vite development proxy configuration;
-- public-content and contact-request tests;
-- smoke script and active deployment/command/reference documentation; and
+- Rails public route declarations, tenant-context behavior, and routing/
+  integration tests;
+- Vue public API, theme, account-link, and development-proxy configuration;
+- local Puma/CORS/origin defaults and tenant environment template;
+- smoke script plus active deployment/command/reference documentation; and
 - focused regression tests that inspect the built frontend contract without
   exposing secrets or contacting providers.
 
@@ -137,16 +211,20 @@ build and deploy accepted code to staging or production.
 
 ## Acceptance Criteria
 
-1. The tenant public page and all its content/contact operations use only the
-   singular `/api/v1/temple...` contract and resolve the configured local
-   tenant server-side.
+1. The tenant public page, contact operation, and login link use no public
+   temple selector. Public content/contact operations use only the singular
+   `/api/v1/temple...` contract and resolve the configured local tenant
+   server-side.
 2. Every former `/api/v1/temples/:slug...` public endpoint is absent with a
    deterministic `404` test; it has no compatibility redirect or alias.
 3. A built Vue production artifact contains neither `localhost:3001` nor
-   `localhost:3002`, and no public-content request depends on
+   `localhost:3002`, a raw `3000` application port, an old plural route, nor a
+   public tenant selector. No public-content request depends on
    `VITE_API_BASE_URL` or a browser-visible port.
-4. The Vite development proxy defaults to `localhost:3001`; this is isolated
-   from compiled staging/production output.
+4. The Vite development proxy and local Puma development default use
+   `localhost:3001`; the `3002` staging listener is selected only through
+   server configuration and is isolated from compiled staging/production
+   output.
 5. Focused Rails routing/integration tests prove the singular endpoint,
    tenant-local resolution, contact request behavior, and old-route rejection.
 6. Focused Vue/build checks prove same-origin paths and the absence of the
