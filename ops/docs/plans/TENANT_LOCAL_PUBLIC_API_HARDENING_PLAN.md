@@ -182,13 +182,18 @@ Add focused Rails routing/integration and frontend artifact checks. The checks
 must fail if a plural public route, public tenant selector, browser-visible
 `localhost`, or public raw application port returns.
 
-### Phase 4 — Explicit tenant release
+### Phase 4 — Main integration and optional staging check
 
-This phase begins only under a separate, explicit release workflow after local
-integration. Build the selected tenant's Vue distribution with its own
-environment, install that distribution on the intended host, and inspect the
-public browser/network result. Do not bundle host changes, Nginx changes,
-provider actions, secrets, or a release into Phases 1–3.
+After Phases 1–3 pass locally, integrate their accepted commits into `main`.
+This is the staging candidate branch, not the protected live release branch.
+It does not by itself deploy to a droplet.
+
+A `main` staging deployment is optional when the local Rails and production
+artifact checks already provide sufficient confidence. When a droplet staging
+check is desired, deploy the exact `main` commit to the staging target using
+the `3002` application-port convention, then inspect the public browser and
+singular endpoint. Do not bundle Nginx changes, provider actions, secrets, or
+production release into this phase.
 
 ## Implementation Scope
 
@@ -237,14 +242,15 @@ build and deploy accepted code to staging or production.
 9. Required focused checks and `git diff --check` pass. No provider, secret,
    deployment, host, database, or external action occurs during this patch.
 
-## Release Gate After Local Acceptance
+## Protected Production Promotion
 
-After Control accepts and integrates the local patch, a separate explicit
-release workflow must build the tenant Vue distribution, deploy it to the
-intended tenant host, and verify:
+`release/current` is the isolated live-server branch and uses the `3000`
+application-port convention. It is not a staging branch and is never changed
+merely because `main` was integrated.
 
-1. the public site fetches the singular endpoint successfully;
-2. the old plural endpoint returns `404`;
-3. no browser request targets `localhost` or a raw application port; and
-4. the selected Nginx upstream matches the environment's `3000`, `3001`, or
-   `3002` convention.
+Only after the accepted `main` commit is confirmed to work—through a chosen
+staging check or accepted local evidence—may a separate explicit production
+workflow promote that exact commit to `release/current` and deploy it to the
+live server. That workflow must identify the target, exact commit, rollback
+point, impact, verification, approval, and monitoring boundaries before any
+push or host mutation.
