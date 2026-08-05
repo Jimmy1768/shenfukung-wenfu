@@ -14,8 +14,9 @@
 #     RAILS_MAX_THREADS, RAILS_MIN_THREADS, WEB_CONCURRENCY, PUMA_PORT
 #
 # - Port convention:
-#     development: 3002 (local dev UI)
-#     other envs:  3000 (prod/staging UI)
+#     development: 3001 (local dev UI)
+#     staging:     3002 (live staging UI)
+#     production:  3000 (live production UI)
 #
 
 max_threads_count = ENV.fetch("RAILS_MAX_THREADS", 5).to_i
@@ -24,19 +25,18 @@ threads min_threads_count, max_threads_count
 
 # Port:
 # - Use PUMA_PORT if set
-# - Otherwise: 3002 in development, 3000 elsewhere
-default_port =
-  if ENV.fetch("RAILS_ENV", "development") == "development"
-    3002
-  else
-    3000
-  end
+# - Otherwise: 3001 in development, 3002 in staging, 3000 in production
+rails_env = ENV.fetch("RAILS_ENV", "development")
+default_port = case rails_env
+when "development" then 3001
+when "staging" then 3002
+else 3000
+end
 
 port ENV.fetch("PORT") {
   ENV.fetch("PUMA_PORT", default_port)
 }.to_i
 
-rails_env = ENV.fetch("RAILS_ENV", "development")
 environment rails_env
 
 pidfile ENV.fetch("PIDFILE", "tmp/pids/server.pid")

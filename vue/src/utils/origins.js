@@ -1,29 +1,18 @@
-const devMarketingOrigin = "http://localhost:5173/marketing";
-const devAdminOrigin = "http://localhost:3002/marketing/admin";
-
-const prodMarketingFallback = "/marketing";
-const prodAdminFallback = "/marketing/admin";
-
-const resolveOrigin = (envValue, devDefault, prodDefault) => {
+const resolveOrigin = (envValue, fallback) => {
   if (envValue && envValue.trim().length) {
     return envValue.trim().replace(/\/+$/, "");
   }
-  if (import.meta.env.DEV) {
-    return devDefault.replace(/\/+$/, "");
-  }
-  return prodDefault.replace(/\/+$/, "");
+  return fallback.replace(/\/+$/, "");
 };
 
 const marketingOrigin = resolveOrigin(
   import.meta.env.VITE_MARKETING_ORIGIN,
-  devMarketingOrigin,
-  prodMarketingFallback
+  import.meta.env.DEV ? "http://localhost:5173/marketing" : "/marketing"
 );
 
 const adminOrigin = resolveOrigin(
   import.meta.env.VITE_MARKETING_ADMIN_ORIGIN,
-  devAdminOrigin,
-  prodAdminFallback
+  import.meta.env.DEV ? "http://localhost:3001/marketing/admin" : "/marketing/admin"
 );
 
 const buildUrl = (origin, path = "/", ensureTrailingSlash = false) => {

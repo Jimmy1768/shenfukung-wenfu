@@ -155,10 +155,7 @@ const buildAdminLink = (locale, theme) => {
 };
 const adminConsoleLink = computed(() => buildAdminLink(selectedLocale.value, selectedTheme.value));
 
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
-const apiEndpoint = apiBaseUrl
-  ? `${apiBaseUrl}/api/v1/demo_contacts`
-  : '/api/v1/demo_contacts';
+const apiEndpoint = '/api/v1/demo_contacts';
 
 const selectedTemplate = computed(
   () => templates.find((tpl) => tpl.id === selectedTemplateId.value) ?? templates[0]

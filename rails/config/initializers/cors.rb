@@ -21,14 +21,10 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
 
     # Development and production ports differ:
     # - Production: 3000
-    # - Development: 3002
+    # - Development: 3001
 
     if Rails.env.development?
       # Rails UI (dev mode)
-      allowed_origins << "http://localhost:3002"
-      allowed_origins << "http://127.0.0.1:3002"
-
-      # Legacy local Rails port kept for compatibility during the transition.
       allowed_origins << "http://localhost:3001"
       allowed_origins << "http://127.0.0.1:3001"
 
@@ -39,11 +35,7 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
       # Expo tunnel domains
       allowed_origins << /\Ahttps?:\/\/.*\.expo\.dev\z/
     else
-      # Production Rails UI
-      allowed_origins << "http://localhost:3000"   # fallback for internal tools
-      allowed_origins << "http://127.0.0.1:3000"
-
-      # Better: use ENV-based production domains
+      # Production/staging browser origins are explicit public domains.
       %w[WEB_DOMAIN APP_DOMAIN DEV_DOMAIN].each do |key|
         host = ENV[key]
         allowed_origins << "https://#{host}" if host.present?

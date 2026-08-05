@@ -1,40 +1,19 @@
-const DEFAULT_BASE_URL = 'http://localhost:3002';
-const DEFAULT_SLUG =
-  import.meta.env.VITE_TEMPLE_SLUG || 'shengfukung-wenfu';
+const API_ROOT = '/api/v1/temple';
 
-function resolveBaseUrl(value) {
-  const input =
-    value ||
-    import.meta.env.VITE_API_BASE_URL ||
-    DEFAULT_BASE_URL;
-  return input.replace(/\/$/, '');
+function buildUrl(path = '') {
+  return `${API_ROOT}${path}`;
 }
 
-function resolveSlug(value) {
-  return value || DEFAULT_SLUG;
-}
-
-function buildConfig(overrides = {}) {
-  return {
-    baseUrl: resolveBaseUrl(overrides.baseUrl),
-    slug: resolveSlug(overrides.slug)
-  };
-}
-
-async function request(path, overrides = {}) {
-  const { baseUrl } = buildConfig(overrides);
-  const url = `${baseUrl}/api/v1/${path.replace(/^\/+/, '')}`;
-  const response = await fetch(url);
+async function request(path) {
+  const response = await fetch(buildUrl(path));
   if (!response.ok) {
     throw new Error(`Temple API request failed (${response.status})`);
   }
   return response.json();
 }
 
-async function requestJson(path, options = {}, overrides = {}) {
-  const { baseUrl } = buildConfig(overrides);
-  const url = `${baseUrl}/api/v1/${path.replace(/^\/+/, '')}`;
-  const response = await fetch(url, {
+async function requestJson(path, options = {}) {
+  const response = await fetch(buildUrl(path), {
     method: options.method || 'GET',
     headers: {
       'Content-Type': 'application/json',
@@ -61,25 +40,21 @@ async function requestJson(path, options = {}, overrides = {}) {
   return payload;
 }
 
-export function fetchTempleProfile(overrides = {}) {
-  const { slug } = buildConfig(overrides);
-  return request(`temples/${slug}`, overrides);
+export function fetchTempleProfile() {
+  return request();
 }
 
 export function fetchTempleNews(options = {}) {
-  const { slug } = buildConfig(options);
   const limit = Number(options.limit || 10);
   const safeLimit = Number.isFinite(limit) ? limit : 10;
-  return request(`temples/${slug}/news?limit=${safeLimit}`, options);
+  return request(`/news?limit=${safeLimit}`);
 }
 
-export function fetchTempleArchive(overrides = {}) {
-  const { slug } = buildConfig(overrides);
-  return request(`temples/${slug}/archive`, overrides);
+export function fetchTempleArchive() {
+  return request('/archive');
 }
 
 export function fetchTempleEvents(options = {}) {
-  const { slug } = buildConfig(options);
   const limit = Number(options.limit || 20);
   const safeLimit = Number.isFinite(limit) ? limit : 20;
   const status = options.status || 'upcoming';
@@ -87,40 +62,30 @@ export function fetchTempleEvents(options = {}) {
     limit: String(safeLimit),
     status
   });
-  return request(`temples/${slug}/events?${query.toString()}`, options);
+  return request(`/events?${query.toString()}`);
 }
 
-export function fetchTempleGatherings(options = {}) {
-  const { slug } = buildConfig(options);
-  return request(`temples/${slug}/gatherings`, options);
+export function fetchTempleGatherings() {
+  return request('/gatherings');
 }
 
-export function fetchTempleEvent(eventSlug, overrides = {}) {
-  const { slug } = buildConfig(overrides);
-  const safeSlug = encodeURIComponent(eventSlug);
-  return request(`temples/${slug}/events/${safeSlug}`, overrides);
+export function fetchTempleEvent(eventSlug) {
+  return request(`/events/${encodeURIComponent(eventSlug)}`);
 }
 
 export function fetchTempleServices(options = {}) {
-  const { slug } = buildConfig(options);
   const limit = Number(options.limit || 50);
   const safeLimit = Number.isFinite(limit) ? limit : 50;
-  const query = new URLSearchParams({
-    limit: String(safeLimit)
-  });
-  return request(`temples/${slug}/services?${query.toString()}`, options);
+  return request(`/services?limit=${safeLimit}`);
 }
 
-export function fetchTempleService(serviceSlug, overrides = {}) {
-  const { slug } = buildConfig(overrides);
-  const safeSlug = encodeURIComponent(serviceSlug);
-  return request(`temples/${slug}/services/${safeSlug}`, overrides);
+export function fetchTempleService(serviceSlug) {
+  return request(`/services/${encodeURIComponent(serviceSlug)}`);
 }
 
-export function submitTempleContactRequest(payload, overrides = {}) {
-  const { slug } = buildConfig(overrides);
-  return requestJson(`temples/${slug}/contact_temple_requests`, {
+export function submitTempleContactRequest(payload) {
+  return requestJson('/contact_temple_requests', {
     method: 'POST',
     body: payload
-  }, overrides);
+  });
 }
