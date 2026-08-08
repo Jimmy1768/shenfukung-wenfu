@@ -1,6 +1,6 @@
 # Admin Permissions UI And Navigation Alignment Plan
 
-Status: implemented and Control B accepted; local integration in progress
+Status: implemented, Control B accepted, and locally integrated
 
 Product authority: Director
 
@@ -349,6 +349,9 @@ mode outside the frozen scope.
 
 No push, deploy, provider call, secret access, production-data action, or
 external mutation occurred.
+
+Accepted local implementation commit:
+`dbc248efce9b92f082bbabeeb004b24eebe1ae4a`.
 
 ## Direct Authorization Record
 

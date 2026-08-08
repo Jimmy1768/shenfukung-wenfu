@@ -13,8 +13,8 @@
 - Repository, worktree, branch, and base HEAD:
   `/Users/jimmy1768/Projects/shengfukung-wenfu`, same worktree, `main`,
   `3898b0967581df79223d4a22e4d634eb9e434458`.
-- Packet status and date: Implementer returned; Control B accepted for local
-  integration, 2026-08-08.
+- Packet status and date: Implementer returned; Control B accepted and locally
+  integrated, 2026-08-08.
 
 ## Scope
 
@@ -119,9 +119,11 @@
   palette but the supported admin selector exposes only Standard and Dark. The
   new CSS uses shared theme tokens, so Control reviewed palette compatibility
   from source without injecting unsupported browser state or expanding scope.
-- Integration, staging, and commit evidence when accepted: Control-owned local
-  staging and commit are the remaining closeout actions; exact commit evidence
-  will be appended after they succeed.
+- Integration, staging, and commit evidence when accepted: Control staged the
+  fourteen planned documentation, implementation, generated CSS, and test
+  paths after confirming no unrelated path remained modified. Local commit
+  `dbc248efce9b92f082bbabeeb004b24eebe1ae4a` integrated the accepted candidate
+  on `main` with subject `fix(admin): align permissions UI and navigation`.
 - Terminal packet: direct user closeout only under the Director-recorded
   no-Control-A/no-Planning exception.
 - Residual risk, production gap, and next owner: no known product defect in the
