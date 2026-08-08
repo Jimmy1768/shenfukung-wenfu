@@ -12,6 +12,14 @@ This file documents how we bring a new temple onto the Shengfukung Wenfu stack. 
 - **TempleRegistration** – unified polymorphic registration model (table: `temple_registrations`). Every onsite order/payment flows through this table regardless of whether the source is an event, service, or gathering.
 - **Gatherings** – `TempleGathering` records for non-offering community events (e.g., workshops). They share the registration/payment stack but are managed separately from offerings.
 
+## First-Tenant Future Gate
+
+First-tenant activation remains deferred: no real client is currently named,
+and no local acceptance simulates one. Before activation, obtain a reviewed
+real-client offering intake and classification; verify ECPay staging versus
+live use; establish controlled Stripe setup with matching webhook evidence;
+and obtain separate authorization for activation, rollback, and monitoring.
+
 ## Admin access model
 
 - Use a temple-scoped split:

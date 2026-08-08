@@ -109,6 +109,9 @@ first-tenant onboarding decision enables them.
 Before enabling either timer or initiating the first setup collection, name the
 first tenant and owner, confirm its expected statement and payment-method
 setup path, and supervise the matching Stripe event and Wenfu audit record.
+Local acceptance established entitlement-first registration/payment-intake
+enforcement and matching owner presentation for adopted temples; it did not
+authorize live collection, activation, or a live-readiness claim.
 Preserve platform-delivery idempotency, signed-webhook behavior, the persisted
 `overdue -> grace -> frozen` lifecycle, legacy annual-record protection,
 ECPay/patron payment behavior, tenant isolation, owner/admin authority,
