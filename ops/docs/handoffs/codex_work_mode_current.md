@@ -20,6 +20,7 @@
 - `ops/docs/plans/FINAL_WEB_READINESS_AND_EXPO_GATE_PLAN.md`
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
 - `ops/docs/plans/FIRST_TENANT_BILLING_ENTITLEMENT_AND_REGISTRATION_GATE_PLAN.md`
+- `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md`
 
 ## Current Authorized Local Sequence
 
@@ -43,3 +44,11 @@ is accepted at `b650944befff2e0f84f2cb9a83ea9f3ca24a5587` through Planning ->
 Wenfu Control B. It removed only unused legacy annual-pricing defaults and
 aligned adopted entitlement state with owner presentation. The local cleanup
 sequence is complete; first-client activation remains separately deferred.
+
+## Current Authorized Documentation Housekeeping
+
+`ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md` is the
+current authorized documentation-only phase through Planning -> Wenfu Control
+B. It archives completed plan evidence, refreshes durable references, and
+creates the future-work record without changing runtime or activation
+authority.
