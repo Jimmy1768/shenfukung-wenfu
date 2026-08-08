@@ -29,5 +29,6 @@ Implementer. Its real-client intake and live activation branch remain deferred;
 they do not block the current authorized local phase.
 
 Phase 1 is accepted at `9e89b96062ae216592fd417853a6d93f633f8851`; Phase 2 is
-accepted at `bc8ec73c8e5067cd5953b5ae604093ae09a874d3`. Phase 3 (monthly
-collection dispatch) is the current authorized local phase.
+accepted at `bc8ec73c8e5067cd5953b5ae604093ae09a874d3`; Phase 3 is accepted at
+`716d1b05431cd36d8dde12ebae4253ff77377d6c`. Phase 4 (webhook, lifecycle, and
+entitlement convergence) is the current authorized local phase.

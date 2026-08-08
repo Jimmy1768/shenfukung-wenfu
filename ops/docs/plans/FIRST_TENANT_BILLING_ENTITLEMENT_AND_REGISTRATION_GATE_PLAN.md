@@ -392,7 +392,20 @@ compatibility remains intact. Focused Rails evidence passed: 62 runs, 400
 assertions, zero failures/errors/skips. No provider, secret, timer,
 deployment, production-data, or external action occurred.
 
-Phase 3 is the next authorized local phase. Its real-client/live activation
+### Phase 3 acceptance
+
+Planning accepted Control B's Phase 3 terminal packet at
+`716d1b05431cd36d8dde12ebae4253ff77377d6c` (`feat(billing): dispatch monthly
+collections`). The local monthly-close path now creates or reuses a pending
+monthly delivery before dispatching it once. Its dispatcher only attempts a
+pending monthly TWD delivery, leaves retry-safe failures pending with bounded
+audit evidence, preserves the existing invoice-total mismatch guard, requires
+the stored customer/payment-method prerequisites, and isolates one temple's
+failure from later temple dispatches. Focused Rails evidence passed: 70 runs,
+433 assertions, zero failures/errors/skips. No provider, secret, timer,
+deployment, production-data, or external action occurred.
+
+Phase 4 is the next authorized local phase. Its real-client/live activation
 dependencies remain deferred and are not a blocker.
 
 The Director authorized execution on 2026-08-08. Phase 0 established that no
