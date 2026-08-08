@@ -442,6 +442,65 @@ All authorized local phases are complete. The future first-client activation
 workflow remains explicitly deferred and requires separate authority; it is
 not a blocker or an action authorized by this local acceptance record.
 
+## Post-Acceptance Local Consistency Cleanup
+
+Status: Director-requested local cleanup phase authorized
+
+### Observed inconsistency
+
+The active monthly pricing authority is
+`Billing::PlatformPricingPolicy::BASE_FEE_CENTS = 150_000`; current statements
+and the owner payment-method surface present the `NT$1,500` monthly fee and the
+separate `NT$10,000` one-time onboarding fee. In contrast, unused legacy
+Temple methods default `billing_monthly_fee_cents` to `300_000` and
+`billing_interval_months` to `12`, then derive an annual fee; matching unused
+constants remain in `Admin::PaymentMethodsForm`. Repository search found no
+active runtime call site for those defaults.
+
+Historical annual Stripe-record protection is separate: it reads persisted raw
+billing settings in `Billing::StripePaymentMethodSetup` to reject a legacy
+annual record. That compatibility guard and its regression proof are not dead
+pricing defaults and must remain unchanged.
+
+The adopted registration gate is entitlement-first, but the owner presentation
+method `Temple#platform_billing_state` first checks stored Stripe identifiers.
+An adopted `pending_setup` temple that retains historical Stripe identifiers
+can therefore display `current` even though its entitlement correctly blocks
+new intake. This is a local presentation-precedence inconsistency, not a
+provider or activation issue.
+
+### Frozen cleanup criteria
+
+1. Remove only the unused legacy monthly/interval/annual pricing defaults and
+   constants from `Temple` and `Admin::PaymentMethodsForm`. Do not change the
+   active `NT$1,500` pricing policy, current statement calculation, the
+   `NT$10,000` onboarding fee, or any persisted historical settings.
+2. Make `platform_billing_state` entitlement-aware for adopted temples:
+   `pending_setup` must present `setup_needed` even when historical Stripe
+   identifiers or delivery records exist; `suspended` must never present as
+   current; `active` continues to present its durable monthly delivery state
+   (`overdue`/`grace`/`frozen`) or current state as applicable. A missing
+   entitlement row keeps the existing legacy presentation behavior.
+3. Align only the existing owner/admin payment-method presentation necessary
+   to consume that state. Do not alter registration-gate semantics, ECPay
+   setup, payment collection, checkout, webhook ingestion, delivery/event
+   lifecycle, pricing, catalog/provider binding, migrations, or historical
+   statements.
+4. Add focused regression proof that adopted pending setup with historical
+   Stripe identifiers does not display active/current access; suspended and
+   active lifecycle presentation remains truthful; missing-row legacy behavior
+   remains unchanged; and the legacy annual-record guard still rejects based
+   on persisted raw settings.
+5. Run focused Rails model/form/integration and legacy-annual compatibility
+   tests plus syntax and diff checks. No provider/secret access, real Stripe
+   or ECPay call, webhook configuration, scheduler action, deployment,
+   production migration/data action, push, or external mutation is authorized.
+
+Pass condition: the only monthly authority is the current pricing policy and
+statement contract; owner presentation cannot contradict an adopted
+entitlement; historical annual-record safety and missing-row compatibility are
+preserved locally.
+
 The Director authorized execution on 2026-08-08. Phase 0 established that no
 real tenant intake is available: the supplied DOCX is a blank four-page
 template with no completed offering entries, classifications, prices, dates,

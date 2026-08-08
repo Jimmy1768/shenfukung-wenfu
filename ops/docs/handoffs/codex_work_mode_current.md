@@ -34,3 +34,12 @@ accepted at `bc8ec73c8e5067cd5953b5ae604093ae09a874d3`; Phase 3 is accepted at
 `36119b403a10685454b85bc0602da333f11ee888`; Phase 5 local acceptance is
 accepted at `8e286e11482a93b5671dbce56e0d8433963b0c0a`. The local phase
 sequence is complete; first-client live activation remains separately deferred.
+
+## Current Authorized Local Cleanup
+
+The Director-requested pricing/presentation consistency cleanup in
+`ops/docs/plans/FIRST_TENANT_BILLING_ENTITLEMENT_AND_REGISTRATION_GATE_PLAN.md`
+is the current authorized local phase through Planning -> Wenfu Control B. It
+removes only unused legacy annual-pricing defaults and aligns adopted
+entitlement state with owner presentation; first-client activation remains
+separately deferred.
