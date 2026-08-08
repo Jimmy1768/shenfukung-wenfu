@@ -39,7 +39,7 @@ sequence is complete; first-client live activation remains separately deferred.
 
 The Director-requested pricing/presentation consistency cleanup in
 `ops/docs/plans/FIRST_TENANT_BILLING_ENTITLEMENT_AND_REGISTRATION_GATE_PLAN.md`
-is the current authorized local phase through Planning -> Wenfu Control B. It
-removes only unused legacy annual-pricing defaults and aligns adopted
-entitlement state with owner presentation; first-client activation remains
-separately deferred.
+is accepted at `b650944befff2e0f84f2cb9a83ea9f3ca24a5587` through Planning ->
+Wenfu Control B. It removed only unused legacy annual-pricing defaults and
+aligned adopted entitlement state with owner presentation. The local cleanup
+sequence is complete; first-client activation remains separately deferred.

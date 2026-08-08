@@ -501,6 +501,25 @@ statement contract; owner presentation cannot contradict an adopted
 entitlement; historical annual-record safety and missing-row compatibility are
 preserved locally.
 
+### Cleanup acceptance
+
+Planning accepted Control B's cleanup terminal packet at
+`b650944befff2e0f84f2cb9a83ea9f3ca24a5587` (`refactor: align billing
+presentation authority`). The unused `300_000` monthly, twelve-month, and
+derived annual defaults are removed. The active `NT$1,500` pricing authority
+and `NT$10,000` onboarding presentation remain unchanged. For adopted temples,
+`pending_setup` now presents `setup_needed`, `suspended` presents `frozen`,
+and active entitlement continues to use durable delivery state; a missing row
+continues to use legacy presentation. The raw persisted-settings legacy annual
+guard in `Billing::StripePaymentMethodSetup` was unchanged and remains covered
+by a regression that raises before Checkout interaction. Focused evidence
+passed: 27 runs, 163 assertions, zero failures/errors/skips, Ruby syntax, and
+diff checks. No provider, secret, runtime, production, or external action
+occurred.
+
+The Director-requested local consistency cleanup is complete. First-client
+activation remains separately deferred and requires its own future authority.
+
 The Director authorized execution on 2026-08-08. Phase 0 established that no
 real tenant intake is available: the supplied DOCX is a blank four-page
 template with no completed offering entries, classifications, prices, dates,
