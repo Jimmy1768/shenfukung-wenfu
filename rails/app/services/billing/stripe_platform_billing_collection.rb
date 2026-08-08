@@ -10,15 +10,18 @@ module Billing
 
     def collect!
       raise ArgumentError, "Only pending monthly deliveries can be collected" unless delivery.kind == "monthly" && delivery.status == "pending"
+      raise ArgumentError, "Only TWD monthly deliveries can be collected" unless delivery.currency == "TWD"
       configuration.validate!
       customer = delivery.temple.billing_settings["stripe_customer_id"].presence
       raise ArgumentError, "Verified Stripe customer is required" if customer.blank?
+      payment_method = delivery.temple.billing_settings["stripe_payment_method_id"].presence
+      raise ArgumentError, "Verified Stripe payment method is required" if payment_method.blank?
 
       options = configuration.stripe_options.merge(idempotency_key: delivery.idempotency_key)
       Stripe::InvoiceItem.create({ customer:, pricing: { price: configuration.monthly_price_id }, quantity: delivery.registration_count,
         metadata: provider_metadata }.compact, options)
       add_adjustment_items(customer, options)
-      invoice = Stripe::Invoice.create({ customer:, collection_method: "charge_automatically", auto_advance: true,
+      invoice = Stripe::Invoice.create({ customer:, default_payment_method: payment_method, collection_method: "charge_automatically", auto_advance: true,
         metadata: provider_metadata }.compact, options.merge(idempotency_key: "#{delivery.idempotency_key}:invoice"))
       amount = invoice.respond_to?(:amount_due) ? invoice.amount_due : invoice[:amount_due]
       raise ArgumentError, "Stripe invoice total does not match Wenfu statement" unless amount.to_i == delivery.total_cents
