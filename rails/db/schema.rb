@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_03_000022) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_08_000023) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -555,6 +555,23 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_000022) do
     t.index ["temple_id"], name: "index_platform_billing_deliveries_on_temple_id"
   end
 
+  create_table "platform_billing_entitlements", force: :cascade do |t|
+    t.bigint "temple_id", null: false
+    t.string "state", default: "pending_setup", null: false
+    t.datetime "adopted_at", null: false
+    t.datetime "activated_at"
+    t.datetime "suspended_at"
+    t.datetime "transitioned_at", null: false
+    t.bigint "platform_billing_delivery_id"
+    t.bigint "platform_billing_event_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["platform_billing_delivery_id"], name: "idx_on_platform_billing_delivery_id_ca1e2d1d1d"
+    t.index ["platform_billing_event_id"], name: "idx_on_platform_billing_event_id_e2d5f5d948"
+    t.index ["temple_id"], name: "index_platform_billing_entitlements_on_temple_id", unique: true
+    t.check_constraint "state::text = ANY (ARRAY['pending_setup'::character varying, 'active'::character varying, 'suspended'::character varying]::text[])", name: "platform_billing_entitlements_state_check"
+  end
+
   create_table "platform_billing_events", force: :cascade do |t|
     t.bigint "temple_id", null: false
     t.bigint "platform_billing_delivery_id"
@@ -1067,6 +1084,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_03_000022) do
   add_foreign_key "platform_billing_adjustments", "temples"
   add_foreign_key "platform_billing_deliveries", "platform_billing_statements"
   add_foreign_key "platform_billing_deliveries", "temples"
+  add_foreign_key "platform_billing_entitlements", "platform_billing_deliveries"
+  add_foreign_key "platform_billing_entitlements", "platform_billing_events"
+  add_foreign_key "platform_billing_entitlements", "temples"
   add_foreign_key "platform_billing_events", "platform_billing_deliveries"
   add_foreign_key "platform_billing_events", "temples"
   add_foreign_key "platform_billing_statements", "temples"

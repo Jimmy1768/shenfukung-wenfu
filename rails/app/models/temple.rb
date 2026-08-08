@@ -42,6 +42,7 @@ class Temple < ApplicationRecord
     dependent: :restrict_with_exception
   has_many :platform_billing_deliveries, dependent: :restrict_with_exception
   has_many :platform_billing_events, dependent: :restrict_with_exception
+  has_one :platform_billing_entitlement, dependent: :restrict_with_exception
   has_many :admin_permissions,
     dependent: :destroy
   has_many :temple_news_posts,
@@ -234,7 +235,36 @@ class Temple < ApplicationRecord
   end
 
   def registration_intake_frozen?(reference_time = Time.current)
+    entitlement = platform_billing_entitlement
+    return !entitlement.active? if entitlement.present?
+
     online_payments_frozen?(reference_time)
+  end
+
+  def adopt_platform_billing_entitlement!(adopted_at: Time.current)
+    PlatformBillingEntitlement.transaction do
+      entitlement = platform_billing_entitlement
+      return entitlement if entitlement.present?
+
+      entitlement = create_platform_billing_entitlement!(
+        state: "pending_setup",
+        adopted_at:,
+        transitioned_at: adopted_at
+      )
+      SystemAuditLogger.log!(
+        action: "platform_billing.entitlement_adopted",
+        target: entitlement,
+        temple: self,
+        metadata: {
+          entitlement_id: entitlement.id,
+          state: entitlement.state,
+          adopted_at: adopted_at.iso8601
+        }
+      )
+      entitlement
+    end
+  rescue ActiveRecord::RecordNotUnique
+    reload.platform_billing_entitlement || raise
   end
 
   def online_payments_hold_message(reference_time = Time.current)
