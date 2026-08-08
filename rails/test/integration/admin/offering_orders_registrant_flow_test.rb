@@ -40,6 +40,7 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "admin creates dependent registration and stores registrant metadata" do
+    @temple.adopt_platform_billing_entitlement!.update!(state: "active")
     sign_in_admin(@admin)
 
     assert_difference -> { @temple.temple_event_registrations.count }, 1 do
@@ -89,6 +90,23 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
     end
 
     assert_redirected_to admin_gathering_offering_orders_path(@gathering)
+  end
+
+  test "pending setup and suspended entitlements block new admin registrations" do
+    entitlement = @temple.adopt_platform_billing_entitlement!
+    sign_in_admin(@admin)
+
+    ["pending_setup", "suspended"].each do |state|
+      entitlement.update!(state:)
+
+      assert_no_difference -> { @temple.temple_event_registrations.count } do
+        post admin_gathering_offering_orders_path(@gathering), params: {
+          temple_event_registration: { user_id: @patron.id, quantity: 1, registrant_scope: "self" }
+        }
+      end
+
+      assert_redirected_to admin_gathering_offering_orders_path(@gathering)
+    end
   end
 
   test "admin create redirects to existing registration for same dependent scope" do

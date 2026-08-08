@@ -180,6 +180,68 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     assert_redirected_to account_registrations_path
   end
 
+  test "pending setup and suspended entitlements block account registration and checkout" do
+    temple = create_temple
+    offering = create_offering(temple:, slug: "entitlement-gated", title: "Entitlement Gated", price_cents: 1500)
+    user = User.create!(
+      email: "entitlementgated@example.com",
+      english_name: "Entitlement Gated",
+      encrypted_password: User.password_hash("Password123!")
+    )
+    registration = create_registration(user:, offering:)
+    entitlement = temple.adopt_platform_billing_entitlement!
+
+    sign_in_account(user, temple_slug: temple.slug)
+
+    ["pending_setup", "suspended"].each do |state|
+      entitlement.update!(state:)
+
+      assert_no_difference -> { TempleEventRegistration.count } do
+        post account_registrations_path, params: {
+          offering: offering.slug,
+          account_action: "event",
+          account_registration_intake_form: { contact_name: "Entitlement Gated", quantity: 1 }
+        }
+      end
+      assert_redirected_to account_registrations_path
+
+      get payment_account_registration_path(registration)
+      assert_response :success
+      refute_includes response.body, "前往付款"
+
+      assert_no_difference -> { registration.temple_payments.count } do
+        post start_checkout_account_registration_path(registration)
+      end
+      assert_redirected_to payment_account_registration_path(registration)
+    end
+  end
+
+  test "active entitlement allows account registration and checkout presentation" do
+    temple = create_temple
+    offering = create_offering(temple:, slug: "entitlement-active", title: "Entitlement Active", price_cents: 1500)
+    user = User.create!(
+      email: "entitlementactive@example.com",
+      english_name: "Entitlement Active",
+      encrypted_password: User.password_hash("Password123!")
+    )
+    temple.adopt_platform_billing_entitlement!.update!(state: "active")
+
+    sign_in_account(user, temple_slug: temple.slug)
+
+    assert_difference -> { TempleEventRegistration.count }, 1 do
+      post account_registrations_path, params: {
+        offering: offering.slug,
+        account_action: "event",
+        account_registration_intake_form: { contact_name: "Entitlement Active", quantity: 1 }
+      }
+    end
+
+    registration = TempleEventRegistration.order(:created_at).last
+    get payment_account_registration_path(registration)
+    assert_response :success
+    assert_includes response.body, "前往付款"
+  end
+
   test "free registration payment page shows confirmation" do
     temple = create_temple
     offering = TempleOffering.create!(

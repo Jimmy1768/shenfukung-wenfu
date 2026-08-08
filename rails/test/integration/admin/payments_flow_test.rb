@@ -188,6 +188,35 @@ class AdminPaymentsFlowTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_event_offering_order_path(offering, registration)
   end
 
+  test "pending setup and suspended entitlements block admin checkout while active allows it" do
+    temple = create_temple
+    offering = create_offering(temple:, slug: "admin-entitlement", title: "Admin Entitlement", price_cents: 1000)
+    user = User.create!(
+      email: "adminentitlement@example.com",
+      english_name: "Admin Entitlement",
+      encrypted_password: User.password_hash("Password123!")
+    )
+    registration = create_registration(user:, offering:)
+    admin_user = create_admin_user(temple:)
+    AdminPermission.find_by(admin_account: admin_user.admin_account, temple:).update!(record_cash_payments: true)
+    entitlement = temple.adopt_platform_billing_entitlement!
+
+    sign_in_admin(admin_user)
+
+    ["pending_setup", "suspended"].each do |state|
+      entitlement.update!(state:)
+      assert_no_difference -> { registration.temple_payments.count } do
+        post start_checkout_admin_payments_path(registration_id: registration.id)
+      end
+      assert_redirected_to admin_event_offering_order_path(offering, registration)
+    end
+
+    entitlement.update!(state: "active")
+    assert_difference -> { registration.temple_payments.count }, 1 do
+      post start_checkout_admin_payments_path(registration_id: registration.id)
+    end
+  end
+
   test "ecpay checkout return for gathering redirects back to gathering order" do
     temple = create_temple
     gathering = temple.temple_gatherings.create!(

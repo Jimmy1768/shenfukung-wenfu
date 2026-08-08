@@ -71,7 +71,7 @@ module Account
     def payment
       @registration_period_label = period_label_for(@registration)
       @payment_provider_label = Payments::ProviderResolver.label_for(Payments::ProviderResolver.current_provider)
-      @online_payments_frozen = current_temple.online_payments_frozen?
+      @online_payments_frozen = current_temple.registration_intake_frozen?
       @billing_grace_remaining_days = current_temple.billing_grace_remaining_days
     end
 

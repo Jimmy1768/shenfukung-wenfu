@@ -17,6 +17,7 @@ module Billing
     def start
       reject_legacy_annual_stripe_billing_record!
       configuration.validate!
+      temple.adopt_platform_billing_entitlement!
       delivery = temple.platform_billing_deliveries.find_or_create_by!(kind: "setup", status: "pending") do |record|
         record.assign_attributes(currency: "TWD", total_cents: 1_000_000, idempotency_key: "platform-setup:#{temple.id}")
       end
@@ -32,6 +33,8 @@ module Billing
     def complete
       reject_legacy_annual_stripe_billing_record!
       configuration.validate!
+      raise ArgumentError, "Stripe setup checkout session is required" if checkout_session_id.blank?
+
       session = Stripe::Checkout::Session.retrieve({ id: checkout_session_id, expand: ["customer", "payment_intent.payment_method"] }, configuration.stripe_options)
       raise ArgumentError, "Stripe setup payment was not paid" unless session.payment_status == "paid" && session.mode == "payment"
       raise ArgumentError, "Stripe setup belongs to another temple" unless session.client_reference_id.to_s == temple.id.to_s && session.metadata["purpose"] == "templemate_platform_setup"
@@ -45,6 +48,7 @@ module Billing
       Temple.transaction do
         temple.update!(payment_provider_settings: settings)
         delivery.update!(status: "paid", provider_customer_id: customer.id, provider_payment_method_id: payment_method.id)
+        Billing::PlatformBillingEntitlementTransition.transition!(temple:, delivery:, state: "active")
         SystemAuditLogger.log!(action: "admin.payment_methods.platform_setup_completed", admin:, target: temple, temple:,
           metadata: { provider: "stripe", setup_delivery_id: delivery.id, provider_reference: session.id })
       end
