@@ -366,6 +366,20 @@ webhook, a live scheduler, or any provider action.
 
 ## Execution State
 
+### Phase 1 acceptance
+
+Planning accepted Control B's Phase 1 terminal packet at
+`9e89b96062ae216592fd417853a6d93f633f8851` (`feat(billing): add temple
+entitlement authority`). The local implementation added the unique durable
+temple entitlement, transactional audited transitions, active-only adopted
+gate, and explicit missing-row legacy compatibility. Focused Rails evidence
+passed: 31 runs, 161 assertions, zero failures/errors/skips; the new migration
+is up in the local test database. No provider, secret, timer, deployment,
+production-data, or external action occurred.
+
+Phase 2 is the next authorized local phase. Its real-client/live activation
+dependencies remain deferred and are not a blocker.
+
 The Director authorized execution on 2026-08-08. Phase 0 established that no
 real tenant intake is available: the supplied DOCX is a blank four-page
 template with no completed offering entries, classifications, prices, dates,
