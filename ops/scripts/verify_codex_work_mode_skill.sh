@@ -172,6 +172,14 @@ require_text '  default: ephemeral_implementer_direct_return' "$protocol"
 require_text '  persistent: exceptional_recorded_reason_one_packet_continuity' "$protocol"
 require_text '  controls_do_not_coordinate_cross_repository_architecture: true' "$protocol"
 ruby -ryaml -e 'data = YAML.load_file(ARGV.fetch(0)); abort "invalid protocol schema" unless data["schema"] == "shengfukung_wenfu_codex_work_mode:v1"' "$protocol"
+require_text '  committed_frozen_plan_authorizes_routine_local_execution: true' "$protocol"
+require_text '  planning_dispatches_or_monitors_implementer: false' "$protocol"
+require_text '  control_authors_or_reopens_planning_documents: false' "$protocol"
+require_text '  blocker_requires_undeferred_current_frozen_criterion: true' "$protocol"
+require_text '  blocker_requires_evidence_first_prevented_action_and_no_independent_continuation: true' "$protocol"
+require_text '  deferred_later_client_specific_or_independent_dependency_blocks_current_phase: false' "$protocol"
+require_text '  planning_sends_next_frozen_phase_after_accepted_terminal_receipt: true' "$protocol"
+require_text '  repeated_director_approval_required_between_routine_local_phases: false' "$protocol"
 
 reference='ops/docs/reference/codex_work_mode.md'
 template='ops/docs/handoffs/templates/codex_control_implementation.md'
@@ -210,6 +218,27 @@ require_text '- Authority confirmation: Planning reported evidence only; Strateg
 
 require_text '  work. Luna is never ephemeral; legacy 5.5 allocation is absent.' "$snapshot"
 require_text '- Persistent Handoff eligibility comes before model selection; only eligible' "$snapshot"
+require_contains 'committed plan execution authority' \
+  'An accepted committed Planning plan is authority for ordinary, reversible,' \
+  "$reference"
+require_contains 'planning implementer boundary' \
+  'or monitor an Implementer. Control owns one implementation packet and cannot' \
+  "$reference"
+require_contains 'control planning document boundary' \
+  'author or reopen Planning documents.' \
+  "$reference"
+require_contains 'valid blocker boundary' \
+  'A blocker is valid only when an undeferred current frozen criterion prevents a' \
+  "$reference"
+require_contains 'deferred dependency boundary' \
+  'Deferred, later, client-specific, or independent external work cannot block an' \
+  "$reference"
+require_contains 'phase continuation boundary' \
+  'receipt, Planning sends the next frozen phase without repeated Director' \
+  "$reference"
+require_contains 'billing plan snapshot pointer' \
+  'FIRST_TENANT_BILLING_ENTITLEMENT_AND_REGISTRATION_GATE_PLAN.md' \
+  "$snapshot"
 
 for active_source in "$skill" "$reference" "$protocol" "$template" "$snapshot"; do
   require_no_match 'gpt-5\\.5' "$active_source"

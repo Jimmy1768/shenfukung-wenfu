@@ -60,3 +60,19 @@ freeze a bounded packet. `ops/protocol/codex_work_mode.yml` is the deterministic
 local contract, and `ops/docs/handoffs/codex_work_mode_current.md` is the
 volatile local coordination and roadmap pointer record. Preserve historical
 records; where a record exists, use pointer-only chat with its absolute path.
+
+## Committed Plan Execution
+
+An accepted committed Planning plan is authority for ordinary, reversible,
+local, in-scope execution. Planning freezes plans and criteria and sends each
+authorized phase directly to the authoritative Control; it does not dispatch
+or monitor an Implementer. Control owns one implementation packet and cannot
+author or reopen Planning documents.
+
+A blocker is valid only when an undeferred current frozen criterion prevents a
+named next action. It must state that criterion, the evidence, the first
+prevented action, and why no authorized independent action can continue.
+Deferred, later, client-specific, or independent external work cannot block an
+authorized local phase. After an accepted Control terminal packet and Planning
+receipt, Planning sends the next frozen phase without repeated Director
+approval unless a valid stop condition exists.

@@ -19,3 +19,11 @@
 
 - `ops/docs/plans/FINAL_WEB_READINESS_AND_EXPO_GATE_PLAN.md`
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
+- `ops/docs/plans/FIRST_TENANT_BILLING_ENTITLEMENT_AND_REGISTRATION_GATE_PLAN.md`
+
+## Current Authorized Local Sequence
+
+The committed first-tenant billing/entitlement plan authorizes its local Phases
+1–5 in sequence through Planning -> Wenfu Control B -> one ephemeral
+Implementer. Its real-client intake and live activation branch remain deferred;
+they do not block the current authorized local phase.

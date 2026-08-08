@@ -17,6 +17,15 @@ roles:
   planning: reports_evidence_and_freezes_accepted_repository_local_criteria_only
   control: owns_packet_review_acceptance_and_local_integration
   implementer: edits_packet_owned_paths_runs_checks_and_returns_to_control
+execution:
+  committed_frozen_plan_authorizes_routine_local_execution: true
+  planning_dispatches_or_monitors_implementer: false
+  control_authors_or_reopens_planning_documents: false
+  blocker_requires_undeferred_current_frozen_criterion: true
+  blocker_requires_evidence_first_prevented_action_and_no_independent_continuation: true
+  deferred_later_client_specific_or_independent_dependency_blocks_current_phase: false
+  planning_sends_next_frozen_phase_after_accepted_terminal_receipt: true
+  repeated_director_approval_required_between_routine_local_phases: false
 evidence:
   concrete_assertions_require_canonical_source: true
   concrete_assertion_categories: [repository_url, port, command, environment, deployment, configuration, live_process]
