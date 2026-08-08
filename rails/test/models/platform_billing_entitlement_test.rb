@@ -64,4 +64,34 @@ class PlatformBillingEntitlementTest < ActiveSupport::TestCase
     refute legacy_open.registration_intake_frozen?
     assert legacy_frozen.registration_intake_frozen?
   end
+
+  test "billing presentation gives an entitlement precedence over legacy Stripe settings" do
+    temple = create_temple(payment_provider_settings: {
+      "billing" => { "stripe_payment_method_id" => "pm_historical" }
+    })
+    temple.platform_billing_deliveries.create!(
+      kind: "monthly", status: "overdue", currency: "TWD", idempotency_key: "entitlement-state-overdue"
+    )
+
+    entitlement = temple.adopt_platform_billing_entitlement!
+    assert_equal "setup_needed", temple.platform_billing_state
+
+    entitlement.update!(state: "suspended")
+    assert_equal "frozen", temple.platform_billing_state
+
+    entitlement.update!(state: "active")
+    assert_equal "overdue", temple.platform_billing_state
+  end
+
+  test "billing presentation retains its legacy result without an entitlement" do
+    temple = create_temple(payment_provider_settings: {
+      "billing" => { "stripe_payment_method_id" => "pm_legacy" }
+    })
+    temple.platform_billing_deliveries.create!(
+      kind: "monthly", status: "overdue", currency: "TWD", idempotency_key: "legacy-state-overdue"
+    )
+
+    assert_nil temple.platform_billing_entitlement
+    assert_equal "overdue", temple.platform_billing_state
+  end
 end

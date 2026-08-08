@@ -207,6 +207,33 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     refute_includes response.body, "寬限期剩餘 30 天"
   end
 
+  test "payment methods presentation follows the entitlement state before historical Stripe settings" do
+    temple = create_temple(payment_provider_settings: {
+      "ecpay" => { "merchant_id" => "2000132", "hash_key" => "key", "hash_iv" => "iv", "environment" => "stage" },
+      "billing" => { "stripe_payment_method_id" => "pm_historical" }
+    })
+    entitlement = temple.adopt_platform_billing_entitlement!
+    owner = create_admin_user(temple: temple, role: "owner")
+    form = Admin::PaymentMethodsForm.new(temple:, params: {
+      ecpay_merchant_id: "2000132", ecpay_hash_key: "key", ecpay_hash_iv: "iv", ecpay_environment: "stage"
+    })
+
+    assert_equal :setup_needed, form.online_payments_state
+
+    sign_in_admin(owner)
+    get admin_payment_methods_path
+
+    assert_response :success
+    assert_includes response.body, "ECPay 尚未設定完成"
+
+    entitlement.update!(state: "suspended")
+    assert_equal :frozen, form.online_payments_state
+    get admin_payment_methods_path
+
+    assert_response :success
+    assert_includes response.body, "已凍結"
+  end
+
   test "billing copy is localized without annual billing claims" do
     copy = {
       subtitle: "admin.payment_methods.sections.payment_method.subtitle",

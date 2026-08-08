@@ -92,6 +92,10 @@ class Billing::StripePaymentMethodSetupTest < ActiveSupport::TestCase
     temple = legacy_annual_stripe_temple
     admin = create_admin_user(temple:)
 
+    assert_equal "year", temple.billing_settings["billing_interval"]
+    assert_equal 12, temple.billing_settings["billing_interval_months"]
+    assert_equal 3_600_000, temple.billing_settings["annual_fee_cents"]
+
     assert_legacy_record_is_unchanged(temple) do
       Stripe::Checkout::Session.stub(:create, ->(*) { flunk "Stripe Checkout create must not be invoked" }) do
         error = assert_raises(Billing::StripePaymentMethodSetup::LegacyAnnualStripeBillingRecordError) do

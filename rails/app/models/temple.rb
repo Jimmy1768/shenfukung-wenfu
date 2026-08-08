@@ -177,24 +177,16 @@ class Temple < ApplicationRecord
   end
 
   def platform_billing_state(_reference_time = Time.current)
+    entitlement = platform_billing_entitlement
+    return "setup_needed" if entitlement&.state == "pending_setup"
+    return "frozen" if entitlement&.state == "suspended"
+
     delivery = platform_billing_deliveries.monthly.order(created_at: :desc).first
     return "setup_needed" unless billing_settings["stripe_payment_method_id"].present?
     return "current" if delivery.blank? || delivery.paid?
     return delivery.status if %w[overdue grace frozen].include?(delivery.status)
 
     "current"
-  end
-
-  def billing_monthly_fee_cents
-    billing_settings["monthly_fee_cents"].presence&.to_i || 300_000
-  end
-
-  def billing_interval_months
-    billing_settings["billing_interval_months"].presence&.to_i || 12
-  end
-
-  def billing_annual_fee_cents
-    billing_settings["annual_fee_cents"].presence&.to_i || billing_monthly_fee_cents * billing_interval_months
   end
 
   def billing_grace_days

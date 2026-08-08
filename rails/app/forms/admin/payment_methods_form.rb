@@ -6,8 +6,6 @@ module Admin
     include ActiveModel::Attributes
 
     ECPAY_ENVIRONMENTS = %w[stage production].freeze
-    DEFAULT_BILLING_MONTHLY_FEE_CENTS = 300_000
-    DEFAULT_BILLING_INTERVAL_MONTHS = 12
     DEFAULT_BILLING_GRACE_DAYS = 30
     DEFAULT_ECPAY_PORTAL_URL = "https://login.ecpay.com.tw/Login?Mode=1&NextURL=https%3A%2F%2Fcashier.ecpay.com.tw%2Fmanage%2Flogin%2Fecpay%2Fcallback"
 
