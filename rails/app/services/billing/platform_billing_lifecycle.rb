@@ -23,8 +23,13 @@ module Billing
     end
 
     def advance!
-      return delivery if delivery.status == "overdue" && delivery.due_at.present? && delivery.due_at <= now && transition!("grace")
-      return delivery if delivery.status == "grace" && delivery.grace_deadline_at.present? && delivery.grace_deadline_at <= now && transition!("frozen")
+      delivery.transaction do
+        if delivery.status == "overdue" && delivery.due_at.present? && delivery.due_at <= now
+          transition!("grace")
+        elsif delivery.status == "grace" && delivery.grace_deadline_at.present? && delivery.grace_deadline_at <= now
+          transition!("frozen")
+        end
+      end
 
       delivery
     end
@@ -40,7 +45,19 @@ module Billing
       delivery.update!(**attributes.merge(status:))
       SystemAuditLogger.log!(action: "platform_billing.delivery_transition", target: delivery, temple: delivery.temple,
         metadata: { delivery_id: delivery.id, from: previous_status, to: status, reference_time: now.iso8601 })
+      suspend_entitlement!(delivery) if status == "frozen"
       true
+    end
+
+    def suspend_entitlement!(delivery)
+      return if delivery.temple.platform_billing_entitlement.blank?
+
+      PlatformBillingEntitlementTransition.transition!(
+        temple: delivery.temple,
+        delivery:,
+        state: "suspended",
+        occurred_at: now
+      )
     end
   end
 end

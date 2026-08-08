@@ -9,4 +9,19 @@ class PlatformBillingLifecycleJobTest < ActiveSupport::TestCase
     end
     assert_equal "grace", delivery.reload.status
   end
+
+  test "suspends an adopted temple only when the lifecycle freezes its delivery" do
+    temple = create_temple
+    entitlement = temple.adopt_platform_billing_entitlement!
+    entitlement.update!(state: "active")
+    delivery = temple.platform_billing_deliveries.create!(kind: "monthly", status: "grace", currency: "TWD", idempotency_key: "job-freeze", grace_deadline_at: 1.day.ago)
+
+    Stripe::Invoice.stub(:create, ->(*) { flunk "lifecycle must not call Stripe" }) do
+      PlatformBillingLifecycleJob.perform_now(reference_time: Time.current)
+    end
+
+    assert_equal "frozen", delivery.reload.status
+    assert_equal "suspended", entitlement.reload.state
+    assert temple.registration_intake_frozen?
+  end
 end

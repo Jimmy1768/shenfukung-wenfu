@@ -6,6 +6,7 @@ class Api::V1::PlatformBillingWebhooksTest < ActionDispatch::IntegrationTest
 
   test "accepts a valid signed event and makes replay idempotent without raw evidence" do
     temple = create_temple
+    entitlement = temple.adopt_platform_billing_entitlement!
     delivery = create_delivery(temple)
     event = platform_event("evt_signed", delivery)
 
@@ -17,6 +18,7 @@ class Api::V1::PlatformBillingWebhooksTest < ActionDispatch::IntegrationTest
     end
 
     assert_equal "paid", delivery.reload.status
+    assert_equal "active", entitlement.reload.state
     assert_equal 1, PlatformBillingEvent.where(provider_event_id: "evt_signed").count
     evidence = PlatformBillingEvent.find_by!(provider_event_id: "evt_signed").payload.to_json
     refute_includes evidence, "4242"
@@ -37,6 +39,8 @@ class Api::V1::PlatformBillingWebhooksTest < ActionDispatch::IntegrationTest
   test "rejects a delivery from another temple without changing either billing status" do
     temple = create_temple
     other_temple = create_temple
+    entitlement = temple.adopt_platform_billing_entitlement!
+    other_entitlement = other_temple.adopt_platform_billing_entitlement!
     delivery = create_delivery(temple)
     other_delivery = create_delivery(other_temple)
     event = platform_event("evt_mismatch", delivery, temple_id: other_temple.id, delivery_id: delivery.id)
@@ -46,6 +50,8 @@ class Api::V1::PlatformBillingWebhooksTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
     assert_equal "collecting", delivery.reload.status
     assert_equal "collecting", other_delivery.reload.status
+    assert_equal "pending_setup", entitlement.reload.state
+    assert_equal "pending_setup", other_entitlement.reload.state
     assert_equal 0, PlatformBillingEvent.where(provider_event_id: "evt_mismatch").count
   end
 

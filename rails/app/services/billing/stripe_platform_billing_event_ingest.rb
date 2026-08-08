@@ -21,7 +21,7 @@ module Billing
       PlatformBillingEvent.transaction do
         record = PlatformBillingEvent.create!(temple:, platform_billing_delivery: delivery, provider_event_id: event.id,
           event_type: event.type, payload: sanitized_payload(object, metadata))
-        transition!(delivery, event.type)
+        transition!(delivery, event.type, record)
         record
       end
     rescue ActiveRecord::RecordNotUnique
@@ -35,15 +35,28 @@ module Billing
       reference = object.respond_to?(:id) ? object.id : object["id"]
       delivery.provider_reference.blank? || delivery.provider_reference == reference
     end
-    def transition!(delivery, type)
+    def transition!(delivery, type, record)
       case type
       when "checkout.session.completed", "invoice.paid", "invoice.payment_succeeded"
         PlatformBillingLifecycle.record_success!(delivery:, now:)
+        activate_entitlement!(delivery, record)
       when "invoice.payment_failed", "invoice.payment_action_required"
         PlatformBillingLifecycle.record_failure!(delivery:, now:)
       end
       SystemAuditLogger.log!(action: "platform_billing.event_processed", target: delivery, temple: delivery.temple,
         metadata: { delivery_id: delivery.id, event_type: type, status: delivery.status })
+    end
+
+    def activate_entitlement!(delivery, record)
+      return if delivery.temple.platform_billing_entitlement.blank?
+
+      PlatformBillingEntitlementTransition.transition!(
+        temple: delivery.temple,
+        delivery:,
+        event: record,
+        state: "active",
+        occurred_at: now
+      )
     end
     def sanitized_payload(object, metadata)
       { object_id: object.respond_to?(:id) ? object.id : object["id"], customer: object.respond_to?(:customer) ? object.customer : nil,

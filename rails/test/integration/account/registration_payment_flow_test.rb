@@ -242,6 +242,34 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "前往付款"
   end
 
+  test "an adopted active entitlement takes precedence over frozen legacy billing settings" do
+    temple = create_temple(
+      payment_provider_settings: {
+        "billing" => {
+          "payment_method_on_file" => false,
+          "grace_started_at" => 31.days.ago.iso8601
+        }
+      }
+    )
+    offering = create_offering(temple:, slug: "entitlement-authority", title: "Entitlement Authority", price_cents: 1500)
+    user = User.create!(
+      email: "entitlementauthority@example.com",
+      english_name: "Entitlement Authority",
+      encrypted_password: User.password_hash("Password123!")
+    )
+    temple.adopt_platform_billing_entitlement!.update!(state: "active")
+
+    sign_in_account(user, temple_slug: temple.slug)
+
+    assert_difference -> { TempleEventRegistration.count }, 1 do
+      post account_registrations_path, params: {
+        offering: offering.slug,
+        account_action: "event",
+        account_registration_intake_form: { contact_name: "Entitlement Authority", quantity: 1 }
+      }
+    end
+  end
+
   test "free registration payment page shows confirmation" do
     temple = create_temple
     offering = TempleOffering.create!(
