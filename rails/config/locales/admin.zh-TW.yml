@@ -206,6 +206,7 @@ zh-TW:
       sign_out: "登出"
       temple_selector_label: "宮廟"
       no_temple: "尚未選擇宮廟"
+      read_only: "唯讀"
       menu_toggle: "開啟管理選單"
       switch_temple: "切換宮廟"
       items:
@@ -1349,31 +1350,31 @@ zh-TW:
       index:
         eyebrow: "權限"
         title: "管理員權限"
-        body: "只有宮廟擁有者可以調整這些權限，請依供品、現場人員與財務審核的需求配置。"
+        body: "具備管理權限的管理員可以調整這些設定，請依供品、現場人員與財務審核的需求配置。"
         save: "儲存"
-        empty: "尚未邀請任何工作管理員，請在使用者頁面發送邀請並授權。"
+        empty: "尚未有管理員，請從信眾頁面晉升管理員以授權。"
       capabilities:
         manage_offerings:
-          label: "管理供品"
-          hint: "建立或編輯官網上的供品。"
+          label: "編輯法會與供品"
+          hint: "建立、編輯、封存與設定法會及供品；社群活動與供品列表仍可唯讀瀏覽。"
         manage_registrations:
           label: "管理報名"
-          hint: "存取報名紀錄與現場訂單。"
+          hint: "存取報名紀錄、現場訂單與共用的信眾頁面。"
         record_cash_payments:
           label: "記錄現金收款"
-          hint: "為訂單登記現金或線下付款。"
+          hint: "在訂單與收款流程中登記現金或線下付款；不會新增選單項目。"
         view_financials:
           label: "檢視財務摘要"
           hint: "查看付款紀錄與儀表板統計。"
         export_financials:
           label: "匯出財務報表"
-          hint: "下載付款與帳冊的 CSV。"
+          hint: "從年度資料下載付款與帳冊 CSV；不會新增獨立選單項目。"
         view_guest_lists:
           label: "查看賓客名單"
-          hint: "檢視現場活動的參與者名冊。"
+          hint: "使用現場活動的賓客名單與 API 名冊介面；不會新增選單項目。"
         manage_permissions:
           label: "管理權限"
-          hint: "賦予或移除工作人員權限。"
+          hint: "授予或移除管理員能力，並可使用共用的信眾頁面。"
         manage_profile:
           label: "管理宮廟資料"
           hint: "編輯官網的文案、主視覺與聯絡資訊。"

@@ -1258,6 +1258,18 @@ body.admin-body--internal .admin-layout--public .admin-main {
   display: inline-block;
   width: 100%;
 }
+.admin-sidebar .sidebar-link-state {
+  flex: 0 0 auto;
+  margin-left: var(--spacing-sm);
+  padding: 0.15rem 0.45rem;
+  border: 1px solid color-mix(in srgb, var(--admin-shell-muted-text, #ffe27a) 70%, transparent);
+  border-radius: 999px;
+  color: var(--admin-shell-muted-text, #ffe27a);
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.2;
+  white-space: nowrap;
+}
 .admin-sidebar form {
   margin: 0;
 }
@@ -3074,6 +3086,121 @@ body.admin-body--internal .admin-layout--public .admin-main {
 @media (max-width: 960px) {
   .hero-image-grid {
     grid-template-columns: minmax(0, 1fr);
+  }
+}
+.permission-grid {
+  display: grid;
+  gap: var(--spacing-lg);
+}
+
+.permission-card {
+  min-width: 0;
+  padding: clamp(var(--spacing-md), 3vw, var(--spacing-lg));
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  background: var(--surface-raised);
+  box-shadow: var(--shadow-soft);
+}
+
+.permission-card-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  min-width: 0;
+}
+
+.permission-card-header > div,
+.permission-card-header h2,
+.permission-card-header .muted {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.permission-card-header h2,
+.permission-card-header .muted {
+  margin: 0;
+}
+
+.permission-card__role {
+  flex: 0 0 auto;
+  margin: 0;
+}
+
+.permission-form {
+  margin-top: var(--spacing-md);
+}
+
+.permission-checklist {
+  display: grid;
+  border-top: 1px solid var(--border);
+}
+
+.permission-checkbox {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--spacing-sm);
+  align-items: start;
+  min-width: 0;
+  min-height: 3.25rem;
+  padding: var(--spacing-sm) 0;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  transition: background-color 150ms ease, box-shadow 150ms ease;
+}
+
+.permission-checkbox:hover {
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+
+.permission-checkbox:has(input:checked) {
+  background: color-mix(in srgb, var(--accent) 12%, transparent);
+}
+
+.permission-checkbox:has(input:focus-visible) {
+  outline: 3px solid color-mix(in srgb, var(--accent) 45%, transparent);
+  outline-offset: 2px;
+}
+
+.permission-checkbox input {
+  width: 1.15rem;
+  height: 1.15rem;
+  margin: 0.2rem 0 0;
+  accent-color: var(--accent);
+}
+
+.permission-checkbox__copy {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.permission-checkbox__copy strong,
+.permission-checkbox__copy .muted {
+  display: block;
+}
+
+.permission-checkbox__copy .muted {
+  margin: 0.2rem 0 0;
+}
+
+.permission-actions {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: var(--spacing-md);
+  padding: var(--spacing-md) 0 var(--spacing-xs);
+  border-top: 1px solid var(--border);
+}
+
+@media (max-width: 520px) {
+  .permission-card-header {
+    flex-direction: column;
+  }
+  .permission-actions {
+    justify-content: stretch;
+  }
+  .permission-actions .btn {
+    width: 100%;
   }
 }
 .temple-map-input {

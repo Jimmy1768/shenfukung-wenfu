@@ -208,6 +208,7 @@ en:
       switch_temple: "Switch temple"
       temple_selector_label: "Temple"
       no_temple: "No temple selected"
+      read_only: "Read-only"
       items:
         dashboard:
           label: "Dashboard"
@@ -1351,31 +1352,31 @@ en:
       index:
         eyebrow: "Permissions"
         title: "Admin capabilities"
-        body: "Only temple owners can change these flags. Use them to align access between offerings, onsite staff, and finance reviewers."
+        body: "Administrators with permission management access can change these flags. Use them to align access between offerings, onsite staff, and finance reviewers."
         save: "Save"
-        empty: "No admins yet. Invite a user from the Users screen to grant access."
+        empty: "No admins yet. Promote a patron from the Patrons screen to grant admin access."
       capabilities:
         manage_offerings:
-          label: "Manage offerings"
-          hint: "Create and edit offerings shown on the site."
+          label: "Author offerings"
+          hint: "Create, edit, archive, and set up offerings. Gatherings and Offerings remain available as read-only lists."
         manage_registrations:
           label: "Manage registrations"
-          hint: "Access registration records and onsite orders."
+          hint: "Access registration records, onsite orders, and the shared Patrons screen."
         record_cash_payments:
           label: "Record cash payments"
-          hint: "Record offline/cash payments for orders."
+          hint: "Record offline or cash payments within the order and payment workflow; this does not add a menu item."
         view_financials:
           label: "View financial summaries"
           hint: "See payment history and dashboard totals."
         export_financials:
           label: "Export ledgers"
-          hint: "Download CSV exports of payments and ledgers."
+          hint: "Download CSV exports from Archives; this does not add a separate menu item."
         view_guest_lists:
           label: "View guest lists"
-          hint: "View attendee rosters for onsite events."
+          hint: "Use guest-list and API roster surfaces for onsite events; this does not add a menu item."
         manage_permissions:
           label: "Manage permissions"
-          hint: "Grant or revoke admin access levels."
+          hint: "Grant or revoke admin capabilities and access the shared Patrons screen."
         manage_profile:
           label: "Manage profile"
           hint: "Edit the temple profile, hero copy, and contact details."

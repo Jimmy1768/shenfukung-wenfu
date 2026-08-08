@@ -49,6 +49,10 @@ module Admin
       false
     end
 
+    def membership_role
+      admin_account.membership_for(temple)&.role
+    end
+
     private
 
     def attributes_from_record

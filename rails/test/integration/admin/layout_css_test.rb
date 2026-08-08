@@ -37,4 +37,36 @@ class AdminLayoutCssTest < ActiveSupport::TestCase
     assert_match(/\.admin-flash\s*\{[^}]*white-space:\s*normal;/m, compiled_css)
     assert_match(/\.admin-flash\s*\{[^}]*overflow-wrap:\s*anywhere;/m, compiled_css)
   end
+
+  test "permission cards and controls have responsive, keyboard-visible styling in source and compiled CSS" do
+    components_css = Rails.root.join("app/stylesheets/admin/_components.scss").read
+    layout_css = Rails.root.join("app/stylesheets/admin/_layout.scss").read
+    compiled_css = Rails.root.join("public/backend/assets/admin.css").read
+    permission_view = Rails.root.join("app/views/admin/permissions/index.html.erb").read
+
+    assert_includes permission_view, 'class="permission-grid"'
+    assert_includes permission_view, 'class="permission-card"'
+    assert_includes permission_view, 'class="checkbox permission-checkbox"'
+    assert_includes permission_view, 'class="permission-actions"'
+    assert_match(/\.permission-grid\s*\{[^}]*gap:/m, components_css)
+    assert_match(/\.permission-card\s*\{[^}]*border:.*border-radius:.*padding:/m, components_css)
+    assert_match(/\.permission-checkbox\s*\{[^}]*grid-template-columns:.*min-height:/m, components_css)
+    assert_includes components_css, ".permission-checkbox:has(input:checked)"
+    assert_includes components_css, ".permission-checkbox:has(input:focus-visible)"
+    assert_match(/\.permission-actions\s*\{[^}]*border-top:.*padding:/m, components_css)
+    assert_includes layout_css, ".sidebar-link-state"
+    assert_includes compiled_css, ".permission-checkbox:has(input:focus-visible)"
+    assert_includes compiled_css, ".sidebar-link-state"
+  end
+
+  test "permission copy is localized for both supported admin locales" do
+    %i[en zh-TW].each do |locale|
+      assert I18n.exists?("admin.permissions.index.body", locale)
+      assert I18n.exists?("admin.permissions.index.empty", locale)
+      assert I18n.exists?("admin.permissions.capabilities.manage_offerings.hint", locale)
+      assert I18n.exists?("admin.permissions.capabilities.record_cash_payments.hint", locale)
+      assert I18n.exists?("admin.permissions.capabilities.view_guest_lists.hint", locale)
+      assert I18n.exists?("admin.nav.read_only", locale)
+    end
+  end
 end

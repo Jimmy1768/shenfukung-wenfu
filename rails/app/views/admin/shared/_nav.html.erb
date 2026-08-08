@@ -8,6 +8,9 @@
         <% classes << "is-active" if current_page?(path) %>
         <%= link_to path, class: classes.join(" ") do %>
           <span class="sidebar-link-title"><%= item[:label] %></span>
+          <% if item[:read_only] %>
+            <span class="sidebar-link-state"><%= t("admin.nav.read_only") %></span>
+          <% end %>
         <% end %>
       <% end %>
     </div>

@@ -73,4 +73,28 @@ class AdminPermissionsManagementTest < ActionDispatch::IntegrationTest
     assert_redirected_to admin_dashboard_path
     assert_equal "You do not have access to manage permissions.", flash[:alert]
   end
+
+  test "permissions page uses the selected temple membership role and bounded controls" do
+    temple = create_temple
+    manager = create_admin_user(temple:)
+    staff = create_admin_user(temple: create_temple, role: "admin")
+    additional_staff = create_admin_user(temple: create_temple, role: "admin")
+    AdminTempleMembership.create!(admin_account: staff.admin_account, temple:, role: "owner")
+    AdminTempleMembership.create!(admin_account: additional_staff.admin_account, temple:, role: "admin")
+    AdminPermission.create!(admin_account: staff.admin_account, temple:, manage_offerings: false)
+    AdminPermission.create!(admin_account: additional_staff.admin_account, temple:, manage_offerings: false)
+
+    sign_in_admin(manager)
+    get admin_permissions_path
+
+    assert_response :success
+    assert_select ".permission-grid .permission-card", minimum: 2
+    assert_select ".permission-card", text: /#{Regexp.escape(staff.english_name)}/ do
+      assert_select ".permission-card__role", text: I18n.t("admin.shared.roles.owner")
+    end
+    assert_select "label.permission-checkbox input[type='checkbox']", count: AdminPermission::CAPABILITIES.size * 2
+    assert_select ".permission-actions input[type='submit']", count: 2
+    assert_includes response.body, I18n.t("admin.permissions.index.body")
+    assert_includes I18n.t("admin.permissions.index.empty", locale: :en), "Patrons"
+  end
 end

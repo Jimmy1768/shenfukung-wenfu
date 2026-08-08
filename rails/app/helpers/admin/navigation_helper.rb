@@ -96,7 +96,7 @@ module Admin
     def admin_navigation_items
       NAV_ITEMS
         .select { |item| nav_item_visible?(item) }
-        .map { |item| item.merge(label: nav_item_label(item)) }
+        .map { |item| item.merge(label: nav_item_label(item), read_only: nav_item_read_only?(item)) }
     end
 
     def admin_navigation_link_path(item)
@@ -122,6 +122,10 @@ module Admin
       fallback_chain = []
       fallback_chain << item[:label_key] if item[:label_key]
       I18n.t("admin.nav.items.#{item[:key]}.label", default: fallback_chain + [default_label])
+    end
+
+    def nav_item_read_only?(item)
+      item[:key].in?(%i[gatherings offerings]) && !current_admin_permissions&.allow?(:manage_offerings)
     end
   end
 end

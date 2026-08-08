@@ -17,7 +17,7 @@
                   <h2><%= permission_form.admin_account.user.english_name %></h2>
                   <p class="muted"><%= permission_form.admin_account.user.email %></p>
                 </div>
-                <p class="badge"><%= permission_form.admin_account.role.titleize %></p>
+                <p class="badge permission-card__role"><%= t("admin.shared.roles.#{permission_form.membership_role}") %></p>
               </header>
 
               <%= form_with model: permission_form,
@@ -41,12 +41,12 @@
                   <% AdminPermission::CAPABILITIES.each do |capability| %>
                     <label class="checkbox permission-checkbox">
                       <%= form.check_box capability %>
-                      <div>
+                      <span class="permission-checkbox__copy">
                         <strong><%= capability_label(capability) %></strong>
                         <% if capability_hint(capability).present? %>
                           <p class="muted"><%= capability_hint(capability) %></p>
                         <% end %>
-                      </div>
+                      </span>
                     </label>
                   <% end %>
                 </div>
