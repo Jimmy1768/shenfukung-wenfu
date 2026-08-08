@@ -27,4 +27,5 @@
 current authorized documentation-only phase through Planning -> Wenfu Control
 B. It archives completed plan evidence, refreshes durable references, and
 creates the future-work record without changing runtime or activation
-authority. This phase remains current pending Control acceptance.
+authority. It is accepted at `2a5f0efdd3b15ca2578eda69bcde6546e5d7269b`; the
+documentation-housekeeping phase is complete.

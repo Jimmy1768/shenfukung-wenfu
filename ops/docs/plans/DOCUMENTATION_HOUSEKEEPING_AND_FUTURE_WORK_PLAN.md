@@ -136,3 +136,19 @@ Do not edit `AGENTS.md`, the portable skill package, Rails/Vue/Expo code,
 schemas, configuration, environment files, deployment/host files, or provider
 records. Do not push, deploy, access secrets/providers, change a scheduler,
 mutate production data, or perform any external action.
+
+## Planning Acceptance
+
+Planning accepted Control B's documentation-housekeeping packet at
+`2a5f0efdd3b15ca2578eda69bcde6546e5d7269b` (`docs: archive completed plans
+and track future work`). The six archived bodies match their pre-move records;
+the 22 retained active/deferred plans remain present; three completed product
+plans are absent from the active surface; and the three `AGENTS.md` source-map
+endpoints are limited historical-index stubs with working archive/current
+links. `future_work.md`, onboarding, and the TempleMate runtime reference
+agree that first-client activation remains deferred and is not authorized by
+local evidence. Focused archive-hash, path/link, retained-plan, deferred-wording,
+and diff checks passed. No documentation checker is configured.
+
+This documentation-only phase is complete. No runtime, provider, deployment,
+production, or external action occurred.
