@@ -305,24 +305,23 @@ Pass condition: focused tests cover success, failure, overdue, grace, day-37
 freeze, recovery, replay, malformed signature, and cross-tenant metadata;
 registration outcomes match entitlement in every case.
 
-### Phase 5 — Local acceptance and first-tenant activation packet
+### Phase 5 — Local acceptance
 
 Goal: distinguish local proof from live operational proof.
 
 - Run the complete focused Rails model/service/job/request suite, migration
 checks, and `git diff --check`; review owner/admin and account states in the
 isolated local environment.
-- Produce a separate controlled activation packet that names the exact commit,
-  first temple/owner, ECPay/Stripe operator, expected webhook event/delivery
-  metadata, scheduler enablement order, rollback, success evidence, and
-  monitoring window.
-- Under the separately approved activation workflow, verify one matching live
-  onboarding event and its local audit/entitlement result before enabling
-  recurring timers. Do not infer live readiness from stubs.
+- Do not produce a target-specific first-tenant activation packet in this
+  phase. It is deferred until a real client and separate authority exist; it
+  must then name the exact commit, first temple/owner, ECPay/Stripe operator,
+  expected webhook event/delivery metadata, scheduler enablement order,
+  rollback, success evidence, and monitoring window.
+- Do not verify a live onboarding event or enable recurring timers. Those are
+  later activation work and must never be inferred from stubs.
 
-Pass condition: local acceptance has durable evidence, and no scheduler or
-provider action occurs until a separately approved packet produces the first
-matching controlled event.
+Pass condition: local acceptance has durable evidence, and no scheduler,
+provider, target-specific activation-packet, or other live action occurs.
 
 ## Readiness Scan By Phase
 
@@ -405,8 +404,23 @@ failure from later temple dispatches. Focused Rails evidence passed: 70 runs,
 433 assertions, zero failures/errors/skips. No provider, secret, timer,
 deployment, production-data, or external action occurred.
 
-Phase 4 is the next authorized local phase. Its real-client/live activation
-dependencies remain deferred and are not a blocker.
+### Phase 4 acceptance
+
+Planning accepted Control B's Phase 4 terminal packet at
+`36119b403a10685454b85bc0602da333f11ee888` (`feat: converge billing lifecycle
+entitlement`). Verified matching success events now activate only their owning
+adopted temple entitlement in the persisted event transaction; provider-event
+replay remains deduplicated. Failed/action-required events retain active
+access through overdue and grace, the durable freeze suspends entitlement
+transactionally, and later verified paid recovery reactivates idempotently.
+The entitlement-first gate, signed webhook matching/deduplication, and
+missing-row legacy compatibility are preserved. Focused Rails evidence passed:
+26 runs, 183 assertions, zero failures/errors/skips. No provider, secret,
+timer, deployment, production-data, or external action occurred.
+
+Phase 5 local acceptance is the next authorized local phase. Its real-client
+and live-activation dependencies, including any target-specific activation
+packet, remain deferred and are not a blocker.
 
 The Director authorized execution on 2026-08-08. Phase 0 established that no
 real tenant intake is available: the supplied DOCX is a blank four-page

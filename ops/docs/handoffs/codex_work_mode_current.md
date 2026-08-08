@@ -30,5 +30,6 @@ they do not block the current authorized local phase.
 
 Phase 1 is accepted at `9e89b96062ae216592fd417853a6d93f633f8851`; Phase 2 is
 accepted at `bc8ec73c8e5067cd5953b5ae604093ae09a874d3`; Phase 3 is accepted at
-`716d1b05431cd36d8dde12ebae4253ff77377d6c`. Phase 4 (webhook, lifecycle, and
-entitlement convergence) is the current authorized local phase.
+`716d1b05431cd36d8dde12ebae4253ff77377d6c`; Phase 4 is accepted at
+`36119b403a10685454b85bc0602da333f11ee888`. Phase 5 local acceptance is the
+current authorized local phase; first-client live activation remains deferred.
