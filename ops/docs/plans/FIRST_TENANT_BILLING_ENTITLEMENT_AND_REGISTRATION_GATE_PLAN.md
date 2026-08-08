@@ -422,6 +422,26 @@ Phase 5 local acceptance is the next authorized local phase. Its real-client
 and live-activation dependencies, including any target-specific activation
 packet, remain deferred and are not a blocker.
 
+### Phase 5 local acceptance
+
+Planning accepted Control B's Phase 5 local-acceptance packet at
+`8e286e11482a93b5671dbce56e0d8433963b0c0a` (`docs: record billing
+entitlement local acceptance`). No product-code correction was required. The
+complete focused local Phase 1–4 Rails suite passed with 81 runs and 488
+assertions, zero failures/errors/skips; all test migrations, including
+`20260808000023`, are up. Static acceptance confirmed Ruby syntax, localized
+owner/admin billing copy, secret-safe rendering/audit behavior, and clean
+diffs. The local contract is proven for pending setup, verified owning setup,
+one-attempt retry-safe monthly dispatch, signed matching outcomes/replay,
+overdue/grace/day-37 freeze/recovery, tenant isolation, and missing-row legacy
+compatibility. No provider, secret, webhook configuration, scheduler,
+deployment, production-data, target-specific activation packet, or external
+action occurred.
+
+All authorized local phases are complete. The future first-client activation
+workflow remains explicitly deferred and requires separate authority; it is
+not a blocker or an action authorized by this local acceptance record.
+
 The Director authorized execution on 2026-08-08. Phase 0 established that no
 real tenant intake is available: the supplied DOCX is a blank four-page
 template with no completed offering entries, classifications, prices, dates,
