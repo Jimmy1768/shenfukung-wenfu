@@ -291,7 +291,7 @@ zh-TW:
         payment_method:
           eyebrow: "平台帳務"
           title: "付款方式"
-          subtitle: "系統固定每月 %{monthly_amount}，以年繳 %{annual_amount} 收取，宮廟不能自行修改價格。"
+          subtitle: "Stripe 會先收取一次性開通費 %{onboarding_amount}；完成設定後，系統會用已儲存的付款方式每月自動收取 %{monthly_amount} 平台費用。宮廟不能自行修改這些金額。"
           status_eyebrow: "帳務狀態"
           status_title: "帳務狀態"
           status_subtitle: "擁有者完成 Stripe 託管設定後，系統會自動更新。"
@@ -301,10 +301,10 @@ zh-TW:
             open_billing: "開啟付款方式設定"
             save: "儲存帳務狀態"
           notes:
-            price_title: "平台費用：每月 %{monthly_amount}"
-            price_body: "此費用以年繳 %{annual_amount} 收取，金額由系統控制。"
+            price_title: "一次性開通費：%{onboarding_amount}"
+            price_body: "完成開通後，系統會用已儲存的付款方式每月自動收取 %{monthly_amount}。金額由系統控制。"
             freeze_title: "寬限期與凍結規則"
-            freeze_body: "如果沒有有效付款方式，ECPay 線上付款會先保留 %{days} 天，之後自動暫停，直到帳務補齊。"
+            freeze_body: "如果已儲存的付款方式無法使用，或每月自動收款未完成，ECPay 線上付款會先保留 %{days} 天，之後自動暫停，直到帳務補齊。"
       fields:
         ecpay_merchant_id: "ECPay Merchant ID"
         ecpay_hash_key: "ECPay HashKey"
@@ -323,7 +323,7 @@ zh-TW:
         billing_overdue: "帳務逾期"
         grace_period: "寬限期剩餘 %{days} 天"
         monthly_fee: "每月費用"
-        annual_fee: "年繳金額"
+        onboarding_fee: "一次性開通費"
         grace_period_label: "寬限期"
         grace_period_value: "%{days} 天"
         current_state: "目前狀態"

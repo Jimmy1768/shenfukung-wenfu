@@ -18,7 +18,10 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "ECPay"
     assert_includes response.body, "帳務設定"
     assert_includes response.body, "NT$10,000"
-    refute_includes response.body, "%{annual_amount}"
+    assert_includes response.body, "一次性開通費"
+    assert_includes response.body, "每月自動收取"
+    assert_includes response.body, "30 天"
+    refute_includes response.body, "年繳"
 
     assert_difference -> { SystemAuditLog.where(action: "admin.payment_methods.updated").count }, 1 do
       patch admin_payment_methods_path, params: {
@@ -202,6 +205,31 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "帳務逾期"
     refute_includes response.body, "寬限期剩餘 30 天"
+  end
+
+  test "billing copy is localized without annual billing claims" do
+    copy = {
+      subtitle: "admin.payment_methods.sections.payment_method.subtitle",
+      price_title: "admin.payment_methods.sections.payment_method.notes.price_title",
+      price_body: "admin.payment_methods.sections.payment_method.notes.price_body",
+      freeze_body: "admin.payment_methods.sections.payment_method.notes.freeze_body",
+      onboarding_fee: "admin.payment_methods.status.onboarding_fee"
+    }
+
+    %i[en zh-TW].each do |locale|
+      rendered = [
+        I18n.t(copy[:subtitle], locale:, monthly_amount: "NT$1,500", onboarding_amount: "NT$10,000"),
+        I18n.t(copy[:price_title], locale:, onboarding_amount: "NT$10,000"),
+        I18n.t(copy[:price_body], locale:, monthly_amount: "NT$1,500"),
+        I18n.t(copy[:freeze_body], locale:, days: 30),
+        I18n.t(copy[:onboarding_fee], locale:)
+      ].join(" ")
+
+      assert_includes rendered, "NT$10,000"
+      assert_includes rendered, "NT$1,500"
+      assert_includes rendered, "30"
+      refute_match(/annual|yearly|年繳/i, rendered)
+    end
   end
 
   test "non-owner is redirected away from payment methods" do

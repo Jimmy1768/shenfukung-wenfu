@@ -87,12 +87,12 @@ module Admin
       Currency::Symbols.format_amount(billing_monthly_fee_cents, "TWD")
     end
 
-    def billing_annual_fee_cents
+    def billing_onboarding_fee_cents
       1_000_000
     end
 
-    def billing_annual_fee_label
-      Currency::Symbols.format_amount(billing_annual_fee_cents, "TWD")
+    def billing_onboarding_fee_label
+      Currency::Symbols.format_amount(billing_onboarding_fee_cents, "TWD")
     end
 
     def billing_grace_days
