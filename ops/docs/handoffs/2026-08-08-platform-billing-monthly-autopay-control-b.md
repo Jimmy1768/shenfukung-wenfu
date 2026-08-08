@@ -11,8 +11,8 @@
 - Repository, worktree, branch, and base HEAD:
   `/Users/jimmy1768/Projects/shengfukung-wenfu`, `main`,
   `99cbdb74060484d4f15693d5cc4075c5c6e8c392`.
-- Packet status and date: Implementer returned; Control B accepted for local
-  integration, 2026-08-08.
+- Packet status and date: Implementer returned; Control B accepted and locally
+  integrated, 2026-08-08.
 
 ## Scope
 
@@ -82,8 +82,11 @@
   Isolated local browser review confirmed the payment-method tab shows the
   one-time `NT$10,000` onboarding fee, monthly automatic collection, and
   30-day grace rule without opening Stripe Checkout or provider links.
-- Integration, staging, and commit evidence: pending Control-owned local
-  integration.
+- Integration, staging, and commit evidence: Control staged the seven planned
+  documentation, implementation, locale, and test paths only after a clean
+  owned-path review. Local commit
+  `e84ce52ec1a2b4534b689fefab86f2611735ffb4` integrated the accepted candidate
+  on `main` with subject `fix(billing): clarify onboarding and monthly autopay`.
 - Residual risk and next owner: source is locally accepted. Production Stripe
   catalog, onboarding, and collection remain intentionally unmodified; any
   release or first-tenant operation requires its separate authorized workflow.

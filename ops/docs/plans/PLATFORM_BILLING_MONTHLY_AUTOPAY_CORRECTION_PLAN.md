@@ -1,6 +1,6 @@
 # Platform Billing Monthly Autopay Correction Plan
 
-Status: implemented and Control B accepted; local integration in progress
+Status: implemented, Control B accepted, and locally integrated
 
 Product authority: Director
 
@@ -127,3 +127,6 @@ All three phases and six frozen criteria were completed on 2026-08-08.
 No external Stripe/ECPay request, catalog or credential access, payment-method
 change, invoice, money movement, deployment, production-data action, or push
 occurred.
+
+Accepted local implementation commit:
+`e84ce52ec1a2b4534b689fefab86f2611735ffb4`.
