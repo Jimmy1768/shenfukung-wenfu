@@ -28,6 +28,6 @@ The committed first-tenant billing/entitlement plan authorizes its local Phases
 Implementer. Its real-client intake and live activation branch remain deferred;
 they do not block the current authorized local phase.
 
-Phase 1 is accepted at `9e89b96062ae216592fd417853a6d93f633f8851`; Phase 2
-(onboarding completion and registration enforcement) is the current authorized
-local phase.
+Phase 1 is accepted at `9e89b96062ae216592fd417853a6d93f633f8851`; Phase 2 is
+accepted at `bc8ec73c8e5067cd5953b5ae604093ae09a874d3`. Phase 3 (monthly
+collection dispatch) is the current authorized local phase.

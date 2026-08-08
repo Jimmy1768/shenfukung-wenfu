@@ -377,7 +377,22 @@ passed: 31 runs, 161 assertions, zero failures/errors/skips; the new migration
 is up in the local test database. No provider, secret, timer, deployment,
 production-data, or external action occurred.
 
-Phase 2 is the next authorized local phase. Its real-client/live activation
+### Phase 2 acceptance
+
+Planning accepted Control B's Phase 2 terminal packet at
+`bc8ec73c8e5067cd5953b5ae604093ae09a874d3` (`feat(billing): activate
+entitlement after setup`). The local implementation adopts the new temple into
+`pending_setup` only after its existing local setup guards and configuration
+validation, then activates it only after server-side verification of the paid
+matching Checkout Session and its owning persisted setup delivery. The account
+registration and checkout, admin order and checkout, gathering entry, and
+account payment presentation now converge on the same entitlement authority;
+pending and suspended states block while the explicit missing-row legacy
+compatibility remains intact. Focused Rails evidence passed: 62 runs, 400
+assertions, zero failures/errors/skips. No provider, secret, timer,
+deployment, production-data, or external action occurred.
+
+Phase 3 is the next authorized local phase. Its real-client/live activation
 dependencies remain deferred and are not a blocker.
 
 The Director authorized execution on 2026-08-08. Phase 0 established that no
