@@ -204,6 +204,61 @@ module Account
       assert_equal "OAuth User", user.english_name
     end
 
+    test "central oauth signs in an existing user after replacing a stale verified google subject" do
+      temple = create_temple(slug: "oauth-google-subject-replacement-temple")
+      user = User.create!(
+        email: "oauth-google-subject@example.com",
+        english_name: "Google Subject User",
+        encrypted_password: User.password_hash("Password123!"),
+        metadata: {}
+      )
+      identity = OAuthIdentity.create!(
+        user: user,
+        provider: "google_oauth2",
+        provider_uid: "integration-google-old-subject",
+        email: user.email,
+        email_verified: true,
+        credentials: { "token" => "integration-old-token" },
+        metadata: {}
+      )
+
+      Auth::CentralOAuthClient.stub(:new, FakeCentralOAuthClient.new({ "redirect_url" => "https://auth.example.test/oauth" }, nil)) do
+        get central_oauth_start_path(
+          provider: "google",
+          surface: "account",
+          temple_slug: temple.slug,
+          origin: account_login_path(temple_slug: temple.slug)
+        )
+      end
+
+      exchange_response = {
+        "provider" => "google",
+        "uid" => "integration-google-new-subject",
+        "email" => user.email,
+        "email_verified" => true,
+        "name" => "Google Subject User",
+        "credentials" => { "token" => "integration-google-new-token" }
+      }
+
+      Auth::CentralOAuthClient.stub(:new, FakeCentralOAuthClient.new(nil, exchange_response)) do
+        get central_oauth_callback_path(code: "integration-oauth-code", state: "integration-oauth-state")
+      end
+
+      assert_redirected_to account_dashboard_path
+      assert_equal user.id, session[AppConstants::Sessions.key(:account)]
+      assert_equal identity.id, OAuthIdentity.find_by!(provider: "google_oauth2", provider_uid: "integration-google-new-subject").id
+      assert_equal 1, user.oauth_identities.where(provider: "google_oauth2").count
+
+      audit = SystemAuditLog.find_by!(action: "auth.oauth.google_subject_replaced")
+      audit_metadata = audit.metadata.to_json
+      assert_equal identity, audit.target
+      assert_equal user, audit.user
+      assert_equal 1, SystemAuditLog.where(action: "auth.oauth.google_subject_replaced").count
+      %w[integration-google-old-subject integration-google-new-subject oauth-google-subject@example.com integration-google-new-token].each do |raw_value|
+        assert_not_includes audit_metadata, raw_value
+      end
+    end
+
     test "user can unlink provider when another login path remains" do
       temple = create_temple(slug: "oauth-unlink-temple")
       user = User.create!(
