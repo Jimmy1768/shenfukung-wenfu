@@ -55,5 +55,5 @@ documentation-housekeeping phase is complete.
 the current unchanged-v1 local package and policy propagation. It is the
 current authorized builder-governance phase through Planning -> Wenfu Control
 B; it is accepted at `9ef996431054f7bacb4765b72b7d04a9e8460a48`. The local
-policy propagation is complete; product/runtime and external boundaries remain
-unchanged.
+policy propagation and registered gate `codex_work_mode.package.f737dc3.v1`
+are accepted. Product/runtime and external boundaries remain unchanged.

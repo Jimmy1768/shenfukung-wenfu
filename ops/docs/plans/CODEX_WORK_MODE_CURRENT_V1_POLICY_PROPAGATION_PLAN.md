@@ -155,3 +155,14 @@ The local propagation is complete: exact package bytes, reference, protocol,
 template, current coordination, and verifier now conform to this plan. The
 registered-gate completion to Strategy is the only cross-repository message
 required after local acceptance.
+
+## Registered-Gate Disposition
+
+Strategy accepted registered gate `codex_work_mode.package.f737dc3.v1` from
+the changed evidence at implementation `9ef996431054f7bacb4765b72b7d04a9e8460a48`
+and Planning receipt `3511a506fe113bac8fc2cf4f9477d36a1faf7db1`. The accepted
+evidence is exact committed-byte comparison to OperatorKit `f737dc3e`, the
+three target hashes, verifier/protocol/manifest closure, clean canonical main,
+and unchanged `AGENTS.md` plus descriptor. The disposition grants no further
+repository, product/runtime, provider, database, deployment, push, or external
+authority.
