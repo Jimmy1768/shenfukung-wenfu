@@ -8,10 +8,11 @@
 - Persistent Handoff: exceptional, recorded-reason, one-packet continuity only.
 - Current coordination authority and task status are read from the active Codex
   task and its file-backed records; this snapshot is not historical evidence.
-- Active allocation: Strategy sol/high; Planning terra/high; Control terra/high
-  (Sol/high only with exceptional Strategy authorization); normal ephemeral
-  Implementer terra/medium, with justified terra/high only for deeper bounded
-  work. Luna is never ephemeral; legacy 5.5 allocation is absent.
+- Active allocation: Strategy sol/xhigh; Planning sol/high; Control terra/high
+  by default (Sol/high only with exceptional Strategy authorization); normal
+  ephemeral Implementer terra/medium, with explicitly justified terra/high
+  only for deeper bounded work. Luna is never ephemeral; legacy 5.5 allocation
+  is absent.
 - Persistent Handoff eligibility comes before model selection; only eligible
   certified-mechanical continuity may use Luna/medium.
 
@@ -29,3 +30,10 @@ B. It archives completed plan evidence, refreshes durable references, and
 creates the future-work record without changing runtime or activation
 authority. It is accepted at `2a5f0efdd3b15ca2578eda69bcde6546e5d7269b`; the
 documentation-housekeeping phase is complete.
+
+## Current Codex Work Mode Policy Propagation
+
+`ops/docs/plans/CODEX_WORK_MODE_CURRENT_V1_POLICY_PROPAGATION_PLAN.md` records
+the current unchanged-v1 local package and policy propagation. It is the
+current authorized builder-governance phase through Planning -> Wenfu Control
+B; product/runtime and external boundaries remain unchanged.
