@@ -3,18 +3,36 @@
 ## Local Coordination
 
 - Ordinary repository route: Planning -> authoritative Control A/B -> one ephemeral Implementer.
-- Strategy owns task-lifecycle action and cross-repository routing only.
-- Cross-repository route: Planning -> Strategy -> affected Planning.
-- Persistent Handoff: exceptional, recorded-reason, one-packet continuity only.
+- Planning commits an accepted plan, records immutable criteria, and sends them
+  directly to Control; it does not select implementation details, receive
+  intermediate repair/status traffic, or monitor the Implementer.
+- Strategy receives Planning traffic only for cross-repository decisions
+  affecting another Planning task, Strategy-owned lifecycle action, or changed
+  evidence requiring registered-gate re-evaluation. Local status, cleanup,
+  closeout, terminal packets, and receipts stay between Planning and Control.
+- A local-only packet misrouted to Strategy receives exactly: `Route this
+  packet to the local Planning owner.`
+- A Control conformance defect within unchanged criteria is a nonterminal
+  bounded repair with an immutable repair packet, direct mechanism, and checks;
+  at most one ephemeral Implementer is active. Planning receives no packet
+  until terminal disposition.
+- One immutable Control terminal packet identifies its delivery, attempt,
+  source/target, continuation disposition, and next owner/action. Planning's
+  paired direct receipt is `released_terminal_idle`, after which Planning
+  classifies the parent and continues known authorized local work. No
+  `active_packet: none` is allowed without the exact missing decision/owner.
+- Protected validation requires a registered immutable policy and a trusted
+  local credential-bearing validator that verifies the manifest, performs one
+  exact one-use match, and returns only a typed safe receipt. Missing policy,
+  validator, or tool is `protected_validator_unavailable`; human output is
+  evidence, not follow-on authority.
+- Active allocation: Strategy `gpt-5.6-sol/xhigh`; Planning
+  `gpt-5.6-sol/high`; Control `gpt-5.6-terra/high` by default; normal
+  ephemeral Implementer `gpt-5.6-terra/medium`. Terra/high requires explicit
+  immutable-packet complexity rationale. Handoff eligibility precedes model
+  choice; Luna is never ephemeral and legacy 5.5 allocation is absent.
 - Current coordination authority and task status are read from the active Codex
   task and its file-backed records; this snapshot is not historical evidence.
-- Active allocation: Strategy sol/xhigh; Planning sol/high; Control terra/high
-  by default (Sol/high only with exceptional Strategy authorization); normal
-  ephemeral Implementer terra/medium, with explicitly justified terra/high
-  only for deeper bounded work. Luna is never ephemeral; legacy 5.5 allocation
-  is absent.
-- Persistent Handoff eligibility comes before model selection; only eligible
-  certified-mechanical continuity may use Luna/medium.
 
 ## Product-Roadmap Pointers
 

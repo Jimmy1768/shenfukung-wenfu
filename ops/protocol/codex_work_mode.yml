@@ -9,52 +9,55 @@ source_map:
 routing:
   ordinary: Planning -> authoritative Control A/B -> one ephemeral Implementer
   cross_repository: Planning -> Strategy -> affected Planning
-  strategy_lifecycle_conditions:
-    - no_authoritative_control
-    - control_requires_thread_refresh
-    - genuinely_independent_work_requires_control_b
+  strategy_message_conditions:
+    - cross_repository_decision_affecting_another_planning_task
+    - strategy_owned_lifecycle_action
+    - changed_evidence_re_evaluates_registered_gate
+  local_only_packet_misroute_response: Route this packet to the local Planning owner.
+  local_status_terminal_packets_and_receipts_stay_planning_control: true
 roles:
-  planning: reports_evidence_and_freezes_accepted_repository_local_criteria_only
-  control: owns_packet_review_acceptance_and_local_integration
+  planning: commits_accepted_plan_records_immutable_criteria_and_sends_directly_to_control
+  control: records_immutable_packet_owns_repair_acceptance_and_local_integration
   implementer: edits_packet_owned_paths_runs_checks_and_returns_to_control
 execution:
-  committed_frozen_plan_authorizes_routine_local_execution: true
-  planning_dispatches_or_monitors_implementer: false
+  planning_selects_implementation_details: false
+  planning_receives_intermediate_repair_or_status: false
+  planning_monitors_implementer: false
+  control_keeps_at_most_one_ephemeral_implementer_active: true
+  conformance_defect_within_unchanged_criteria_is_nonterminal_bounded_repair: true
+  repair_packet_requires_attempt_evidence_direct_mechanism_and_checks: true
+  planning_packet_before_terminal_outcome: false
+  terminal_packet_is_immutable_and_direct: true
+  terminal_packet_identifies_delivery_attempt_source_target_disposition_and_next_owner: true
+  planning_paired_receipt: released_terminal_idle
+  active_packet_none_requires_exact_missing_decision_and_owner: true
+  committed_accepted_plan_authorizes_routine_local_execution: true
   control_authors_or_reopens_planning_documents: false
-  blocker_requires_undeferred_current_frozen_criterion: true
-  blocker_requires_evidence_first_prevented_action_and_no_independent_continuation: true
-  deferred_later_client_specific_or_independent_dependency_blocks_current_phase: false
-  planning_sends_next_frozen_phase_after_accepted_terminal_receipt: true
-  repeated_director_approval_required_between_routine_local_phases: false
 evidence:
-  concrete_assertions_require_canonical_source: true
-  concrete_assertion_categories: [repository_url, port, command, environment, deployment, configuration, live_process]
   state_labels: [configured, documented, observed, unknown]
-incident_correction:
-  persistent_governance_default: false
-  proper_surfaces: [configuration, reference, skill, test_hook]
-  agents_edit_requires_explicit_director_authorization: true
-authority:
-  planning_cannot_recommend_approve_or_redefine_canonical_policy: true
-  strategy_owns_cross_repository_policy: true
-  director_accepts_cross_repository_policy: true
+immutable_artifacts:
+  generic_active_prose_freeze_allowed: false
+  accepted_plan_committed: true
+  criteria_and_control_packet_recorded_immutable: true
+protected_validation:
+  registered_immutable_policy_required: true
+  required_policy_fields: [identity_version, repository_target_validator_command_worktree_commit, credential_injection_owner, safe_receipt_schema, side_effect_concurrency, nonce_replay, expiry_revocation, preconditions_postconditions, uncertain_outcome_fence]
+  trusted_local_credential_bearing_validator_required: true
+  validator_verifies_manifest_and_exact_one_use_match: true
+  unavailable_result: protected_validator_unavailable
+  human_output_is_follow_on_authority: false
 allocation:
-  strategy: gpt-5.6-sol/high
-  planning: gpt-5.6-terra/high
+  strategy: gpt-5.6-sol/xhigh
+  planning: gpt-5.6-sol/high
   control: gpt-5.6-terra/high
-  control_sol_high_requires_exceptional_strategy_authorization: true
   normal_ephemeral_implementer: gpt-5.6-terra/medium
-  deeper_bounded_ephemeral_implementer: justified_gpt-5.6-terra/high
+  deeper_ephemeral_implementer: explicit_immutable_packet_complexity_rationale_gpt-5.6-terra/high
   luna_ephemeral_implementer_allowed: false
   gpt_5_5_active_allocation_allowed: false
 handoff:
-  default: ephemeral_implementer_direct_return
-  persistent: exceptional_recorded_reason_one_packet_continuity
   eligibility_before_model_selection: true
+  persistent: exceptional_recorded_reason_one_packet_continuity
   certified_mechanical_after_eligibility: gpt-5.6-luna/medium
-  normal_after_eligibility: gpt-5.6-terra/medium
-  deeper_bounded_after_eligibility: justified_gpt-5.6-terra/high
-  luna_availability_cost_mechanical_simplicity_or_rejection_qualifies: false
 boundaries:
   controls_do_not_coordinate_cross_repository_architecture: true
   historical_records_are_preserved: true

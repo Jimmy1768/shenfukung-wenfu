@@ -8,6 +8,6 @@ canonical_provenance:
   package_identity: operatorkit:codex_work_mode_skill_package:v1
 portable_payload:
   - path: SKILL.md
-    sha256: aabcf7aa4adb80c75bf4784149aeef242bd57d7ffcb6d88b9d3bbb3c420542fa
+    sha256: 6547d2aeee198bcc9e16c6f8fb6120f0efd443fe1d39b828ecaff2ca872182ae
   - path: agents/openai.yaml
     sha256: f79867a4869ff4cc5c6638955346f43d3e84f1c54c7a1d42fa9f1416f50ad007
