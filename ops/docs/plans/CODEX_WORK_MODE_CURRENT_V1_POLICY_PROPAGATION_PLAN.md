@@ -143,3 +143,15 @@ secret, account, payment, scheduler, deployment, production-data, push, or
 external action is authorized. No intermediate local status is sent to
 Strategy. After local acceptance, Planning sends Strategy only the compact
 completion required for registered gate `codex_work_mode.package.f737dc3.v1`.
+
+## Planning Acceptance And Direct Receipt
+
+Planning accepted Control B's immutable terminal packet at
+`9ef996431054f7bacb4765b72b7d04a9e8460a48` (`docs: propagate current Codex
+Work Mode v1 policy`). The direct paired receipt identifies the Control
+terminal `2026-08-10-codex-work-mode-current-v1-policy-propagation-control-b`,
+its `accepted_frozen_outcome` disposition, and `released_terminal_idle` state.
+The local propagation is complete: exact package bytes, reference, protocol,
+template, current coordination, and verifier now conform to this plan. The
+registered-gate completion to Strategy is the only cross-repository message
+required after local acceptance.

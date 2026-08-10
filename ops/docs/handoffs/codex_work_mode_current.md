@@ -54,4 +54,6 @@ documentation-housekeeping phase is complete.
 `ops/docs/plans/CODEX_WORK_MODE_CURRENT_V1_POLICY_PROPAGATION_PLAN.md` records
 the current unchanged-v1 local package and policy propagation. It is the
 current authorized builder-governance phase through Planning -> Wenfu Control
-B; product/runtime and external boundaries remain unchanged.
+B; it is accepted at `9ef996431054f7bacb4765b72b7d04a9e8460a48`. The local
+policy propagation is complete; product/runtime and external boundaries remain
+unchanged.
