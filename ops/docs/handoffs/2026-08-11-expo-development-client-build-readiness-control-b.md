@@ -156,25 +156,36 @@ cloud, provider, or device readiness.
    linkage, CLI choice, project-creation/link prompt behavior, and Android
    credential ownership. It must stop on an unknown or destructive choice.
    This is the first action blocked by an external unknown.
-2. **Rails/central-auth/provider configuration validation (deployment and
-   provider authority).** Establish the accepted native server contract and
-   return allowlist in the intended non-production validation environment,
-   without exposing client secrets. It must precede a live Google/Apple journey.
-3. **EAS cloud development APK build and controlled artifact handling
-   (EAS authority).** Use the exact `development` profile and Android APK
-   interface after gates 1–2. Verify resolved development identity, native
-   modules, API 36 target, no version mutation, artifact provenance/checksum,
-   low-disk preflight, temporary storage, and deletion of the downloaded APK
-   immediately after installation unless the Director asks to retain it.
-4. **Target-fenced physical validation (device authority).** Independently
-   preflight the intended device and free disk; clean-install only
-   `com.jimmy1768.komainu.dev` after confirming the prior package’s Director-
-   reported uninstall as actual device state. Start dummy mode first, then
-   target-fenced Metro/ADB reverse only for source-derived ports, QR camera
-   permission grant/deny/retry/reset plus a safe fixture QR scan, and only then
-   separately authorized real OAuth tests. Keep app-scoped logs redacted of
-   auth codes, tokens, provider payloads, and central response bodies.
-5. **Release work remains separate.** Store/AAB, OTA, public production
+2. **EAS cloud development APK build and controlled artifact handling
+   (EAS authority).** After gate 1 (and only after any separately accepted
+   local source correction that preflight proves necessary), use the exact
+   `development` profile and Android APK interface. This build is independent
+   of Rails, central-auth, and provider readiness. Verify resolved development
+   identity, native modules, API 36 target, no version mutation, artifact
+   provenance/checksum, low-disk preflight, temporary storage, and deletion of
+   the downloaded APK immediately after installation unless the Director asks
+   to retain it.
+3. **Target-fenced dummy and camera validation (device authority).** After a
+   successful gate-2 artifact, independently preflight the intended device and
+   free disk; clean-install only `com.jimmy1768.komainu.dev` after confirming
+   the prior package’s Director-reported uninstall as actual device state.
+   Start dummy mode first, then target-fenced Metro/ADB reverse only for
+   source-derived ports, QR camera permission grant/deny/retry/reset, and a
+   safe fixture QR scan. Keep app-scoped logs redacted of auth codes, tokens,
+   provider payloads, and central response bodies.
+4. **Rails/central-auth/provider configuration validation (deployment and
+   provider authority).** This may run in parallel with gates 2–3 or later.
+   Establish the accepted native server contract and return allowlist in the
+   intended non-production validation environment, without exposing client
+   secrets. It is required before real local/test API use or a live
+   Google/Apple journey, but not before the APK build, clean install, dummy
+   smoke, or fixture-QR camera validation.
+5. **Real local/test and Google/Apple validation (server/provider plus device
+   authority).** Only after gate 4 and the required device preparation, prove
+   the explicit real local/test configuration, central-browser success,
+   cancellation, denial, profile-required, interruption/restart, and logout
+   cleanup with sanitized logs.
+6. **Release work remains separate.** Store/AAB, OTA, public production
    distribution, app-store signing/submission, iOS/TestFlight, and version
    advancement are not prerequisites for this Android internal development
    client.
@@ -188,11 +199,17 @@ cloud, provider, or device readiness.
   `templemate://oauth/complete`, SDK 36, and `1.0.0 / 1 / 1`.
 - [ ] An authorized EAS preflight proves project/account/linkage, approved CLI
   interface, internal-APK profile interpretation, and signing ownership.
-- [ ] An authorized server/provider preflight proves the deployed native
-  start/exchange and exact native return contract; no secret is copied into
-  Expo.
 - [ ] The build packet names a temporary artifact location, low-disk threshold,
   checksum/provenance evidence, and deletion owner.
+
+The following is a **real OAuth/local-test prerequisite**, not a pre-build
+invariant:
+
+- [ ] An authorized server/provider preflight proves the deployed native
+  start/exchange and exact native return contract; no secret is copied into
+  Expo. It is required before real local/test API or Google/Apple validation,
+  not before the development APK, clean installation, dummy smoke, or fixture
+  QR camera validation.
 
 ## Post-build/device acceptance matrix
 
@@ -202,7 +219,7 @@ cloud, provider, or device readiness.
 | Clean install | Device preflight records OS/API, disk, exact package absence/presence; install is a clean Komainu development package install | Device packet only; Director report is insufficient device proof |
 | Dummy smoke | Launcher opens development client and reaches explicit network-free dummy account state | Device/Metro packet only |
 | Camera | User-initiated permission; deny has no prompt loop; explicit retry/reset behavior; rear QR scan of a deterministic fixture; untrusted input safely fails | Device packet only |
-| Real local/test | Explicit local/test configuration, source-derived Metro/Rails/ADB reverse proof, cleartext result, and no dummy fallback | Server + device packet only |
+| Real local/test | Explicit local/test configuration, source-derived Metro/Rails/ADB reverse proof, cleartext result, and no dummy fallback | Requires completed server/provider validation plus device authority; not a build/dummy/camera prerequisite |
 | Google/Apple | Central-browser success, cancellation, denial, profile-required, interruption/restart, logout cleanup, and sanitized logs | Provider/server + device authority only |
 | Cleanup | Remove target-fenced reverse mappings; delete temporary APK unless explicitly retained; preserve no secrets/log payloads | Device/build packet only |
 
@@ -248,7 +265,10 @@ external action occurred during this scan.
 There is no blocker to this report. The first blocker to a future cloud build
 is the **unverified EAS project/account/linkage and Android signing state**;
 the precise next owner is the Director/Planning-authorized EAS preflight
-packet. After that, server/provider configuration and the bounded cloud-build
-and device packets remain independently gated. Source is ready for one future
-APK, while all external facts are intentionally left unknown rather than
-inferred.
+packet. After that preflight (and any separately accepted source correction it
+proves necessary), the bounded cloud-build packet may proceed independently of
+server/provider readiness. Server/provider validation remains a separate
+parallel-or-later gate before real local/test API or Google/Apple validation;
+it does not block clean installation, dummy smoke, or physical fixture-QR
+camera validation. Source is ready for one future APK, while all external
+facts are intentionally left unknown rather than inferred.
