@@ -1,7 +1,8 @@
 # Expo Account V1 Build Plan
 
-Status: Director-authorized V1 planning organization; implementation scope is
-not yet selected; implementation and Control dispatch are not authorized
+Status: Director-authorized first broad objective accepted; dummy-data
+development-client scope recorded; implementation and Control dispatch are not
+authorized
 
 Created: 2026-08-11
 
@@ -11,6 +12,9 @@ Repository: `/Users/jimmy1768/Projects/shengfukung-wenfu`
 
 Planning base: `main` at `63a059566d66c6dda586ef7e0e9ae827ea49ff97`
 
+First-objective update base:
+`main` at `37b37a7bf6a2a4ebbac0c9248123008038c57d85`
+
 Supporting readiness inventory:
 `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
 
@@ -19,20 +23,67 @@ Mature read-only implementation reference:
 
 ## Purpose
 
-Organize the first Wenfu Expo build around a defined account-user purpose
-without treating every web account feature as an automatic V1 requirement.
+Organize the first Wenfu Expo build without treating every web account feature
+as an automatic V1 requirement.
 
 The readiness inventory remains useful because it records the existing Expo
 scaffold, web account surfaces, API gaps, and risks. It is an upper-bound
 inventory, not a command to implement full account parity.
 
-V1 must answer this first:
+The first broad objective is now selected: create a development client using
+dummy data. This technical milestone deliberately precedes selection of the
+first real account-user product journey.
+
+Before real account behavior is implemented, V1 must still answer:
 
 > What single job should a Wenfu account user be able to complete more usefully
 > in the native app than by continuing to use the web account portal?
 
-Until that job and its success outcome are accepted, broad CRUD, OAuth,
-payment, notification, offline, and release work remain deferred.
+Until that job and its success outcome are accepted, real API integration,
+authentication, broad CRUD, OAuth, payment, notification, offline, and release
+work remain deferred.
+
+## First Broad Objective — Dummy-Data Development Client
+
+Create an installable Expo development client from the existing Wenfu scaffold
+that renders an account-only native shell with deterministic dummy data.
+
+This objective exists to prove the scaffold and native development loop, not
+to approximate the final product prematurely.
+
+### Included
+
+- the checked-in Expo 54 scaffold and existing shared design/project assets;
+- a development-client build identity isolated from any future production app;
+- local Metro attachment and normal development-client reload behavior;
+- the minimum account-oriented shell needed to prove app startup, navigation,
+  theme/tokens, locale presentation, safe areas, system bars, keyboard/insets,
+  and Android back behavior where those elements are present;
+- deterministic local fixtures that are visibly dummy/demo data;
+- clear dummy-data mode separation so fixtures cannot silently become a
+  production fallback;
+- generated Android and installed development-client evidence for target SDK
+  36;
+- focused tests and configuration checks for the implemented shell.
+
+### Excluded
+
+- Rails or any other backend dependency;
+- live or local API calls, native sessions, real users, or real temple data;
+- signup, login, password recovery, SecureStore token use, OAuth, or identity
+  linking;
+- real CRUD or writes of any kind;
+- payments, checkout, provider callbacks, secrets, push, camera, media, or
+  background behavior;
+- admin UI, role switching, admin data, or admin capabilities;
+- production signing, production identifiers, AAB generation, Play upload,
+  store submission, OTA publication, deployment, or release promotion.
+
+For Android, the requested artifact is a development-client APK or equivalent
+installable development artifact selected by Control under a later packet. It
+is explicitly **not an AAB**. A cloud/EAS build is not implied and would require
+separate external-action authority; Control may select a local mechanism when
+the later packet and available tooling support it.
 
 ## Accepted Direction
 
@@ -40,22 +91,25 @@ These criteria are immutable for V1 planning:
 
 1. Expo is for the account audience only. Admin remains web-only.
 2. Reuse the checked-in Wenfu Expo scaffold. Do not generate a replacement app.
-3. Select one primary V1 user job before choosing screens, endpoints, or
-   dependencies.
-4. Include only the minimum supporting features required to complete that job
+3. The dummy-data development client may precede product-scope selection, but
+   it must remain a technical shell and must not choose real product behavior
+   by implication.
+4. Select one primary V1 user job before choosing real screens, endpoints,
+   providers, or product dependencies.
+5. Include only the minimum supporting features required to complete that job
    safely and coherently.
-5. Web account behavior is authoritative for every selected feature. Match its
+6. Web account behavior is authoritative for every selected feature. Match its
    fields, validation, lifecycle, permissions, tenant scope, and allowed
    operations; do not invent native-only business behavior.
-6. “Parity” applies only to the selected V1 slice. It does not require all web
+7. “Parity” applies only to the selected V1 slice. It does not require all web
    features, all CRUD, all login methods, OAuth, payments, or every setting.
-7. Features not explicitly accepted into V1 are deferred, not missing V1
+8. Features not explicitly accepted into V1 are deferred, not missing V1
    defects.
-8. DojoMate may guide app structure, native build discipline, and verification;
+9. DojoMate may guide app structure, native build discipline, and verification;
    its product surface does not define Wenfu scope.
-9. The Android deliverable must ultimately prove API 36 in the built artifact,
-   but source alignment alone does not authorize a build or Play submission.
-10. Production, providers, secrets, EAS cloud actions, store submission, and
+10. The Android development client must prove API 36 without producing an AAB;
+    a later release artifact must prove it again under separate authority.
+11. Production, providers, secrets, EAS cloud actions, store submission, and
     release promotion remain separately authorized.
 
 ## Plan Relationship And Supersession
@@ -111,15 +165,17 @@ was found. Therefore:
 - built AAB target: **not yet proven**;
 - Play compliance/release: **not yet proven or authorized**.
 
-The later native gate must inspect the generated project and built artifact for
-compile SDK 36 and target SDK 36, then exercise Android 16 behavior. Do not
+V1-0 must inspect the generated project and development-client artifact for
+compile SDK 36 and target SDK 36, then exercise Android 16 behavior. A later
+AAB must prove the target again under separate release authority. Do not
 upgrade packages merely to imitate DojoMate's exact patch versions; use Expo
 compatibility evidence at implementation time.
 
 ## V1 Product-Scope Gate
 
-Planning must record one accepted V1 scope card before any product
-implementation packet.
+Planning must record one accepted V1 scope card before any real product or
+backend implementation packet. The dummy-data development-client milestone is
+the sole accepted precursor to this gate.
 
 ### Required scope-card fields
 
@@ -243,7 +299,26 @@ Otherwise OAuth and identity linking are deferred.
 These are Planning phases. A later Control owns implementation packet details,
 paths, commands, and the one-Implementer execution mechanism.
 
-### V1-0 — Accept the product scope card
+### V1-0 — Dummy-data development client
+
+- Reconcile only the scaffold/configuration needed to create a development
+  client: development identity, EAS/local profile consistency, config-plugin
+  source, dependency compatibility, and placeholder/admin residue.
+- Add the smallest account-only shell and deterministic dummy fixtures needed
+  for development-client validation.
+- Keep dummy mode explicit, local, and impossible to confuse with real API
+  success.
+- Generate and inspect the Android development project under a bounded packet.
+- Install and launch the development client, attach it to Metro, and exercise
+  the implemented shell.
+- Prove target SDK 36 from generated and installed development-client evidence.
+- Do not generate an AAB.
+
+Exit: an installable account-only development client runs with dummy data and
+no backend/provider dependency; API 36 is observed; no release artifact or
+product-scope claim follows.
+
+### V1-1 — Accept the product scope card
 
 - Choose the primary user, trigger, job, success outcome, and explicit
   deferrals.
@@ -253,20 +328,6 @@ paths, commands, and the one-Implementer execution mechanism.
 
 Exit: one implementable V1 journey exists; no screen or endpoint is included
 without a direct role in that journey.
-
-### V1-1 — Scaffold and API 36 baseline
-
-- Reconcile the checked-in Expo config, EAS profiles, build wrappers,
-  config-plugin source, project identifiers, storage-key namespace, locales,
-  and placeholder/admin residue.
-- Validate dependency compatibility without broad upgrades.
-- Generate a disposable native project or equivalent inspected output under a
-  bounded local packet.
-- Prove the resolved Android compile/target SDK is 36 before product work
-  depends on the scaffold.
-
-Exit: the existing scaffold is reproducible, account-scoped, and observed to
-generate an API 36 Android project. This is not a release build or store proof.
 
 ### V1-2 — Minimum server contract
 
@@ -345,30 +406,49 @@ Do not copy:
 
 ## V1 Acceptance Criteria
 
-The following delivery criteria become applicable only after V1-0 records the
-selected scope card:
+The following criteria apply to V1-0:
 
-1. The app starts from the existing Wenfu scaffold.
-2. One named account-user job and observable success outcome define V1.
-3. Every shipped screen, endpoint, dependency, permission, and provider flow
-   is necessary for that job or a required safety/release obligation.
-4. Selected features match existing web account rules and operations; features
-   outside the selected slice are absent or explicitly deferred.
-5. Expo exposes no admin UI, data, capability, preference, route, or mode.
-6. Dual-role users remain account-scoped server-side.
-7. Authentication, CRUD, OAuth, and payment are implemented only to the extent
-   accepted by the V1 scope card.
-8. No credentials or provider secrets appear in source, public config, logs,
+1. The existing Wenfu scaffold is used rather than replaced.
+2. The result is an installable development client, not Expo Go and not an
+   AAB/store artifact.
+3. It renders only an account-oriented technical shell using deterministic,
+   visibly dummy data.
+4. It makes no Rails/API, authentication, CRUD, OAuth, payment, provider, or
+   real-data request.
+5. Dummy mode is explicit and cannot silently act as a production fallback.
+6. No admin UI, mode, data, capability, or identifier is shipped in the shell.
+7. No credential or provider secret appears in source, public config, logs,
    fixtures, or screenshots.
-9. Required loading/error/retry/interruption states for the selected journey
+8. Generated and installed Android evidence proves target SDK 36, and the
+   implemented shell is exercised on Android 16 when the packet provides an
+   available emulator/device.
+9. Focused checks pass with exact evidence and final Git state is clean.
+10. Acceptance authorizes no AAB, EAS cloud action, Play/store action,
+    deployment, provider action, production data, or release promotion.
+
+The following product-delivery criteria become applicable only after V1-1
+records the selected scope card:
+
+1. One named account-user job and observable success outcome define V1.
+2. Every shipped real screen, endpoint, dependency, permission, and provider
+   flow is necessary for that job or a required safety/release obligation.
+3. Selected features match existing web account rules and operations; features
+   outside the selected slice are absent or explicitly deferred.
+4. Expo exposes no admin UI, data, capability, preference, route, or mode.
+5. Dual-role users remain account-scoped server-side.
+6. Authentication, CRUD, OAuth, and payment are implemented only to the extent
+   accepted by the V1 scope card.
+7. No credentials or provider secrets appear in source, public config, logs,
+   fixtures, or screenshots.
+8. Required loading/error/retry/interruption states for the selected journey
    are tested.
-10. Generated Android configuration and the later release artifact each prove
-    target SDK 36; the V1 journey is exercised on Android 16.
-11. Required checks pass with exact evidence and final Git state is clean.
-12. Local acceptance does not authorize deployment, providers, EAS cloud
+9. Generated Android configuration and the later release artifact each prove
+   target SDK 36; the V1 journey is exercised on Android 16.
+10. Required checks pass with exact evidence and final Git state is clean.
+11. Local acceptance does not authorize deployment, providers, EAS cloud
     actions, store submission, production data, or release promotion.
 
-## Explicitly Deferred Until V1-0 Selects Them
+## Explicitly Deferred Until V1-1 Selects Them
 
 - full account-site parity;
 - all-resource CRUD;
@@ -380,8 +460,10 @@ selected scope card:
 - push notifications, background work, broad offline caching, analytics,
   camera, media upload, sharing, gamification, IAP, and subscriptions;
 - admin/internal/operations features;
-- EAS builds, signing, provider configuration, store records/submission, OTA,
-  deployment, and production actions.
+- EAS production/store builds, signing, provider configuration, store
+  records/submission, OTA, deployment, and production actions. Any EAS cloud
+  development-client build also requires separate explicit external-action
+  authority.
 
 Deferral here is not a decision that these features never belong in the app.
 It means their need must follow from an accepted user job rather than from the
@@ -389,13 +471,17 @@ existence of web code or a mature example app.
 
 ## Current Gate And Next Action
 
-Current classification: `v1_organization_ready_scope_not_selected`.
+Current classification:
+`v1_dummy_data_development_client_objective_accepted_not_dispatched`.
 
-First blocker to implementation: the primary V1 account-user job and success
-outcome have not been selected.
+First blocker to V1-0 implementation: the Director has selected the objective
+but has not explicitly instructed Planning to dispatch implementation. The
+build mechanism also remains Control-owned; EAS cloud use would require
+separate external-action authority.
 
-Next owner/action: Director and Wenfu Planning select and record the V1-0 scope
-card. Planning then records the selected criteria as immutable and sends the
-first bounded phase directly to the authoritative Wenfu Control. Until then,
-Planning remains authoritative idle with no active packet, callback, approval,
-or Control dispatch.
+Next owner/action: the Director may authorize implementation of V1-0. Planning
+then records its criteria as immutable and sends the bounded dummy-data
+development-client phase directly to the authoritative Wenfu Control. The real
+account-user job remains a later V1-1 decision. Until implementation is
+explicitly authorized, Planning remains authoritative idle with no active
+packet, callback, approval, or Control dispatch.

@@ -42,12 +42,15 @@
 - `ops/docs/plans/EXPO_ACCOUNT_V1_BUILD_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
-The Expo account readiness scan remains the gap inventory. The V1 build plan
-accepts account-only, purpose-first scope: one primary account-user job must be
-selected before screens, APIs, CRUD, OAuth, or payment enter V1. Wenfu's Expo
-54 source is API 36 capable, while generated-project and AAB proof remain later
-gates. The current first blocker is the missing V1-0 scope card; Expo
-implementation and Control dispatch remain unauthorized.
+The Expo account readiness scan remains the gap inventory. The V1 build plan's
+first accepted broad objective is an installable account-only development
+client with deterministic dummy data: no backend, auth, real CRUD, OAuth,
+payment, providers, production identity, AAB, or release action. Wenfu's Expo
+54 source is API 36 capable; the development client must prove API 36 without
+an AAB, and a later release artifact must prove it separately. The real
+account-user product job remains the next scope decision after this technical
+milestone. V1-0 implementation and Control dispatch await explicit Director
+authorization; EAS cloud use would require separate external-action authority.
 
 ## Current Authorized Documentation Housekeeping
 
