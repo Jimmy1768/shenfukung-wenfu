@@ -1,7 +1,7 @@
 # Expo V1 Development-Client UI Refinement Plan
 
-Status: Director-amended TempleMate `1.0.0` UI-refinement phase; Control B
-candidate complete, direct terminal delivery and Planning acceptance pending
+Status: completed and accepted on canonical `main` at
+`7410daa70b0e8bea72af8508c43132ca0b12c4ff`
 
 Created: 2026-08-11
 
@@ -338,7 +338,7 @@ development-client UI baseline suitable for the next separately planned V1
 candidate-readiness decision. Device installation does not authorize live API,
 tenant-domain, OAuth, payment, release, or store work.
 
-Current classification: `expo_v1_dev_client_ui_refinement_terminal_pending`.
+Current classification: `expo_v1_dev_client_ui_refinement_complete`.
 
-First blocker: none. Planning must commit this exact identifier decision and
-send the source-only correction to Control B.
+First blocker: none within this completed phase. Any next V1 phase requires a
+separately accepted plan.

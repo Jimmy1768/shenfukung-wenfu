@@ -61,11 +61,12 @@ version/API 36, contract, and offline Expo Doctor checks. Control A and Control
 B are both `released_terminal_idle`.
 
 The separately scoped development-client UI refinement phase is recorded under
-`ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`. Control B completed
-an isolated candidate with pinned project-local `expo-doctor@1.20.1`, refined
-account-only screens, and a deterministic dummy journey on the Pixel 8. Direct
-immutable terminal delivery to Planning remains pending, so the candidate has
-not yet been accepted or integrated.
+`ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`. It is complete and
+accepted on canonical `main` at
+`7410daa70b0e8bea72af8508c43132ca0b12c4ff`, with pinned project-local
+`expo-doctor@1.20.1`, refined account-only screens, and the deterministic dummy
+journey evidence from the Pixel 8. Control B received
+`released_terminal_idle`.
 
 The Director superseded the plan's permissive local-rebuild clause. TempleMate
 now follows the mature DojoMate rule: reuse the compatible installed
@@ -81,9 +82,9 @@ remain excluded.
 The internal project name is `komainu`; the public app name remains
 `TempleMate`. The accepted native identifiers are
 `com.jimmy1768.komainu` for production and
-`com.jimmy1768.komainu.dev` for development on both platforms. Control B owns
-the source/config/test correction and local integration. No native build or
-device action is authorized.
+`com.jimmy1768.komainu.dev` for development on both platforms. The
+source/config/test correction is integrated. No native build or device action
+is authorized.
 
 ## Current Authorized Documentation Housekeeping
 
