@@ -140,15 +140,17 @@ received `released_terminal_idle`. It observed the existing authenticated
 account `jimmy1768`, an unlinked TempleMate source tree, no configured EAS
 project, and unknown signing state without mutation.
 
-The Director explicitly authorized creation of a new EAS project. The current
-authorized phase is
-`ops/docs/plans/EXPO_EAS_PROJECT_CREATION_AND_LINK_PLAN.md` through Control B.
-It permits one collision-fenced creation attempt for exact target
-`@jimmy1768/templemate`, durable linkage through the returned nonsecret
-`extra.eas.projectId`, and read-only project/config verification. It does not
-authorize signing/credential configuration, a build or artifact, provider or
-deployment action, device work, version/build increment, deletion, transfer,
-rename, alternate project, or push.
+The EAS project creation/link phase is complete and accepted on canonical
+`main` at `55af65306fb19317416c468bfc3d07b1c31bd543`; Control B received
+`released_terminal_idle`. Exactly one project was created as
+`@jimmy1768/templemate` and linked through nonsecret project ID
+`c7b8523a-2fad-4123-bc96-0c0c85a23dec`. Read-only EAS reconciliation and the
+mobile checks passed, with TempleMate/Komainu identity, API 36, and
+`1.0.0 / 1 / 1` preserved. No signing/credential configuration, build,
+artifact, provider/deployment action, device work, release action, or push is
+authorized. The exact missing Director/Planning decision is whether to
+authorize a signing/build preflight or the EAS cloud Android development-client
+build; no Control packet is active.
 
 ## Current Authorized Documentation Housekeeping
 
