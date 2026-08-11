@@ -135,7 +135,7 @@ Evidence was classified as:
 | Secure storage | `expo-secure-store` and auth storage helper | Scaffolded; key names are unsafe residue |
 | HTTP auth helper | login, refresh, logout request helper | Scaffolded against nonexistent routes |
 | EAS/build | `mobile/eas.json`, `bin/expo_prebuild`, `bin/expo_build` | Present; profile/config defects found; no build run |
-| Versioning | `mobile/versioning.js` | Present at initial `1.0.0` / build `1` values |
+| Versioning | `mobile/versioning.js` | Accepted independent TempleMate app version `1.0.0`, iOS build `1`, and Android version code `1`; EAS local authority/no auto-increment is aligned, but no synchronization check, consumed-number receipt, or bump/reset guard exists |
 
 ### Placeholder and template residue that must not ship
 
@@ -154,6 +154,10 @@ Evidence was classified as:
 - Demo credentials, including a password, are placed in public Expo `extra`
   configuration. Account production code must not embed credentials.
 - Native identifiers default to an `.admin` suffix.
+- Expo app versioning is correctly separate from Rails and currently starts at
+  `1.0.0`, but `mobile/versioning.js` and `mobile/package.json` duplicate the
+  value without a deterministic synchronization or mismatch check. No script
+  propagates the authority into generated iOS/Android files.
 - SecureStore keys use `golden-template.admin.*`, creating wrong-surface and
   possible cross-app collision semantics.
 - Mobile translations live under `demo_admin`; they are not account copy.
@@ -391,7 +395,22 @@ Wenfu compatibility, not be downgraded to match the example.
   correspondence to the intended app were not externally verified.
 - No prebuild/build was run, so native generation, iOS pods, Android Gradle,
   signing, and current Expo Doctor compatibility are unverified.
-- Version/build-number ownership and bump rules are not accepted.
+- The starting values and platform rules are accepted, but no tool enforces
+  them: Android code `1` remains unchanged until a Play release-library/track
+  AAB upload consumes it, then advances exactly once; iOS `1.0.0 (1)` advances
+  the build within `1.0.0` and resets the build to `1` when the app version
+  advances. Play Internal App Sharing is the documented reusable-code
+  exception and does not consume the release-track ledger.
+- Rails commits, migrations, and deployments must never act as the Expo version
+  source. The accepted TempleMate marketing version starts at `1.0.0`; later
+  mobile version/build advancement needs its own controlled release rule.
+- Unlike DojoMate-Expo, Wenfu has no `sync:version` package command,
+  prebuild/EAS version sync hook, native-file synchronization script, or
+  deterministic config/package/native mismatch check. `eas.json` correctly
+  contains authority/profile policy rather than duplicated version numbers.
+- The First Objective must add local synchronization/verification without
+  adding automatic increments. Upload receipts and post-upload increments
+  remain separately authorized release work.
 - Deep-link association files, universal/app links, store records, signing,
   privacy manifests, screenshots, review credentials, and release rollback are
   unplanned or unverified.

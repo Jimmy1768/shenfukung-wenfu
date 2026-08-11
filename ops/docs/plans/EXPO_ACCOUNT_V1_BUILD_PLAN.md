@@ -121,6 +121,9 @@ These criteria are immutable for V1 planning:
     never carry a user identifier, credential, session, or bearer token.
 15. The dummy-data development client does not add camera, network binding, or
     live domain behavior; those remain later selected product slices.
+16. TempleMate Expo versioning is independent of Rails and begins at app
+    version `1.0.0`. Rails changes or deployments never imply an Expo version
+    change.
 
 ## Plan Relationship And Supersession
 
@@ -223,6 +226,68 @@ Current scaffold gaps are explicit: the production mobile API origin is
 currently build-time configured as `https://shengfukung.com.tw`, no runtime
 validated tenant-origin store exists, and no camera/scanner dependency is
 installed. None of those gaps alters the First Objective's dummy-only scope.
+
+## Independent Expo Version Authority
+
+TempleMate has its own tightly controlled mobile release identity. It does not
+reuse, derive, or infer a version from Rails, Vue, a repository commit count,
+or a tenant deployment.
+
+- The accepted initial TempleMate app version is `1.0.0`.
+- `mobile/versioning.js` is the current Expo configuration source and already
+  declares app version `1.0.0`, iOS build number `1`, and Android version code
+  `1`.
+- `mobile/eas.json` uses `appVersionSource: local` and no build profile enables
+  `autoIncrement`. That is aligned with deliberate local control and must not
+  be changed to consume a number merely because EAS or a local build ran.
+- Android version code starts at `1`. Local prebuilds, development clients,
+  APKs, failed builds, and AABs that are never accepted into Google Play do not
+  advance it. An AAB accepted into the Play release library/track system
+  consumes that integer; only after the Play receipt is recorded does source
+  advance to the next integer for a future upload. A consumed code is never
+  reused, even if its uploaded release is later rejected, replaced, or
+  abandoned. Google Play Internal App Sharing is a separate mechanism that
+  officially permits reused version codes; using it does not change the
+  release-track consumption ledger.
+- iOS starts at version `1.0.0` build `1`. Each App Store Connect/TestFlight
+  upload consumes that version/build pair. Additional uploads for `1.0.0` use
+  builds `2`, `3`, and so on. When the app version advances, the iOS build
+  number resets to `1`, so the first build of `1.0.1` is `1.0.1 (1)`.
+- The user-visible app version, iOS build number, and Android version code are
+  three distinct values. A version change requires an explicit mobile release
+  decision; neither platform build number changes Rails versioning.
+- `mobile/package.json` currently mirrors `1.0.0`, but no synchronization,
+  mismatch guard, or consumed-number receipt exists yet. Before a distributed
+  artifact, one mobile version authority and deterministic checks must cover
+  Expo config, package metadata, and generated iOS/Android values.
+- Rails deploys, tenant onboarding, content changes, and backend migrations do
+  not bump TempleMate automatically. Conversely, an Expo version bump does not
+  rename or version the Rails application.
+
+DojoMate-Expo is evidence for the centralized version-source and native-sync
+pattern, not a source for TempleMate's current number. Its
+`scripts/sync-version.mjs` propagates a central version configuration into
+package metadata and generated iOS/Android version fields; its profile prebuild
+and EAS pre-install hooks run synchronization again. It does not store the
+three version numbers in `eas.json`; that file selects local/remote authority
+and build-profile behavior. Wenfu currently has no equivalent sync or verify
+script. TempleMate begins at `1.0.0` even when the mature reference app has
+advanced to a later release.
+
+Official platform evidence for this policy:
+
+- Android requires successive Play releases to use a greater `versionCode` and
+  does not allow reuse of a code already used in the Play Store:
+  `https://developer.android.com/studio/publish/versioning`
+- Google documents Internal App Sharing as the exception where version codes
+  may be reused:
+  `https://support.google.com/googleplay/android-developer/answer/9844679`
+- Apple documents that iOS apps may reset the build number to `1` for a new app
+  version because App Store Connect identifies the unique version/build pair:
+  `https://developer.apple.com/documentation/xcode/setting-the-next-build-number-for-xcode-cloud-builds`
+- Expo documents local version authority and warns that app config and native
+  values must stay synchronized:
+  `https://docs.expo.dev/build-reference/app-versions/`
 
 ### Android API 36 disposition
 
@@ -385,6 +450,11 @@ paths, commands, and the one-Implementer execution mechanism.
   client: `TempleMate (Dev)` launcher naming, DEV-badged launcher artwork,
   EAS/local profile consistency, config-plugin source, dependency
   compatibility, and placeholder/admin/tenant-branding residue.
+- Establish `mobile/versioning.js` as the single mobile version authority and
+  add deterministic DojoMate-style synchronization/verification for package
+  metadata and generated native values. It must validate `eas.json` local
+  authority/no-auto-increment policy without writing duplicate version numbers
+  into `eas.json` or incrementing any value during a build.
 - Add the smallest account-only shell and deterministic dummy fixtures needed
   for development-client validation.
 - Keep dummy mode explicit, local, and impossible to confuse with real API
@@ -463,6 +533,10 @@ production claim follows.
   domain, artifact inspection, public privacy/help/support URLs, store
   metadata/privacy obligations, app links, test track, monitoring, rollback,
   and submission approval.
+- Prove the accepted mobile version source, package/config/native consistency,
+  the Android upload-consumption receipt and next-code rule, and the iOS
+  version/build pair and reset rule independently of Rails release or
+  deployment state.
 - Build and inspect an AAB proving target SDK 36 only under that later
   authorized release packet.
 
@@ -496,19 +570,27 @@ The following criteria apply to the First Objective:
    AAB/store artifact.
 3. Its launcher name is `TempleMate (Dev)` and it uses DEV-badged app and
    adaptive icons; `竹南鎮聖福宮` is tenant data and is not used as the app name.
-4. It renders only an account-oriented technical shell using deterministic,
+4. Its resolved Expo app version is `1.0.0` and no Rails version or deployment
+   state contributes to that value.
+5. The mobile version authority, package metadata, resolved Expo config, and
+   generated native values agree; the sync/check mechanism does not write
+   version numbers into `eas.json` or auto-increment them.
+6. Its local development-client build does not increment or consume the
+   Android Google Play version code or an iOS App Store Connect/TestFlight
+   build pair.
+7. It renders only an account-oriented technical shell using deterministic,
    visibly dummy data.
-5. It makes no Rails/API, authentication, CRUD, OAuth, payment, provider, or
+8. It makes no Rails/API, authentication, CRUD, OAuth, payment, provider, or
    real-data request.
-6. Dummy mode is explicit and cannot silently act as a production fallback.
-7. No admin UI, mode, data, capability, or identifier is shipped in the shell.
-8. No credential or provider secret appears in source, public config, logs,
+9. Dummy mode is explicit and cannot silently act as a production fallback.
+10. No admin UI, mode, data, capability, or identifier is shipped in the shell.
+11. No credential or provider secret appears in source, public config, logs,
    fixtures, or screenshots.
-9. Generated and installed Android evidence proves target SDK 36, and the
+12. Generated and installed Android evidence proves target SDK 36, and the
    implemented shell is exercised on Android 16 when the packet provides an
    available emulator/device.
-10. Focused checks pass with exact evidence and final Git state is clean.
-11. Acceptance authorizes no AAB, EAS cloud action, Play/store action,
+13. Focused checks pass with exact evidence and final Git state is clean.
+14. Acceptance authorizes no AAB, EAS cloud action, Play/store action,
     deployment, provider action, production data, or release promotion.
 
 The following product-delivery criteria become applicable only after the

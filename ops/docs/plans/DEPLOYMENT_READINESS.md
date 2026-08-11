@@ -33,6 +33,10 @@ Neither permanent-domain purchase is required for the dummy-data Expo
 development client. Both roles must be resolved explicitly before app
 distribution planning can claim stable public URLs.
 
+Rails/Vue deployment state and TempleMate Expo release versioning are separate.
+This web deployment checklist does not set or advance the mobile app version;
+TempleMate Expo starts at `1.0.0` under its own later candidate/release rules.
+
 ## Current Status Split
 
 Use these labels consistently when updating the checklist:
