@@ -28,7 +28,7 @@ module Auth
       [@base_url, @client_id, @client_secret].all?(&:present?)
     end
 
-    def start(provider:, return_url:, tenant_slug: nil, context: {})
+    def start(provider:, return_url:, tenant_slug: nil, context: {}, pkce_challenge: nil, pkce_method: nil)
       ensure_configured!
 
       post_json(
@@ -37,7 +37,9 @@ module Auth
           provider: provider,
           return_url: return_url,
           tenant_slug: tenant_slug,
-          context: context
+          context: context,
+          pkce_challenge: pkce_challenge,
+          pkce_method: pkce_method
         }.compact
       )
     end

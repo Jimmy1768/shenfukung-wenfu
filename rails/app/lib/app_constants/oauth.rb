@@ -28,9 +28,16 @@ module AppConstants
     }.freeze
 
     CENTRAL_AUTH_ENV_KEYS = %w[AUTH_BASE_URL AUTH_CLIENT_ID AUTH_CLIENT_SECRET].freeze
+    NATIVE_RETURN_URL_ENV_KEY = "AUTH_NATIVE_RETURN_URL"
 
     def self.central_auth_enabled?
       CENTRAL_AUTH_ENV_KEYS.all? { |key| ENV[key].present? }
+    end
+
+    # This return URL belongs to the server-side central-auth tenant contract.
+    # Native callers never submit or select it.
+    def self.native_return_url
+      ENV[NATIVE_RETURN_URL_ENV_KEY].to_s.strip.presence
     end
 
     def self.enabled_providers

@@ -36,6 +36,8 @@ Rails.application.routes.draw do
           delete "logout", to: "native_sessions#logout"
           post "password/recovery", to: "native_sessions#password_recovery"
           post "password/reset", to: "native_sessions#password_reset"
+          post "oauth/start", to: "native_oauth#start"
+          post "oauth/exchange", to: "native_oauth#exchange"
           get "bootstrap", to: "native_bootstrap#show"
           resource :profile, controller: "native_profile", only: %i[show update] do
             post :password
