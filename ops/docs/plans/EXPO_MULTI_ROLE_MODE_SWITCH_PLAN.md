@@ -1,5 +1,10 @@
 # EXPO MULTI-ROLE MODE SWITCH PLAN
 
+Status: superseded for Wenfu Expo scope on 2026-08-11 by
+`EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`. The historical direction below
+is retained as evidence; do not dispatch or implement its admin/mode-switch
+criteria.
+
 ## Purpose
 
 - Define how a single Expo app can support both patron and admin workflows safely.

@@ -38,7 +38,13 @@
 
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
 - `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md`
+- `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
 - `ops/docs/reference/future_work.md`
+
+The Expo account readiness scan accepts account-only parity as the current
+product direction and supersedes the older multi-role/mode-switch proposal.
+It identifies native session and account API contracts as the first blocker;
+Expo implementation and Control dispatch remain unauthorized.
 
 ## Current Authorized Documentation Housekeeping
 

@@ -35,7 +35,7 @@ assign equal priority or implementation readiness.
 - `ops/docs/plans/API_ABUSE_BLACKLIST_GOVERNANCE_PLAN.md`
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
 - `ops/docs/plans/EMAIL_DELIVERY_QUEUE_AND_DEDUPE_PLAN.md`
-- `ops/docs/plans/EXPO_MULTI_ROLE_MODE_SWITCH_PLAN.md`
+- `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
 - `ops/docs/plans/INTERNAL_TEMPLE_ACCESS_DASHBOARD_PLAN.md`
 - `ops/docs/plans/OAUTH_GOOGLE_SUBJECT_COMPATIBILITY_REPAIR_PLAN.md`
 - `ops/docs/plans/OAUTH_PROVIDERS_SETUP_PLAN.md`
@@ -46,6 +46,13 @@ assign equal priority or implementation readiness.
 - `ops/docs/plans/SYSTEM_AUDIT_COVERAGE_AND_RETENTION_PLAN.md`
 - `ops/docs/plans/SYSTEM_WIDE_ABUSE_PROTECTION_TELEMETRY_FOLLOWUP.md`
 - `ops/docs/plans/TEMPLE_OFFERING_SYSTEM_SPEC.md`
+
+## Superseded Plan Pointers
+
+- `ops/docs/plans/EXPO_MULTI_ROLE_MODE_SWITCH_PLAN.md` is retained as
+  historical decision evidence. Its multi-role/admin mode direction was
+  superseded on 2026-08-11 by the account-only Expo direction in
+  `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`.
 
 ## Archived Completed Records
 
