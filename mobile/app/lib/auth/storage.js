@@ -22,6 +22,7 @@ const getItem = async key => {
 const deleteItem = async key => {
   try { await SecureStore.deleteItemAsync(key); } catch (_) { delete memoryStore[key]; }
 };
+export const scopedStorage = { setItem, getItem, deleteItem };
 
 export async function persistDummySession({ environment, tenantId, session }) {
   return setItem(scopedKey(environment, tenantId, 'dummy-session'), JSON.stringify(session));

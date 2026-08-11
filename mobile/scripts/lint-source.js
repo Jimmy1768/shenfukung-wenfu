@@ -2,23 +2,32 @@ const fs = require('fs');
 const path = require('path');
 
 const root = path.resolve(__dirname, '..', 'app');
-const forbidden = /fetch\(|Stripe|ECPay|checkout|OAuth|golden-template|\.admin\b/i;
+const forbidden = /\bfetch\b|Stripe|ECPay|checkout|OAuth|golden-template|\badmin\b/i;
 const files = [];
 const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).forEach(entry => {
   const target = path.join(dir, entry.name);
   if (entry.isDirectory()) walk(target);
   else if (entry.name.endsWith('.js')) files.push(target);
 });
-walk(root);
-const failures = files.filter(file => forbidden.test(fs.readFileSync(file, 'utf8')));
-const liveOriginFailures = files.filter(file => {
+const allowedTransport = path.join(root, 'real', 'transport.js');
+const sourceFailures = entries => entries.filter(({ file, source }) => {
+  // The real adapter's local/test transport is the only permitted fetch seam.
+  const checked = file === allowedTransport ? source.replace('globalThis.fetch', '') : source;
+  return forbidden.test(checked);
+});
+const liveOriginFailures = entries => entries.filter(({ file, source }) => {
   const relative = path.relative(root, file);
   if (relative === path.join('dummy', 'fixtures.js') || relative === path.join('tenant', 'binding.js')) return false;
-  return /https?:\/\//i.test(fs.readFileSync(file, 'utf8'));
+  return /https?:\/\//i.test(source);
 });
-failures.push(...liveOriginFailures);
-if (failures.length) {
-  console.error(`forbidden dummy-client residue in: ${failures.map(file => path.relative(root, file)).join(', ')}`);
-  process.exit(1);
+if (require.main === module) {
+  walk(root);
+  const entries = files.map(file => ({ file, source: fs.readFileSync(file, 'utf8') }));
+  const failures = sourceFailures(entries).concat(liveOriginFailures(entries));
+  if (failures.length) {
+    console.error(`forbidden dummy-client residue in: ${failures.map(file => path.relative(root, file)).join(', ')}`);
+    process.exit(1);
+  }
+  console.log(`source lint passed for ${files.length} mobile app modules.`);
 }
-console.log(`source lint passed for ${files.length} mobile app modules.`);
+module.exports = { sourceFailures, liveOriginFailures, allowedTransport };

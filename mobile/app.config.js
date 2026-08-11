@@ -41,7 +41,12 @@ module.exports = () => {
       },
       plugins: ['expo-secure-store', 'expo-dev-client'],
       extra: {
-        clientMode: 'dummy',
+        // Dummy is network-free by default. Real mode is an intentional local/test
+        // selection and is invalid without both values; neither is a secret.
+        clientMode: process.env.TEMPLEMATE_CLIENT_MODE === 'real' ? 'real' : 'dummy',
+        localApiBaseUrl: process.env.TEMPLEMATE_LOCAL_API_BASE_URL || '',
+        localTenantSlug: process.env.TEMPLEMATE_LOCAL_TENANT_SLUG || '',
+        clientEnvironment: process.env.TEMPLEMATE_CLIENT_ENVIRONMENT || 'development',
         supportedLocales: ['zh-TW', 'en'],
         supportedThemes: ['light', 'dark'],
         android16TargetSdk: 36
