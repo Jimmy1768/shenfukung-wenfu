@@ -1,7 +1,5 @@
 # frozen_string_literal: true
 
-require "base64"
-require "json"
 require "securerandom"
 
 module Auth
@@ -17,12 +15,6 @@ module Auth
     PROVIDER_ALIASES = {
       "google" => "google",
       "google_oauth2" => "google",
-      "apple" => "apple",
-      "facebook" => "facebook"
-    }.freeze
-
-    PROVIDER_TO_IDENTITY = {
-      "google" => "google_oauth2",
       "apple" => "apple",
       "facebook" => "facebook"
     }.freeze
@@ -90,13 +82,12 @@ module Auth
       }.compact
 
       response = central_auth_client.exchange(params: exchange_payload, tenant_slug: central_tenant_slug(pending))
-      identity, user, link_result = resolve_identity_from_exchange!(response, pending, account_user)
+      exchange_identity = resolve_identity_from_exchange!(response, pending, account_user)
+      identity = exchange_identity.identity
+      user = exchange_identity.user
+      link_result = exchange_identity.link_result
 
       unless link_intent?(pending)
-        if user.closed_account?
-          raise "Closed account cannot sign in"
-        end
-
         establish_session_for(user, pending)
       end
 
@@ -109,7 +100,7 @@ module Auth
         linked_existing_user: link_result.respond_to?(:linked_existing_user) ? link_result.linked_existing_user : nil
       )
 
-      redirect_to success_redirect_path(pending), notice: success_notice(pending, link_result, identity)
+      redirect_to success_redirect_path(pending, profile_required: exchange_identity.profile_required), notice: success_notice(pending, link_result, identity, profile_required: exchange_identity.profile_required)
     rescue Auth::OAuthIdentityLinker::ConflictError, Auth::OAuthIdentityLinker::ProviderAlreadyLinkedError => e
       Rails.logger.warn("[CentralOAuthController#callback] #{e.class}: #{e.message}")
       log_oauth_event(
@@ -187,132 +178,11 @@ module Auth
     end
 
     def resolve_identity_from_exchange!(response, pending, account_user)
-      fields = extract_identity_fields(response)
-      provider = normalize_identity_provider(fields[:provider])
-      uid = fields[:uid]
-
-      if provider.blank?
-        Rails.logger.error("[CentralOAuthController#callback] Missing provider in exchange response keys=#{response.keys}")
-        raise "OAuth exchange missing provider"
-      end
-
-      if uid.blank?
-        Rails.logger.error("[CentralOAuthController#callback] Missing uid in exchange response keys=#{response.keys}")
-        raise "OAuth exchange missing uid"
-      end
-
-      result =
-        if link_intent?(pending)
-          raise "You must be signed in to link a provider." if account_user.blank?
-
-          Auth::OAuthIdentityLinker.link!(
-            user: account_user,
-            provider: provider,
-            uid: uid,
-            email: fields[:email],
-            email_verified: fields[:email_verified],
-            credentials: response["credentials"] || {},
-            metadata: { "central_auth" => response }
-          )
-        else
-          Auth::OAuthIdentityResolver.resolve_or_link!(
-            provider: provider,
-            uid: uid,
-            email: fields[:email],
-            name: fields[:name],
-            email_verified: fields[:email_verified],
-            credentials: response["credentials"] || {},
-            metadata: { "central_auth" => response }
-          )
-        end
-
-      ensure_terms_acceptance(link_intent?(pending) ? account_user : result.user, provider)
-      [result.identity, link_intent?(pending) ? account_user : result.user, result]
-    end
-
-    def extract_identity_fields(response)
-      claims = extract_claims(response)
-      id_token_claims = extract_id_token_claims(response)
-
-      {
-        provider: first_present(
-          claims["provider"],
-          response["provider"],
-          id_token_claims["provider"],
-          response.dig("identity", "provider")
-        ),
-        uid: first_present(
-          claims["provider_uid"],
-          claims["uid"],
-          claims["sub"],
-          claims["subject"],
-          response["provider_uid"],
-          response["uid"],
-          response["sub"],
-          response["subject"],
-          response.dig("identity", "provider_uid"),
-          response.dig("identity", "uid"),
-          response.dig("identity", "sub"),
-          id_token_claims["sub"],
-          id_token_claims["uid"]
-        ),
-        email: first_present(
-          claims["email"],
-          response["email"],
-          response.dig("identity", "email"),
-          response.dig("user", "email"),
-          id_token_claims["email"]
-        ),
-        name: first_present(
-          claims["name"],
-          response["name"],
-          response.dig("identity", "name"),
-          response.dig("user", "name"),
-          id_token_claims["name"]
-        ),
-        email_verified: first_present(
-          claims["email_verified"],
-          response["email_verified"],
-          response.dig("identity", "email_verified"),
-          response.dig("user", "email_verified"),
-          id_token_claims["email_verified"]
-        )
-      }
-    end
-
-    def extract_claims(response)
-      value =
-        response["claims"] ||
-        response["user"] ||
-        response["profile"] ||
-        response.dig("identity", "claims") ||
-        response.dig("credentials", "claims") ||
-        {}
-
-      value.is_a?(Hash) ? value : {}
-    end
-
-    def extract_id_token_claims(response)
-      token =
-        response["id_token"] ||
-        response.dig("credentials", "id_token") ||
-        response.dig("tokens", "id_token")
-
-      return {} if token.blank?
-
-      payload = token.to_s.split(".")[1]
-      return {} if payload.blank?
-
-      padded = payload + ("=" * ((4 - payload.length % 4) % 4))
-      decoded = Base64.urlsafe_decode64(padded)
-      parsed = JSON.parse(decoded)
-      parsed.is_a?(Hash) ? parsed : {}
-    rescue StandardError
-      {}
-    end
-
-    def first_present(*values)
-      values.find(&:present?)
+      Auth::OAuthExchangeIdentity.resolve!(
+        response:,
+        link: link_intent?(pending),
+        link_user: account_user
+      )
     end
 
     def central_tenant_slug(pending)
@@ -356,27 +226,19 @@ module Auth
       fallback_login_path(pending["surface"])
     end
 
-    def success_redirect_path(pending)
+    def success_redirect_path(pending, profile_required:)
       return fallback_redirect_path(pending) if link_intent?(pending)
-      return edit_account_profile_path if require_profile_completion?(current_account_user)
+      return edit_account_profile_path if profile_required
 
       resolve_post_login_path(pending)
     end
 
-    def success_notice(pending, link_result, identity)
-      return I18n.t("account.oauth.flash.complete_profile") if !link_intent?(pending) && require_profile_completion?(current_account_user)
+    def success_notice(pending, link_result, identity, profile_required:)
+      return I18n.t("account.oauth.flash.complete_profile") if !link_intent?(pending) && profile_required
       return "Signed in successfully." unless link_intent?(pending)
       return "Your #{identity.provider.titleize} account is already linked." if link_result&.respond_to?(:already_linked) && link_result.already_linked
 
       "Linked #{identity.provider.titleize} to your account."
-    end
-
-    def require_profile_completion?(user)
-      return false if user.blank?
-
-      english_name = user.english_name.to_s.strip
-      native_name = user.native_name.to_s.strip
-      (english_name.blank? || english_name == "OAuth User") && native_name.blank?
     end
 
     def log_oauth_event(action, user:, pending:, provider:, **metadata)
@@ -397,21 +259,5 @@ module Auth
       PROVIDER_ALIASES[value.to_s]
     end
 
-    def normalize_identity_provider(value)
-      mapped = PROVIDER_ALIASES[value.to_s]
-      PROVIDER_TO_IDENTITY[mapped]
-    end
-
-    def ensure_terms_acceptance(user, provider)
-      metadata = (user.metadata || {}).with_indifferent_access
-      updated_metadata = metadata.merge(
-        signup_source: metadata[:signup_source].presence || provider,
-        terms_version: metadata[:terms_version].presence || AppConstants::Legal.default_terms_version,
-        terms_accepted_at: metadata[:terms_accepted_at].presence || Time.current.iso8601
-      )
-      return if updated_metadata == metadata
-
-      user.update!(metadata: updated_metadata)
-    end
   end
 end

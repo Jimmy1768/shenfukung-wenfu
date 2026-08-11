@@ -204,6 +204,39 @@ module Account
       assert_equal "OAuth User", user.english_name
     end
 
+    test "central OAuth callback retains the browser admin session branch through shared exchange handling" do
+      temple = create_temple(slug: "oauth-shared-admin-temple")
+      user = create_admin_user(temple:)
+
+      Auth::CentralOAuthClient.stub(:new, FakeCentralOAuthClient.new({ "redirect_url" => "https://auth.example.test/admin" }, nil)) do
+        get central_oauth_start_path(
+          provider: "google",
+          surface: "admin",
+          temple_slug: temple.slug,
+          origin: admin_login_path
+        )
+      end
+      assert_redirected_to "https://auth.example.test/admin"
+
+      exchange_response = {
+        "provider" => "google",
+        "uid" => "shared-admin-subject",
+        "email" => user.email,
+        "name" => user.english_name,
+        "email_verified" => true,
+        "credentials" => { "token" => "admin-central-token" }
+      }
+
+      Auth::CentralOAuthClient.stub(:new, FakeCentralOAuthClient.new(nil, exchange_response)) do
+        get central_oauth_callback_path(code: "admin-oauth-code", state: "admin-oauth-state")
+      end
+
+      assert_redirected_to admin_dashboard_path
+      assert_equal user.id, session[AppConstants::Sessions.key(:admin)]
+      assert_nil session[AppConstants::Sessions.key(:account)]
+      assert_equal temple.slug, session[AppConstants::Sessions.key(:admin_temple)]
+    end
+
     test "central oauth signs in an existing user after replacing a stale verified google subject" do
       temple = create_temple(slug: "oauth-google-subject-replacement-temple")
       user = User.create!(
