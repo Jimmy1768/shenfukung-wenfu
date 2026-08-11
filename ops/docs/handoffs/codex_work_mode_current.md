@@ -43,6 +43,8 @@
 - `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`
+- `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`
+- `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -85,6 +87,23 @@ The internal project name is `komainu`; the public app name remains
 `com.jimmy1768.komainu.dev` for development on both platforms. The
 source/config/test correction is integrated. No native build or device action
 is authorized.
+
+The Director has authorized two independent parallel tracks from the canonical
+commit containing their plans:
+
+- Control A implements
+  `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`, correcting the
+  confirmed Expo state-management and real-adapter wiring defects without a
+  native build or device action.
+- Control B performs the documentation/read-only
+  `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`, mapping the
+  existing working Rails Google/Apple behavior, TempleMate gaps, and mature
+  DojoMate mechanisms without product-code, provider, secret, build, or runtime
+  action.
+
+The tracks do not share owned paths or coordinate directly. Each returns one
+terminal packet to Planning. OAuth implementation remains unauthorized until
+Planning accepts the readiness evidence and creates later bounded plans.
 
 ## Current Authorized Documentation Housekeeping
 

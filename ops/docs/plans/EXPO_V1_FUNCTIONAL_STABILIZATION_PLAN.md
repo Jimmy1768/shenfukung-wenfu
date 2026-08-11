@@ -1,11 +1,14 @@
 # Expo V1 Functional Stabilization Plan
 
-Status: readiness findings captured; documentation only; not accepted
-implementation or Control-dispatch authority
+Status: accepted for direct implementation dispatch to Control A after this
+plan and the parallel OAuth-readiness plan are committed
 
 Created: 2026-08-11
 
 Owner: Wenfu Planning
+
+Target: Wenfu Control A
+`019fc08d-676b-7ca2-be32-3efe42fa2fca`
 
 Repository: `/Users/jimmy1768/Projects/shengfukung-wenfu`
 
@@ -199,6 +202,24 @@ No new runtime UI/navigation/form dependency is authorized by this findings
 document. A dependency request must identify the exact missing capability and
 why the current React Native/Expo surface cannot provide it.
 
+## Control Ownership
+
+Control A owns one isolated `codex/`-prefixed branch/worktree from the
+canonical commit containing this accepted plan, one immutable implementation
+packet, one ephemeral Implementer, independent conformance review, acceptance,
+and local integration.
+
+Control A may edit only the bounded Expo JavaScript/state/adapter/test paths it
+records from the scope above plus its own immutable Control handoff. Rails,
+Vue, Planning documents, native generated projects, dependencies, build
+profiles, provider configuration, deployment, and release paths remain
+excluded.
+
+Control A sends no intermediate Planning traffic. It returns exactly one
+immutable terminal packet after an accepted outcome, a true Planning gap, a
+Director authority decision, or no evidence-backed direct repair remains.
+Control A does not coordinate with the independent OAuth-readiness track.
+
 ## Proposed Verification
 
 An accepted implementation plan should require:
@@ -275,8 +296,7 @@ require a native rebuild.
 
 ## Current Gate
 
-Current classification: `expo_v1_functional_stabilization_findings_captured`.
+Current classification: `expo_v1_functional_stabilization_authorized`.
 
-First blocker: this document has not been accepted as implementation authority.
-Planning must not dispatch Control B until the Director reviews and accepts the
-scope and criteria.
+First blocker: none. Planning must commit the paired parallel-track plans and
+dispatch this plan directly to Control A.
