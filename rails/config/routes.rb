@@ -25,6 +25,35 @@ Rails.application.routes.draw do
         resources :certificates, only: :index
         resources :guest_lists, only: :show, param: :offering_id
         resource :preferences, only: %i[show update]
+
+        # Native account sessions intentionally live beside, not inside, the
+        # legacy cookie-authenticated account API above. This namespace never
+        # exposes its payment-status or guest-list routes.
+        scope :native, as: :native_account do
+          post "signup", to: "native_sessions#signup"
+          post "login", to: "native_sessions#login"
+          post "refresh", to: "native_sessions#refresh"
+          delete "logout", to: "native_sessions#logout"
+          post "password/recovery", to: "native_sessions#password_recovery"
+          post "password/reset", to: "native_sessions#password_reset"
+          get "bootstrap", to: "native_bootstrap#show"
+          resource :profile, controller: "native_profile", only: %i[show update] do
+            post :password
+          end
+          resources :dependents, controller: "native_dependents", only: %i[index show create update destroy]
+          resources :registrations, controller: "native_registrations", only: %i[index show new create edit update]
+          resource :preferences, controller: "native_preferences", only: %i[show update]
+          get "events", to: "native_resources#events"
+          get "services", to: "native_resources#services"
+          get "galleries", to: "native_resources#galleries"
+          get "galleries/:id", to: "native_resources#galleries"
+          get "certificates", to: "native_resources#certificates"
+          post "assistance", to: "native_resources#assistance"
+          post "contact", to: "native_resources#contact"
+          get "privacy", to: "native_privacy#show"
+          post "privacy/close", to: "native_privacy#close"
+          post "privacy/:request_type", to: "native_privacy#request_action"
+        end
       end
     end
   end
