@@ -1,8 +1,7 @@
 # Expo OAuth Native Client Plan
 
-Status: sequenced dependent plan; not implementation authority until the Rails
-native OAuth contract is accepted on canonical `main` and Planning dispatches
-this plan with that exact contract commit
+Status: accepted for direct implementation dispatch to Control B after this
+promotion and exact Rails predecessor are committed
 
 Created: 2026-08-11
 
@@ -15,6 +14,9 @@ Predecessors:
 
 - `ops/docs/plans/EXPO_OAUTH_NATIVE_RAILS_CONTRACT_PLAN.md`
 - `ops/docs/handoffs/2026-08-11-expo-oauth-integration-readiness-control-b.md`
+
+Accepted Rails contract:
+`a0f4888c749835f648a5f716237efef89ef29900`
 
 ## Objective
 
@@ -173,8 +175,8 @@ belongs to the later EAS/provider validation plan.
 
 ## Current Gate
 
-Current classification: `awaiting_expo_oauth_native_rails_contract`.
+Current classification: `expo_oauth_native_client_authorized`.
 
-First blocker: the exact accepted Rails start/exchange commit and response/error
-contract. Planning must not dispatch this plan before that predecessor is
-accepted.
+First blocker: none for source implementation. Provider registration, exact
+deployed return allowlisting, EAS-cloud development-client build, and device
+validation remain later separately planned gates.

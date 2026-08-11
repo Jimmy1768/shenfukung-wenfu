@@ -98,14 +98,15 @@ is accepted and canonically integrated at
 `5164b18c87817b1ea86d23667892860ee11aec53`.
 
 Komainu is the first SourceGrid OAuth-enabled Expo app. The active OAuth
-sequence is recorded in `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`. Current
-implementation authority is Rails-only through
-`ops/docs/plans/EXPO_OAUTH_NATIVE_RAILS_CONTRACT_PLAN.md` and Control A. The
-dependent `ops/docs/plans/EXPO_OAUTH_NATIVE_CLIENT_PLAN.md` is not dispatch
-authority until Planning accepts the exact Rails contract commit. Provider
-registration plus EAS-cloud development-client/device validation remains a
-later separately planned gate. No shared package, provider action, native
-build, deployment, release, or push is authorized.
+sequence is recorded in `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`. The Rails
+native start/exchange contract is complete and accepted on canonical `main` at
+`a0f4888c749835f648a5f716237efef89ef29900`, including the typed
+`invalid_grant` repair. Current implementation authority is
+`ops/docs/plans/EXPO_OAUTH_NATIVE_CLIENT_PLAN.md` through Control B against
+that exact predecessor. Provider registration plus EAS-cloud
+development-client/device validation remains a later separately planned gate.
+No shared package, provider action, native build, deployment, release, or push
+is authorized.
 
 ## Current Authorized Documentation Housekeeping
 

@@ -26,13 +26,13 @@ not create a shared package or authorize changes to another repository.
 ## Sequence
 
 1. `EXPO_OAUTH_NATIVE_RAILS_CONTRACT_PLAN.md`
-   - current implementation authority;
+   - complete and accepted on canonical `main` at
+     `a0f4888c749835f648a5f716237efef89ef29900`;
    - adds the account-only native start/exchange contract around the existing
      central-auth service;
    - uses stubbed/local evidence only and does not access providers.
 2. `EXPO_OAUTH_NATIVE_CLIENT_PLAN.md`
-   - written now as the dependent client contract, but not dispatch authority
-     until phase 1 is accepted on canonical `main`;
+   - current implementation authority through Control B;
    - adds deterministic dummy OAuth UI/state evidence and a real adapter for
      the accepted Rails contract.
 3. Provider and development-client validation
