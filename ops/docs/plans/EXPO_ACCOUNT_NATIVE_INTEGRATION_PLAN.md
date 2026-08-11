@@ -1,7 +1,7 @@
 # Expo Account Native Integration Plan
 
-Status: accepted V1 integration phase; authorized for direct dispatch to
-Control A after this plan is committed
+Status: completed and accepted integrated TempleMate `1.0.0` local source
+baseline; Control A is `released_terminal_idle`
 
 Created: 2026-08-11
 
@@ -193,12 +193,27 @@ accepted commit(s), checks, final Git identities, residual gaps, and
 continuation disposition. Planning sends the paired receipt and does not
 monitor the Implementer.
 
-If accepted, the result is the integrated TempleMate `1.0.0` source baseline.
-Planning may then organize the final V1 UI-refinement phase and later separate
-device, OAuth, payment, tenant-domain, and release phases. None is authorized
-by this plan.
+Accepted result:
 
-Current classification: `expo_v1_account_native_integration_authorized`.
+- candidate commit:
+  `bccd60f9f3372edfb95bb15d4402da965c5b5281`;
+- canonical integration commit:
+  `6cab3f1b52ebaeaf68667f19a3c804f8d9c43079`;
+- Track A, Track B, and the candidate commit are ancestors of the canonical
+  integration commit;
+- Control evidence: 14 mobile tests, mobile lint/version/API 36 verification,
+  30 Rails runs with 238 assertions, Expo Doctor 18/18 using the existing
+  local cache with networking disabled, clean source, and empty staging;
+- classification: `accepted_frozen_outcome` / `released_terminal_idle`.
 
-First blocker: none. Planning must commit this accepted plan and dispatch it
-directly to Control A.
+The result is the integrated TempleMate `1.0.0` local source baseline. No
+device, Metro, prebuild/build, OAuth, payment/provider, live registry,
+production, release, deployment, external, or push action occurred.
+
+Current classification: `expo_v1_account_native_integration_complete`.
+
+Next gate: the Director must decide whether to open the separately deferred
+final V1 UI-refinement phase and provide its product/UI criteria. Until that
+decision, Planning is authoritative idle and neither Control has an active
+packet. Device, OAuth, payment, tenant-domain, and release work remain separate
+later phases.

@@ -186,7 +186,7 @@ Accepted checkpoint:
   `740aa39bb38806d2207636bb391167c2fee6a9b1`;
 - classification: `accepted_frozen_outcome` / `released_terminal_idle`.
 
-Next owner/action: Planning combines this checkpoint with the accepted Track B
-checkpoint under `EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md` through Control A.
-No provider, production, external, or release action is authorized by this
-completed track.
+Integration result: this checkpoint is incorporated into canonical integration
+commit `6cab3f1b52ebaeaf68667f19a3c804f8d9c43079` under
+`EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`. No provider, production, external,
+or release action is authorized by this completed track.

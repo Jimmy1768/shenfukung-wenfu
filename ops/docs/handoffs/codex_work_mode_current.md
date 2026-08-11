@@ -51,15 +51,21 @@ provides the Rails account JSON/native-email contract, and Track B at
 interactive dummy account client, tenant/client interfaces, and local API 36
 debug-build evidence. Both Controls received `released_terminal_idle`.
 
-Physical development-client installation is not a Track B completion
-criterion and is deferred to a later explicitly authorized execution phase.
-Planning's current accepted next phase is
-`ops/docs/plans/EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`: Control A combines
-the two frozen inputs, supplies the real local/test adapter, proves contract
-fit, and continues the TempleMate `1.0.0` source toward a V1 refinement
-checkpoint. Control B remains idle and does not receive a real-adapter
-continuation. OAuth and payment remain separate deferred phases. EAS cloud use
-and device/store/release action remain separately gated.
+The separate account-native integration phase is complete on canonical `main`
+at `6cab3f1b52ebaeaf68667f19a3c804f8d9c43079`. That commit contains the exact
+Track A and Track B checkpoint ancestry plus the accepted real local/test
+adapter candidate `bccd60f9f3372edfb95bb15d4402da965c5b5281`. The integrated
+TempleMate `1.0.0` local source baseline passed the required Rails, mobile,
+version/API 36, contract, and offline Expo Doctor checks. Control A and Control
+B are both `released_terminal_idle`.
+
+Physical development-client installation was not an integration criterion and
+remains deferred. The exact current missing decision belongs to the Director:
+whether to open the separately deferred final V1 UI-refinement phase and what
+product/UI criteria it must satisfy. No Control packet is active until that
+decision. OAuth, payment, live tenant-domain/trust, device execution, EAS
+cloud, store/release, deployment, external action, and push remain separately
+gated.
 
 ## Current Authorized Documentation Housekeeping
 

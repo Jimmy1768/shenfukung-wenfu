@@ -229,7 +229,7 @@ historical evidence, not as a Track B blocker. The Director subsequently
 clarified that physical development-client installation does not occur in the
 middle of this plans/roadmap run.
 
-Next owner/action: Planning combines this checkpoint with the accepted Track A
-checkpoint under `EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md` through Control A.
-Control B remains idle. EAS cloud use and every other external action remain
-separately unauthorized.
+Integration result: this checkpoint is incorporated into canonical integration
+commit `6cab3f1b52ebaeaf68667f19a3c804f8d9c43079` under
+`EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`. Control B remains idle. EAS cloud
+use and every other external action remain separately unauthorized.

@@ -22,15 +22,16 @@ Current disposition: the two non-payment, non-OAuth parallel V1 tracks are
 implemented, accepted, frozen, and terminal. Track A supplies the Rails JSON and
 native email-session equivalent; Track B supplies Expo-native infrastructure,
 interactive dummy UI, tenant/client seams, and local development-client build
-evidence. Planning now coordinates their separate integration phase through
-Control A under `EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`. Physical device
-installation is deferred beyond this roadmap phase. OAuth and the entire
-payment surface/lifecycle remain separate later phases.
+evidence. Their separate integration phase is complete on canonical `main` at
+`6cab3f1b52ebaeaf68667f19a3c804f8d9c43079`, including the real local/test
+adapter. Physical device installation is deferred beyond this roadmap phase.
+Final V1 UI refinement now requires Director scope criteria; OAuth and the
+entire payment surface/lifecycle remain separate later phases.
 
 At this scan's original base, Wenfu was ready for detailed Expo planning but
 was not yet ready for account-app screen implementation against a stable mobile
-contract. The accepted Track A and Track B checkpoints have since closed that
-specific readiness gap for the integration phase.
+contract. The accepted Track A, Track B, and integration checkpoints have since
+closed that specific readiness gap.
 
 This is not a greenfield app. The repository already contains an Expo 54
 project, EAS profiles, per-environment URL/config helpers, shared project and
