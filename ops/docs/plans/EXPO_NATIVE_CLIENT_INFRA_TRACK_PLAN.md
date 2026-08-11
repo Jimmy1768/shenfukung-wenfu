@@ -21,9 +21,10 @@ parity.
 
 This track begins with deterministic dummy adapters, so navigation, menus,
 screens, forms, state transitions, build configuration, and device behavior do
-not depend on unfinished Rails endpoints. After Track A is accepted, this track
-maps the real JSON contract behind the same client boundary and performs local/
-test integration. Final UI refinement remains the last slice of this track.
+not depend on unfinished Rails endpoints. It stops at an accepted immutable
+pre-integration checkpoint. Real JSON adapter work, local/test Rails integration,
+and final post-integration refinement belong to a later Planning-coordinated
+merging phase through Control A.
 
 ## Parallel Ownership
 
@@ -40,9 +41,9 @@ Control B does not edit:
 - Planning documents.
 
 During the parallel wave, Control B uses dummy adapters and internal client
-models. It does not guess or impose the final Rails wire format. After Planning
-provides Track A's accepted contract, Control B adds the mobile wire adapter
-without asking Control A to coordinate directly.
+models. It does not guess or impose the final Rails wire format, add a live
+Rails adapter, or continue into integration. Control B terminates at the
+identified pre-integration checkpoint and returns it only to Planning.
 
 ## Parallel Wave — Expo Infrastructure And Dummy Account Client
 
@@ -118,8 +119,8 @@ Control B owns the native side of the accepted one-temple model:
 - QR scanning and equivalent tappable connection link;
 - parsing a non-secret tenant HTTPS origin plus fixed TempleMate connection
   path;
-- trusted-origin validation followed by tenant identity confirmation through
-  `/api/v1/temple`;
+- a client interface for later trusted-origin validation and tenant identity
+  confirmation through `/api/v1/temple`;
 - environment-scoped local persistence;
 - explicit switching confirmation and complete prior-tenant session/cache/
   pending-state cleanup.
@@ -128,51 +129,33 @@ The native app never trusts an arbitrary scanned HTTPS origin. The accepted
 database-free direction is a trust registry derived from the deployment
 manifest and served from the TempleMate platform origin. The exact trust
 document and any external hosting remain separately planned; local development
-may use deterministic trust fixtures and must not hardcode the staging hostname
-as permanent product identity.
+uses deterministic trust and tenant-identity fixtures and must not hardcode the
+staging hostname as permanent product identity. No live origin or tenant API
+request enters this parallel track.
 
-## Convergence Wave — Real Account Adapter
+## Pre-Integration Checkpoint
 
-This wave starts only after Planning provides Control A's accepted Rails commit
-and contract evidence.
+Control B's accepted source commit, required checks, generated/installed
+development-client evidence, dummy fixture contract, and terminal packet form
+the identified immutable pre-integration checkpoint.
 
-- Implement the mobile wire adapter against the accepted JSON contract.
-- Replace dummy email session behavior with local/test Rails email sessions,
-  secure persistence, refresh, sign out, expiry, revocation, and closure.
-- Connect the existing screens to local/test Rails reads and mutations without
-  changing internal product behavior to fit the transport.
-- Keep dummy mode available only as an explicit development/test mode; it never
-  handles a failed real request.
-- Prove profile edits, dependent CRUD, registration create/update, preferences,
-  assistance/contact, privacy actions, and closure against local/test data.
-- Prove dual-role users receive only account data and no admin navigation or
-  capability.
-- A payment-required registration stops truthfully before checkout; existing
-  paid state may be displayed only through the accepted minimal field.
+At this checkpoint:
 
-If the accepted server contract and client need genuinely conflict, Control B
-reports the exact planning design gap to Planning. It does not coordinate a
-contract change directly with Control A.
-
-## Final V1 Refinement
-
-After functional local/test integration is accepted, refine the existing V1
-surface without adding scope:
-
-- coherent navigation, typography, spacing, icons, and component primitives;
-- complete Traditional Chinese/English copy;
-- loading/error/empty/pending/confirmation consistency;
-- keyboard, focus, touch targets, screen reader, dynamic text, reduced motion,
-  contrast, Android 16 edge-to-edge/back/resume, and available iOS checks;
-- removal of placeholder, template, dummy-only, and admin residue from the real
-  client mode.
-
-Refinement adds no route, resource, CRUD operation, provider, permission, or
-business rule.
+- dummy menus, screens, and interactions are accepted independently of Rails;
+- the client-side adapter interface is present but no real wire implementation
+  is selected or inferred;
+- Control B sends one terminal packet directly to Planning and receives the
+  paired `released_terminal_idle` receipt;
+- Control B performs no merge, Rails integration, real adapter continuation, or
+  post-integration UI refinement;
+- Planning retains the checkpoint for a later merging/integration plan through
+  Control A.
 
 ## Explicit Exclusions
 
 - Rails implementation or Rails test changes;
+- real Rails wire adapters, local/test Rails integration, end-to-end account
+  API checks, merging, and post-integration refinement;
 - Google/Apple OAuth or identity link/unlink;
 - payment menu/history/status polling, checkout, return, callbacks, providers,
   refunds, settlement, or accounting;
@@ -198,28 +181,26 @@ business rule.
 7. No admin, backend, provider, production, external, or release behavior is
    present in the dummy wave.
 
-### Convergence and refinement criteria
+### Checkpoint criteria
 
-8. The real adapter conforms to Control A's accepted JSON contract without
-   changing Rails-owned semantics.
-9. Local/test email sessions and included account reads/mutations work through
-   the same screens previously exercised with dummy data.
-10. Tenant switching clears all prior tenant-scoped session and cached state;
-    arbitrary scanned origins are rejected.
-11. Dual-role users see and receive only account behavior.
-12. Final refinement improves presentation/accessibility/device behavior but
-    adds no product scope.
-13. No OAuth, payment, provider, production, deployment, AAB/store, or release
+8. Tenant binding, switching, trusted-origin, and tenant-confirmation behavior
+   is testable against deterministic interfaces/fixtures without a live request.
+9. No real Rails adapter, merge, local/test Rails integration, or
+   post-integration refinement occurs.
+10. Control B's accepted commit, checks, artifact evidence, dummy contract, and
+    terminal packet identify one immutable pre-integration checkpoint.
+11. No OAuth, payment, provider, production, deployment, AAB/store, or release
     work occurs.
-14. Required mobile and local integration checks pass with exact evidence and
-    final source state is clean and attributable.
+12. Required mobile checks pass with exact evidence and final source state is
+    clean and attributable.
 
-## Convergence And Current Gate
+## Terminal Return And Current Gate
 
-Control B may complete the parallel dummy/infrastructure wave independently.
-Its real-adapter continuation requires Planning's receipt of Control A's
-accepted terminal contract. Planning sends that continuation directly to
-Control B; the Controls do not coordinate directly.
+Control B completes the parallel dummy/infrastructure wave independently, sends
+its terminal checkpoint only to Planning, receives `released_terminal_idle`,
+and stops. Planning waits for both parallel terminal checkpoints before
+coordinating a separate merging/integration plan through Control A. The
+Controls do not coordinate directly.
 
 Current classification:
 `parallel_track_b_accepted_not_dispatched`.

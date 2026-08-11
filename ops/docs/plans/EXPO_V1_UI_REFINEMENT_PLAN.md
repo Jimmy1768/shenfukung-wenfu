@@ -1,8 +1,8 @@
 # Expo V1 UI Refinement Plan
 
-Status: superseded as standalone sequencing authority; final refinement is now
-the last slice of `EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; retained as prior
-evidence
+Status: superseded as standalone sequencing authority; final refinement is
+deferred until after the separate Planning-coordinated merging/integration
+phase through Control A; retained as prior evidence
 
 Created: 2026-08-11
 

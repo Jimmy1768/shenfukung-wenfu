@@ -1,8 +1,9 @@
 # Expo Core Account Parity Plan
 
 Status: superseded as standalone sequencing authority; Rails JSON parity is now
-owned by `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and mobile integration by
-`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; retained as prior evidence
+owned by `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`; mobile integration is deferred
+to a separate later Planning-coordinated merging phase through Control A;
+retained as prior evidence
 
 Created: 2026-08-11
 

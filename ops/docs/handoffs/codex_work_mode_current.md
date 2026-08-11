@@ -47,13 +47,14 @@ The Expo readiness scan remains the gap inventory. Core V1 is now divided into
 two independent parallel tracks: Control A is intended to own the Rails JSON
 and native email-session equivalent of the current non-payment/non-OAuth
 account namespace; Control B is intended to own Expo infrastructure,
-interactive dummy account screens, tenant/client state, build/API 36 evidence,
-later real-adapter integration, and final UI refinement. Control B can complete
-its dummy/infrastructure wave without Track A. After Control A's accepted
-terminal contract reaches Planning, Planning may continue Control B with the
-real adapter; the Controls do not coordinate directly. OAuth and payment remain
-separate deferred phases. Both implementation dispatches await explicit
-Director authorization, and EAS cloud use remains separately gated.
+interactive dummy account screens, tenant/client interfaces, and build/API 36
+evidence through an immutable pre-integration checkpoint. Both tracks terminate
+and receive `released_terminal_idle` before integration. Planning then
+coordinates a separate merging/integration phase through Control A; Control B
+does not receive a real-adapter continuation. The Controls do not coordinate
+directly. OAuth and payment remain separate deferred phases. Both parallel
+implementation dispatches await explicit Director authorization, and EAS cloud
+use remains separately gated.
 
 ## Current Authorized Documentation Housekeeping
 

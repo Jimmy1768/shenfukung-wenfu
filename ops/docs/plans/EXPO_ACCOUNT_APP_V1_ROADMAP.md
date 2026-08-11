@@ -3,11 +3,14 @@
 Status: superseded as current sequencing authority by the two parallel-track
 plans; retained as prior roadmap evidence
 
-Disposition: dummy-client, native-foundation, core-parity, and refinement work
-is now organized into `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` for Control A and
-`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md` for Control B. OAuth and payments
-remain separate deferred phases. No implementation or Control dispatch is
-authorized by this disposition.
+Disposition: parallel Rails JSON work is now organized in
+`EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` for Control A, and pre-integration
+Expo-native infrastructure/dummy-client work in
+`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md` for Control B. Both stop at terminal
+checkpoints. Planning later coordinates a separate merging/integration phase
+through Control A; final refinement follows functional integration. OAuth and
+payments remain separate deferred phases. No implementation or Control dispatch
+is authorized by this disposition.
 
 Created: 2026-08-11
 

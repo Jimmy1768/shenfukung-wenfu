@@ -41,8 +41,9 @@ Control A does not edit:
 - Planning documents.
 
 Control B does not need to wait for this track to build the dummy client and
-native infrastructure. It does wait for Control A's accepted terminal contract
-before wiring the real mobile adapter.
+native infrastructure. Neither parallel track integrates the other. The later
+merging phase waits for both accepted terminal checkpoints and is coordinated
+by Planning through Control A.
 
 ## Account-Only Contract Boundary
 
@@ -161,12 +162,21 @@ Focused Rails request/contract evidence must cover, where applicable:
 8. Required Rails checks pass with exact evidence and final source state is
    clean and attributable.
 
-## Convergence And Current Gate
+## Terminal Checkpoint, Later Merge, And Current Gate
 
 On accepted completion, Control A sends its terminal packet only to Planning.
-Planning records the receipt and provides the accepted commit and contract
-evidence to Control B for a later mobile integration continuation. Control A
-and Control B do not coordinate directly.
+Planning records the paired receipt and holds Control A's accepted Rails commit
+and contract evidence as one input to a later merging phase. Control A performs
+no Expo integration under this parallel-track plan.
+
+After both Control A and Control B have delivered accepted terminal checkpoints
+and received `released_terminal_idle`, Planning may write and accept a separate
+merging/integration plan and send it to Control A. That later plan—not this
+parallel track—owns bringing the two accepted commits together, implementing or
+adapting the real mobile wire integration, resolving evidence-backed contract
+fit, and running end-to-end local/test checks. Control B remains idle unless a
+later Planning decision explicitly gives it new work. The Controls do not
+coordinate directly.
 
 Current classification:
 `parallel_track_a_accepted_not_dispatched`.

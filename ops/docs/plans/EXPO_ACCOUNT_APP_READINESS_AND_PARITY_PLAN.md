@@ -21,10 +21,12 @@ Mature read-only reference: `/Users/jimmy1768/Projects/DojoMate-Expo`
 Current disposition: the Director accepted the current non-payment, non-OAuth
 account namespace as core V1 scope in two parallel tracks. Control A's intended
 track creates the Rails JSON/account-session equivalent; Control B's intended
-track builds Expo-native infrastructure, dummy UI, later real-adapter
-integration, and final refinement. OAuth and the entire payment
-surface/lifecycle remain separate later phases. Current sequencing and
-acceptance authority lives in `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
+track builds Expo-native infrastructure and dummy UI through an immutable
+pre-integration checkpoint. Planning later coordinates a separate merging/
+integration phase through Control A after both parallel tracks are terminal and
+idle. OAuth and the entire payment surface/lifecycle remain separate later
+phases. Current sequencing and acceptance authority lives in
+`EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
 `EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`.
 
 Wenfu is ready for detailed Expo planning, but it is not ready for account-app

@@ -68,8 +68,10 @@ assign equal priority or implementation readiness.
   `ops/docs/plans/EXPO_NATIVE_ACCOUNT_FOUNDATION_PLAN.md`,
   `ops/docs/plans/EXPO_CORE_ACCOUNT_PARITY_PLAN.md`, and
   `ops/docs/plans/EXPO_V1_UI_REFINEMENT_PLAN.md` are retained as prior phase
-  decomposition evidence. Their current scope is reorganized into the two
-  parallel-track plans for Rails JSON and Expo-native infrastructure.
+  decomposition evidence. Their independent pre-integration scope is
+  reorganized into the two parallel-track plans for Rails JSON and Expo-native
+  infrastructure; merging/integration and final refinement remain later
+  Planning-coordinated work through Control A.
 
 ## Archived Completed Records
 
