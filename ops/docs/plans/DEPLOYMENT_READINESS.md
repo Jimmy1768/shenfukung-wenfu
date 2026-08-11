@@ -35,7 +35,9 @@ distribution planning can claim stable public URLs.
 
 Rails/Vue deployment state and TempleMate Expo release versioning are separate.
 This web deployment checklist does not set or advance the mobile app version;
-TempleMate Expo starts at `1.0.0` under its own later candidate/release rules.
+TempleMate Expo uses DojoMate-Expo's three-component `major.minor.patch`
+version pattern, starting at `1.0.0` under its own later candidate/release
+rules.
 
 ## Current Status Split
 

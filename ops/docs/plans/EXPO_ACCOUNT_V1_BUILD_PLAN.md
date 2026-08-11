@@ -121,9 +121,9 @@ These criteria are immutable for V1 planning:
     never carry a user identifier, credential, session, or bearer token.
 15. The dummy-data development client does not add camera, network binding, or
     live domain behavior; those remain later selected product slices.
-16. TempleMate Expo versioning is independent of Rails and begins at app
-    version `1.0.0`. Rails changes or deployments never imply an Expo version
-    change.
+16. TempleMate Expo versioning uses the same three-component
+    `major.minor.patch` pattern as DojoMate-Expo and begins at app version
+    `1.0.0`. Rails changes or deployments never imply an Expo version change.
 
 ## Plan Relationship And Supersession
 
@@ -233,7 +233,9 @@ TempleMate has its own tightly controlled mobile release identity. It does not
 reuse, derive, or infer a version from Rails, Vue, a repository commit count,
 or a tenant deployment.
 
-- The accepted initial TempleMate app version is `1.0.0`.
+- TempleMate app versions use DojoMate-Expo's three-component
+  `major.minor.patch` pattern. The accepted initial TempleMate app version is
+  `1.0.0`; later app releases retain the three-component pattern.
 - `mobile/versioning.js` is the current Expo configuration source and already
   declares app version `1.0.0`, iOS build number `1`, and Android version code
   `1`.
@@ -264,15 +266,14 @@ or a tenant deployment.
   not bump TempleMate automatically. Conversely, an Expo version bump does not
   rename or version the Rails application.
 
-DojoMate-Expo is evidence for the centralized version-source and native-sync
-pattern, not a source for TempleMate's current number. Its
+DojoMate-Expo is evidence for both the three-component `major.minor.patch`
+app-version pattern and the centralized version-source/native-sync pattern. Its
 `scripts/sync-version.mjs` propagates a central version configuration into
 package metadata and generated iOS/Android version fields; its profile prebuild
 and EAS pre-install hooks run synchronization again. It does not store the
 three version numbers in `eas.json`; that file selects local/remote authority
 and build-profile behavior. Wenfu currently has no equivalent sync or verify
-script. TempleMate begins at `1.0.0` even when the mature reference app has
-advanced to a later release.
+script. TempleMate adopts that version format beginning at `1.0.0`.
 
 Official platform evidence for this policy:
 

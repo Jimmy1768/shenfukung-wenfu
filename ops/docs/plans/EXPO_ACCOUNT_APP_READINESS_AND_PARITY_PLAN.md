@@ -135,7 +135,7 @@ Evidence was classified as:
 | Secure storage | `expo-secure-store` and auth storage helper | Scaffolded; key names are unsafe residue |
 | HTTP auth helper | login, refresh, logout request helper | Scaffolded against nonexistent routes |
 | EAS/build | `mobile/eas.json`, `bin/expo_prebuild`, `bin/expo_build` | Present; profile/config defects found; no build run |
-| Versioning | `mobile/versioning.js` | Accepted independent TempleMate app version `1.0.0`, iOS build `1`, and Android version code `1`; EAS local authority/no auto-increment is aligned, but no synchronization check, consumed-number receipt, or bump/reset guard exists |
+| Versioning | `mobile/versioning.js` | Accepted independent TempleMate app version uses DojoMate-Expo's three-component `major.minor.patch` pattern and starts at `1.0.0`; iOS build starts at `1` and Android version code starts at `1`; EAS local authority/no auto-increment is aligned, but no synchronization check, consumed-number receipt, or bump/reset guard exists |
 
 ### Placeholder and template residue that must not ship
 
@@ -402,7 +402,8 @@ Wenfu compatibility, not be downgraded to match the example.
   advances. Play Internal App Sharing is the documented reusable-code
   exception and does not consume the release-track ledger.
 - Rails commits, migrations, and deployments must never act as the Expo version
-  source. The accepted TempleMate marketing version starts at `1.0.0`; later
+  source. TempleMate follows DojoMate-Expo's three-component
+  `major.minor.patch` marketing-version pattern, starting at `1.0.0`; later
   mobile version/build advancement needs its own controlled release rule.
 - Unlike DojoMate-Expo, Wenfu has no `sync:version` package command,
   prebuild/EAS version sync hook, native-file synchronization script, or
