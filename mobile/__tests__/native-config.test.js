@@ -38,6 +38,17 @@ test('production config uses the public TempleMate native identifiers', () => {
   assert.equal(config.android.package, project.nativeIdentifiers.production.androidPackage);
 });
 
+test('both public configs declare QR-only camera access without Android audio recording', () => {
+  for (const buildMode of ['development', 'production']) {
+    const config = configFor(buildMode);
+    const camera = config.plugins.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-camera');
+    assert.deepEqual(camera, ['expo-camera', {
+      cameraPermission: 'TempleMate uses your camera only to scan a temple QR code.',
+      recordAudioAndroid: false
+    }]);
+  }
+});
+
 test('project native identifiers contain only the komainu production and development pair', () => {
   assert.deepEqual(project.nativeIdentifiers, {
     production: {

@@ -10,4 +10,9 @@ const createQrScanner = ({ readPayload }) => ({
 
 const createFixtureQrScanner = payload => createQrScanner({ readPayload: () => payload });
 
-module.exports = { createQrScanner, createFixtureQrScanner };
+const scanCameraPayload = async ({ mode, payload }) => {
+  if (mode !== 'dummy') return { state: 'binding_failed', tenant: null, error: 'real_camera_binding_deferred', source: 'qr' };
+  return createFixtureQrScanner(payload).scanConnection();
+};
+
+module.exports = { createQrScanner, createFixtureQrScanner, scanCameraPayload };

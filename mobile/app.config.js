@@ -42,7 +42,14 @@ module.exports = () => {
         },
         edgeToEdgeEnabled: true
       },
-      plugins: ['expo-secure-store', 'expo-dev-client'],
+      plugins: [
+        'expo-secure-store',
+        'expo-dev-client',
+        ['expo-camera', {
+          cameraPermission: 'TempleMate uses your camera only to scan a temple QR code.',
+          recordAudioAndroid: false
+        }]
+      ],
       extra: {
         // Dummy is network-free by default. Real mode is an intentional local/test
         // selection and is invalid without both values; neither is a secret.

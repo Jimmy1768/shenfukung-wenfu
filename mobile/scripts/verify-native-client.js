@@ -54,6 +54,11 @@ if (productionConfig.ios.bundleIdentifier !== project.nativeIdentifiers.producti
 if (developmentConfig.android.compileSdkVersion !== 36 || developmentConfig.android.targetSdkVersion !== 36 || productionConfig.android.compileSdkVersion !== 36 || productionConfig.android.targetSdkVersion !== 36) fail('Android compile/target SDK must be 36');
 if (developmentConfig.extra.nativeOAuthReturnUrl !== nativeOAuthReturnUrl || productionConfig.extra.nativeOAuthReturnUrl !== nativeOAuthReturnUrl || nativeOAuthReturnUrl !== 'templemate://oauth/complete') fail('OAuth return must use the accepted TempleMate scheme');
 if (pkg.dependencies['expo-auth-session'] !== '~7.0.11' || pkg.dependencies['expo-web-browser'] !== '~15.0.11' || pkg.dependencies['expo-crypto'] !== '~15.0.9') fail('SDK 54 OAuth package versions differ from the accepted Expo compatibility set');
+if (pkg.dependencies['expo-camera'] !== '~17.0.10') fail('SDK 54 QR camera package version differs from the accepted Expo compatibility set');
+for (const config of [developmentConfig, productionConfig]) {
+  const cameraPlugin = config.plugins?.find(plugin => Array.isArray(plugin) && plugin[0] === 'expo-camera');
+  if (!cameraPlugin || cameraPlugin[1]?.recordAudioAndroid !== false || !/TempleMate.*camera.*QR/i.test(cameraPlugin[1]?.cameraPermission || '')) fail('QR camera config must declare a TempleMate purpose and disable Android audio recording');
+}
 if (!publicConfigurationMatrix.development || !publicConfigurationMatrix.production || JSON.stringify(publicConfigurationMatrix).match(/secret|client[_-]?id|token/i)) fail('OAuth configuration matrix must remain public and nonsecret');
 if (!eas.build?.development?.developmentClient || eas.build.development.android?.buildType !== 'apk') fail('only the development APK profile is permitted');
 if (JSON.stringify(eas).match(/app-bundle|production-aab|autoIncrement/i)) fail('release or auto-increment configuration is forbidden');

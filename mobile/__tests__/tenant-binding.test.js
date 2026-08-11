@@ -3,7 +3,7 @@ const assert = require('node:assert/strict');
 const { alternateTenant, tenant } = require('../app/dummy/fixtures');
 const { bindFixture, clearPriorTenant, confirmSwitch, fixtureConnectionLink, initialBinding, parseConnectionLink, requestSwitch, scanFixture } = require('../app/tenant/binding');
 const { storageKey, storageScope } = require('../app/core/storage_scope');
-const { createFixtureQrScanner } = require('../app/tenant/scanner');
+const { createFixtureQrScanner, scanCameraPayload } = require('../app/tenant/scanner');
 
 test('tenant parser accepts only deterministic trusted fixture links', () => {
   const link = `${tenant.origin}${tenant.connectionPath}?token=fixture-token`;
@@ -34,4 +34,12 @@ test('QR scanner interface receives deterministic fixture payloads without a net
   assert.equal(scanner.kind, 'native_qr_interface');
   assert.equal(result.state, 'bound');
   assert.equal(result.source, 'qr');
+});
+
+test('camera payload binding is executable only for a deterministic dummy fixture', async () => {
+  const dummy = await scanCameraPayload({ mode: 'dummy', payload: fixtureConnectionLink(tenant) });
+  assert.equal(dummy.state, 'bound');
+  assert.equal(dummy.source, 'qr');
+  const real = await scanCameraPayload({ mode: 'real', payload: fixtureConnectionLink(tenant) });
+  assert.deepEqual(real, { state: 'binding_failed', tenant: null, error: 'real_camera_binding_deferred', source: 'qr' });
 });
