@@ -1,7 +1,7 @@
 # Expo Account App Readiness And Parity Plan
 
 Status: completed initial readiness inventory; retained as supporting evidence
-for `EXPO_ACCOUNT_V1_BUILD_PLAN.md`; implementation and Control dispatch not
+for `EXPO_ACCOUNT_APP_V1_ROADMAP.md`; implementation and Control dispatch not
 authorized by this document
 
 Created: 2026-08-11
@@ -17,11 +17,11 @@ Mature read-only reference: `/Users/jimmy1768/Projects/DojoMate-Expo`
 
 ## Outcome
 
-Current disposition: the Director clarified on 2026-08-11 that V1 scope must
-follow the app's selected purpose. The complete feature/parity language below
-is an upper-bound inventory, not a V1 delivery requirement. Current V1
-selection, sequencing, and acceptance authority lives in
-`EXPO_ACCOUNT_V1_BUILD_PLAN.md`.
+Current disposition: the Director accepted the current non-payment, non-OAuth
+account namespace as core V1 scope, divided across dummy UI, native foundation,
+core parity, and final UI-refinement phases. OAuth and the entire payment
+surface/lifecycle are separate later phases. Current sequencing and acceptance
+authority lives in `EXPO_ACCOUNT_APP_V1_ROADMAP.md` and its linked phase plans.
 
 Wenfu is ready for detailed Expo planning, but it is not ready for account-app
 screen implementation against a stable mobile contract.
@@ -427,6 +427,11 @@ Wenfu compatibility, not be downgraded to match the example.
 
 ## Required Future Work Packages
 
+Disposition note: the package list below is retained as the original readiness
+decomposition. Current sequencing and phase acceptance are superseded by
+`EXPO_ACCOUNT_APP_V1_ROADMAP.md` and its linked plans; these packages must not
+be dispatched as one combined parity build.
+
 These are sequencing and acceptance boundaries, not implementation packets.
 Planning must accept the applicable detailed contract before any Control
 dispatch. Control later owns bounded packet construction and implementation
@@ -522,6 +527,11 @@ EA-7.
 
 ## Immutable Acceptance Criteria For Future Expo Delivery
 
+Disposition note: these criteria describe the original full-parity upper bound.
+They are not the acceptance criteria for core V1. The roadmap's dummy,
+foundation, core-parity, refinement, OAuth, and payment plans now own their
+respective immutable criteria.
+
 1. Expo starts from the checked-in Wenfu scaffold and preserves compatible
    project/design/environment assets.
 2. Signed-out users can use the same account authentication methods supported
@@ -602,7 +612,9 @@ Exact commands and tools remain Control-owned implementation-packet details.
 8. The supported device/OS/accessibility matrix and later release targets.
 
 These decisions are not blockers to accepting this readiness scan. They are
-blockers to dispatching the affected implementation slices.
+owned by the separate roadmap phases and are blockers only to dispatching the
+affected phase. OAuth and payment decisions do not block dummy UI, native email
+foundation, core non-payment account parity, or V1 UI refinement.
 
 ## Implementation Start Gate
 

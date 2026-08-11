@@ -1,8 +1,13 @@
 # Expo Account V1 Build Plan
 
-Status: Director-authorized first broad objective accepted; dummy-data
-development-client scope recorded; implementation and Control dispatch are not
-authorized
+Status: superseded as current sequencing authority by
+`EXPO_ACCOUNT_APP_V1_ROADMAP.md`; retained as prior planning evidence
+
+Disposition: its purpose-first product gate, selective-CRUD framing, and
+minimal-shell dummy objective were superseded by the Director's accepted
+account-parity phase split. Its scaffold, domain, one-temple binding, branding,
+API 36, and independent-version evidence remain useful. Current phase scope and
+acceptance criteria live in the roadmap and its separate phase plans.
 
 Created: 2026-08-11
 

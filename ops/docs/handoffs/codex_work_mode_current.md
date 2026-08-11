@@ -39,17 +39,17 @@
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
 - `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
-- `ops/docs/plans/EXPO_ACCOUNT_V1_BUILD_PLAN.md`
+- `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
 - `ops/docs/reference/future_work.md`
 
-The Expo account readiness scan remains the gap inventory. The V1 build plan's
-first accepted broad objective is an installable account-only development
-client with deterministic dummy data: no backend, auth, real CRUD, OAuth,
-payment, providers, production identity, AAB, or release action. Wenfu's Expo
-54 source is API 36 capable; the development client must prove API 36 without
-an AAB, and a later release artifact must prove it separately. The real
-account-user product job remains the next scope decision after this technical
-milestone. V1-0 implementation and Control dispatch await explicit Director
+The Expo readiness scan remains the gap inventory. The current roadmap divides
+work into an interactive dummy-account development client, native account
+foundation, core non-payment/non-OAuth account parity, and final UI refinement.
+The dummy client includes stateful dummy email login, profile/dependent CRUD,
+registration creation/editing, and read-only paid-registration fixtures for
+screen testing, without backend, provider, AAB, or release action. OAuth and
+the entire payment surface/lifecycle are separate deferred phase plans. The
+first implementation phase and Control dispatch await explicit Director
 authorization; EAS cloud use would require separate external-action authority.
 
 ## Current Authorized Documentation Housekeeping
