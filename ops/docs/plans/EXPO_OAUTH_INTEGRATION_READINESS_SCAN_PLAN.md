@@ -1,7 +1,8 @@
 # Expo OAuth Integration Readiness Scan Plan
 
-Status: accepted documentation/readiness scan for direct dispatch to Control B
-after this plan and the parallel functional-stabilization plan are committed
+Status: Director-corrected documentation/readiness scan; prior DojoMate-based
+dispatch stopped and superseded; authorized for redispatch to Control B after
+this correction is committed
 
 Created: 2026-08-11
 
@@ -20,8 +21,12 @@ Parallel independent track:
 Existing deferred phase pointer:
 `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
 
-Mature read-only native reference:
-`/Users/jimmy1768/Projects/DojoMate-Expo`
+Candidate SourceGrid read-only evidence roots:
+
+- `/Users/jimmy1768/Projects/sourcegrid-labs`
+- `/Users/jimmy1768/Projects/Golden-Template`
+- checked-in Wenfu and SourceGrid documentation/history that identifies an
+  exact SourceGrid APK or its source commit
 
 ## Objective
 
@@ -34,9 +39,14 @@ Rails account/admin web authentication surface and centralized SourceGrid auth.
 The native app should incorporate that existing behavior rather than inventing
 a second identity model.
 
-This track discovers the exact contracts, reusable sibling patterns, missing
-native surfaces, platform/config prerequisites, tests, sequencing, and
-authority gates. It does not implement OAuth.
+This track discovers the exact contracts, the actual SourceGrid native/APK
+OAuth test evidence, missing TempleMate surfaces, platform/config
+prerequisites, tests, sequencing, and authority gates. It does not implement
+OAuth.
+
+DojoMate is explicitly not an OAuth reference. It does not use OAuth and must
+not be cited as evidence for OAuth dependencies, redirect handling, provider
+configuration, state machines, or native implementation patterns.
 
 ## Accepted Product Direction
 
@@ -57,6 +67,31 @@ authority gates. It does not implement OAuth.
   The scan records repository prerequisites and later verification needs but
   does not open the console, enumerate credentials, access providers, or infer
   unrecorded project/client identifiers.
+
+## Preliminary SourceGrid Artifact Evidence
+
+Planning's initial read-only scan found:
+
+- SourceGrid Labs history includes the Expo admin-demo source commit
+  `852531f6` and APK-download-link commit `4b477a0f`;
+- `sourcegrid-labs/ops/docs/COMMANDS.md` records old local paths
+  `/Volumes/DevSSD/Projects/sourcegrid-labs/mobile/dev-client-2.apk` and
+  `/Volumes/DevSSD/Projects/sourcegrid-labs/mobilebuild-1765454955888.apk`;
+- the download-link commit identifies a hosted
+  `sourcegrid-labs-demo.apk`, but its accompanying UI describes demo-credential
+  login rather than OAuth;
+- the recorded DevSSD artifacts are not present on the currently mounted local
+  filesystem;
+- current SourceGrid Labs mobile source contains a demo console and email/JWT
+  client helpers, not a proven native OAuth flow;
+- Golden Template mobile source exposes only an OAuth availability/stub UI and
+  explicitly says the real flow is not wired.
+
+These facts neither disprove the Director's recollection nor identify the
+OAuth test APK. The readiness scan must search SourceGrid repository history,
+branches, documentation, artifact references, and existing local files to find
+the exact source/artifact evidence. If it cannot, it must report that result
+and the next evidence owner rather than substituting another app.
 
 ## Source Inventory
 
@@ -88,16 +123,22 @@ Control B and its Implementer must inspect and cite at minimum:
 - signed-out UI, error model, startup/session restoration, and account-only
   navigation boundaries relevant to adding provider choices later.
 
-### DojoMate-Expo read-only reference
+### SourceGrid native/APK evidence discovery
 
-- Google and Apple sign-in dependencies, config plugins, app configuration,
-  schemes, redirect construction, browser/native return handling, state,
-  nonce, PKCE, cancellation, and interrupted-return behavior;
-- secure token/session handling, startup restoration, logout, account linking,
-  error presentation, test seams, and development-versus-production config;
-- any provider-specific platform requirements and build implications;
-- exact mechanisms that are reusable versus DojoMate product, backend, role,
-  payment, push, or release behavior that is not TempleMate authority.
+- SourceGrid Labs and Golden Template mobile history, branches, tags,
+  documentation, build/download records, and existing local artifacts;
+- exact APK filename, path or historical URL, hash when locally available,
+  package/version metadata, source repository, source commit, build profile,
+  and intended test purpose;
+- static, local-only inspection of an already present APK when needed to
+  attribute its source or determine whether OAuth behavior exists; do not
+  install, launch, decompile secret material into the report, or print embedded
+  configuration values;
+- the Expo/Rails source and tests that correspond to any verified OAuth test
+  APK, including redirect construction, browser/app return, state, nonce,
+  PKCE, cancellation, interrupted return, session exchange, and storage;
+- a clear distinction among a real OAuth test client, an email/JWT demo APK,
+  an OAuth availability stub, and an unrelated native artifact.
 
 ## Questions The Scan Must Answer
 
@@ -115,9 +156,10 @@ Control B and its Implementer must inspect and cite at minimum:
 6. Which Google and Apple public identifiers/config values must exist per
    Komainu development and production application, and which secret values
    must remain server-only?
-7. Which DojoMate packages/config plugins and source patterns are directly
-   reusable at Expo 54/API 36, and which require version or architecture
-   adaptation?
+7. What exact SourceGrid APK/source was used to test OAuth, and which of its
+   packages, config plugins, redirect/session mechanisms, and tests are
+   reusable at Expo 54/API 36? If the artifact cannot be identified, what
+   evidence was exhausted and who owns the missing fact?
 8. Does adding those native dependencies/config plugins require a new
    development-client binary, and what exact future EAS cloud profile would be
    appropriate? Do not run the build.
@@ -140,7 +182,8 @@ Control B produces one durable Control-owned readiness report at:
 The report must contain:
 
 - a route/controller/service/model/test map for current Wenfu OAuth;
-- a DojoMate mechanism/dependency/config/test map;
+- a SourceGrid native/APK artifact-to-source mechanism/dependency/config/test
+  map, or a precise not-found result with exhausted evidence;
 - a TempleMate native gap matrix grouped as already present, reusable,
   additive Rails work, additive Expo work, external prerequisite, deferred, or
   unknown;
@@ -176,7 +219,8 @@ continuation disposition.
 
 Control B must record:
 
-- exact Wenfu and DojoMate HEAD/branch/status used as evidence;
+- exact Wenfu, SourceGrid Labs, and Golden Template HEAD/branch/status and Git
+  refs used as evidence, without switching or mutating sibling worktrees;
 - focused route/controller/service/model/config/test searches and the cited
   source inventory;
 - proof that only the report path changed;
@@ -194,6 +238,9 @@ Control B must record:
   credential, callback allowlist, app-store, or provider mutation;
 - reading or copying secrets, tokens, client secrets, signing material,
   production data, or private provider responses;
+- downloading a missing APK or other artifact, opening a hosted APK URL,
+  installing or launching an APK, or changing a sibling repository;
+- treating DojoMate as OAuth implementation evidence;
 - Facebook;
 - admin functionality in Expo;
 - payment/ECPay/Stripe;
@@ -210,8 +257,9 @@ Control B must record:
    are explicit; the native target remains account-only for dual-role users.
 3. Existing TempleMate email-session/storage behavior and the missing native
    OAuth adapter boundary are mapped precisely.
-4. DojoMate reuse is mechanism-specific, version-aware, and separated from
-   DojoMate-only product behavior.
+4. The exact SourceGrid OAuth test APK/source is attributed with evidence, or
+   the report proves it was not found in the authorized local sources and names
+   the next evidence owner; no unrelated app is substituted.
 5. Google/Apple and development/production prerequisites are distinct, with
    public configuration separated from server-only secrets.
 6. Native dependency/config/build implications are identified without adding a
