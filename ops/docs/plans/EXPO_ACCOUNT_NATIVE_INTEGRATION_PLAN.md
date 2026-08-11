@@ -212,8 +212,8 @@ production, release, deployment, external, or push action occurred.
 
 Current classification: `expo_v1_account_native_integration_complete`.
 
-Next gate: the Director must decide whether to open the separately deferred
-final V1 UI-refinement phase and provide its product/UI criteria. Until that
-decision, Planning is authoritative idle and neither Control has an active
-packet. Device, OAuth, payment, tenant-domain, and release work remain separate
-later phases.
+Next phase: the Director opened the separate development-client UI-refinement
+phase under `EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`. That plan—not this
+completed integration plan—owns project-local Expo Doctor installation,
+development-client device action, and presentation refinement. OAuth, payment,
+live tenant-domain/trust, and release work remain separate later phases.

@@ -42,6 +42,7 @@
 - `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`
 - `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`
+- `ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -59,13 +60,15 @@ TempleMate `1.0.0` local source baseline passed the required Rails, mobile,
 version/API 36, contract, and offline Expo Doctor checks. Control A and Control
 B are both `released_terminal_idle`.
 
-Physical development-client installation was not an integration criterion and
-remains deferred. The exact current missing decision belongs to the Director:
-whether to open the separately deferred final V1 UI-refinement phase and what
-product/UI criteria it must satisfy. No Control packet is active until that
-decision. OAuth, payment, live tenant-domain/trust, device execution, EAS
-cloud, store/release, deployment, external action, and push remain separately
-gated.
+The Director has now opened the separately scoped development-client UI
+refinement phase under
+`ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`. Control B owns the
+Expo-only phase from the integrated baseline. It installs pinned project-local
+`expo-doctor@1.20.1`, refines the existing account screens without adding
+features, installs `TempleMate (Dev)` on the exact preflighted Android device,
+and exercises the deterministic dummy journey against local Metro. This device
+authority is narrow and does not authorize live API, real tenant QR/camera,
+OAuth, payment, EAS cloud, AAB/store/release, deployment, production, or push.
 
 ## Current Authorized Documentation Housekeeping
 

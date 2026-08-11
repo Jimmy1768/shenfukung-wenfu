@@ -25,8 +25,9 @@ interactive dummy UI, tenant/client seams, and local development-client build
 evidence. Their separate integration phase is complete on canonical `main` at
 `6cab3f1b52ebaeaf68667f19a3c804f8d9c43079`, including the real local/test
 adapter. Physical device installation is deferred beyond this roadmap phase.
-Final V1 UI refinement now requires Director scope criteria; OAuth and the
-entire payment surface/lifecycle remain separate later phases.
+The Director has opened final V1 development-client UI refinement under
+`EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`; OAuth and the entire payment
+surface/lifecycle remain separate later phases.
 
 At this scan's original base, Wenfu was ready for detailed Expo planning but
 was not yet ready for account-app screen implementation against a stable mobile
