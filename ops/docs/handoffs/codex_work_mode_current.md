@@ -51,6 +51,8 @@
 - `ops/docs/plans/EXPO_TEMPLE_QR_CAMERA_FOUNDATION_PLAN.md`
 - `ops/docs/plans/EXPO_DEVELOPMENT_CLIENT_BUILD_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_EAS_PROJECT_AND_SIGNING_PREFLIGHT_PLAN.md`
+- `ops/docs/plans/EXPO_EAS_PROJECT_CREATION_AND_LINK_PLAN.md`
+- `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_BUILD_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -148,9 +150,16 @@ The EAS project creation/link phase is complete and accepted on canonical
 mobile checks passed, with TempleMate/Komainu identity, API 36, and
 `1.0.0 / 1 / 1` preserved. No signing/credential configuration, build,
 artifact, provider/deployment action, device work, release action, or push is
-authorized. The exact missing Director/Planning decision is whether to
-authorize a signing/build preflight or the EAS cloud Android development-client
-build; no Control packet is active.
+authorized by that completed phase.
+
+The Director explicitly authorized the EAS cloud Android development-client
+build through Control A. The current plan is
+`ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_BUILD_PLAN.md`. It permits
+one exact Android `development` cloud-build submission for
+`@jimmy1768/templemate`, using an existing remote keystore or generating one
+minimum EAS-managed Android keystore if absent. It preserves `1.0.0 / 1 / 1`,
+does not download/install the APK, and excludes local builds, provider/server,
+device, store/release, deployment, and push actions.
 
 ## Current Authorized Documentation Housekeeping
 
