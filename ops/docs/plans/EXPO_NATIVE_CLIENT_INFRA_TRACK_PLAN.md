@@ -1,7 +1,7 @@
 # Expo Native Client Infrastructure Track Plan
 
-Status: accepted parallel Track B boundary; intended for Control B;
-implementation and Control dispatch are not authorized by this document alone
+Status: completed and accepted immutable Track B source/build checkpoint;
+Control B is `released_terminal_idle`
 
 Created: 2026-08-11
 
@@ -59,8 +59,11 @@ identified pre-integration checkpoint and returns it only to Planning.
 - Reconcile local development-client profiles, config plugins, dependency
   compatibility, environment isolation, placeholder residue, and account-only
   identifiers.
-- Generate, inspect, install, and run an Android development client proving
-  compile/target SDK 36 and Android 16 behavior.
+- Generate and inspect a local Android development-client APK proving compile
+  SDK 36, target SDK 36, development-client identity, and preserved version
+  code. Physical device installation and runtime exercise are a later,
+  explicitly authorized execution phase and are not part of this roadmap
+  checkpoint.
 - Do not produce an AAB or consume Android version code `1` or an iOS App Store
   Connect/TestFlight build pair.
 
@@ -135,9 +138,9 @@ request enters this parallel track.
 
 ## Pre-Integration Checkpoint
 
-Control B's accepted source commit, required checks, generated/installed
-development-client evidence, dummy fixture contract, and terminal packet form
-the identified immutable pre-integration checkpoint.
+Control B's accepted source commit, required checks, generated and inspected
+development-client artifact evidence, dummy fixture contract, and terminal
+packet form the identified immutable pre-integration checkpoint.
 
 At this checkpoint:
 
@@ -194,6 +197,14 @@ At this checkpoint:
 12. Required mobile checks pass with exact evidence and final source state is
     clean and attributable.
 
+Physical installation, launch, Metro attachment, and Android-version-specific
+runtime QA are deliberately excluded from these acceptance criteria. A local
+debug APK that is successfully assembled and whose manifest/configuration
+proves target SDK 36 is sufficient for this source/build checkpoint. Targeting
+API 36 is a build property; it does not require the validation device itself to
+run API 36. Any later install/run packet must identify its own device and
+runtime criteria and cannot be inferred from this plan.
+
 ## Terminal Return And Current Gate
 
 Control B completes the parallel dummy/infrastructure wave independently, sends
@@ -202,9 +213,23 @@ and stops. Planning waits for both parallel terminal checkpoints before
 coordinating a separate merging/integration plan through Control A. The
 Controls do not coordinate directly.
 
-Current classification:
-`parallel_track_b_accepted_not_dispatched`.
+Accepted checkpoint:
 
-First blocker: no explicit Director instruction has authorized Track B
-implementation dispatch. EAS cloud use and every other external action remain
+- branch: `codex/expo-native-infra-track-b`;
+- initial implementation: `0263b0a6cd387d1e0101b76d4834a50b1f247254`;
+- accepted source/conformance correction:
+  `a7d0226bbad08d79650515f7ed4f98e28320848c`;
+- immutable branch tip, including Control closeout evidence:
+  `274dd7f763b7d95274a28f5241b0766cbea1d853`;
+- classification: `accepted_frozen_outcome` / `released_terminal_idle`.
+
+The attempted install-only continuation established only that the available
+Pixel 8 runs Android 17/API 37 and made no device mutation. It is retained as
+historical evidence, not as a Track B blocker. The Director subsequently
+clarified that physical development-client installation does not occur in the
+middle of this plans/roadmap run.
+
+Next owner/action: Planning combines this checkpoint with the accepted Track A
+checkpoint under `EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md` through Control A.
+Control B remains idle. EAS cloud use and every other external action remain
 separately unauthorized.

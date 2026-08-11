@@ -41,20 +41,25 @@
 - `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`
 - `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
+- `ops/docs/plans/EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
-The Expo readiness scan remains the gap inventory. Core V1 is now divided into
-two independent parallel tracks: Control A is intended to own the Rails JSON
-and native email-session equivalent of the current non-payment/non-OAuth
-account namespace; Control B is intended to own Expo infrastructure,
-interactive dummy account screens, tenant/client interfaces, and build/API 36
-evidence through an immutable pre-integration checkpoint. Both tracks terminate
-and receive `released_terminal_idle` before integration. Planning then
-coordinates a separate merging/integration phase through Control A; Control B
-does not receive a real-adapter continuation. The Controls do not coordinate
-directly. OAuth and payment remain separate deferred phases. Both parallel
-implementation dispatches await explicit Director authorization, and EAS cloud
-use remains separately gated.
+The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
+now accepted and terminal: Track A at `740aa39bb38806d2207636bb391167c2fee6a9b1`
+provides the Rails account JSON/native-email contract, and Track B at
+`274dd7f763b7d95274a28f5241b0766cbea1d853` provides the Expo infrastructure,
+interactive dummy account client, tenant/client interfaces, and local API 36
+debug-build evidence. Both Controls received `released_terminal_idle`.
+
+Physical development-client installation is not a Track B completion
+criterion and is deferred to a later explicitly authorized execution phase.
+Planning's current accepted next phase is
+`ops/docs/plans/EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`: Control A combines
+the two frozen inputs, supplies the real local/test adapter, proves contract
+fit, and continues the TempleMate `1.0.0` source toward a V1 refinement
+checkpoint. Control B remains idle and does not receive a real-adapter
+continuation. OAuth and payment remain separate deferred phases. EAS cloud use
+and device/store/release action remain separately gated.
 
 ## Current Authorized Documentation Housekeeping
 

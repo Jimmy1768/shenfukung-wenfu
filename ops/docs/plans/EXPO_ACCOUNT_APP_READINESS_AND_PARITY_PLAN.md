@@ -18,30 +18,31 @@ Mature read-only reference: `/Users/jimmy1768/Projects/DojoMate-Expo`
 
 ## Outcome
 
-Current disposition: the Director accepted the current non-payment, non-OAuth
-account namespace as core V1 scope in two parallel tracks. Control A's intended
-track creates the Rails JSON/account-session equivalent; Control B's intended
-track builds Expo-native infrastructure and dummy UI through an immutable
-pre-integration checkpoint. Planning later coordinates a separate merging/
-integration phase through Control A after both parallel tracks are terminal and
-idle. OAuth and the entire payment surface/lifecycle remain separate later
-phases. Current sequencing and acceptance authority lives in
-`EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
-`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`.
+Current disposition: the two non-payment, non-OAuth parallel V1 tracks are
+implemented, accepted, frozen, and terminal. Track A supplies the Rails JSON and
+native email-session equivalent; Track B supplies Expo-native infrastructure,
+interactive dummy UI, tenant/client seams, and local development-client build
+evidence. Planning now coordinates their separate integration phase through
+Control A under `EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`. Physical device
+installation is deferred beyond this roadmap phase. OAuth and the entire
+payment surface/lifecycle remain separate later phases.
 
-Wenfu is ready for detailed Expo planning, but it is not ready for account-app
-screen implementation against a stable mobile contract.
+At this scan's original base, Wenfu was ready for detailed Expo planning but
+was not yet ready for account-app screen implementation against a stable mobile
+contract. The accepted Track A and Track B checkpoints have since closed that
+specific readiness gap for the integration phase.
 
 This is not a greenfield app. The repository already contains an Expo 54
 project, EAS profiles, per-environment URL/config helpers, shared project and
 design tokens, generated native artwork, SecureStore helpers, build wrappers,
 and version metadata. That scaffold should be retained and corrected.
 
-The first implementation blocker is server-side: there is no implemented
-native account authentication/session contract, and the current account JSON
-controllers inherit browser-cookie authentication. Most web account reads and
-writes also have no JSON equivalents. Building screens first would force the
-mobile client to guess contracts and would violate the parity-only direction.
+The scan's first implementation blocker was server-side: there was no
+implemented native account authentication/session contract, and the then-
+current account JSON controllers inherited browser-cookie authentication. The
+accepted Track A checkpoint now supplies that native contract. This paragraph
+is retained as the reasoning that required Track A rather than as a current
+blocker.
 
 This scan intentionally leaves many gaps open. It does not authorize code,
 schema, dependency, native-project, provider, runtime, build, or release work.

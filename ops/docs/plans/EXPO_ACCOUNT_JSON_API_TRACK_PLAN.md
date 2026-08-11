@@ -1,7 +1,7 @@
 # Expo Account JSON API Track Plan
 
-Status: accepted parallel Track A boundary; intended for Control A;
-implementation and Control dispatch are not authorized by this document alone
+Status: completed and accepted immutable Track A checkpoint; Control A is
+`released_terminal_idle` pending the separate integration dispatch
 
 Created: 2026-08-11
 
@@ -178,9 +178,15 @@ fit, and running end-to-end local/test checks. Control B remains idle unless a
 later Planning decision explicitly gives it new work. The Controls do not
 coordinate directly.
 
-Current classification:
-`parallel_track_a_accepted_not_dispatched`.
+Accepted checkpoint:
 
-First blocker: no explicit Director instruction has authorized Track A
-implementation dispatch. No provider, production, external, or Control action
-is authorized by this plan alone.
+- branch: `codex/expo-account-json-api-track-a`;
+- implementation: `684c9efcd43127b07281fe0bf67d4932f98e0ef2`;
+- accepted contract/concurrency evidence and branch tip:
+  `740aa39bb38806d2207636bb391167c2fee6a9b1`;
+- classification: `accepted_frozen_outcome` / `released_terminal_idle`.
+
+Next owner/action: Planning combines this checkpoint with the accepted Track B
+checkpoint under `EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md` through Control A.
+No provider, production, external, or release action is authorized by this
+completed track.
