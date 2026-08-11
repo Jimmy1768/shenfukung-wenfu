@@ -1,8 +1,8 @@
 # Expo OAuth Integration Readiness Scan Plan
 
-Status: Director-corrected documentation/readiness scan; prior DojoMate-based
-dispatch stopped and superseded; authorized for redispatch to Control B after
-this correction is committed
+Status: Director-corrected documentation/readiness scan; Komainu classified as
+the first SourceGrid OAuth-enabled Expo app; authorized for redispatch to
+Control B after this correction is committed
 
 Created: 2026-08-11
 
@@ -21,12 +21,11 @@ Parallel independent track:
 Existing deferred phase pointer:
 `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
 
-Candidate SourceGrid read-only evidence roots:
+Read-only server and historical evidence roots:
 
 - `/Users/jimmy1768/Projects/sourcegrid-labs`
 - `/Users/jimmy1768/Projects/Golden-Template`
-- checked-in Wenfu and SourceGrid documentation/history that identifies an
-  exact SourceGrid APK or its source commit
+- checked-in Wenfu and SourceGrid OAuth documentation, tests, and history
 
 ## Objective
 
@@ -39,14 +38,25 @@ Rails account/admin web authentication surface and centralized SourceGrid auth.
 The native app should incorporate that existing behavior rather than inventing
 a second identity model.
 
-This track discovers the exact contracts, the actual SourceGrid native/APK
-OAuth test evidence, missing TempleMate surfaces, platform/config
-prerequisites, tests, sequencing, and authority gates. It does not implement
-OAuth.
+This track discovers the exact contracts, missing TempleMate native surfaces,
+current platform/config prerequisites, tests, sequencing, and authority gates.
+It does not implement OAuth.
 
 DojoMate is explicitly not an OAuth reference. It does not use OAuth and must
 not be cited as evidence for OAuth dependencies, redirect handling, provider
 configuration, state machines, or native implementation patterns.
+
+Komainu/TempleMate is the first SourceGrid Expo application that will implement
+OAuth. Existing Wenfu Rails and SourceGrid centralized-auth behavior are mature
+server authority; there is no mature SourceGrid native OAuth application to
+copy. The native design must be derived from those server contracts and current
+official Expo, Google, and Apple documentation.
+
+After a later implementation is accepted with complete contract, security,
+platform-config, and device evidence, Komainu may serve as the example/reference
+for later SourceGrid Expo apps. This readiness scan prepares that future
+reference quality without creating a shared package, changing another
+repository, or claiming implementation evidence before it exists.
 
 ## Accepted Product Direction
 
@@ -87,11 +97,11 @@ Planning's initial read-only scan found:
 - Golden Template mobile source exposes only an OAuth availability/stub UI and
   explicitly says the real flow is not wired.
 
-These facts neither disprove the Director's recollection nor identify the
-OAuth test APK. The readiness scan must search SourceGrid repository history,
-branches, documentation, artifact references, and existing local files to find
-the exact source/artifact evidence. If it cannot, it must report that result
-and the next evidence owner rather than substituting another app.
+These artifacts are historical context, not an expected implementation
+reference or prerequisite. The scan may identify and classify additional local
+SourceGrid APK evidence, but failure to find an OAuth APK is not a blocker:
+Komainu is the first SourceGrid OAuth-enabled Expo app. No unrelated app or
+email/JWT demo may be substituted as native OAuth authority.
 
 ## Source Inventory
 
@@ -123,22 +133,30 @@ Control B and its Implementer must inspect and cite at minimum:
 - signed-out UI, error model, startup/session restoration, and account-only
   navigation boundaries relevant to adding provider choices later.
 
-### SourceGrid native/APK evidence discovery
+### First SourceGrid native OAuth design inputs
 
-- SourceGrid Labs and Golden Template mobile history, branches, tags,
-  documentation, build/download records, and existing local artifacts;
-- exact APK filename, path or historical URL, hash when locally available,
-  package/version metadata, source repository, source commit, build profile,
-  and intended test purpose;
-- static, local-only inspection of an already present APK when needed to
-  attribute its source or determine whether OAuth behavior exists; do not
-  install, launch, decompile secret material into the report, or print embedded
-  configuration values;
-- the Expo/Rails source and tests that correspond to any verified OAuth test
-  APK, including redirect construction, browser/app return, state, nonce,
-  PKCE, cancellation, interrupted return, session exchange, and storage;
-- a clear distinction among a real OAuth test client, an email/JWT demo APK,
-  an OAuth availability stub, and an unrelated native artifact.
+- current official Expo SDK 54 authentication, AuthSession, WebBrowser,
+  redirect/deep-link, development-build, secure-storage, and Apple
+  authentication guidance;
+- current official Google OAuth guidance for installed/native applications,
+  redirect handling, PKCE, platform client identity, and development versus
+  production registration;
+- current official Apple Sign in with Apple guidance for native applications,
+  nonce/state, bundle/service identifiers, key ownership, and development
+  versus production behavior;
+- SourceGrid Rails centralized-auth source and tests for start, callback,
+  state/nonce, PKCE, token exchange, identity resolution, account linking, and
+  tenant allowlisting;
+- historical SourceGrid mobile/APK records only to classify what was previously
+  tested; they are not presumed reusable native OAuth code;
+- a proposed Komainu module/config/test boundary that is explicit enough to
+  become a later reference while remaining TempleMate account-only and avoiding
+  premature shared-library extraction.
+
+Read-only internet access is authorized only for public official Expo, Google,
+and Apple documentation needed by this scan. Do not sign in, open a provider
+console, use an authenticated session, download SDKs/artifacts, or rely on
+third-party tutorials where a primary source exists.
 
 ## Questions The Scan Must Answer
 
@@ -156,10 +174,9 @@ Control B and its Implementer must inspect and cite at minimum:
 6. Which Google and Apple public identifiers/config values must exist per
    Komainu development and production application, and which secret values
    must remain server-only?
-7. What exact SourceGrid APK/source was used to test OAuth, and which of its
-   packages, config plugins, redirect/session mechanisms, and tests are
-   reusable at Expo 54/API 36? If the artifact cannot be identified, what
-   evidence was exhausted and who owns the missing fact?
+7. What current official Expo/Google/Apple mechanisms and constraints apply to
+   this first SourceGrid native OAuth implementation at Expo 54/API 36, and how
+   should Komainu isolate reusable mechanism from TempleMate product behavior?
 8. Does adding those native dependencies/config plugins require a new
    development-client binary, and what exact future EAS cloud profile would be
    appropriate? Do not run the build.
@@ -182,8 +199,10 @@ Control B produces one durable Control-owned readiness report at:
 The report must contain:
 
 - a route/controller/service/model/test map for current Wenfu OAuth;
-- a SourceGrid native/APK artifact-to-source mechanism/dependency/config/test
-  map, or a precise not-found result with exhausted evidence;
+- an official-source-backed native mechanism/dependency/config/test map for the
+  first Komainu implementation;
+- a concise classification of any located SourceGrid APK history as OAuth,
+  email/JWT demo, stub, unrelated, or not found;
 - a TempleMate native gap matrix grouped as already present, reusable,
   additive Rails work, additive Expo work, external prerequisite, deferred, or
   unknown;
@@ -191,6 +210,9 @@ The report must contain:
 - account-only and dual-role isolation analysis;
 - proposed implementation sequencing and merge gates without dispatching any
   implementation;
+- proposed documentation and test artifacts that would let later SourceGrid
+  Expo apps use the accepted Komainu implementation as a reference without
+  copying TempleMate account/product behavior;
 - exact source paths for every material fact;
 - open decisions and the first actual blocker, if any.
 
@@ -221,6 +243,8 @@ Control B must record:
 
 - exact Wenfu, SourceGrid Labs, and Golden Template HEAD/branch/status and Git
   refs used as evidence, without switching or mutating sibling worktrees;
+- direct links and access dates for official Expo, Google, and Apple documents
+  used by the report;
 - focused route/controller/service/model/config/test searches and the cited
   source inventory;
 - proof that only the report path changed;
@@ -241,6 +265,8 @@ Control B must record:
 - downloading a missing APK or other artifact, opening a hosted APK URL,
   installing or launching an APK, or changing a sibling repository;
 - treating DojoMate as OAuth implementation evidence;
+- treating any existing SourceGrid Expo app as mature native OAuth authority;
+- creating a shared OAuth package or editing another Expo application;
 - Facebook;
 - admin functionality in Expo;
 - payment/ECPay/Stripe;
@@ -257,9 +283,10 @@ Control B must record:
    are explicit; the native target remains account-only for dual-role users.
 3. Existing TempleMate email-session/storage behavior and the missing native
    OAuth adapter boundary are mapped precisely.
-4. The exact SourceGrid OAuth test APK/source is attributed with evidence, or
-   the report proves it was not found in the authorized local sources and names
-   the next evidence owner; no unrelated app is substituted.
+4. The report treats Komainu as the first SourceGrid native OAuth
+   implementation, uses current official primary documentation for native
+   mechanisms, and classifies historical APK evidence without making it a
+   prerequisite or substitute.
 5. Google/Apple and development/production prerequisites are distinct, with
    public configuration separated from server-only secrets.
 6. Native dependency/config/build implications are identified without adding a
@@ -273,6 +300,11 @@ Control B must record:
    or secret access occurs.
 10. Only the Control readiness report changes, checks pass, and all repository
     worktrees finish clean with staging empty.
+
+11. The proposed implementation leaves behind attributable contracts, tests,
+    configuration matrices, and operating notes suitable for Komainu to become
+    a later SourceGrid Expo reference without premature cross-repository code
+    extraction.
 
 ## Current Gate
 

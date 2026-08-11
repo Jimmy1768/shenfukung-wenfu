@@ -97,12 +97,14 @@ commit containing their plans:
   native build or device action.
 - Control B performs the documentation/read-only
   `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`, mapping the
-  existing working Rails Google/Apple behavior, TempleMate gaps, and the actual
-  SourceGrid native/APK OAuth test evidence without product-code, provider,
-  secret, build, or runtime action. The initial DojoMate-based dispatch was
-  rejected and stopped before acceptance, commit, or merge because DojoMate
-  does not use OAuth. Control B must not substitute DojoMate or the known
-  email/JWT SourceGrid demo APK for verified OAuth evidence.
+  existing working Rails Google/Apple behavior and TempleMate native gaps
+  without product-code, provider, secret, build, or runtime action. Komainu is
+  the first SourceGrid OAuth-enabled Expo app: no existing SourceGrid or
+  DojoMate app is a mature native OAuth reference. Control B uses current
+  official Expo/Google/Apple guidance plus mature Rails/central-auth source,
+  and classifies historical APK records only as context. A later accepted
+  Komainu implementation may become the reference for other SourceGrid Expo
+  apps; no shared package or cross-repository change is authorized now.
 
 The tracks do not share owned paths or coordinate directly. Each returns one
 terminal packet to Planning. OAuth implementation remains unauthorized until
