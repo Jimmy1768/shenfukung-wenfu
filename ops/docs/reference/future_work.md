@@ -36,13 +36,10 @@ assign equal priority or implementation readiness.
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
 - `ops/docs/plans/EMAIL_DELIVERY_QUEUE_AND_DEDUPE_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
-- `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
-- `ops/docs/plans/EXPO_CORE_ACCOUNT_PARITY_PLAN.md`
-- `ops/docs/plans/EXPO_DUMMY_ACCOUNT_DEVELOPMENT_CLIENT_PLAN.md`
-- `ops/docs/plans/EXPO_NATIVE_ACCOUNT_FOUNDATION_PLAN.md`
+- `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`
+- `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
 - `ops/docs/plans/EXPO_PAYMENT_PHASE_PLAN.md`
-- `ops/docs/plans/EXPO_V1_UI_REFINEMENT_PLAN.md`
 - `ops/docs/plans/INTERNAL_TEMPLE_ACCESS_DASHBOARD_PLAN.md`
 - `ops/docs/plans/OAUTH_GOOGLE_SUBJECT_COMPATIBILITY_REPAIR_PLAN.md`
 - `ops/docs/plans/OAUTH_PROVIDERS_SETUP_PLAN.md`
@@ -59,12 +56,20 @@ assign equal priority or implementation readiness.
 - `ops/docs/plans/EXPO_MULTI_ROLE_MODE_SWITCH_PLAN.md` is retained as
   historical decision evidence. Its multi-role/admin mode direction was
   superseded on 2026-08-11 by the account-only Expo direction in
-  `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md` and the
-  phased V1 scope in `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`.
+  `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md` and the two
+  parallel plans for Rails JSON and Expo-native infrastructure.
 - `ops/docs/plans/EXPO_ACCOUNT_V1_BUILD_PLAN.md` is retained as prior planning
   evidence. Its purpose-first selection gate, selective-CRUD framing, and
   minimal-shell dummy objective were superseded on 2026-08-11 by
-  `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md` and its separate phase plans.
+  `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
+  `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`.
+- `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`,
+  `ops/docs/plans/EXPO_DUMMY_ACCOUNT_DEVELOPMENT_CLIENT_PLAN.md`,
+  `ops/docs/plans/EXPO_NATIVE_ACCOUNT_FOUNDATION_PLAN.md`,
+  `ops/docs/plans/EXPO_CORE_ACCOUNT_PARITY_PLAN.md`, and
+  `ops/docs/plans/EXPO_V1_UI_REFINEMENT_PLAN.md` are retained as prior phase
+  decomposition evidence. Their current scope is reorganized into the two
+  parallel-track plans for Rails JSON and Expo-native infrastructure.
 
 ## Archived Completed Records
 

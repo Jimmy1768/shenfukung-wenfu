@@ -1,8 +1,9 @@
 # Expo Account App Readiness And Parity Plan
 
 Status: completed initial readiness inventory; retained as supporting evidence
-for `EXPO_ACCOUNT_APP_V1_ROADMAP.md`; implementation and Control dispatch not
-authorized by this document
+for `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
+`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; implementation and Control dispatch
+not authorized by this document
 
 Created: 2026-08-11
 
@@ -18,10 +19,13 @@ Mature read-only reference: `/Users/jimmy1768/Projects/DojoMate-Expo`
 ## Outcome
 
 Current disposition: the Director accepted the current non-payment, non-OAuth
-account namespace as core V1 scope, divided across dummy UI, native foundation,
-core parity, and final UI-refinement phases. OAuth and the entire payment
-surface/lifecycle are separate later phases. Current sequencing and acceptance
-authority lives in `EXPO_ACCOUNT_APP_V1_ROADMAP.md` and its linked phase plans.
+account namespace as core V1 scope in two parallel tracks. Control A's intended
+track creates the Rails JSON/account-session equivalent; Control B's intended
+track builds Expo-native infrastructure, dummy UI, later real-adapter
+integration, and final refinement. OAuth and the entire payment
+surface/lifecycle remain separate later phases. Current sequencing and
+acceptance authority lives in `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
+`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`.
 
 Wenfu is ready for detailed Expo planning, but it is not ready for account-app
 screen implementation against a stable mobile contract.
@@ -428,9 +432,10 @@ Wenfu compatibility, not be downgraded to match the example.
 ## Required Future Work Packages
 
 Disposition note: the package list below is retained as the original readiness
-decomposition. Current sequencing and phase acceptance are superseded by
-`EXPO_ACCOUNT_APP_V1_ROADMAP.md` and its linked plans; these packages must not
-be dispatched as one combined parity build.
+decomposition. Current sequencing and acceptance are superseded by
+`EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
+`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; these packages must not be dispatched
+as one combined parity build.
 
 These are sequencing and acceptance boundaries, not implementation packets.
 Planning must accept the applicable detailed contract before any Control
@@ -528,9 +533,9 @@ EA-7.
 ## Immutable Acceptance Criteria For Future Expo Delivery
 
 Disposition note: these criteria describe the original full-parity upper bound.
-They are not the acceptance criteria for core V1. The roadmap's dummy,
-foundation, core-parity, refinement, OAuth, and payment plans now own their
-respective immutable criteria.
+They are not the acceptance criteria for core V1. The two parallel-track plans
+now own Rails JSON and Expo-native core criteria; the separate OAuth and payment
+plans own their deferred criteria.
 
 1. Expo starts from the checked-in Wenfu scaffold and preserves compatible
    project/design/environment assets.

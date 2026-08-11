@@ -39,18 +39,21 @@
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
 - `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
-- `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
+- `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`
+- `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
-The Expo readiness scan remains the gap inventory. The current roadmap divides
-work into an interactive dummy-account development client, native account
-foundation, core non-payment/non-OAuth account parity, and final UI refinement.
-The dummy client includes stateful dummy email login, profile/dependent CRUD,
-registration creation/editing, and read-only paid-registration fixtures for
-screen testing, without backend, provider, AAB, or release action. OAuth and
-the entire payment surface/lifecycle are separate deferred phase plans. The
-first implementation phase and Control dispatch await explicit Director
-authorization; EAS cloud use would require separate external-action authority.
+The Expo readiness scan remains the gap inventory. Core V1 is now divided into
+two independent parallel tracks: Control A is intended to own the Rails JSON
+and native email-session equivalent of the current non-payment/non-OAuth
+account namespace; Control B is intended to own Expo infrastructure,
+interactive dummy account screens, tenant/client state, build/API 36 evidence,
+later real-adapter integration, and final UI refinement. Control B can complete
+its dummy/infrastructure wave without Track A. After Control A's accepted
+terminal contract reaches Planning, Planning may continue Control B with the
+real adapter; the Controls do not coordinate directly. OAuth and payment remain
+separate deferred phases. Both implementation dispatches await explicit
+Director authorization, and EAS cloud use remains separately gated.
 
 ## Current Authorized Documentation Housekeeping
 

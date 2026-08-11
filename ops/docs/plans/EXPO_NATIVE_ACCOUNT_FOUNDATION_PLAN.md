@@ -1,13 +1,14 @@
 # Expo Native Account Foundation Plan
 
-Status: accepted sequence boundary; planned after the dummy development client;
-not current implementation authority
+Status: superseded as standalone sequencing authority; Rails session/API work
+is now owned by `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and Expo-native foundation
+work by `EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; retained as prior evidence
 
 Created: 2026-08-11
 
 Owner: Wenfu Planning
 
-Parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
+Prior parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
 
 ## Objective
 

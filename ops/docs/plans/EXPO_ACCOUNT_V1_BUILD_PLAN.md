@@ -1,13 +1,14 @@
 # Expo Account V1 Build Plan
 
 Status: superseded as current sequencing authority by
-`EXPO_ACCOUNT_APP_V1_ROADMAP.md`; retained as prior planning evidence
+`EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
+`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; retained as prior planning evidence
 
 Disposition: its purpose-first product gate, selective-CRUD framing, and
 minimal-shell dummy objective were superseded by the Director's accepted
 account-parity phase split. Its scaffold, domain, one-temple binding, branding,
 API 36, and independent-version evidence remain useful. Current phase scope and
-acceptance criteria live in the roadmap and its separate phase plans.
+acceptance criteria live in the two parallel-track plans.
 
 Created: 2026-08-11
 

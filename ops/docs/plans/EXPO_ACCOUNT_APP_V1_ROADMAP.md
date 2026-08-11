@@ -1,7 +1,13 @@
 # Expo Account App V1 Roadmap
 
-Status: accepted product direction and phase sequence; documentation only;
-implementation and Control dispatch are not authorized by this document
+Status: superseded as current sequencing authority by the two parallel-track
+plans; retained as prior roadmap evidence
+
+Disposition: dummy-client, native-foundation, core-parity, and refinement work
+is now organized into `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` for Control A and
+`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md` for Control B. OAuth and payments
+remain separate deferred phases. No implementation or Control dispatch is
+authorized by this disposition.
 
 Created: 2026-08-11
 

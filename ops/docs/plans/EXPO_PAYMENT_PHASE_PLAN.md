@@ -7,7 +7,8 @@ Created: 2026-08-11
 
 Owner: Wenfu Planning
 
-Parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
+Core-track predecessors: `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`
+and `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
 
 ## Objective
 

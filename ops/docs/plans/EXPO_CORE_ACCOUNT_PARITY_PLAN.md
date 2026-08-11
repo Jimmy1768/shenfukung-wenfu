@@ -1,13 +1,14 @@
 # Expo Core Account Parity Plan
 
-Status: accepted V1 functional boundary; planned after native account
-foundation; not current implementation authority
+Status: superseded as standalone sequencing authority; Rails JSON parity is now
+owned by `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and mobile integration by
+`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; retained as prior evidence
 
 Created: 2026-08-11
 
 Owner: Wenfu Planning
 
-Parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
+Prior parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
 
 ## Objective
 

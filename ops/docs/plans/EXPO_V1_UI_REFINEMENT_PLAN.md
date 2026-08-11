@@ -1,13 +1,14 @@
 # Expo V1 UI Refinement Plan
 
-Status: accepted final core-V1 phase boundary; planned after functional parity;
-not current implementation authority
+Status: superseded as standalone sequencing authority; final refinement is now
+the last slice of `EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; retained as prior
+evidence
 
 Created: 2026-08-11
 
 Owner: Wenfu Planning
 
-Parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
+Prior parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
 
 ## Objective
 

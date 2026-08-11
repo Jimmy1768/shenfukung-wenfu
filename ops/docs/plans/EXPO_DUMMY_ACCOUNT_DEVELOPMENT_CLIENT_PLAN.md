@@ -1,13 +1,14 @@
 # Expo Dummy Account Development Client Plan
 
-Status: accepted first implementation objective; documentation only;
-implementation and Control dispatch are not authorized by this document
+Status: superseded as standalone sequencing authority; dummy-client scope is
+now owned by `EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; retained as prior
+planning evidence
 
 Created: 2026-08-11
 
 Owner: Wenfu Planning
 
-Parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
+Prior parent roadmap: `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`
 
 ## Objective
 
