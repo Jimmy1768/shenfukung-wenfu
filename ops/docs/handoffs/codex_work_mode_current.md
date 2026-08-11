@@ -152,14 +152,16 @@ mobile checks passed, with TempleMate/Komainu identity, API 36, and
 artifact, provider/deployment action, device work, release action, or push is
 authorized by that completed phase.
 
-The Director explicitly authorized the EAS cloud Android development-client
-build through Control A. The current plan is
-`ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_BUILD_PLAN.md`. It permits
-one exact Android `development` cloud-build submission for
-`@jimmy1768/templemate`, using an existing remote keystore or generating one
-minimum EAS-managed Android keystore if absent. It preserves `1.0.0 / 1 / 1`,
-does not download/install the APK, and excludes local builds, provider/server,
-device, store/release, deployment, and push actions.
+The EAS cloud Android development-client build is complete and accepted on
+canonical `main` at `be4165da2c45e9fd9b74ad35057ef539d69a3397`; Control A
+received `released_terminal_idle`. Exactly one build,
+`ca45b77c-cb45-458c-a298-6be449a9e396`, finished for
+`@jimmy1768/templemate` as an Android internal `development` artifact. EAS
+created and retained one managed development keystore without exposing private
+material. The remote APK is available, and `1.0.0 / 1 / 1` remains unchanged.
+No APK was downloaded or installed. The exact missing Director/Planning
+decision is authorization for a target-fenced APK download/install and device
+validation packet; provider/server real-OAuth validation remains separate.
 
 ## Current Authorized Documentation Housekeeping
 
