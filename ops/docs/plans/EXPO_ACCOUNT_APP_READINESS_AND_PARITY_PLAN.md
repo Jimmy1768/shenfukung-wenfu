@@ -1,7 +1,8 @@
 # Expo Account App Readiness And Parity Plan
 
-Status: Director-directed initial readiness scan; account-only product direction
-accepted; implementation and Control dispatch not authorized
+Status: completed initial readiness inventory; retained as supporting evidence
+for `EXPO_ACCOUNT_V1_BUILD_PLAN.md`; implementation and Control dispatch not
+authorized by this document
 
 Created: 2026-08-11
 
@@ -15,6 +16,12 @@ Mature read-only reference: `/Users/jimmy1768/Projects/DojoMate-Expo`
 `main` at `0a35b4ca9af78a69917d80ea17471a676c36760f`
 
 ## Outcome
+
+Current disposition: the Director clarified on 2026-08-11 that V1 scope must
+follow the app's selected purpose. The complete feature/parity language below
+is an upper-bound inventory, not a V1 delivery requirement. Current V1
+selection, sequencing, and acceptance authority lives in
+`EXPO_ACCOUNT_V1_BUILD_PLAN.md`.
 
 Wenfu is ready for detailed Expo planning, but it is not ready for account-app
 screen implementation against a stable mobile contract.

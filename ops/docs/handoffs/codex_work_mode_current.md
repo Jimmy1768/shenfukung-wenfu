@@ -39,12 +39,15 @@
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
 - `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
+- `ops/docs/plans/EXPO_ACCOUNT_V1_BUILD_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
-The Expo account readiness scan accepts account-only parity as the current
-product direction and supersedes the older multi-role/mode-switch proposal.
-It identifies native session and account API contracts as the first blocker;
-Expo implementation and Control dispatch remain unauthorized.
+The Expo account readiness scan remains the gap inventory. The V1 build plan
+accepts account-only, purpose-first scope: one primary account-user job must be
+selected before screens, APIs, CRUD, OAuth, or payment enter V1. Wenfu's Expo
+54 source is API 36 capable, while generated-project and AAB proof remain later
+gates. The current first blocker is the missing V1-0 scope card; Expo
+implementation and Control dispatch remain unauthorized.
 
 ## Current Authorized Documentation Housekeeping
 
