@@ -103,7 +103,7 @@ Evidence was classified as:
 | Expo runtime | `mobile/package.json` uses Expo `~54.0.25`, React Native `0.81.5`, React `19.1.0` | Implemented dependency scaffold; execution unverified |
 | App/config entry | `mobile/App.js`, `mobile/index.js`, `mobile/app.config.js`, `mobile/metro.config.js` | Scaffolded |
 | Environment mapping | `shared/app_constants/env.json` and `mobile/app/lib/app_constants/env.js` | Scaffolded; URLs not probed |
-| Project identity | `shared/app_constants/project.json` and mobile project helper | Scaffolded; native identifiers need correction/review |
+| Project identity | `shared/app_constants/project.json` and mobile project helper | Scaffolded; launcher naming conflates the `TempleMate` product with the `竹南鎮聖福宮` test tenant, and native identifiers need correction/review |
 | Design system | shared themes plus `mobile/theme/tokens.js` and login styles | Reusable, not account-screen complete |
 | Artwork | app, adaptive, development, splash, favicon assets | Present; store suitability unverified |
 | Secure storage | `expo-secure-store` and auth storage helper | Scaffolded; key names are unsafe residue |
@@ -114,6 +114,10 @@ Evidence was classified as:
 ### Placeholder and template residue that must not ship
 
 - `mobile/App.js` is an explicit “Expo starter” screen, not an account app.
+- `mobile/app.config.js` derives the launcher name from the test tenant name in
+  `shared/app_constants/project.json`. The app product is `TempleMate`; the
+  SourceGrid-style visible development variant is `TempleMate (Dev)`, not
+  `竹南鎮聖福宮 (Dev)`.
 - It displays seeded admin credentials, offers an admin quick action, and only
   logs an OAuth stub.
 - `mobile/app.config.js` names login/refresh settings as admin settings and

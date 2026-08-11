@@ -54,7 +54,9 @@ to approximate the final product prematurely.
 ### Included
 
 - the checked-in Expo 54 scaffold and existing shared design/project assets;
-- a development-client build identity isolated from any future production app;
+- visually distinct development-client branding: launcher name
+  `TempleMate (Dev)` and DEV-badged app/adaptive icons, while the production
+  launcher remains `TempleMate` with unbadged artwork;
 - local Metro attachment and normal development-client reload behavior;
 - the minimum account-oriented shell needed to prove app startup, navigation,
   theme/tokens, locale presentation, safe areas, system bars, keyboard/insets,
@@ -139,10 +141,14 @@ not select the native product purpose or authorize implementation/release.
 - SecureStore dependency and preliminary auth helper;
 - version metadata and application scheme.
 
-“Reuse” does not mean every placeholder value is accepted. Admin-oriented demo
-copy, credentials, identifiers, storage keys, nonexistent auth routes, and
-unresolved config-plugin behavior remain cleanup items when an implementation
-slice is authorized.
+"Reuse" does not mean every placeholder value is accepted. In particular,
+`shared/app_constants/project.json` currently names the test tenant
+`竹南鎮聖福宮`, and `mobile/app.config.js` incorrectly reuses that tenant name as
+the launcher name. The product app is `TempleMate`; tenant identity belongs
+inside the account experience. Admin-oriented demo copy, credentials,
+identifiers, storage keys, nonexistent auth routes, and unresolved
+config-plugin behavior remain cleanup items when an implementation slice is
+authorized.
 
 ### Android API 36 disposition
 
@@ -165,11 +171,11 @@ was found. Therefore:
 - built AAB target: **not yet proven**;
 - Play compliance/release: **not yet proven or authorized**.
 
-V1-0 must inspect the generated project and development-client artifact for
-compile SDK 36 and target SDK 36, then exercise Android 16 behavior. A later
-AAB must prove the target again under separate release authority. Do not
-upgrade packages merely to imitate DojoMate's exact patch versions; use Expo
-compatibility evidence at implementation time.
+The First Objective must inspect the generated project and development-client
+artifact for compile SDK 36 and target SDK 36, then exercise Android 16
+behavior. A later AAB must prove the target again under separate release
+authority. Do not upgrade packages merely to imitate DojoMate's exact patch
+versions; use Expo compatibility evidence at implementation time.
 
 ## V1 Product-Scope Gate
 
@@ -299,11 +305,12 @@ Otherwise OAuth and identity linking are deferred.
 These are Planning phases. A later Control owns implementation packet details,
 paths, commands, and the one-Implementer execution mechanism.
 
-### V1-0 — Dummy-data development client
+### First Objective — Dummy-data development client
 
 - Reconcile only the scaffold/configuration needed to create a development
-  client: development identity, EAS/local profile consistency, config-plugin
-  source, dependency compatibility, and placeholder/admin residue.
+  client: `TempleMate (Dev)` launcher naming, DEV-badged launcher artwork,
+  EAS/local profile consistency, config-plugin source, dependency
+  compatibility, and placeholder/admin/tenant-branding residue.
 - Add the smallest account-only shell and deterministic dummy fixtures needed
   for development-client validation.
 - Keep dummy mode explicit, local, and impossible to confuse with real API
@@ -318,7 +325,7 @@ Exit: an installable account-only development client runs with dummy data and
 no backend/provider dependency; API 36 is observed; no release artifact or
 product-scope claim follows.
 
-### V1-1 — Accept the product scope card
+### Product Scope Gate — Accept the V1 user job
 
 - Choose the primary user, trigger, job, success outcome, and explicit
   deferrals.
@@ -406,28 +413,30 @@ Do not copy:
 
 ## V1 Acceptance Criteria
 
-The following criteria apply to V1-0:
+The following criteria apply to the First Objective:
 
 1. The existing Wenfu scaffold is used rather than replaced.
 2. The result is an installable development client, not Expo Go and not an
    AAB/store artifact.
-3. It renders only an account-oriented technical shell using deterministic,
+3. Its launcher name is `TempleMate (Dev)` and it uses DEV-badged app and
+   adaptive icons; `竹南鎮聖福宮` is tenant data and is not used as the app name.
+4. It renders only an account-oriented technical shell using deterministic,
    visibly dummy data.
-4. It makes no Rails/API, authentication, CRUD, OAuth, payment, provider, or
+5. It makes no Rails/API, authentication, CRUD, OAuth, payment, provider, or
    real-data request.
-5. Dummy mode is explicit and cannot silently act as a production fallback.
-6. No admin UI, mode, data, capability, or identifier is shipped in the shell.
-7. No credential or provider secret appears in source, public config, logs,
+6. Dummy mode is explicit and cannot silently act as a production fallback.
+7. No admin UI, mode, data, capability, or identifier is shipped in the shell.
+8. No credential or provider secret appears in source, public config, logs,
    fixtures, or screenshots.
-8. Generated and installed Android evidence proves target SDK 36, and the
+9. Generated and installed Android evidence proves target SDK 36, and the
    implemented shell is exercised on Android 16 when the packet provides an
    available emulator/device.
-9. Focused checks pass with exact evidence and final Git state is clean.
-10. Acceptance authorizes no AAB, EAS cloud action, Play/store action,
+10. Focused checks pass with exact evidence and final Git state is clean.
+11. Acceptance authorizes no AAB, EAS cloud action, Play/store action,
     deployment, provider action, production data, or release promotion.
 
-The following product-delivery criteria become applicable only after V1-1
-records the selected scope card:
+The following product-delivery criteria become applicable only after the
+Product Scope Gate records the selected scope card:
 
 1. One named account-user job and observable success outcome define V1.
 2. Every shipped real screen, endpoint, dependency, permission, and provider
@@ -448,7 +457,7 @@ records the selected scope card:
 11. Local acceptance does not authorize deployment, providers, EAS cloud
     actions, store submission, production data, or release promotion.
 
-## Explicitly Deferred Until V1-1 Selects Them
+## Explicitly Deferred Until The Product Scope Gate Selects Them
 
 - full account-site parity;
 - all-resource CRUD;
@@ -474,14 +483,15 @@ existence of web code or a mature example app.
 Current classification:
 `v1_dummy_data_development_client_objective_accepted_not_dispatched`.
 
-First blocker to V1-0 implementation: the Director has selected the objective
-but has not explicitly instructed Planning to dispatch implementation. The
-build mechanism also remains Control-owned; EAS cloud use would require
-separate external-action authority.
+First blocker to First Objective implementation: the Director has selected the
+objective but has not explicitly instructed Planning to dispatch
+implementation. The build mechanism also remains Control-owned; EAS cloud use
+would require separate external-action authority.
 
-Next owner/action: the Director may authorize implementation of V1-0. Planning
-then records its criteria as immutable and sends the bounded dummy-data
-development-client phase directly to the authoritative Wenfu Control. The real
-account-user job remains a later V1-1 decision. Until implementation is
-explicitly authorized, Planning remains authoritative idle with no active
-packet, callback, approval, or Control dispatch.
+Next owner/action: the Director may authorize implementation of the First
+Objective. Planning then records its criteria as immutable and sends the
+bounded dummy-data development-client phase directly to the authoritative
+Wenfu Control. The real account-user job remains a later Product Scope Gate
+decision. Until implementation is explicitly authorized, Planning remains
+authoritative idle with no active packet, callback, approval, or Control
+dispatch.
