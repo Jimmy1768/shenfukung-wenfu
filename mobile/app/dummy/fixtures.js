@@ -5,6 +5,13 @@ const tenant = Object.freeze({
   connectionPath: '/connect/templemate'
 });
 
+const alternateTenant = Object.freeze({
+  id: 'fixture-temple-002',
+  name: '示範宮廟二號',
+  origin: 'https://second-temple.example.test',
+  connectionPath: '/connect/templemate'
+});
+
 const seed = Object.freeze({
   profile: { id: 'account-001', email: 'member@example.test', name: '林小安' },
   dependents: [{ id: 'dependent-001', name: '林小福', relationship: '家人' }],
@@ -15,4 +22,4 @@ const seed = Object.freeze({
 });
 
 const clone = value => JSON.parse(JSON.stringify(value));
-module.exports = { tenant, seed, clone };
+module.exports = { tenant, alternateTenant, seed, clone };

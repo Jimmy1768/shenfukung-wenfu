@@ -22,6 +22,20 @@ function createDummyRepository(initial = seed) {
       if (email.trim().toLowerCase() !== initial.profile.email || password !== 'templemate-demo') throw validationError('form', '示範帳號或密碼不正確');
       return snapshot();
     },
+    signUp({ name, email, password }) {
+      if (!required(name)) throw validationError('name', '請輸入姓名');
+      if (!required(email)) throw validationError('email', '請輸入電子郵件');
+      if (!required(password) || password.length < 8) throw validationError('password', '密碼至少需要 8 個字元');
+      state.profile.name = name.trim();
+      state.profile.email = email.trim().toLowerCase();
+      state.signup = { completed: true, email: state.profile.email };
+      return snapshot();
+    },
+    recoverPassword({ email }) {
+      if (!required(email)) throw validationError('email', '請輸入電子郵件');
+      state.recovery = { requested: true, email: email.trim().toLowerCase() };
+      return snapshot();
+    },
     updateProfile({ name }) {
       if (!required(name)) throw validationError('name', '請輸入姓名');
       state.profile.name = name.trim(); return snapshot();
@@ -53,6 +67,26 @@ function createDummyRepository(initial = seed) {
       if (registration.readOnly) throw validationError('registration', '此示範已完成項目僅供閱讀');
       if (!required(offering) || !required(registrantName)) throw validationError('registration', '請完成登記資料');
       registration.offering = offering.trim(); registration.registrantName = registrantName.trim();
+      return snapshot();
+    },
+    submitAssistance({ message }) {
+      if (!required(message)) throw validationError('message', '請說明需要的協助');
+      state.assistance = { submitted: true, message: message.trim() };
+      return snapshot();
+    },
+    contactTemple({ message }) {
+      if (!required(message)) throw validationError('message', '請輸入訊息');
+      state.contact = { submitted: true, message: message.trim() };
+      return snapshot();
+    },
+    requestPrivacy({ kind }) {
+      if (!['export', 'deletion'].includes(kind)) throw validationError('privacy', '請選擇隱私請求');
+      state.privacyRequest = { submitted: true, kind };
+      return snapshot();
+    },
+    closeAccount({ confirmation }) {
+      if (confirmation !== 'CLOSE') throw validationError('confirmation', '請輸入 CLOSE 以確認');
+      state.closed = true;
       return snapshot();
     }
   };
