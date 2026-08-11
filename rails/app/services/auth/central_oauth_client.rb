@@ -8,7 +8,18 @@ module Auth
   class CentralOAuthClient
     class Error < StandardError; end
     class ConfigError < Error; end
-    class RequestError < Error; end
+    class RequestError < Error
+      attr_reader :code
+
+      def initialize(_message = nil, code: nil)
+        @code = "invalid_grant" if code == "invalid_grant"
+        super("Central auth request failed")
+      end
+
+      def invalid_grant?
+        code == "invalid_grant"
+      end
+    end
 
     def initialize(
       base_url: ENV["AUTH_BASE_URL"],
@@ -79,10 +90,10 @@ module Auth
       end
 
       parse_response!(response)
-    rescue JSON::ParserError => e
-      raise RequestError, "Central auth returned malformed JSON: #{e.message}"
-    rescue StandardError => e
-      raise RequestError, "Central auth request failed: #{e.message}"
+    rescue RequestError
+      raise
+    rescue StandardError
+      raise RequestError
     end
 
     def parse_response!(response)
@@ -91,8 +102,9 @@ module Auth
 
       return parsed if response.code.to_i.between?(200, 299)
 
-      message = parsed["error"].presence || parsed["message"].presence || "HTTP #{response.code}"
-      raise RequestError, message
+      raise RequestError.new(code: parsed["error"])
+    rescue JSON::ParserError
+      raise RequestError
     end
 
     def ensure_trailing_slash(url)

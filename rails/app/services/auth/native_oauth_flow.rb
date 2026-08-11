@@ -83,7 +83,9 @@ module Auth
       Result.new(user: identity_result.user, provider:, profile_required: identity_result.profile_required)
     rescue Auth::CentralOAuthClient::ConfigError
       raise ConfigurationError, "native OAuth is not configured"
-    rescue Auth::CentralOAuthClient::RequestError
+    rescue Auth::CentralOAuthClient::RequestError => error
+      raise InvalidGrant, "central OAuth grant is invalid" if error.invalid_grant?
+
       raise UpstreamError, "central OAuth exchange failed"
     rescue Auth::OAuthExchangeIdentity::MissingProvider
       raise UpstreamError, "central OAuth exchange response is malformed"
