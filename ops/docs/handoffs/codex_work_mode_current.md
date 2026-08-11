@@ -134,13 +134,21 @@ within the broader readiness scan.
 The development-client build readiness report, including the corrected
 provider/build gate ordering, is accepted on canonical `main` at
 `84ca6f8c5f4afbd6d29cc29751f49977ef452158`; Control B received
-`released_terminal_idle`. The Director explicitly authorized the next bounded
-authenticated phase:
-`ops/docs/plans/EXPO_EAS_PROJECT_AND_SIGNING_PREFLIGHT_PLAN.md` through Control
-B. It may inspect the current EAS account, project/link state, resolved
-development configuration, and safely available signing metadata. It does not
-authorize project linking/creation, credential mutation, a build, artifact,
-provider/deployment action, or device work.
+`released_terminal_idle`. The authenticated EAS preflight is accepted on
+canonical `main` at `dfa44bf50c3bab3060af96f3bcd34f509504681a`; Control B
+received `released_terminal_idle`. It observed the existing authenticated
+account `jimmy1768`, an unlinked TempleMate source tree, no configured EAS
+project, and unknown signing state without mutation.
+
+The Director explicitly authorized creation of a new EAS project. The current
+authorized phase is
+`ops/docs/plans/EXPO_EAS_PROJECT_CREATION_AND_LINK_PLAN.md` through Control B.
+It permits one collision-fenced creation attempt for exact target
+`@jimmy1768/templemate`, durable linkage through the returned nonsecret
+`extra.eas.projectId`, and read-only project/config verification. It does not
+authorize signing/credential configuration, a build or artifact, provider or
+deployment action, device work, version/build increment, deletion, transfer,
+rename, alternate project, or push.
 
 ## Current Authorized Documentation Housekeeping
 
