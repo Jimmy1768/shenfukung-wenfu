@@ -104,3 +104,35 @@ Date: 2026-08-12
 - Authority confirmation: no provider, deployment, product/runtime, payment,
   production-data, or secret action is authorized beyond the exact EAS account
   and signing/build action described above.
+
+## Protected Build Closeout
+
+- Control preflight used installed `/opt/homebrew/bin/eas` `18.12.2` under the
+  existing `jimmy1768` account. EAS resolved only
+  `@jimmy1768/templemate` / `c7b8523a-2fad-4123-bc96-0c0c85a23dec`; the
+  initial matching-build fence was empty.
+- The local source checks passed before submission: `yarn test` (42 tests),
+  `yarn lint`, `yarn verify`, and offline `yarn doctor` (with its documented
+  ignored offline `exp.host` schema-metadata warning). The resolved
+  development configuration retained `TempleMate (Dev)`,
+  `com.jimmy1768.komainu.dev`, `templemate`, dummy default, API 36, the
+  OAuth/camera native closure, and `1.0.0` / Android `1` / iOS `1`, with
+  local version authority and no auto-increment.
+- Exactly one cloud submission occurred. Build
+  `ca45b77c-cb45-458c-a298-6be449a9e396` reached `FINISHED` at
+  `2026-08-11T18:14:15.292Z`. Its safe EAS metadata identifies Android,
+  internal distribution, `development` profile, source
+  `a67aa8fa6f57885461af91c319f7a830b99f0764`, Expo SDK `54.0.0`, app version
+  `1.0.0`, and an available artifact. Dashboard:
+  `https://expo.dev/accounts/jimmy1768/projects/templemate/builds/ca45b77c-cb45-458c-a298-6be449a9e396`.
+- EAS reported remote Android credential use and creation of one EAS-managed
+  keystore for the exact development build. No key, password, credential JSON,
+  or other private signing material was viewed, exported, copied, or retained.
+- No APK was downloaded or installed. No device, Metro, ADB, provider, server,
+  deployment, release, or push action occurred. Temporary local dependency
+  trees/symlinks used only to resolve the existing dynamic Expo config were
+  removed.
+- Final disposition: `eas_android_development_client_build_succeeded`.
+  The next owner is Planning for the separately authorized target-fenced APK
+  download/install, dummy smoke, and fixture-camera validation packet; real
+  API and OAuth validation remain separately gated.
