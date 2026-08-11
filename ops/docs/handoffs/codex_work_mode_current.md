@@ -48,6 +48,7 @@
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_NATIVE_RAILS_CONTRACT_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_NATIVE_CLIENT_PLAN.md`
+- `ops/docs/plans/EXPO_TEMPLE_QR_CAMERA_FOUNDATION_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -107,6 +108,15 @@ that exact predecessor. Provider registration plus EAS-cloud
 development-client/device validation remains a later separately planned gate.
 No shared package, provider action, native build, deployment, release, or push
 is authorized.
+
+The Expo OAuth native-client source phase is complete and accepted on
+canonical `main` at `e5ae5e8fd76b9b152b24e7b3c9e142b12cff2427`; Control B
+received `released_terminal_idle`. The next authorized source phase is
+`ops/docs/plans/EXPO_TEMPLE_QR_CAMERA_FOUNDATION_PLAN.md` through Control B.
+It adds the Expo SDK 54 camera dependency, QR-only permission/UI foundation,
+and fixture-backed scanner evidence before the later single EAS-cloud
+development-client build. It does not authorize that build, device action,
+live temple binding, provider configuration, deployment, release, or push.
 
 ## Current Authorized Documentation Housekeeping
 
