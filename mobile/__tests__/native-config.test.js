@@ -19,6 +19,7 @@ test('development config uses TempleMate identity and preserves local version au
   const config = configFor('development');
   assert.equal(project.name, 'komainu');
   assert.equal(config.name, project.developmentPublicName);
+  assert.equal(config.owner, 'jimmy1768');
   assert.equal(config.version, '1.0.0');
   assert.equal(versioning.iosBuildNumber, '1');
   assert.equal(versioning.androidVersionCode, 1);
@@ -34,6 +35,7 @@ test('development config uses TempleMate identity and preserves local version au
 test('production config uses the public TempleMate native identifiers', () => {
   const config = configFor('production');
   assert.equal(config.name, project.publicName);
+  assert.equal(config.owner, 'jimmy1768');
   assert.equal(config.ios.bundleIdentifier, project.nativeIdentifiers.production.iosBundleIdentifier);
   assert.equal(config.android.package, project.nativeIdentifiers.production.androidPackage);
 });

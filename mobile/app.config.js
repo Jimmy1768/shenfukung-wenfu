@@ -15,6 +15,7 @@ module.exports = () => {
     expo: {
       name: development ? project.developmentPublicName : project.publicName,
       slug: 'templemate',
+      owner: 'jimmy1768',
       version: versioning.appVersion,
       scheme: 'templemate',
       orientation: 'portrait',

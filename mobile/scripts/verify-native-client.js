@@ -47,6 +47,7 @@ if (!/^\d+\.\d+\.\d+$/.test(versioning.appVersion)) fail('version must be major.
 if (pkg.version !== versioning.appVersion || developmentConfig.version !== versioning.appVersion || productionConfig.version !== versioning.appVersion) fail('package/config version differs from versioning.js');
 if (versioning.iosBuildNumber !== '1' || versioning.androidVersionCode !== 1) fail('initial build values must remain 1');
 if (project.name !== 'komainu') fail('internal project name must be komainu');
+if (developmentConfig.owner !== 'jimmy1768' || productionConfig.owner !== 'jimmy1768') fail('development and production public config must use the exact EAS owner');
 if (developmentConfig.name !== project.developmentPublicName) fail('development launcher must be TempleMate (Dev)');
 if (developmentConfig.ios.bundleIdentifier !== project.nativeIdentifiers.development.iosBundleIdentifier || developmentConfig.android.package !== project.nativeIdentifiers.development.androidPackage) fail('development config must use the public development identifiers');
 if (productionConfig.name !== project.publicName) fail('production launcher must be TempleMate');
