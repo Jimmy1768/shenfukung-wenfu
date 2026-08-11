@@ -1,4 +1,5 @@
 const LOCAL_MODES = new Set(['dummy', 'real']);
+const { nativeOAuthReturnUrl } = require('../oauth/config');
 
 function resolveClientConfig(extra = {}) {
   const mode = LOCAL_MODES.has(extra.clientMode) ? extra.clientMode : 'dummy';
@@ -20,7 +21,13 @@ function resolveClientConfig(extra = {}) {
       throw error;
     }
   }
-  return { mode, apiBaseUrl, tenantSlug, environment: String(extra.clientEnvironment || 'development') };
+  const oauthReturnUrl = String(extra.nativeOAuthReturnUrl || nativeOAuthReturnUrl);
+  if (oauthReturnUrl !== nativeOAuthReturnUrl) {
+    const error = new Error('Native OAuth return URL must use the configured templemate scheme.');
+    error.code = 'NATIVE_OAUTH_RETURN_REQUIRED';
+    throw error;
+  }
+  return { mode, apiBaseUrl, tenantSlug, environment: String(extra.clientEnvironment || 'development'), oauthReturnUrl };
 }
 
 const localTenantBinding = config => ({ state: 'bound', tenant: { id: config.tenantSlug, name: config.tenantSlug }, error: null, source: 'local-test' });

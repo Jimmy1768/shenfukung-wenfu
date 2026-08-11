@@ -24,4 +24,9 @@ const seed = Object.freeze({
 });
 
 const clone = value => JSON.parse(JSON.stringify(value));
-module.exports = { tenant, alternateTenant, seed, clone };
+const nativeOAuthReturnUrl = 'templemate://oauth/complete';
+const oauthJourneys = Object.freeze({
+  success: Object.freeze({ type: 'success' }), profile_required: Object.freeze({ type: 'profile_required' }), cancellation: Object.freeze({ type: 'cancel' }),
+  denial: Object.freeze({ type: 'denied' }), failure: Object.freeze({ type: 'failure' }), interruption: Object.freeze({ type: 'interrupted' })
+});
+module.exports = { tenant, alternateTenant, seed, clone, nativeOAuthReturnUrl, oauthJourneys };

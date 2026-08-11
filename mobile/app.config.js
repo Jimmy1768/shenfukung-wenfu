@@ -1,5 +1,6 @@
 const versioning = require('./versioning');
 const project = require('./app/lib/app_constants/project');
+const { nativeOAuthReturnUrl } = require('./app/oauth/config');
 
 const isDevelopmentClient = () => {
   const value = String(process.env.BUILD_MODE || process.env.EAS_BUILD_PROFILE || 'development').toLowerCase();
@@ -49,6 +50,7 @@ module.exports = () => {
         localApiBaseUrl: process.env.TEMPLEMATE_LOCAL_API_BASE_URL || '',
         localTenantSlug: process.env.TEMPLEMATE_LOCAL_TENANT_SLUG || '',
         clientEnvironment: process.env.TEMPLEMATE_CLIENT_ENVIRONMENT || 'development',
+        nativeOAuthReturnUrl,
         supportedLocales: ['zh-TW', 'en'],
         supportedThemes: ['light', 'dark'],
         android16TargetSdk: 36

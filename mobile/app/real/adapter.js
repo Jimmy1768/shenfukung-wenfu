@@ -23,6 +23,19 @@ function createRealAdapter({ config, store, transport, device = { device_id: 'lo
   const updateState = (key, value) => { state = { ...state, [key]: value }; return state; };
   return {
     kind: 'real', network: 'local-test', mode: 'real', snapshot: () => state,
+    oauthStorage: { loadPending: () => scoped.loadPending(), savePending: pending => scoped.savePending(pending), clearPending: () => scoped.clearPending() },
+    async startOAuth({ provider, pkceChallenge, pkceMethod }) {
+      const payload = await request('POST', '/oauth/start', { oauth: { provider, pkce_challenge: pkceChallenge, pkce_method: pkceMethod } }, false);
+      return payload.oauth;
+    },
+    async exchangeOAuth({ code, transactionToken, pkceVerifier }) {
+      const payload = await request('POST', '/oauth/exchange', { oauth: { code, transaction_token: transactionToken, pkce_verifier: pkceVerifier }, device }, false);
+      await applySession(payload.session);
+      state = { ...state, ...snapshotFromBootstrap(payload) };
+      await loadBootstrap();
+      return { snapshot: state, oauth: payload.oauth };
+    },
+    async clearOAuthSession() { session = null; state = snapshotFromBootstrap(); await scoped.clearAll(); },
     signUp: input => authenticate('/signup', { signup: { email: input.email, password: input.password, password_confirmation: input.passwordConfirmation || input.password } }),
     signIn: input => authenticate('/login', { session: input }),
     recoverPassword: input => request('POST', '/password/recovery', input, false),
