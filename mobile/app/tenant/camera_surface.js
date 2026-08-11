@@ -2,22 +2,23 @@ import { useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 
-import { createCameraSession, permissionState } from './camera_session';
+import { createCameraPermissionController, createCameraSession } from './camera_session';
 import { Button, Notice } from '../ui/primitives';
 
 export function TempleQrCamera({ mode, onScan, onCancel, t, palette }) {
   const [permission, requestPermission] = useCameraPermissions();
   const session = useRef(createCameraSession({ scanPayload: onScan })).current;
+  const permissionController = useRef(createCameraPermissionController()).current;
   const [state, setState] = useState(() => session.open(permission));
 
   useEffect(() => {
     const next = session.open(permission);
     setState(next);
-    if (permission && !permission.granted && permission.canAskAgain !== false) requestPermission();
-  }, [permission, requestPermission, session]);
+    if (permissionController.open(permission)) requestPermission();
+  }, [permission, permissionController, requestPermission, session]);
 
-  const cancel = () => { session.close(); onCancel(); };
-  const retry = () => requestPermission();
+  const cancel = () => { permissionController.close(); session.close(); onCancel(); };
+  const retry = () => { if (permissionController.retry(permission)) requestPermission(); };
   const receive = async ({ data }) => {
     const next = await session.receive(data);
     setState(next);

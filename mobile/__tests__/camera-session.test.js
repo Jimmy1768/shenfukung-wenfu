@@ -2,7 +2,7 @@ const test = require('node:test');
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
-const { createCameraSession, permissionState } = require('../app/tenant/camera_session');
+const { createCameraPermissionController, createCameraSession, permissionState } = require('../app/tenant/camera_session');
 const { fixtureConnectionLink } = require('../app/tenant/binding');
 const { tenant } = require('../app/dummy/fixtures');
 const { scanCameraPayload } = require('../app/tenant/scanner');
@@ -12,6 +12,36 @@ test('camera permission states keep preview closed until a user-initiated grante
   assert.equal(permissionState({ granted: true }), 'ready');
   assert.equal(permissionState({ granted: false, canAskAgain: true }), 'denied');
   assert.equal(permissionState({ granted: false, canAskAgain: false }), 'blocked');
+});
+
+test('camera permission requests never repeat after denial and Retry is the only retry authority', () => {
+  const controller = createCameraPermissionController();
+  let requests = 0;
+  const requestWhenAllowed = permission => {
+    if (controller.open(permission)) requests += 1;
+  };
+  const retry = permission => {
+    if (controller.retry(permission)) requests += 1;
+  };
+  const undetermined = { granted: false, canAskAgain: true, status: 'undetermined' };
+  const denied = { granted: false, canAskAgain: true, status: 'denied' };
+  const blocked = { granted: false, canAskAgain: false, status: 'denied' };
+
+  requestWhenAllowed(undetermined);
+  assert.equal(requests, 1);
+  requestWhenAllowed(denied);
+  assert.equal(requests, 1, 'a permission update after denial must not re-request');
+  retry(denied);
+  assert.equal(requests, 2, 'one explicit Retry makes exactly one request');
+  requestWhenAllowed(denied);
+  retry(blocked);
+  assert.equal(requests, 2, 'blocked permission never requests');
+
+  controller.close();
+  requestWhenAllowed(undetermined);
+  assert.equal(requests, 3, 'a new explicit scanner session may make one initial request');
+  requestWhenAllowed(denied);
+  assert.equal(requests, 3, 'the reopened session still cannot loop after denial');
 });
 
 test('camera session accepts only the first QR callback and can be cancelled or retried', async () => {

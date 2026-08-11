@@ -6,6 +6,24 @@ const permissionState = permission => {
   return permission.canAskAgain === false ? 'blocked' : 'denied';
 };
 
+const createCameraPermissionController = () => {
+  let isOpen = false;
+  let initialRequestMade = false;
+  return {
+    open: permission => {
+      isOpen = true;
+      if (initialRequestMade || permission?.status !== 'undetermined') return false;
+      initialRequestMade = true;
+      return true;
+    },
+    retry: permission => isOpen && permissionState(permission) === 'denied',
+    close: () => {
+      isOpen = false;
+      initialRequestMade = false;
+    }
+  };
+};
+
 const createCameraSession = ({ scanPayload }) => {
   let current = closedCamera();
   return {
@@ -28,4 +46,4 @@ const createCameraSession = ({ scanPayload }) => {
   };
 };
 
-module.exports = { closedCamera, permissionState, createCameraSession };
+module.exports = { closedCamera, permissionState, createCameraPermissionController, createCameraSession };
