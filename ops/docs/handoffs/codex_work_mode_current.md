@@ -60,15 +60,31 @@ TempleMate `1.0.0` local source baseline passed the required Rails, mobile,
 version/API 36, contract, and offline Expo Doctor checks. Control A and Control
 B are both `released_terminal_idle`.
 
-The Director has now opened the separately scoped development-client UI
-refinement phase under
-`ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`. Control B owns the
-Expo-only phase from the integrated baseline. It installs pinned project-local
-`expo-doctor@1.20.1`, refines the existing account screens without adding
-features, installs `TempleMate (Dev)` on the exact preflighted Android device,
-and exercises the deterministic dummy journey against local Metro. This device
-authority is narrow and does not authorize live API, real tenant QR/camera,
-OAuth, payment, EAS cloud, AAB/store/release, deployment, production, or push.
+The separately scoped development-client UI refinement phase is recorded under
+`ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`. Control B completed
+an isolated candidate with pinned project-local `expo-doctor@1.20.1`, refined
+account-only screens, and a deterministic dummy journey on the Pixel 8. Direct
+immutable terminal delivery to Planning remains pending, so the candidate has
+not yet been accepted or integrated.
+
+The Director superseded the plan's permissive local-rebuild clause. TempleMate
+now follows the mature DojoMate rule: reuse the compatible installed
+development client for Metro/UI work; use EAS cloud by default only when a new
+native artifact is actually required and separately authorized; use a local
+native build only after an explicit Director request or an accepted concrete
+local native-debugging reason. Confirmed disposable Android build trees were
+deleted after the installed `tw.com.templemate.dev` 1.0.0/build 1 package was
+verified. No EAS build is authorized or running. Live API, real tenant
+QR/camera, OAuth, payment, AAB/store/release, deployment, production, and push
+remain excluded.
+
+The Director also rejected the legacy `tw.com.templemate.dev` identifier.
+SourceGrid's established `com.sourcegridlabs` reverse-domain authority now
+defines `com.sourcegridlabs.templemate` for production and
+`com.sourcegridlabs.templemate.dev` for the development client. The legacy-ID
+client may remain installed as historical UI evidence, but no future native
+build may use it. Control B must make the config/test correction without a
+native build before direct terminal delivery.
 
 ## Current Authorized Documentation Housekeeping
 
