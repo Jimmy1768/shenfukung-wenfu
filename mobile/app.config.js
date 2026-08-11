@@ -1,4 +1,5 @@
 const versioning = require('./versioning');
+const project = require('./app/lib/app_constants/project');
 
 const isDevelopmentClient = () => {
   const value = String(process.env.BUILD_MODE || process.env.EAS_BUILD_PROFILE || 'development').toLowerCase();
@@ -7,10 +8,11 @@ const isDevelopmentClient = () => {
 
 module.exports = () => {
   const development = isDevelopmentClient();
+  const nativeIdentifiers = project.nativeIdentifiers[development ? 'development' : 'production'];
 
   return {
     expo: {
-      name: development ? 'TempleMate (Dev)' : 'TempleMate',
+      name: development ? project.developmentPublicName : project.publicName,
       slug: 'templemate',
       version: versioning.appVersion,
       scheme: 'templemate',
@@ -25,11 +27,11 @@ module.exports = () => {
       },
       ios: {
         supportsTablet: true,
-        bundleIdentifier: 'tw.com.templemate.dev',
+        bundleIdentifier: nativeIdentifiers.iosBundleIdentifier,
         buildNumber: versioning.iosBuildNumber
       },
       android: {
-        package: 'tw.com.templemate.dev',
+        package: nativeIdentifiers.androidPackage,
         versionCode: versioning.androidVersionCode,
         compileSdkVersion: 36,
         targetSdkVersion: 36,

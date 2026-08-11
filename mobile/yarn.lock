@@ -2376,6 +2376,11 @@ expo-dev-menu@7.0.19:
   dependencies:
     expo-dev-menu-interface "2.0.0"
 
+expo-doctor@1.20.1:
+  version "1.20.1"
+  resolved "https://registry.yarnpkg.com/expo-doctor/-/expo-doctor-1.20.1.tgz#2992175aa38110cac6744cd55e0f557ee4ca9414"
+  integrity sha512-u0QYTm3hTZbuMuNdnvscA1X6Xm31ilQ6uxrf8FfzO0ddpOEBrgVEYp8jXgFOBwrRf6DqJoD2j3eKUTWTqvKVzg==
+
 expo-file-system@~19.0.23:
   version "19.0.23"
   resolved "https://registry.yarnpkg.com/expo-file-system/-/expo-file-system-19.0.23.tgz#ad2c88ed039ba0fd5a739338818f42304171eddd"

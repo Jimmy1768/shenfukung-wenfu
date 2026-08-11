@@ -1,10 +1,22 @@
+const nativeIdentifiers = Object.freeze({
+  production: Object.freeze({
+    iosBundleIdentifier: 'com.jimmy1768.komainu',
+    androidPackage: 'com.jimmy1768.komainu'
+  }),
+  development: Object.freeze({
+    iosBundleIdentifier: 'com.jimmy1768.komainu.dev',
+    androidPackage: 'com.jimmy1768.komainu.dev'
+  })
+});
+
 const project = Object.freeze({
-  name: 'TempleMate',
+  name: 'komainu',
+  publicName: 'TempleMate',
+  developmentPublicName: 'TempleMate (Dev)',
   slug: 'templemate',
   expoSlug: 'templemate',
   scheme: 'templemate',
-  iosBundleIdentifier: 'tw.com.templemate.dev',
-  androidPackage: 'tw.com.templemate.dev'
+  nativeIdentifiers
 });
 
 module.exports = project;
