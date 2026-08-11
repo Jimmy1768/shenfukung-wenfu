@@ -50,6 +50,7 @@
 - `ops/docs/plans/EXPO_OAUTH_NATIVE_CLIENT_PLAN.md`
 - `ops/docs/plans/EXPO_TEMPLE_QR_CAMERA_FOUNDATION_PLAN.md`
 - `ops/docs/plans/EXPO_DEVELOPMENT_CLIENT_BUILD_READINESS_SCAN_PLAN.md`
+- `ops/docs/plans/EXPO_EAS_PROJECT_AND_SIGNING_PREFLIGHT_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -129,6 +130,17 @@ contains both OAuth and camera native modules. It does not authorize EAS,
 provider, deployment, artifact, Metro, or device action. Version `1.0.0`,
 Android code `1`, and iOS build `1` remain unchanged as one minor invariant
 within the broader readiness scan.
+
+The development-client build readiness report, including the corrected
+provider/build gate ordering, is accepted on canonical `main` at
+`84ca6f8c5f4afbd6d29cc29751f49977ef452158`; Control B received
+`released_terminal_idle`. The Director explicitly authorized the next bounded
+authenticated phase:
+`ops/docs/plans/EXPO_EAS_PROJECT_AND_SIGNING_PREFLIGHT_PLAN.md` through Control
+B. It may inspect the current EAS account, project/link state, resolved
+development configuration, and safely available signing metadata. It does not
+authorize project linking/creation, credential mutation, a build, artifact,
+provider/deployment action, or device work.
 
 ## Current Authorized Documentation Housekeeping
 
