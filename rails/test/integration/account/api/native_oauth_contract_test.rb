@@ -227,22 +227,34 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
     assert_response :bad_gateway
     assert_equal "oauth_start_failed", response.parsed_body.fetch("code")
 
-    central_failure = FakeCentralOAuthClient.new({ "redirect_url" => "https://central.example.test/google" }, nil, nil, Auth::CentralOAuthClient::RequestError.new("invalid_grant provider-body"))
+    central_failure = FakeCentralOAuthClient.new({ "redirect_url" => "https://central.example.test/google" }, nil, nil, Auth::CentralOAuthClient::RequestError.new(code: "invalid_grant"))
     failure_token = start_transaction(central_failure)
     with_return_url { Auth::CentralOAuthClient.stub(:new, central_failure) { post native_exchange_path, params: exchange_params(failure_token) } }
+    assert_response :unprocessable_entity
+    assert_equal "invalid_oauth_grant", response.parsed_body.fetch("code")
+    assert_not_includes response.body, "provider-body"
+
+    generic_failure = FakeCentralOAuthClient.new(
+      { "redirect_url" => "https://central.example.test/google" },
+      nil,
+      nil,
+      Auth::CentralOAuthClient::RequestError.new("arbitrary-upstream-detail")
+    )
+    generic_token = start_transaction(generic_failure)
+    with_return_url { Auth::CentralOAuthClient.stub(:new, generic_failure) { post native_exchange_path, params: exchange_params(generic_token) } }
     assert_response :bad_gateway
     assert_equal "oauth_exchange_failed", response.parsed_body.fetch("code")
-    assert_not_includes response.body, "provider-body"
+    assert_not_includes response.body, "arbitrary-upstream-detail"
 
     replay = FakeCentralOAuthClient.new({ "redirect_url" => "https://central.example.test/google" }, identity_response)
     replay_token = start_transaction(replay)
     with_return_url { Auth::CentralOAuthClient.stub(:new, replay) { post native_exchange_path, params: exchange_params(replay_token) } }
     assert_response :success
-    replay.exchange_response = nil
+    replay.exchange_error = Auth::CentralOAuthClient::RequestError.new(code: "invalid_grant")
     issued_sessions = RefreshToken.where(user: User.find_by!(email: "native-oauth@example.test")).count
     with_return_url { Auth::CentralOAuthClient.stub(:new, replay) { post native_exchange_path, params: exchange_params(replay_token) } }
-    assert_response :bad_gateway
-    assert_equal "oauth_exchange_failed", response.parsed_body.fetch("code")
+    assert_response :unprocessable_entity
+    assert_equal "invalid_oauth_grant", response.parsed_body.fetch("code")
     assert_equal issued_sessions, RefreshToken.where(user: User.find_by!(email: "native-oauth@example.test")).count
 
     closed = User.create!(email: "closed-native@example.test", english_name: "Closed Native", encrypted_password: User.password_hash("Password123!"), metadata: {})
