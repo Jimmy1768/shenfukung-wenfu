@@ -1,0 +1,225 @@
+# frozen_string_literal: true
+
+require "test_helper"
+
+class NativeAccountContractTest < ActionDispatch::IntegrationTest
+  def setup
+    @temple = create_temple
+    @user = User.create!(
+      email: "contract-#{SecureRandom.hex(3)}@example.com",
+      english_name: "Contract User",
+      encrypted_password: User.password_hash("Password123!")
+    )
+    @access_token = native_login(@user)
+  end
+
+  test "signup and logout have stable account-safe session contracts" do
+    email = "signup-#{SecureRandom.hex(3)}@example.com"
+    post "/api/v1/account/native/signup", params: {
+      temple_slug: @temple.slug,
+      signup: { email:, password: "Password123!", password_confirmation: "Password123!" },
+      device: { device_id: "signup-device", platform: "ios" }
+    }
+
+    assert_response :created
+    assert_equal %w[session user], response.parsed_body.keys.sort
+    assert_account_safe_user(response.parsed_body.fetch("user"), email:)
+    assert_session_contract(response.parsed_body.fetch("session"))
+
+    post "/api/v1/account/native/signup", params: {
+      temple_slug: @temple.slug,
+      signup: { email:, password: "Password123!", password_confirmation: "Password123!" }
+    }
+    assert_response :unprocessable_entity
+    assert_equal "validation_failed", response.parsed_body.fetch("code")
+
+    session = native_login(@user, include_refresh: true)
+    delete "/api/v1/account/native/logout", params: { temple_slug: @temple.slug, refresh_token: session.fetch("refresh_token") }, headers: bearer(session.fetch("access_token"))
+    assert_response :no_content
+
+    get "/api/v1/account/native/profile", params: { temple_slug: @temple.slug }, headers: bearer(session.fetch("access_token"))
+    assert_response :unauthorized
+    assert_equal "session_revoked", response.parsed_body.fetch("code")
+  end
+
+  test "profile update and password addition retain account-only response contracts" do
+    patch "/api/v1/account/native/profile", params: {
+      temple_slug: @temple.slug,
+      profile: { english_name: "Updated Contract User", city: "Taipei" }
+    }, headers: bearer
+    assert_response :success
+    assert_account_safe_user(response.parsed_body.fetch("user"), email: @user.email)
+    assert_equal "Updated Contract User", response.parsed_body.dig("user", "english_name")
+    assert_equal "Taipei", response.parsed_body.dig("user", "city")
+
+    passwordless_user = User.create!(
+      email: "password-add-#{SecureRandom.hex(3)}@example.com",
+      english_name: "Password Add User",
+      encrypted_password: User.password_hash("OAuthSeededPlaceholder!"),
+      metadata: { "oauth_seeded" => true }
+    )
+    access_token = direct_native_access(passwordless_user)
+    post "/api/v1/account/native/profile/password", params: {
+      temple_slug: @temple.slug,
+      password: { password: "NewPassword123!", password_confirmation: "NewPassword123!" }
+    }, headers: bearer(access_token)
+    assert_response :no_content
+    assert_equal User.password_hash("NewPassword123!"), passwordless_user.reload.encrypted_password
+
+    post "/api/v1/account/native/profile/password", params: {
+      temple_slug: @temple.slug,
+      password: { password: "AnotherPassword123!", password_confirmation: "AnotherPassword123!" }
+    }, headers: bearer(access_token)
+    assert_response :unprocessable_entity
+    assert_equal "validation_failed", response.parsed_body.fetch("code")
+  end
+
+  test "dependent index show and update return stable account-owned records" do
+    post "/api/v1/account/native/dependents", params: {
+      temple_slug: @temple.slug,
+      dependent: { english_name: "Contract Dependent", relationship_label: "family" }
+    }, headers: bearer
+    assert_response :created
+    dependent = response.parsed_body.fetch("dependent")
+    assert_dependent_contract(dependent)
+
+    get "/api/v1/account/native/dependents", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    assert_equal [dependent.fetch("id")], response.parsed_body.fetch("dependents").map { |entry| entry.fetch("id") }
+
+    get "/api/v1/account/native/dependents/#{dependent.fetch("id")}", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    assert_dependent_contract(response.parsed_body.fetch("dependent"))
+
+    other_owner = User.create!(email: "other-owner-#{SecureRandom.hex(3)}@example.com", english_name: "Other Owner", encrypted_password: User.password_hash("Password123!"))
+    other_dependent = Dependent.create!(english_name: "Other Dependent")
+    foreign_link = other_owner.user_dependents.create!(dependent: other_dependent, role: "family")
+    get "/api/v1/account/native/dependents/#{foreign_link.id}", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :not_found
+    assert_equal "not_found", response.parsed_body.fetch("code")
+
+    patch "/api/v1/account/native/dependents/#{dependent.fetch("id")}", params: {
+      temple_slug: @temple.slug,
+      dependent: { english_name: "Updated Dependent", relationship_label: "family" }
+    }, headers: bearer
+    assert_response :success
+    assert_equal "Updated Dependent", response.parsed_body.dig("dependent", "english_name")
+  end
+
+  test "account resource reads expose only the current tenant's safe presentation data" do
+    event = create_event
+    service = @temple.temple_services.create!(
+      slug: "service-#{SecureRandom.hex(3)}", title: "Contract Service", status: "published", price_cents: 0, currency: "TWD"
+    )
+    gallery = @temple.temple_gallery_entries.create!(title: "Contract Gallery", body: "Account-safe gallery text", event_date: Time.current)
+    registration = create_registration(user: @user, offering: event)
+    registration.certificate_number = "CERT-#{SecureRandom.hex(3).upcase}"
+    registration.save!
+
+    get "/api/v1/account/native/events", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    assert_equal event.slug, response.parsed_body.fetch("events").first.fetch("slug")
+    refute response.body.include?("guest_lists")
+
+    get "/api/v1/account/native/services", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    assert_equal service.slug, response.parsed_body.fetch("services").first.fetch("slug")
+
+    get "/api/v1/account/native/galleries", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    assert_equal gallery.id, response.parsed_body.fetch("galleries").first.fetch("id")
+
+    get "/api/v1/account/native/galleries/#{gallery.id}", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    assert_equal gallery.id, response.parsed_body.dig("gallery", "id")
+
+    get "/api/v1/account/native/certificates", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    certificate = response.parsed_body.fetch("certificates").first
+    assert_equal registration.certificate_number, certificate.fetch("certificate_number")
+    assert_equal @user.email, certificate.dig("registrant", "email")
+    refute response.body.include?("provider_reference")
+  end
+
+  test "registration new and edit contracts preserve account-only lifecycle state" do
+    event = create_event
+    registration = create_registration(user: @user, offering: event)
+
+    get "/api/v1/account/native/registrations/new", params: {
+      temple_slug: @temple.slug, account_action: "event", offering: event.slug
+    }, headers: bearer
+    assert_response :success
+    assert_equal event.slug, response.parsed_body.dig("offering", "slug")
+    assert response.parsed_body.fetch("registration").key?("quantity")
+    refute response.body.include?("provider_reference")
+
+    get "/api/v1/account/native/registrations/#{registration.id}/edit", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    contract = response.parsed_body.fetch("registration")
+    assert_equal registration.reference_code, contract.fetch("reference_code")
+    assert_equal registration.payment_status, contract.fetch("payment_state")
+    refute contract.key?("total_amount_cents")
+    refute response.body.include?("checkout")
+  end
+
+  test "privacy show returns only the authenticated account user's requests" do
+    request_record = @user.privacy_requests.create!(request_type: "data_export", status: "pending", submitted_via: "web", requested_at: Time.current)
+
+    get "/api/v1/account/native/privacy", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    privacy_request = response.parsed_body.fetch("privacy_requests").first
+    assert_equal request_record.id, privacy_request.fetch("id")
+    assert_equal "data_export", privacy_request.fetch("request_type")
+    assert_equal "pending", privacy_request.fetch("status")
+    refute response.body.include?("admin_account")
+  end
+
+  private
+
+  def native_login(user, include_refresh: false)
+    post "/api/v1/account/native/login", params: {
+      temple_slug: @temple.slug,
+      session: { email: user.email, password: "Password123!" },
+      device: { device_id: "contract-device", platform: "ios" }
+    }
+    assert_response :success
+    session = response.parsed_body.fetch("session")
+    include_refresh ? session : session.fetch("access_token")
+  end
+
+  def direct_native_access(user)
+    issued = Auth::RefreshToken.new(user).issue!(context: { device_id: "password-add-device", platform: "ios" })
+    Auth::JwtService.encode({ "sub" => user.id, "native_session_id" => issued.record.id, "scope" => "account" })
+  end
+
+  def create_event
+    @temple.temple_events.create!(
+      slug: "event-#{SecureRandom.hex(3)}", title: "Contract Event", starts_on: Date.current,
+      ends_on: Date.current + 1.day, status: "published", price_cents: 0, currency: "TWD"
+    )
+  end
+
+  def bearer(access_token = @access_token)
+    { "Authorization" => "Bearer #{access_token}" }
+  end
+
+  def assert_session_contract(session)
+    assert_equal %w[access_token expires_in refresh_token token_type], session.keys.sort
+    assert_equal "Bearer", session.fetch("token_type")
+    assert session.fetch("access_token").present?
+    assert session.fetch("refresh_token").present?
+  end
+
+  def assert_account_safe_user(user, email:)
+    assert_equal email, user.fetch("email")
+    assert_includes user.keys, "id"
+    refute user.key?("admin_account")
+    refute user.key?("roles")
+    refute user.key?("provider_reference")
+  end
+
+  def assert_dependent_contract(dependent)
+    assert_equal %w[dependent_id english_name id relationship_label], dependent.keys.sort
+    refute dependent.key?("admin_account")
+  end
+end
