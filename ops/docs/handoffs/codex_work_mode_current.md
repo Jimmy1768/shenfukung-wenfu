@@ -49,6 +49,7 @@
 - `ops/docs/plans/EXPO_OAUTH_NATIVE_RAILS_CONTRACT_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_NATIVE_CLIENT_PLAN.md`
 - `ops/docs/plans/EXPO_TEMPLE_QR_CAMERA_FOUNDATION_PLAN.md`
+- `ops/docs/plans/EXPO_DEVELOPMENT_CLIENT_BUILD_READINESS_SCAN_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -117,6 +118,17 @@ It adds the Expo SDK 54 camera dependency, QR-only permission/UI foundation,
 and fixture-backed scanner evidence before the later single EAS-cloud
 development-client build. It does not authorize that build, device action,
 live temple binding, provider configuration, deployment, release, or push.
+
+The Temple QR camera foundation, including the explicit permission-denial
+repair, is complete and accepted on canonical `main` at
+`b476d42a422f28fbe9918fb8870a93e633486d99`; Control B received
+`released_terminal_idle`. The current authorized phase is the report-only
+`ops/docs/plans/EXPO_DEVELOPMENT_CLIENT_BUILD_READINESS_SCAN_PLAN.md` through
+Control B. It prepares one later EAS-cloud Android development-client APK that
+contains both OAuth and camera native modules. It does not authorize EAS,
+provider, deployment, artifact, Metro, or device action. Version `1.0.0`,
+Android code `1`, and iOS build `1` remain unchanged as one minor invariant
+within the broader readiness scan.
 
 ## Current Authorized Documentation Housekeeping
 
