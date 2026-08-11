@@ -1,62 +1,55 @@
-# Expo OAuth Phase Plan
+# Expo OAuth Phase Roadmap
 
-Status: separately deferred capability phase; not part of core V1 and not
-current implementation authority
+Status: active roadmap; implementation authority lives only in the bounded
+phase plans named below
 
-Created: 2026-08-11
+Updated: 2026-08-11
 
 Owner: Wenfu Planning
 
-Core-track predecessors: `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`
-and `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
+Canonical readiness evidence:
+`ops/docs/handoffs/2026-08-11-expo-oauth-integration-readiness-control-b.md`
 
-## Objective
+## Direction
 
-Add native Google and Apple account authentication and existing identity
-link/unlink behavior only after core email authentication and account parity are
-stable. OAuth is not required to build or test core V1.
+Komainu/TempleMate is the first SourceGrid Expo application that will
+implement OAuth. There is no mature SourceGrid or DojoMate native OAuth client
+to copy. Existing Wenfu Rails account OAuth and SourceGrid central-auth are the
+mature server authority; current official Expo, Google, and Apple guidance is
+the native platform authority.
 
-## Scope Boundary
+After implementation and validation are complete, Komainu's attributable
+contracts, tests, nonsecret configuration matrix, and operating notes may be
+used as the example for later SourceGrid Expo applications. This roadmap does
+not create a shared package or authorize changes to another repository.
 
-This phase may include only OAuth behavior already supported by the web account
-namespace for the target environment:
+## Sequence
 
-- Google/Apple sign-in where configured;
-- native initiation and browser/app return;
-- state, nonce, PKCE, cancellation, failure, and interrupted-return handling;
-- safe native-session exchange through the account-only API boundary;
-- identity list/link/unlink with the existing last-login-method protection;
-- account signup/linking behavior consistent with existing Rails authority;
-- truthful unavailable states when a provider is not configured.
+1. `EXPO_OAUTH_NATIVE_RAILS_CONTRACT_PLAN.md`
+   - current implementation authority;
+   - adds the account-only native start/exchange contract around the existing
+     central-auth service;
+   - uses stubbed/local evidence only and does not access providers.
+2. `EXPO_OAUTH_NATIVE_CLIENT_PLAN.md`
+   - written now as the dependent client contract, but not dispatch authority
+     until phase 1 is accepted on canonical `main`;
+   - adds deterministic dummy OAuth UI/state evidence and a real adapter for
+     the accepted Rails contract.
+3. Provider and development-client validation
+   - requires a later separate plan after source integration;
+   - verifies exact central-auth return allowlisting and any Google/Apple
+     registration prerequisites;
+   - uses EAS cloud when a new development-client binary is required. Local
+     native building remains prohibited without a separately accepted reason.
+4. Native OAuth identity management
+   - signed-in provider list/link/unlink remains a separate later phase;
+   - it must preserve the existing last-login-method and linking-conflict
+     rules and is not required to prove first OAuth sign-in.
 
-DojoMate may provide native browser-return, state-machine, secure-session, and
-test patterns. Wenfu central-auth and account identity rules remain
-authoritative.
+## V1 Boundary
 
-## External Boundary
-
-- No client secret may be embedded in Expo source or public configuration.
-- Local/stubbed contract work does not authorize provider-console changes,
-  real credentials, production callback changes, app-store records, or live
-  validation.
-- Any provider configuration or protected live check requires its own exact
-  authority and safe evidence path.
-
-## Immutable Acceptance Criteria
-
-1. OAuth is additive to the accepted email session and does not weaken it.
-2. Google/Apple behavior matches the existing web-authorized account identity
-   model without adding providers or linking operations.
-3. State/nonce/PKCE, cancellation, retry, interrupted return, and failure paths
-   fail safely.
-4. Link/unlink preserves the last-login-method rule.
-5. OAuth tokens grant no admin authority and remain scoped to the validated
-   temple account context.
-6. No provider secret, production action, deployment, or release action occurs
-   without separate authority.
-
-## Current Gate
-
-OAuth is deferred until core email authentication and account parity are
-accepted. It is planned separately so provider and deep-link complexity cannot
-delay dummy UI or basic account CRUD testing.
+The first OAuth-enabled V1 increment is Google and Apple account sign-in only.
+It is additive to email authentication and never grants admin authority.
+Payment, provider consoles, production credentials, app-store release, native
+identity link/unlink management, and shared-package extraction are excluded
+until their own plans are accepted.

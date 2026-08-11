@@ -45,6 +45,9 @@
 - `ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`
+- `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
+- `ops/docs/plans/EXPO_OAUTH_NATIVE_RAILS_CONTRACT_PLAN.md`
+- `ops/docs/plans/EXPO_OAUTH_NATIVE_CLIENT_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -88,27 +91,21 @@ The internal project name is `komainu`; the public app name remains
 source/config/test correction is integrated. No native build or device action
 is authorized.
 
-The Director has authorized two independent parallel tracks from the canonical
-commit containing their plans:
+The parallel stabilization/readiness tracks are complete. Control A's Expo V1
+functional stabilization is accepted on canonical `main` at
+`58b03c6af26a6f7ec3329372c762ccd772743fa6`. Control B's OAuth readiness report
+is accepted and canonically integrated at
+`5164b18c87817b1ea86d23667892860ee11aec53`.
 
-- Control A implements
-  `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`, correcting the
-  confirmed Expo state-management and real-adapter wiring defects without a
-  native build or device action.
-- Control B performs the documentation/read-only
-  `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`, mapping the
-  existing working Rails Google/Apple behavior and TempleMate native gaps
-  without product-code, provider, secret, build, or runtime action. Komainu is
-  the first SourceGrid OAuth-enabled Expo app: no existing SourceGrid or
-  DojoMate app is a mature native OAuth reference. Control B uses current
-  official Expo/Google/Apple guidance plus mature Rails/central-auth source,
-  and classifies historical APK records only as context. A later accepted
-  Komainu implementation may become the reference for other SourceGrid Expo
-  apps; no shared package or cross-repository change is authorized now.
-
-The tracks do not share owned paths or coordinate directly. Each returns one
-terminal packet to Planning. OAuth implementation remains unauthorized until
-Planning accepts the readiness evidence and creates later bounded plans.
+Komainu is the first SourceGrid OAuth-enabled Expo app. The active OAuth
+sequence is recorded in `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`. Current
+implementation authority is Rails-only through
+`ops/docs/plans/EXPO_OAUTH_NATIVE_RAILS_CONTRACT_PLAN.md` and Control A. The
+dependent `ops/docs/plans/EXPO_OAUTH_NATIVE_CLIENT_PLAN.md` is not dispatch
+authority until Planning accepts the exact Rails contract commit. Provider
+registration plus EAS-cloud development-client/device validation remains a
+later separately planned gate. No shared package, provider action, native
+build, deployment, release, or push is authorized.
 
 ## Current Authorized Documentation Housekeeping
 
