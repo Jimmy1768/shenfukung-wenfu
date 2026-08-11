@@ -52,6 +52,9 @@ module.exports = () => {
         }]
       ],
       extra: {
+        eas: {
+          projectId: 'c7b8523a-2fad-4123-bc96-0c0c85a23dec'
+        },
         // Dummy is network-free by default. Real mode is an intentional local/test
         // selection and is invalid without both values; neither is a secret.
         clientMode: process.env.TEMPLEMATE_CLIENT_MODE === 'real' ? 'real' : 'dummy',
