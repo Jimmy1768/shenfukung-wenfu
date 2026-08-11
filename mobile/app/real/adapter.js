@@ -1,6 +1,6 @@
 const { storageScope } = require('../core/storage_scope');
 const { createScopedStorage } = require('./storage');
-const { nativeError, snapshotFromBootstrap, mapDependent, mapRegistration, nameFor } = require('./response');
+const { nativeError, snapshotFromBootstrap, mapDependent, mapRegistration, nameFor, collectionFrom } = require('./response');
 
 const nativePath = '/api/v1/account/native';
 const query = (path, tenantSlug) => `${path}${path.includes('?') ? '&' : '?'}temple_slug=${encodeURIComponent(tenantSlug)}`;
@@ -43,9 +43,19 @@ function createRealAdapter({ config, store, transport, device = { device_id: 'lo
     async createRegistration(input) { const payload = await request('POST', '/registrations', { offering: input.offering, account_action: input.accountAction, registration: input.registration || { contact_name: input.registrantName } }); return updateState('registrations', [mapRegistration(payload.registration), ...state.registrations]); },
     editRegistration: id => request('GET', `/registrations/${id}/edit`),
     async updateRegistration(id, input) { const registration = input.registration || { contact_name: input.registrantName }; const payload = await request('PATCH', `/registrations/${id}`, { registration }); return updateState('registrations', state.registrations.map(item => item.id === String(id) ? mapRegistration(payload.registration) : item)); },
-    events: () => request('GET', '/events'), services: () => request('GET', '/services'), galleries: () => request('GET', '/galleries'), gallery: id => request('GET', `/galleries/${id}`), certificates: () => request('GET', '/certificates'),
+    async events() { const payload = await request('GET', '/events'); return updateState('events', collectionFrom(payload, 'events')); },
+    async services() { const payload = await request('GET', '/services'); return updateState('services', collectionFrom(payload, 'services')); },
+    async galleries() { const payload = await request('GET', '/galleries'); return updateState('gallery', collectionFrom(payload, 'galleries')); },
+    gallery: id => request('GET', `/galleries/${id}`),
+    async certificates() { const payload = await request('GET', '/certificates'); return updateState('certificates', collectionFrom(payload, 'certificates')); },
+    async loadCollections() {
+      await Promise.all([this.listDependents(), this.listRegistrations(), this.events(), this.services(), this.galleries(), this.certificates()]);
+      return state;
+    },
     submitAssistance: input => request('POST', '/assistance', { assistance: input }), contactTemple: input => request('POST', '/contact', { contact: input }),
-    preferences: () => request('GET', '/preferences'), updatePreferences: input => request('PATCH', '/preferences', { preferences: input }), privacy: () => request('GET', '/privacy'),
+    preferences: () => request('GET', '/preferences'),
+    async updatePreferences(input) { const payload = await request('PATCH', '/preferences', { preferences: input }); return updateState('preferences', payload.preferences || input); },
+    privacy: () => request('GET', '/privacy'),
     requestPrivacy: input => request('POST', `/privacy/${input.kind === 'export' ? 'data_export' : 'data_deletion'}`),
     async closeAccount() { await request('POST', '/privacy/close'); session = null; await scoped.clearAll(); }
   };

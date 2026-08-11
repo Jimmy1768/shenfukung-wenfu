@@ -37,4 +37,5 @@ function snapshotFromBootstrap(payload = {}) {
     preferences: payload.preferences || {}, temple: payload.temple || null
   };
 }
-module.exports = { nativeError, snapshotFromBootstrap, mapDependent, mapRegistration, nameFor };
+const collectionFrom = (payload, name) => payload?.[name] || [];
+module.exports = { nativeError, snapshotFromBootstrap, mapDependent, mapRegistration, nameFor, collectionFrom };

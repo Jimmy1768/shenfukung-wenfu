@@ -80,3 +80,22 @@ test('real transport errors are surfaced and never return fixture data', async (
   await assert.rejects(adapter.signIn({ email: user.email, password: 'bad' }), { code: 'invalid_credentials' });
   assert.equal(adapter.snapshot().profile.email, '');
 });
+
+test('real startup restoration loads every accepted collection and registration forms use the Rails identifiers', async () => {
+  const calls = []; const local = store();
+  const adapter = createRealAdapter({ config, store: local, transport: fixtureTransport(calls) });
+  await adapter.signIn({ email: user.email, password: 'test-password' });
+  const restored = createRealAdapter({ config, store: local, transport: fixtureTransport(calls) });
+  const bootstrap = await restored.restoreSession();
+  assert.equal(bootstrap.profile.email, user.email);
+  const loaded = await restored.loadCollections();
+  assert.deepEqual(loaded.dependents, [{ id: '4', name: '家屬', relationship: '家人' }]);
+  for (const path of ['/dependents', '/registrations', '/events', '/services', '/galleries', '/certificates']) assert.ok(calls.some(call => call.url.includes(`${path}?`)), path);
+  await restored.newRegistration({ offering: 'prayer', accountAction: 'event' });
+  await restored.createRegistration({ offering: 'prayer', accountAction: 'event', registration: { quantity: 1, contact_name: '林小安' } });
+  await restored.updateRegistration(9, { registration: { contact_name: '新名字' } });
+  const create = calls.find(call => call.method === 'POST' && call.url.includes('/registrations?'));
+  assert.deepEqual(JSON.parse(create.body), { offering: 'prayer', account_action: 'event', registration: { quantity: 1, contact_name: '林小安' } });
+  const update = calls.find(call => call.method === 'PATCH' && call.url.includes('/registrations/9?'));
+  assert.deepEqual(JSON.parse(update.body), { registration: { contact_name: '新名字' } });
+});

@@ -9,5 +9,10 @@ const isPaidFixtureReadOnly = registration => Boolean(registration?.readOnly);
 const dummyMode = adapter => adapter?.kind === 'dummy' && adapter?.network === 'disabled';
 const visibleTheme = dark => dark ? 'dark' : 'light';
 const visibleLocale = locale => ['zh-TW', 'en'].includes(locale) ? locale : 'zh-TW';
+const safeAccountScreen = screen => isAccountScreen(screen) ? screen : 'home';
+const mutationOutcome = async ({ action, onSuccess }) => {
+  try { const value = await action(); if (onSuccess) onSuccess(value); return { ok: true, value }; }
+  catch (error) { return { ok: false, error }; }
+};
 
-module.exports = { ACCOUNT_SCREENS, accountMenu, isAccountScreen, isPaidFixtureReadOnly, dummyMode, visibleTheme, visibleLocale };
+module.exports = { ACCOUNT_SCREENS, accountMenu, isAccountScreen, isPaidFixtureReadOnly, dummyMode, visibleTheme, visibleLocale, safeAccountScreen, mutationOutcome };

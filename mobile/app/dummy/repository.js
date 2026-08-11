@@ -5,6 +5,7 @@ const validationError = (field, message) => ({ code: 'VALIDATION', field, messag
 
 function createDummyRepository(initial = seed) {
   let state = clone(initial);
+  let credentials = { email: initial.profile.email, password: 'templemate-demo' };
   let nextDependentNumber = state.dependents.length + 1;
   let nextRegistrationNumber = state.registrations.length + 1;
   const snapshot = () => clone(state);
@@ -12,6 +13,7 @@ function createDummyRepository(initial = seed) {
     snapshot,
     reset() {
       state = clone(initial);
+      credentials = { email: initial.profile.email, password: 'templemate-demo' };
       nextDependentNumber = state.dependents.length + 1;
       nextRegistrationNumber = state.registrations.length + 1;
       return snapshot();
@@ -19,7 +21,7 @@ function createDummyRepository(initial = seed) {
     signIn({ email, password }) {
       if (!required(email)) throw validationError('email', '請輸入電子郵件');
       if (!required(password)) throw validationError('password', '請輸入密碼');
-      if (email.trim().toLowerCase() !== initial.profile.email || password !== 'templemate-demo') throw validationError('form', '示範帳號或密碼不正確');
+      if (email.trim().toLowerCase() !== credentials.email || password !== credentials.password) throw validationError('form', '示範帳號或密碼不正確');
       return snapshot();
     },
     signUp({ name, email, password }) {
@@ -28,12 +30,17 @@ function createDummyRepository(initial = seed) {
       if (!required(password) || password.length < 8) throw validationError('password', '密碼至少需要 8 個字元');
       state.profile.name = name.trim();
       state.profile.email = email.trim().toLowerCase();
+      credentials = { email: state.profile.email, password };
       state.signup = { completed: true, email: state.profile.email };
       return snapshot();
     },
     recoverPassword({ email }) {
       if (!required(email)) throw validationError('email', '請輸入電子郵件');
       state.recovery = { requested: true, email: email.trim().toLowerCase() };
+      return snapshot();
+    },
+    updatePreferences(input) {
+      state.preferences = { ...(state.preferences || {}), ...input };
       return snapshot();
     },
     updateProfile({ name }) {
