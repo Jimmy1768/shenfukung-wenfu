@@ -112,3 +112,21 @@
 - Control reviews, stages, commits, integrates accepted source/reports, and
   sends one immutable terminal directly to Planning. No intermediate Planning
   traffic. `AGENTS.md` remains excluded.
+
+## Control Review And Closeout
+
+- Conformance review: accepted. P1 proved exact target absence without a
+  write; P2 created exactly `@jimmy1768/templemate` once, then stopped at the
+  expected dynamic-config auto-write refusal. The exact returned UUID was
+  reconciled forward through the allowed dynamic config paths, never guessed
+  or retried.
+- Read-only reconciliation: P3 confirmed the exact project correspondence;
+  P4 resolved the expected linked Android development-client profile and
+  retained every accepted native/configuration invariant. No credential or
+  signing path was invoked.
+- Acceptance rationale: focused config proof, full mobile checks, safe scans,
+  temporary-materialization cleanup, status/staging evidence, and diff checks
+  satisfy the plan. The external project is intentionally retained; deletion,
+  transfer, rename, signing, and build are outside this packet.
+- Terminal disposition: `eas_project_created_and_linked`; Planning owns any
+  separately authorized signing/build continuation.

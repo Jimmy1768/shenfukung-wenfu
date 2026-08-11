@@ -24,6 +24,32 @@ Scope: one authorized creation attempt for the exact public Expo target
 project ID at `expo.extra.eas.projectId`. Development and production resolved
 public config are guarded to use the same owner and project ID.
 
-P3 project-info and P4 resolved-config reconciliation remain pending Control's
-read-only checks. This receipt contains only the project-link metadata needed
-for the next bounded reconciliation step.
+## Read-only reconciliation
+
+- `CI=1 /opt/homebrew/bin/eas project:info` resolves exactly
+  `@jimmy1768/templemate` with the same returned project ID; no other project
+  was selected or linked.
+- `CI=1 /opt/homebrew/bin/eas config --platform android --profile development
+  --json` resolves the linked internal Android development-client APK profile:
+  `TempleMate (Dev)`, `com.jimmy1768.komainu.dev`, `templemate`, API 36,
+  development client, internal distribution, APK build type, the accepted
+  camera/no-audio declaration, and
+  `templemate://oauth/complete`.
+- Both public config modes preserve the Komainu development/production
+  identifier split, dummy default, version `1.0.0`, Android code `1`, iOS
+  build `1`, local version authority, and no auto-increment.
+
+## Local checks and terminal state
+
+- `yarn test` passed 42 tests; `yarn lint` and `yarn verify` passed.
+- Focused rejected-identifier, project-ID, secret, generated-native-artifact,
+  signing-material, version, and diff checks passed.
+- Temporary dependency symlinks were removed after the protected calls; no
+  generated project, native artifact, credential, signing, provider,
+  deployment, Metro, ADB, device, or release action occurred.
+
+**Terminal classification:** `eas_project_created_and_linked`.
+
+The next smallest separately authorized phase is Android signing/build
+preflight or an EAS cloud development-client build packet. Neither is implied
+by this project creation and link.
