@@ -19,6 +19,25 @@ catalog as configuration and retains neither catalog-write authority nor a
 broad SourceGrid secret key. One shared billing backend serves every tenant;
 each tenant may use its own public frontend domain and owner/admin console.
 
+## Domain ownership and placeholder roles
+
+TempleMate platform identity and temple tenant identity have different domain
+owners:
+
+- SourceGrid may later own `templemate.com` or, if unavailable,
+  `templemateapp.com` for the TempleMate product site, privacy, help/support,
+  app connection trust, app links, and distribution-facing URLs.
+- Each temple client purchases and owns its tenant domain. The pilot's intended
+  completed-onboarding domain is `shengfukung.org.tw`; SourceGrid does not
+  purchase that `.org.tw` domain.
+- `shengfukung.com.tw` is the current development/staging placeholder. It
+  temporarily serves both logical roles, but it is neither the permanent
+  TempleMate brand domain nor the pilot's final tenant domain.
+
+Runtime configuration may use the placeholder while those domains are
+deferred. Product identity, QR/app binding, public documentation, and release
+configuration must not treat it as permanent.
+
 ## Catalog configuration
 
 The active SourceGrid account is `acct_1TFRmE7ZKypwRK7g`. These are non-secret
@@ -66,12 +85,12 @@ The shared Stripe platform-billing endpoint is:
 https://shengfukung.com.tw/api/v1/platform_billing/webhooks
 ```
 
-`shengfukung.com.tw` is a temporary backend hostname, not the TempleMate
-brand domain or a requirement for future temple domains. An unsigned probe
-returns `401`; a locally generated valid-signature probe without tenant or
-delivery metadata returns `422`. Together those results prove the deployed
+`shengfukung.com.tw` is the temporary hostname described above. An unsigned
+probe returns `401`; a locally generated valid-signature probe without tenant
+or delivery metadata returns `422`. Together those results prove the deployed
 environment, public route, and signature verification, while safely refusing
-an event that cannot belong to a tenant.
+an event that cannot belong to a tenant. They do not establish a permanent
+TempleMate or client-owned domain.
 
 The endpoint accepts only these platform events:
 

@@ -40,6 +40,32 @@ mobile client to guess contracts and would violate the parity-only direction.
 This scan intentionally leaves many gaps open. It does not authorize code,
 schema, dependency, native-project, provider, runtime, build, or release work.
 
+## Accepted Domain And Temple-Binding Clarification
+
+The TempleMate product and each temple tenant have separate permanent domain
+ownership:
+
+- SourceGrid will later select and own `templemate.com` or, if unavailable,
+  `templemateapp.com` for TempleMate product, privacy, help/support,
+  connection-trust, app-link, and distribution-facing URLs.
+- Each temple client purchases and owns its own tenant domain. The pilot's
+  intended completed-onboarding domain is `shengfukung.org.tw`; SourceGrid does
+  not purchase that `.org.tw` domain.
+- `shengfukung.com.tw` is the current development/staging placeholder for both
+  logical roles. It is not TempleMate product identity and is not the pilot's
+  final client-owned domain.
+
+The accepted native direction is one active temple at a time, connected by a
+validated QR code or equivalent tappable link. Expo does not copy the web
+temple-directory fallback into normal app navigation. A tenant site can derive
+its non-secret QR/link payload from its current HTTPS origin and a fixed path,
+so no QR database record is required. Real binding still needs a trusted-origin
+contract, tenant confirmation through `/api/v1/temple`, local persistence, and
+safe switching cleanup before authentication can use it.
+
+This clarification does not add camera, networking, or live temple binding to
+the accepted dummy-data development-client objective.
+
 ## Binding Product Direction
 
 The following criteria are frozen for any later implementation packet:
@@ -102,7 +128,7 @@ Evidence was classified as:
 | --- | --- | --- |
 | Expo runtime | `mobile/package.json` uses Expo `~54.0.25`, React Native `0.81.5`, React `19.1.0` | Implemented dependency scaffold; execution unverified |
 | App/config entry | `mobile/App.js`, `mobile/index.js`, `mobile/app.config.js`, `mobile/metro.config.js` | Scaffolded |
-| Environment mapping | `shared/app_constants/env.json` and `mobile/app/lib/app_constants/env.js` | Scaffolded; URLs not probed |
+| Environment mapping | `shared/app_constants/env.json` and `mobile/app/lib/app_constants/env.js` | Scaffolded for build-time selection; production is currently hardcoded to the placeholder `https://shengfukung.com.tw`, not runtime tenant binding |
 | Project identity | `shared/app_constants/project.json` and mobile project helper | Scaffolded; launcher naming conflates the `TempleMate` product with the `竹南鎮聖福宮` test tenant, and native identifiers need correction/review |
 | Design system | shared themes plus `mobile/theme/tokens.js` and login styles | Reusable, not account-screen complete |
 | Artwork | app, adaptive, development, splash, favicon assets | Present; store suitability unverified |
@@ -118,6 +144,9 @@ Evidence was classified as:
   `shared/app_constants/project.json`. The app product is `TempleMate`; the
   SourceGrid-style visible development variant is `TempleMate (Dev)`, not
   `竹南鎮聖福宮 (Dev)`.
+- `shared/app_constants/env.json` treats `https://shengfukung.com.tw` as the
+  production mobile API origin. That is temporary staging configuration, not a
+  permanent TempleMate platform or tenant-origin decision.
 - It displays seeded admin credentials, offers an admin quick action, and only
   logs an OAuth stub.
 - `mobile/app.config.js` names login/refresh settings as admin settings and
@@ -148,7 +177,7 @@ found at the scanned base, not what a future endpoint must be named.
 
 | Account behavior | Web account evidence | Account JSON API now | Expo readiness / gap |
 | --- | --- | --- | --- |
-| Choose temple context | `/account/temples`; session-held active temple slug | No native bootstrap/selection contract | Missing. The mobile contract must preserve server-validated temple scope without inventing an admin temple selector. |
+| Choose temple context | `/account/temples`; session-held active temple slug | No native bootstrap/selection contract | Missing. Accepted native direction is one validated QR/direct-link-bound temple at a time, not the web directory. Runtime origin trust, confirmation, persistence, switching cleanup, and failure behavior remain undefined. |
 | Email/password sign in and sign out | `Account::SessionsController`, login form, account session key | No mobile session endpoint | Blocker. Placeholder client routes do not exist. |
 | Google/Apple sign in where configured | Central OAuth browser flow and account login/signup links | No native start/callback/session exchange contract | Missing. Exact native browser/deep-link contract requires an explicit decision. |
 | Email signup | `Account::SignupsController` and `Account::RegistrationForm` | No JSON endpoint | Missing, including duplicate-provider guidance, minimum password, terms metadata, errors, and post-sign-in intent. |
@@ -325,6 +354,17 @@ Wenfu compatibility, not be downgraded to match the example.
 ### Client architecture and quality gaps
 
 - No account navigation map or deep-link allowlist exists.
+- No runtime tenant-origin store or one-temple binding state machine exists.
+- No trusted TempleMate domain registry, signed connection document, or other
+  accepted mechanism prevents a malicious QR code from redirecting account
+  credentials to an arbitrary HTTPS origin.
+- No QR scanner/camera dependency, permission policy, denial state, or physical
+  device acceptance exists. A same-device tappable connection link is also
+  unplanned.
+- The web picker redirects missing context to `/account/temples`, but
+  `TempleContextResolver` can fall back to the first database temple for an
+  unresolved slug. That behavior must not be copied as a native fail-open
+  tenant contract.
 - No startup/auth recovery state machine exists in Wenfu.
 - No account API client, normalized error model, refresh single-flight, or
   mutation guard exists.
@@ -355,6 +395,13 @@ Wenfu compatibility, not be downgraded to match the example.
 - Deep-link association files, universal/app links, store records, signing,
   privacy manifests, screenshots, review credentials, and release rollback are
   unplanned or unverified.
+- The SourceGrid-owned TempleMate platform domain is not selected or purchased;
+  the pilot's client-owned `shengfukung.org.tw` domain is also pending. The
+  current `shengfukung.com.tw` hostname temporarily represents both roles and
+  must not be embedded as a permanent distribution assumption.
+- Stable public TempleMate privacy, help/support, connection-trust, and
+  store-facing URLs do not yet exist. Their exact Apple/Google requirements
+  must be reverified at release planning time.
 - Builds, provider setup, OTA publishing, store submission, and release remain
   separately authorized work.
 
@@ -524,8 +571,9 @@ Exact commands and tools remain Control-owned implementation-packet details.
 1. The exact native access/refresh/session contract and its compatibility with
    browser account sessions.
 2. Whether the minimal bootstrap is one resource or composed requests.
-3. How account temple selection and registration entry intent are represented
-   without importing admin multi-temple behavior.
+3. The exact QR/direct-link payload, trusted-origin document, refresh/failure
+   behavior, local storage, and prior-tenant cleanup contract for the accepted
+   one-temple-at-a-time binding model.
 4. The native OAuth and password-reset browser/deep-link return contract.
 5. The registration checkout browser/deep-link return contract.
 6. Whether certificates and completed privacy exports need native

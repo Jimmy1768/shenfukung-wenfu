@@ -113,6 +113,14 @@ These criteria are immutable for V1 planning:
     a later release artifact must prove it again under separate authority.
 11. Production, providers, secrets, EAS cloud actions, store submission, and
     release promotion remain separately authorized.
+12. TempleMate is one platform app. A temple name or domain is tenant context,
+    not app identity.
+13. The native product binds to one temple at a time. It does not copy the web
+    temple-directory fallback into its normal app navigation.
+14. QR/direct-link temple binding must use a validated tenant origin and must
+    never carry a user identifier, credential, session, or bearer token.
+15. The dummy-data development client does not add camera, network binding, or
+    live domain behavior; those remain later selected product slices.
 
 ## Plan Relationship And Supersession
 
@@ -149,6 +157,72 @@ inside the account experience. Admin-oriented demo copy, credentials,
 identifiers, storage keys, nonexistent auth routes, and unresolved
 config-plugin behavior remain cleanup items when an implementation slice is
 authorized.
+
+## Domain Ownership And Temporary Dual Role
+
+The accepted domain model has two permanent roles:
+
+| Role | Permanent owner | Intended domain | Purpose |
+| --- | --- | --- | --- |
+| TempleMate platform | SourceGrid | `templemate.com` or, if unavailable, `templemateapp.com` | TempleMate product site, privacy policy, help/support, app connection trust, app links, and distribution-facing URLs |
+| Temple tenant | The temple client | For the pilot, `shengfukung.org.tw` | That temple's Vue site, account surface, and tenant-local API origin |
+
+`shengfukung.com.tw` is a temporary development/staging hostname. Until the two
+permanent domains exist, it stands in for both logical roles. This temporary
+overloading is configuration and deployment evidence only. It must not become
+TempleMate product identity, a permanent tenant domain, or a hardcoded release
+assumption.
+
+The standard ownership boundary is that each temple client purchases and owns
+its own public domain. SourceGrid does not purchase the pilot's `.org.tw`
+domain. SourceGrid may later purchase the separate TempleMate platform domain
+when app distribution requires stable public product, privacy, help/support,
+connection-trust, and store-facing URLs.
+
+The availability of either TempleMate platform-domain candidate is not
+verified by this plan, and no domain search or purchase is authorized.
+
+The dummy-data development client does not require either purchase. Before
+distribution planning can complete, the exact TempleMate platform domain must
+be selected and its required public documents and connection endpoints must be
+live. Exact Apple and Google submission requirements are reverified at that
+later release gate rather than inferred now.
+
+## One-Temple Native Binding Direction
+
+TempleMate is scoped to one active temple at a time. This matches the expected
+patron relationship more closely than a global in-app temple browser and keeps
+rare switching explicit.
+
+- An unbound app asks the user to connect to their temple.
+- A temple site may present a QR code and an equivalent tappable connection
+  link. The link is required because a user cannot scan a QR code displayed on
+  the same phone.
+- The QR/link payload is derived from the current tenant HTTPS origin plus a
+  fixed TempleMate connection path. It contains no user-specific or secret
+  value.
+- The same Vue/account implementation can generate the payload from the
+  current origin for every tenant; no per-temple QR database record is needed.
+- TempleMate accepts a binding only after validating the origin through a
+  trusted TempleMate mechanism and confirming tenant identity from the
+  tenant-local `/api/v1/temple` endpoint.
+- A database-free trust registry may be generated from the existing deployment
+  manifest and later served from the SourceGrid-owned TempleMate platform
+  domain. The exact trust document, refresh/failure behavior, and whether
+  signing is required need acceptance before real authentication can use a
+  scanned origin.
+- Rare switching belongs in account settings. It requires a new scan/link,
+  explicit confirmation, cleanup of all prior tenant-scoped session/cache
+  state, and reauthentication where required.
+
+The current web fallback remains distinct: `/account/temples` is an
+unauthenticated Rails picker sourced from the checked-in deployment manifest.
+Expo does not copy that directory merely because it exists on web.
+
+Current scaffold gaps are explicit: the production mobile API origin is
+currently build-time configured as `https://shengfukung.com.tw`, no runtime
+validated tenant-origin store exists, and no camera/scanner dependency is
+installed. None of those gaps alters the First Objective's dummy-only scope.
 
 ### Android API 36 disposition
 
@@ -194,7 +268,7 @@ the sole accepted precursor to this gate.
 | Essential reads | Which existing web/public data is required? |
 | Essential writes | Which existing web-authorized mutations, if any, are required? |
 | Identity need | Is personalized data required? If yes, what minimum accepted login/session path supports it? |
-| Temple context | How is the relevant account temple selected or known? |
+| Temple context | How does one-temple QR/direct-link binding validate and persist the tenant origin, and how does rare switching clear prior tenant state? |
 | Provider need | Does the primary job actually require OAuth, payment, camera, push, or another provider? |
 | Connectivity | Is online-only acceptable for V1? What failure/retry state is required? |
 | Languages | Which existing account locales must ship? |
@@ -336,7 +410,7 @@ product-scope claim follows.
 Exit: one implementable V1 journey exists; no screen or endpoint is included
 without a direct role in that journey.
 
-### V1-2 — Minimum server contract
+### Minimum server contract
 
 - Define and implement only the APIs required by the accepted V1 journey.
 - Reuse existing Rails forms, services, policies, serializers, and public
@@ -349,7 +423,7 @@ without a direct role in that journey.
 Exit: fixtures/request tests give the client stable selected-slice contracts;
 unselected account APIs remain deferred.
 
-### V1-3 — Native foundation for the selected journey
+### Native foundation for the selected journey
 
 - Replace the placeholder with the smallest navigation and state structure
   needed by V1.
@@ -361,7 +435,7 @@ unselected account APIs remain deferred.
 
 Exit: the shell has no admin surface and no unused product navigation.
 
-### V1-4 — Primary journey implementation
+### Primary journey implementation
 
 - Implement the accepted end-to-end account-user job.
 - Match selected web behavior and server-owned rules.
@@ -370,7 +444,7 @@ Exit: the shell has no admin surface and no unused product navigation.
 
 Exit: the success outcome and explicitly accepted failure cases pass locally.
 
-### V1-5 — V1 conformance and Android 16 runtime gate
+### V1 conformance and Android 16 runtime gate
 
 - Run selected Rails and mobile checks.
 - Exercise the journey on an Android 16 / API 36 emulator or device.
@@ -382,11 +456,13 @@ Exit: the success outcome and explicitly accepted failure cases pass locally.
 Exit: local source and runtime evidence support a V1 candidate. No store or
 production claim follows.
 
-### V1-6 — Separate candidate and release planning
+### Separate candidate and release planning
 
-- Define exact version/build identity, signing owner, EAS profile, API origin,
-  artifact inspection, store metadata/privacy obligations, test track,
-  monitoring, rollback, and submission approval.
+- Define exact version/build identity, signing owner, EAS profile, runtime
+  tenant-origin trust, selected TempleMate platform domain, pilot client-owned
+  domain, artifact inspection, public privacy/help/support URLs, store
+  metadata/privacy obligations, app links, test track, monitoring, rollback,
+  and submission approval.
 - Build and inspect an AAB proving target SDK 36 only under that later
   authorized release packet.
 
@@ -447,14 +523,18 @@ Product Scope Gate records the selected scope card:
 5. Dual-role users remain account-scoped server-side.
 6. Authentication, CRUD, OAuth, and payment are implemented only to the extent
    accepted by the V1 scope card.
-7. No credentials or provider secrets appear in source, public config, logs,
+7. Temple context is one active validated tenant origin at a time; switching
+   cannot retain or disclose the prior tenant's session or cached data.
+8. No QR/direct-link payload contains a user identifier, credential, session,
+   bearer token, or other secret.
+9. No credentials or provider secrets appear in source, public config, logs,
    fixtures, or screenshots.
-8. Required loading/error/retry/interruption states for the selected journey
+10. Required loading/error/retry/interruption states for the selected journey
    are tested.
-9. Generated Android configuration and the later release artifact each prove
+11. Generated Android configuration and the later release artifact each prove
    target SDK 36; the V1 journey is exercised on Android 16.
-10. Required checks pass with exact evidence and final Git state is clean.
-11. Local acceptance does not authorize deployment, providers, EAS cloud
+12. Required checks pass with exact evidence and final Git state is clean.
+13. Local acceptance does not authorize deployment, providers, EAS cloud
     actions, store submission, production data, or release promotion.
 
 ## Explicitly Deferred Until The Product Scope Gate Selects Them
@@ -468,6 +548,7 @@ Product Scope Gate records the selected scope card:
 - account closure, deletion/export requests, and their store-policy effects;
 - push notifications, background work, broad offline caching, analytics,
   camera, media upload, sharing, gamification, IAP, and subscriptions;
+- a global in-app temple directory or casual temple switcher;
 - admin/internal/operations features;
 - EAS production/store builds, signing, provider configuration, store
   records/submission, OTA, deployment, and production actions. Any EAS cloud

@@ -54,6 +54,24 @@ Use this when you need representative data locally or on staging:
 
 Use this workflow whenever you onboard a new temple slug.
 
+### Domain ownership
+
+- Each temple client purchases and owns its own public tenant domain. SourceGrid
+  configures the accepted deployment target after the client provides or
+  delegates the required DNS access; SourceGrid does not purchase a client's
+  restricted domain on the client's behalf.
+- For the pilot, the completed-onboarding tenant domain is intended to be
+  `shengfukung.org.tw`, pending client purchase.
+- The separate TempleMate platform domain will be SourceGrid-owned. The current
+  candidates are `templemate.com` and, if unavailable, `templemateapp.com`.
+- `shengfukung.com.tw` is temporary development/staging infrastructure and may
+  stand in for both roles before distribution. Never copy it into onboarding
+  material as a permanent TempleMate or tenant-domain requirement.
+- Update the deployment manifest `public_url`, DNS/TLS configuration, smoke
+  target, and tenant-facing links when the client-owned domain is ready. A
+  tenant-domain cutover does not choose or replace the TempleMate platform
+  domain.
+
 1. Copy values from `ops/env/template.temple.env` into the target env file and fill real values (API keys, origins, payment provider credentials):
    - local: `.env.development`
    - production: `/etc/default/<slug>-env`
