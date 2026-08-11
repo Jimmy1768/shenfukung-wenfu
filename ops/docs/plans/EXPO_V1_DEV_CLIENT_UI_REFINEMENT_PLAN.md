@@ -50,11 +50,9 @@ features, redesign Rails behavior, add admin functions, or begin release work.
   authority.
 - Pixel 8 serial `39011FDJH00FQ8` has the earlier
   `tw.com.templemate.dev` development client, version `1.0.0`, version code
-  `1`, target SDK 36 installed. The Director rejected that Taiwan-prefixed
-  identifier because TempleMate is a SourceGrid product and SourceGrid is a
-  Singapore company. The installed binary may remain as historical UI-runtime
-  evidence, but its identifier is not accepted product or future-build
-  authority.
+  `1`, target SDK 36 installed. The Director rejected that identifier. The
+  installed binary may remain as historical UI-runtime evidence, but its
+  identifier is not accepted product or future-build authority.
 - Control B's isolated candidate branch
   `codex/expo-v1-dev-client-ui-refinement` contains the UI refinement and
   pinned project-local `expo-doctor@1.20.1`; its direct immutable terminal
@@ -94,24 +92,18 @@ TempleMate adopts the same boundary:
 - after installation, any local APK and generated native build directory are
   deleted unless the Director explicitly requests retention.
 
-## Native Application Identifier Authority — Director Amendment
+## Native Application Identifier — Director Decision
 
-SourceGrid's existing mobile project authority uses the owned
-`sourcegridlabs.com` reverse-domain prefix `com.sourcegridlabs`. TempleMate
-therefore uses product-owned identifiers, independent of any temple tenant or
-tenant country:
+The internal project name is `komainu`; the public app name remains
+`TempleMate`. Following the established DojoMate project-name convention and
+the lowercase convention for new projects, the exact identifiers are:
 
-- production iOS bundle identifier and Android application ID:
-  `com.sourcegridlabs.templemate`;
-- development-client iOS bundle identifier and Android application ID:
-  `com.sourcegridlabs.templemate.dev`.
+- production: `com.jimmy1768.komainu`;
+- development client: `com.jimmy1768.komainu.dev`.
 
-No `tw.*`, `shengfukung.*`, temple-domain, or tenant-name identifier is
-accepted. The application config and its source/config tests must express the
-development/production split deterministically. This source correction does
-not authorize building, installing, or replacing a native binary during this
-plans/roadmap run. The currently installed legacy-ID development client is not
-release evidence.
+Both iOS and Android use the same environment-specific value. No other
+identifier is accepted. This source correction does not authorize a native
+build or device action.
 
 ## Control Ownership
 
@@ -269,10 +261,9 @@ Control records exact commands and results for:
   presentation/state tests added by this phase;
 - current public Expo development config confirming `TempleMate (Dev)`, Expo
   54, version `1.0.0`, Android/iOS build values `1`, development-client plugin,
-  target/compile SDK 36, and development identifier
-  `com.sourcegridlabs.templemate.dev`;
-- current public Expo production config confirming product identifier
-  `com.sourcegridlabs.templemate`, without building a production artifact;
+  target/compile SDK 36, and `com.jimmy1768.komainu.dev`;
+- current public Expo production config confirming
+  `com.jimmy1768.komainu`, without building a production artifact;
 - installed package identity/version and exact ADB launch target; no native
   build evidence is required when the compatible installed client is reused;
 - Metro connection plus completion of the required dummy journey;
@@ -312,10 +303,9 @@ phase.
    run passes.
 10. TempleMate remains `1.0.0`; Android version code and iOS build number remain
     `1`; no AAB/store build number is consumed; API 36 checks remain green.
-11. Development and production config use
-    `com.sourcegridlabs.templemate.dev` and
-    `com.sourcegridlabs.templemate`, respectively; no tenant or country prefix
-    remains in active mobile source.
+11. Development config uses `com.jimmy1768.komainu.dev`; production config
+    uses `com.jimmy1768.komainu`; no rejected identifier remains in active
+    mobile source.
 12. Required automated and device checks pass with attributable evidence, and
     final Git state is clean with staging empty.
 
@@ -350,6 +340,5 @@ tenant-domain, OAuth, payment, release, or store work.
 
 Current classification: `expo_v1_dev_client_ui_refinement_terminal_pending`.
 
-First blocker: Control B must apply the source-only identifier correction
-without a native build, then deliver its immutable terminal packet directly to
-Planning under the amended build policy.
+First blocker: none. Planning must commit this exact identifier decision and
+send the source-only correction to Control B.

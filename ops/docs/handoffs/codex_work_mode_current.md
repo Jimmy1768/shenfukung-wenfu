@@ -78,13 +78,12 @@ verified. No EAS build is authorized or running. Live API, real tenant
 QR/camera, OAuth, payment, AAB/store/release, deployment, production, and push
 remain excluded.
 
-The Director also rejected the legacy `tw.com.templemate.dev` identifier.
-SourceGrid's established `com.sourcegridlabs` reverse-domain authority now
-defines `com.sourcegridlabs.templemate` for production and
-`com.sourcegridlabs.templemate.dev` for the development client. The legacy-ID
-client may remain installed as historical UI evidence, but no future native
-build may use it. Control B must make the config/test correction without a
-native build before direct terminal delivery.
+The internal project name is `komainu`; the public app name remains
+`TempleMate`. The accepted native identifiers are
+`com.jimmy1768.komainu` for production and
+`com.jimmy1768.komainu.dev` for development on both platforms. Control B owns
+the source/config/test correction and local integration. No native build or
+device action is authorized.
 
 ## Current Authorized Documentation Housekeeping
 

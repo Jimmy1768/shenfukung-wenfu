@@ -191,14 +191,11 @@ connection-trust, and store-facing URLs.
 The availability of either TempleMate platform-domain candidate is not
 verified by this plan, and no domain search or purchase is authorized.
 
-Native application identifiers belong to SourceGrid and never to a temple
-tenant or the tenant's country. SourceGrid's existing mobile authority uses
-the owned `sourcegridlabs.com` reverse-domain prefix `com.sourcegridlabs`.
-TempleMate production therefore uses `com.sourcegridlabs.templemate`; the
-separately installable development client uses
-`com.sourcegridlabs.templemate.dev`. The rejected `tw.com.templemate.dev`
-identifier is legacy local evidence only and must not be used for a future
-build.
+The internal project name is `komainu`; the public app name remains
+`TempleMate`. Following the established DojoMate project-name convention and
+using lowercase for new project identifiers, production uses
+`com.jimmy1768.komainu` and the development client uses
+`com.jimmy1768.komainu.dev` on both iOS and Android.
 
 The dummy-data development client does not require either purchase. Before
 distribution planning can complete, the exact TempleMate platform domain must
