@@ -57,6 +57,7 @@
 - `ops/docs/plans/EXPO_EAS_PROJECT_CREATION_AND_LINK_PLAN.md`
 - `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_BUILD_PLAN.md`
 - `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_DOWNLOAD_INSTALL_PLAN.md`
+- `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -315,6 +316,18 @@ dependent create/edit/delete and draft-registration create/edit visible
 transition evidence. It authorizes no source repair, QR scan, real API/OAuth,
 provider, payment, dependency, native rebuild, version/build increment,
 deployment, release, or push.
+
+The separate Apple OAuth account-resolution diagnosis is recorded in
+`ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
+Source and focused tests explain the observed Apple-only `OAuth User` as a
+persisted OAuth-seeded user created for a new Apple subject whose returned
+address did not match the existing Gmail/Google user. The records have no
+trustworthy local correlation and are not safe merge candidates from the
+supplied facts. Planning recommends explicit dual-proof linking, pending
+resolution for unmatched provider identities, lookup-only admin OAuth, and no
+name/email/relay heuristic. The plan awaits Director decisions and is not
+accepted for implementation or Control dispatch. No production-data,
+provider, account, deployment, or source authority is active from this record.
 
 ## Current Authorized Documentation Housekeeping
 
