@@ -53,6 +53,7 @@
 - `ops/docs/plans/EXPO_EAS_PROJECT_AND_SIGNING_PREFLIGHT_PLAN.md`
 - `ops/docs/plans/EXPO_EAS_PROJECT_CREATION_AND_LINK_PLAN.md`
 - `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_BUILD_PLAN.md`
+- `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_DOWNLOAD_INSTALL_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -160,8 +161,18 @@ received `released_terminal_idle`. Exactly one build,
 created and retained one managed development keystore without exposing private
 material. The remote APK is available, and `1.0.0 / 1 / 1` remains unchanged.
 No APK was downloaded or installed. The exact missing Director/Planning
-decision is authorization for a target-fenced APK download/install and device
+decision was authorization for a target-fenced APK download/install and device
 validation packet; provider/server real-OAuth validation remains separate.
+
+The Director explicitly authorized the target-fenced download and installation
+on Pixel 8 serial `39011FDJH00FQ8`. The current plan is
+`ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_DOWNLOAD_INSTALL_PLAN.md`
+through Control B. It permits one exact temporary application-archive download,
+APK identity inspection, one fresh install of
+`com.jimmy1768.komainu.dev`, read-only installed-package verification, and
+mandatory immediate local artifact deletion. App launch, Metro, ADB reverse,
+dummy/camera/OAuth runtime testing, another build, and release/provider/
+deployment actions remain excluded.
 
 ## Current Authorized Documentation Housekeeping
 
