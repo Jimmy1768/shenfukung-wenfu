@@ -26,6 +26,15 @@ test('presentation uses generated token authority and a wrapped native account m
   assert.match(primitives, /accessibilityRole="alert"/);
 });
 
+test('signed-out OAuth status uses the existing locale outcome dictionaries', () => {
+  const app = read('App.js');
+  const copy = read('app/ui/copy.js');
+  assert.match(app, /t\.oauthOutcome\[oauthState\.phase\] \|\| t\.oauthOutcome\.idle/);
+  assert.equal(app.includes('t.oauthState'), false);
+  assert.equal((copy.match(/\boauthOutcome:/g) || []).length, 2);
+  assert.equal(copy.includes('oauthState:'), false);
+});
+
 test('Doctor stays project-local and reports unavailable metadata checks in offline mode', () => {
   const pkg = JSON.parse(read('package.json'));
   assert.equal(pkg.devDependencies['expo-doctor'], '1.20.1');
