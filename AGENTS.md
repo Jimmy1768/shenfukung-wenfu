@@ -57,8 +57,11 @@ For TempleMate Android development-client work on a USB-connected device,
 attach Metro through the exact target-fenced ADB reverse and local
 `exp+templemate` URL method established by accepted device evidence. Never ask
 the Director to scan a Metro/Expo QR code to attach or log in to Metro. Temple
-tenant QR scanning is a separate app feature and must never be conflated with
-Metro attachment.
+tenant QR validation is a separate app feature and must be performed only
+inside TempleMate through its own `Scan demo QR` / Expo CameraView surface
+after the app bundle loads. Do not use the Expo development launcher's QR
+scanner or the Pixel's native Camera/QR scanner for that feature test, and
+never conflate it with Metro attachment.
 
 Without explicit authorization, do not push, deploy, publish, mutate external
 systems, access or rotate secrets, alter accounts, perform destructive actions,

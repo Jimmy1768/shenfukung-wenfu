@@ -73,8 +73,11 @@ repository but is not the authority for this attachment step.
 
 The Director must never be asked to scan a Metro/Expo QR code. The connected
 Pixel's USB/ADB path is authoritative. QR images used later in this plan are
-only payloads for testing TempleMate's temple-camera feature after the app has
-already attached to Metro; they are never an attachment or login mechanism.
+only temple payloads displayed on the computer after TempleMate has already
+attached to Metro. They must be read exclusively by TempleMate's own in-app
+`Scan demo QR` / Expo CameraView surface. Do not open the Expo development
+launcher's QR scanner or the Pixel's native Camera/QR scanner. The payloads are
+never an attachment or login mechanism.
 
 ## Preflight And Materialization
 
@@ -157,7 +160,9 @@ remain source-test evidence and need not be exposed through hidden controls.
 
 ## Camera And Fixture QR
 
-From an unbound signed-in home state:
+From an unbound signed-in TempleMate home state, open only TempleMate's visible
+`Scan demo QR` action. Do not leave TempleMate for the Expo development
+launcher scanner or Pixel's native Camera/QR scanner.
 
 1. Open `Scan demo QR`, deny the initial camera prompt once, and prove the
    prompt does not loop; the app must show denied state plus explicit retry.
@@ -170,11 +175,12 @@ From an unbound signed-in home state:
 5. Exercise visible switch-temple confirmation. It must not switch before
    confirmation and must switch to `示範宮廟二號` only after cleanup completes.
 
-The Director may physically point the Pixel at the QR images while Control
-observes the app result. Control does not access/record camera media or create a
-live tenant link. If physical positioning does not occur in the bounded window,
-record `physical_qr_scan_unconfirmed` without simulating success or discarding
-other completed evidence.
+The Director may physically point the Pixel, while this TempleMate in-app
+scanner remains visible, at the QR images displayed on the computer. Control
+observes only TempleMate's result. Control does not access/record camera media
+or create a live tenant link. If physical positioning does not occur in the
+bounded window, record `physical_qr_scan_unconfirmed` without substituting
+another scanner, simulating success, or discarding other completed evidence.
 
 ## No-Repair Findings Report
 

@@ -220,7 +220,9 @@ Control B. It reuses the exact previously accepted TempleMate Pixel method:
 `npx expo start --dev-client --localhost --port 8081`, and the exact local
 `exp+templemate` URL opened through target-fenced ADB on the USB-connected
 Pixel. Asking the Director to scan a Metro/Expo QR code is permanently banned;
-temple QR feature testing is separate. The packet then validates the account-only
+temple QR feature testing is separate and must use only TempleMate's in-app
+`Scan demo QR` / Expo CameraView surface, never the Expo development launcher
+scanner or Pixel native scanner. The packet then validates the account-only
 dummy surface, dummy Google/Apple native seams, camera denial/retry, untrusted
 and trusted fixture QR scans, and tenant switching on the exact Pixel. It
 records functional defects and UI-refinement gaps without repairing source.
