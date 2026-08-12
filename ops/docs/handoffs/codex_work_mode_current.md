@@ -174,6 +174,18 @@ mandatory immediate local artifact deletion. App launch, Metro, ADB reverse,
 dummy/camera/OAuth runtime testing, another build, and release/provider/
 deployment actions remain excluded.
 
+The first Control B download packet closed as
+`artifact_download_or_identity_failed` before any device mutation because its
+local zsh wrapper assigned to the reserved read-only variable `status`. It
+removed the empty temporary directory and all incidental residue; the Komainu
+development package remains absent. The still-current Director instruction is
+continued through
+`ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_DOWNLOAD_INSTALL_CONTINUATION_PLAN.md`.
+This continuation permits one direct, wrapper-free build-ID download followed
+by the unchanged APK identity fence, one fresh exact-device install, read-only
+verification, and mandatory immediate artifact cleanup. It still excludes app
+launch, Metro, runtime validation, another build, and version/build increments.
+
 ## Current Authorized Documentation Housekeeping
 
 `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md` is the
