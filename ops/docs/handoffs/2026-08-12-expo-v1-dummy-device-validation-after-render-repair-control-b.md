@@ -24,7 +24,7 @@
 
 ## Safe receipt
 
-All results are pending Control observation. Retain only aggregate check results, fenced package/device identity, visible app outcomes, first error text/source location when applicable, nonsecret UI findings, cleanup/Git state, terminal classification, continuation disposition, and next owner. Never retain credentials, raw Metro URL, QR media/payload, camera frames, provider/browser material, or broad logs.
+The result matrix is complete with the observed outcomes. Retain only aggregate check results, fenced package/device identity, visible app outcomes, first error text/source location when applicable, nonsecret UI findings, cleanup/Git state, terminal classification, continuation disposition, and next owner. Never retain credentials, raw Metro URL, QR media/payload, camera frames, provider/browser material, or broad logs.
 
 ## Control-observed result
 
@@ -120,20 +120,20 @@ All results are pending Control observation. Retain only aggregate check results
 
 ## Sanitized runtime result matrix
 
-| Gate | Required visible evidence | Initial status | Sanitized Control result |
+| Gate | Required visible evidence | Completed status | Sanitized Control result |
 | --- | --- | --- | --- |
-| Repaired signed-out gate | No former fatal render error; dummy disclosure, fixture sign-in affordances, provider buttons, and idle OAuth label visible | pending | — |
-| Dummy account smoke | Invalid sign-in rejection; fixture sign-in; account-only navigation; profile/dependent/registration flows; paid fixture remains read-only; collections, preferences, assistance/contact/privacy, reset, and sign-out | pending | — |
-| Dummy Google journey | One network-free dummy Google success reaches the account-only signed-in state and clears on sign-out | pending | — |
-| Dummy Apple journey | One network-free dummy Apple success reaches the account-only signed-in state and clears on sign-out | pending | — |
-| In-app camera entry | Only TempleMate `Scan demo QR` / CameraView opens; no Expo-launcher or native-scanner use | pending | — |
-| Camera denial/no-loop | Initial denial yields a visible denied state and explicit Retry without a repeated prompt | pending | — |
-| Camera Retry/grant | One visible Retry then grant produces rear-facing QR-only preview with no microphone/audio prompt | pending | — |
-| Untrusted fixture QR | TempleMate visibly rejects the first fixture and preserves the pre-scan binding | pending | — |
-| Trusted fixture QR | After visible Scan again, exactly one result is consumed, camera closes, and TempleMate visibly binds the trusted fixture tenant | pending | — |
-| Confirmed tenant switch | No pre-confirmation switch; visible confirmation clears prior tenant state and then switches to the second fixture tenant | pending | — |
-| UI observations | Layout, keyboard, scrolling, edge-to-edge, touch, copy, and navigation findings recorded separately without repair | pending | — |
-| Defect classification | Any first fatal/functional defect records only its visible app-scoped text plus JS-only/native/unknown assessment; downstream path stops where required | pending | — |
-| Cleanup | Packet Metro process, exact `tcp:8081` reverse, temporary dependency symlink, and ephemeral evidence removed; app retained | pending | — |
+| Repaired signed-out gate | No former fatal render error; dummy disclosure, fixture sign-in affordances, provider buttons, and idle OAuth label visible | passed | Former render error absent; all required signed-out dummy affordances and idle OAuth label were visible. |
+| Dummy account smoke | Invalid sign-in rejection; fixture sign-in; account-only navigation; profile/dependent/registration flows; paid fixture remains read-only; collections, preferences, assistance/contact/privacy, reset, and sign-out | partial / untested | Invalid and valid sign-in, account-only navigation, profile, read-only paid fixture, collections, preferences, assistance/contact/privacy, reset, and sign-out passed; dependent and registration list transitions were not reliably observable under bounded keyboard automation. |
+| Dummy Google journey | One network-free dummy Google success reaches the account-only signed-in state and clears on sign-out | failed | Visible dummy Google action returned to signed-out with `External sign-in did not complete. Start again.`; no account-only signed-in state resulted. |
+| Dummy Apple journey | One network-free dummy Apple success reaches the account-only signed-in state and clears on sign-out | failed | Visible dummy Apple action returned to signed-out with `External sign-in did not complete. Start again.`; no account-only signed-in state resulted. |
+| In-app camera entry | Only TempleMate `Scan demo QR` / CameraView opens; no Expo-launcher or native-scanner use | passed | Only TempleMate's visible in-app `Scan demo QR` / CameraView was opened; no Expo-launcher or Pixel native scanner was used. |
+| Camera denial/no-loop | Initial denial yields a visible denied state and explicit Retry without a repeated prompt | passed | First request was denied once; the visible denied/retry state remained stable without a repeat prompt. |
+| Camera Retry/grant | One visible Retry then grant produces rear-facing QR-only preview with no microphone/audio prompt | passed | Only visible Retry made the second request; grant opened the in-app camera surface with no microphone/audio prompt. |
+| Untrusted fixture QR | TempleMate visibly rejects the first fixture and preserves the pre-scan binding | untested — physical_qr_scan_unconfirmed | The untrusted fixture was not presented during the bounded in-app camera window; no scan result was consumed. |
+| Trusted fixture QR | After visible Scan again, exactly one result is consumed, camera closes, and TempleMate visibly binds the trusted fixture tenant | untested — physical_qr_scan_unconfirmed | Untested because the untrusted scan did not occur; no trusted fixture binding was attempted. |
+| Confirmed tenant switch | No pre-confirmation switch; visible confirmation clears prior tenant state and then switches to the second fixture tenant | untested — physical_qr_scan_unconfirmed | Untested because no trusted fixture binding occurred; no confirmation-only tenant switch was attempted. |
+| UI observations | Layout, keyboard, scrolling, edge-to-edge, touch, copy, and navigation findings recorded separately without repair | passed | Observed account menu, keyboard-safe forms, scroll, locale/theme changes, and edge-to-edge presentation were usable; no new UI-refinement defect is asserted. |
+| Defect classification | Any first fatal/functional defect records only its visible app-scoped text plus JS-only/native/unknown assessment; downstream path stops where required | follow-up | Dummy Google and Apple success failed with the recorded generic visible outcome; targeted package-scoped evidence did not classify the mechanism beyond unknown. The scoped CameraView child warning is a JavaScript presentation-source follow-up, not a native rebuild finding. |
+| Cleanup | Packet Metro process, exact `tcp:8081` reverse, temporary dependency symlink, and ephemeral evidence removed; app retained | passed | Metro, exact reverse, temporary symlink, and packet-created evidence were removed; no listener, reverse, symlink, or evidence directory remained; installed client retained. |
 
 The runtime report must not retain the raw local dev-client URL, fixture QR payload or image, camera media, credentials, provider/browser content, or broad device/Metro logs.
