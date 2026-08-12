@@ -23,6 +23,13 @@ module Api
 
         def exchange
           result = flow.exchange!(**exchange_params)
+          if result.account_resolution.present?
+            return render json: {
+              code: "account_resolution_required",
+              oauth: { provider: result.provider, resolution_token: result.account_resolution.token }
+            }, status: :conflict
+          end
+
           render json: {
             user: ::Account::Api::NativeAccountSerializer.user(result.user),
             session: issue_session_payload(result.user, context: native_context),
@@ -42,6 +49,8 @@ module Api
           render_error("account_closed", :unauthorized)
         rescue Auth::NativeOAuthFlow::IdentityError
           render_error("oauth_identity_invalid", :unprocessable_entity)
+        rescue Auth::NativeOAuthFlow::ResolutionUnavailable
+          render_error("account_resolution_unavailable", :service_unavailable)
         rescue Auth::NativeOAuthFlow::InvalidGrant
           render_error("invalid_oauth_grant", :unprocessable_entity)
         rescue Auth::NativeOAuthFlow::UpstreamError

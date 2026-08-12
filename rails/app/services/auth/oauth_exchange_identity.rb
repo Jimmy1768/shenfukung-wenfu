@@ -15,6 +15,7 @@ module Auth
       :provider,
       :canonical_provider,
       :profile_required,
+      :account_resolution,
       keyword_init: true
     )
 
@@ -36,15 +37,17 @@ module Auth
       "facebook" => "facebook"
     }.freeze
 
-    def self.resolve!(response:, link_user: nil, link: false, expected_provider: nil)
-      new(response:, link_user:, link:, expected_provider:).resolve!
+    def self.resolve!(response:, link_user: nil, link: false, expected_provider: nil, resolution_surface: "account", lookup_only: false)
+      new(response:, link_user:, link:, expected_provider:, resolution_surface:, lookup_only:).resolve!
     end
 
-    def initialize(response:, link_user:, link:, expected_provider:)
+    def initialize(response:, link_user:, link:, expected_provider:, resolution_surface:, lookup_only:)
       @response = response.is_a?(Hash) ? response : {}
       @link_user = link_user
       @link = link
       @expected_provider = expected_provider
+      @resolution_surface = resolution_surface
+      @lookup_only = lookup_only
     end
 
     def resolve!
@@ -58,17 +61,20 @@ module Auth
       end
 
       link_result = resolve_identity!(provider, fields)
+      return pending_result(provider, canonical_provider, fields) if link_result == :unmatched
+
       user = @link ? @link_user : link_result.user
       raise ClosedAccount, "Closed account cannot sign in" if !@link && user.closed_account?
 
-      ensure_terms_acceptance!(user, provider)
+      ensure_terms_acceptance!(user, provider) unless @lookup_only
       Result.new(
         identity: link_result.identity,
         user:,
         link_result:,
         provider:,
         canonical_provider:,
-        profile_required: profile_required?(user)
+        profile_required: profile_required?(user),
+        account_resolution: nil
       )
     end
 
@@ -88,6 +94,19 @@ module Auth
           metadata: { "central_auth" => @response }
         )
       else
+        begin
+        if @lookup_only
+          identity = OAuthIdentity.find_by(provider: provider, provider_uid: fields[:uid])
+          raise Auth::OAuthIdentityResolver::UnmatchedIdentity unless identity
+
+          return Auth::OAuthIdentityResolver::Result.new(
+            identity: identity,
+            user: identity.user,
+            created_identity: false,
+            linked_existing_user: false
+          )
+        end
+
         Auth::OAuthIdentityResolver.resolve_or_link!(
           provider:,
           uid: fields[:uid],
@@ -97,7 +116,32 @@ module Auth
           credentials: @response["credentials"] || {},
           metadata: { "central_auth" => @response }
         )
+        rescue Auth::OAuthIdentityResolver::UnmatchedIdentity
+          raise if @lookup_only
+
+          :unmatched
+        end
       end
+    end
+
+    def pending_result(provider, canonical_provider, fields)
+      resolution = Auth::OAuthAccountResolution.create!(
+        provider:,
+        uid: fields[:uid],
+        email: fields[:email],
+        name: fields[:name],
+        email_verified: fields[:email_verified],
+        surface: @resolution_surface
+      )
+      Result.new(
+        identity: nil,
+        user: nil,
+        link_result: nil,
+        provider:,
+        canonical_provider:,
+        profile_required: false,
+        account_resolution: resolution
+      )
     end
 
     def identity_fields

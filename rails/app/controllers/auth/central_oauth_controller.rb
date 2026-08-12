@@ -83,6 +83,13 @@ module Auth
 
       response = central_auth_client.exchange(params: exchange_payload, tenant_slug: central_tenant_slug(pending))
       exchange_identity = resolve_identity_from_exchange!(response, pending, account_user)
+      if exchange_identity.account_resolution.present?
+        return redirect_to(
+          account_oauth_resolution_path(token: exchange_identity.account_resolution.token, provider: exchange_identity.canonical_provider),
+          notice: "Choose how you would like to continue."
+        )
+      end
+
       identity = exchange_identity.identity
       user = exchange_identity.user
       link_result = exchange_identity.link_result
@@ -181,7 +188,9 @@ module Auth
       Auth::OAuthExchangeIdentity.resolve!(
         response:,
         link: link_intent?(pending),
-        link_user: account_user
+        link_user: account_user,
+        resolution_surface: "account",
+        lookup_only: pending["surface"].to_s == "admin"
       )
     end
 

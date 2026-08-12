@@ -1,0 +1,32 @@
+<section class="account-section">
+  <header class="section-header">
+    <div>
+      <p class="eyebrow">Sign-in method</p>
+      <h2>Continue with <%= @provider.titleize %></h2>
+      <p>Choose whether to add this sign-in method to an existing account or create a new account.</p>
+    </div>
+  </header>
+
+  <div class="dependent-grid">
+    <article class="dependent-card">
+      <div><h3>I already have an account</h3><p class="muted">Sign in to prove ownership before this method is linked.</p></div>
+      <%= form_with url: account_oauth_resolution_existing_path, method: :post do |form| %>
+        <%= hidden_field_tag :token, params[:token] %><%= hidden_field_tag :provider, params[:provider] %>
+        <%= form.email_field "account[email]", placeholder: "Email", required: true %>
+        <%= form.password_field "account[password]", placeholder: "Password", required: true %>
+        <%= form.submit "Link to my account", class: "pill-link primary" %>
+      <% end %>
+    </article>
+    <article class="dependent-card">
+      <div><h3>Create a new account</h3><p class="muted">Provide your profile and accept the terms before continuing.</p></div>
+      <%= form_with url: account_oauth_resolution_new_account_path, method: :post do |form| %>
+        <%= hidden_field_tag :token, params[:token] %><%= hidden_field_tag :provider, params[:provider] %>
+        <%= form.email_field "account[email]", placeholder: "Email", required: true %>
+        <%= form.text_field "account[name]", placeholder: "Name", required: true %>
+        <%= form.password_field "account[password]", placeholder: "Password", required: true %>
+        <label><%= check_box_tag "account[terms_accepted]", "true", false %> I accept the current terms.</label>
+        <%= form.submit "Create account", class: "pill-link primary" %>
+      <% end %>
+    </article>
+  </div>
+</section>

@@ -5,7 +5,7 @@ module Auth
 
     def callback
       auth_hash = request.env["omniauth.auth"]
-      identity = find_or_create_identity(auth_hash)
+      identity = find_identity(auth_hash)
       raise "Closed account cannot sign in" if identity.user.closed_account?
 
       establish_account_session!(identity.user)
@@ -49,7 +49,7 @@ module Auth
       session[AppConstants::Sessions.key(:account)] = user.id
     end
 
-    def find_or_create_identity(auth_hash)
+    def find_identity(auth_hash)
       provider = auth_hash["provider"].to_s
       uid = auth_hash["uid"].to_s
 
@@ -66,20 +66,7 @@ module Auth
         }
       )
 
-      ensure_terms_acceptance(result.user, provider)
       result.identity
-    end
-
-    def ensure_terms_acceptance(user, provider)
-      metadata = (user.metadata || {}).with_indifferent_access
-      updated_metadata = metadata.merge(
-        signup_source: metadata[:signup_source].presence || provider,
-        terms_version: metadata[:terms_version].presence || AppConstants::Legal.default_terms_version,
-        terms_accepted_at: metadata[:terms_accepted_at].presence || Time.current.iso8601
-      )
-      return if updated_metadata == metadata
-
-      user.update!(metadata: updated_metadata)
     end
   end
 end

@@ -169,6 +169,7 @@ module Account
 
     test "oauth sign in without usable name redirects to profile edit" do
       temple = create_temple(slug: "oauth-profile-temple")
+      Config::EntryResolver.upsert!(key: "oauth_account_resolution", value: true)
 
       Auth::CentralOAuthClient.stub(:new, FakeCentralOAuthClient.new({ "redirect_url" => "https://auth.example.test/oauth" }, nil)) do
         get central_oauth_start_path(
@@ -193,20 +194,27 @@ module Account
         get central_oauth_callback_path(code: "oauth-code", state: "oauth-state")
       end
 
-      assert_redirected_to edit_account_profile_path
+      assert_redirected_to /account\/oauth\/resolution/
       follow_redirect!
 
       assert_response :success
-      assert_includes response.body, I18n.t("account.oauth.flash.complete_profile")
-
-      user = User.find_by!(email: "apple-missing-name@example.com")
-      assert_equal user.id, session[AppConstants::Sessions.key(:account)]
-      assert_equal "OAuth User", user.english_name
+      assert_includes response.body, "I already have an account"
+      assert_nil User.find_by(email: "apple-missing-name@example.com")
+      assert_nil session[AppConstants::Sessions.key(:account)]
     end
 
     test "central OAuth callback retains the browser admin session branch through shared exchange handling" do
       temple = create_temple(slug: "oauth-shared-admin-temple")
       user = create_admin_user(temple:)
+      original_metadata = user.metadata.deep_dup
+      OAuthIdentity.create!(
+        user:,
+        provider: "google_oauth2",
+        provider_uid: "shared-admin-subject",
+        email: user.email,
+        credentials: {},
+        metadata: {}
+      )
 
       Auth::CentralOAuthClient.stub(:new, FakeCentralOAuthClient.new({ "redirect_url" => "https://auth.example.test/admin" }, nil)) do
         get central_oauth_start_path(
@@ -235,6 +243,7 @@ module Account
       assert_equal user.id, session[AppConstants::Sessions.key(:admin)]
       assert_nil session[AppConstants::Sessions.key(:account)]
       assert_equal temple.slug, session[AppConstants::Sessions.key(:admin_temple)]
+      assert_equal original_metadata, user.reload.metadata
     end
 
     test "central oauth signs in an existing user after replacing a stale verified google subject" do
