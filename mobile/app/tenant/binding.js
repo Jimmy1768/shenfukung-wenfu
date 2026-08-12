@@ -35,5 +35,6 @@ const confirmSwitch = (binding, cleanup) => {
   if (!cleanup || cleanup.clearedTenantId !== binding.tenant?.id) return { state: 'binding_failed', tenant: binding.tenant, error: 'prior_tenant_not_cleared', source: 'switch' };
   return { state: 'bound', tenant: binding.candidate, error: null, source: 'switch' };
 };
+const activePresentationTenant = binding => binding?.tenant || null;
 const fixtureConnectionLink = target => `${target.origin}${target.connectionPath}?token=fixture-token`;
-module.exports = { TRUSTED_ORIGINS, parseConnectionLink, initialBinding, bindFixture, scanFixture, beginSwitch, requestSwitch, clearPriorTenant, confirmSwitch, fixtureConnectionLink };
+module.exports = { TRUSTED_ORIGINS, parseConnectionLink, initialBinding, bindFixture, scanFixture, beginSwitch, requestSwitch, clearPriorTenant, confirmSwitch, activePresentationTenant, fixtureConnectionLink };

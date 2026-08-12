@@ -1,7 +1,7 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
 const { alternateTenant, tenant } = require('../app/dummy/fixtures');
-const { bindFixture, clearPriorTenant, confirmSwitch, fixtureConnectionLink, initialBinding, parseConnectionLink, requestSwitch, scanFixture } = require('../app/tenant/binding');
+const { activePresentationTenant, bindFixture, clearPriorTenant, confirmSwitch, fixtureConnectionLink, initialBinding, parseConnectionLink, requestSwitch, scanFixture } = require('../app/tenant/binding');
 const { storageKey, storageScope } = require('../app/core/storage_scope');
 const { createFixtureQrScanner, scanCameraPayload } = require('../app/tenant/scanner');
 
@@ -26,6 +26,19 @@ test('binding state and tenant-scoped cleanup are explicit', () => {
   const scope = storageScope({ environment: 'development', tenantId: tenant.id });
   assert.equal(storageKey(scope, 'session'), `templemate.development.${tenant.id}.session`);
   assert.notEqual(storageKey(scope, 'session'), storageKey(storageScope({ environment: 'test', tenantId: tenant.id }), 'session'));
+});
+
+test('active presentation retains only the prior bound tenant until confirmation', () => {
+  const bound = bindFixture(fixtureConnectionLink(tenant));
+  const switching = requestSwitch(bound, fixtureConnectionLink(alternateTenant));
+  const retainedFailure = confirmSwitch(switching, null);
+  assert.equal(activePresentationTenant(bound), tenant);
+  assert.equal(activePresentationTenant(switching), tenant);
+  assert.equal(activePresentationTenant(retainedFailure), tenant);
+  assert.equal(activePresentationTenant(initialBinding()), null);
+  assert.equal(activePresentationTenant(bindFixture('https://other.example.test/connect/templemate')), null);
+  assert.notEqual(activePresentationTenant(switching), alternateTenant);
+  assert.deepEqual(confirmSwitch(switching, clearPriorTenant(bound.tenant)), { state: 'bound', tenant: alternateTenant, error: null, source: 'switch' });
 });
 
 test('QR scanner interface receives deterministic fixture payloads without a network adapter', async () => {
