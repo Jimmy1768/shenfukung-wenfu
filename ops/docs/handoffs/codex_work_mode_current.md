@@ -359,17 +359,17 @@ edit and dependent draft create remain untested—not defects—because Android
 input/developer-inspector foreground behavior occurred before either save and
 later observation proved no partial mutation.
 
-The keyboard-dismissal retry report is accepted on canonical `main` at
-`638e3b0`. Exact Runtime Dependent creation passed. Control then stopped because
-the self-service contact field was nonempty while the plan required empty;
-reset/cleanup passed. Source proves this is intentional: dummy preparation
-defaults `contact_name` to canonical profile name `林小安`. The current Expo
-runtime authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_RUNTIME_KNOWN_CONTACT_DEFAULT_RETRY_PLAN.md`
-through Control B. It permits clearing only exact known `林小安` with three
-verified deletions before entering `Runtime Contact`, while retaining the
-one-Back IME lifecycle and fresh post-IME bounds. Director callbacks remain
-prohibited. No source repair, rebuild, version/build change, real API/OAuth/
+The known-contact runtime report is accepted on canonical `main` at
+`e9bf205`. Exact Runtime Dependent creation and the initial self service draft
+with authoritative `林小安`, quantity `1`, and immutable `TWD 600` passed.
+Reopen passed, but clearing quantity immediately rendered `1` again. Source
+proves a JavaScript defect: RegistrationForm uses a logical-OR default that
+replaces the intentional empty editing value. The current Expo source
+authority is
+`ops/docs/plans/EXPO_V1_REGISTRATION_QUANTITY_INPUT_REPAIR_PLAN.md` through
+Control B. It adds one pure, tested missing-versus-empty presentation helper
+and changes only the quantity FormInput consumer. No device workaround,
+Director callback, native rebuild, version/build change, real API/OAuth/
 provider, payment, QR/camera, production, deployment, release, or push is
 authorized.
 
