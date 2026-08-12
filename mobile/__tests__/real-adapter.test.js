@@ -21,14 +21,14 @@ function fixtureTransport(calls, failures = {}, overrides = {}) {
     if (path === '/oauth/start') return response({ oauth: { authorization_url: 'https://central.example.test/authorize', redirect_uri: 'templemate://oauth/complete', transaction_token: 'opaque-native-transaction', provider: JSON.parse(request.body).oauth.provider, expires_in: 300 } }, 201);
     if (path === '/oauth/exchange') return response({ user, session, oauth: { provider: 'google', profile_required: false } });
     if (path === '/refresh') return response({ session: { ...session, access_token: 'access-2', refresh_token: 'refresh-2' } });
-    if (path === '/bootstrap') return response({ user, temple: { slug: 'fixture-temple', name: 'Fixture' }, preferences: { locale: 'zh-TW' }, registrations: [{ id: 9, offering: { title: '祈福', slug: 'prayer' }, fulfillment_status: 'pending', payment_status: 'unpaid', lifecycle: 'pending', payment_state: 'unpaid' }], certificates: [{ id: 3 }] });
+    if (path === '/bootstrap') return response({ user, temple: { slug: 'fixture-temple', name: 'Fixture' }, preferences: { locale: 'zh-TW' }, registrations: [{ id: 9, offering: { id: 1, title: '祈福', slug: 'prayer', account_action: 'event', price_cents: 1200, currency: 'TWD' }, quantity: 1, total_amount_cents: 1200, fulfillment_status: 'pending', payment_status: 'unpaid', lifecycle: 'pending', payment_state: 'unpaid' }], certificates: [{ id: 3 }] });
     if (path === '/profile') return response({ user: { ...user, native_name: '新名字' } });
     if (path === '/dependents') return request.method === 'GET' ? response({ dependents: [{ id: 4, native_name: '家屬', relationship_label: '家人' }] }) : response({ dependent: { id: 5, native_name: '新家屬', relationship_label: '子女' } }, request.method === 'POST' ? 201 : 200);
     if (/^\/dependents\//.test(path)) return request.method === 'DELETE' ? response({}, 204) : response({ dependent: { id: 4, native_name: '家屬', relationship_label: '家人' } });
-    if (path === '/registrations') return request.method === 'GET' ? response({ registrations: [{ id: 9, offering: { title: '祈福', slug: 'prayer' }, fulfillment_status: 'pending', payment_status: 'unpaid', lifecycle: 'pending', payment_state: 'unpaid' }] }) : response({ registration: { id: 10, offering: { title: '超薦', slug: 'memorial' }, fulfillment_status: 'pending', payment_status: 'unpaid', lifecycle: 'pending', payment_state: 'unpaid' } }, 201);
-    if (/^\/registrations\/new/.test(path)) return response({ offering: { id: 1 }, registration: { quantity: 1 } });
-    if (/^\/registrations\/\d+\/edit/.test(path)) return response({ registration: { id: 9 } });
-    if (/^\/registrations\/\d+/.test(path)) return response({ registration: { id: 9, offering: { title: '祈福', slug: 'prayer' }, fulfillment_status: 'pending', payment_status: 'unpaid', lifecycle: 'pending', payment_state: 'unpaid' } });
+    if (path === '/registrations') return request.method === 'GET' ? response({ registrations: [{ id: 9, offering: { id: 1, title: '祈福', slug: 'prayer', account_action: 'event', price_cents: 1200, currency: 'TWD' }, quantity: 1, total_amount_cents: 1200, fulfillment_status: 'pending', payment_status: 'unpaid', lifecycle: 'pending', payment_state: 'unpaid' }] }) : response({ registration: { id: 10, offering: { id: 2, title: '超薦', slug: 'memorial', account_action: 'event', price_cents: 600, currency: 'TWD' }, quantity: 1, total_amount_cents: 600, fulfillment_status: 'pending', payment_status: 'unpaid', lifecycle: 'pending', payment_state: 'unpaid' } }, 201);
+    if (/^\/registrations\/new/.test(path)) return response({ offering: { id: 1, title: '祈福', slug: 'prayer', account_action: 'event', price_cents: 1200, currency: 'TWD' }, registration: { quantity: 1 }, registrants: [{ scope: 'self', id: 1, label: '林小安' }] });
+    if (/^\/registrations\/\d+\/edit/.test(path)) return response({ registration: { id: 9, offering: { id: 1, title: '祈福', slug: 'prayer', account_action: 'event', price_cents: 1200, currency: 'TWD' }, quantity: 1, total_amount_cents: 1200 } });
+    if (/^\/registrations\/\d+/.test(path)) return response({ registration: { id: 9, offering: { id: 1, title: '祈福', slug: 'prayer', account_action: 'event', price_cents: 1200, currency: 'TWD' }, quantity: 1, total_amount_cents: 1200, fulfillment_status: 'pending', payment_status: 'unpaid', lifecycle: 'pending', payment_state: 'unpaid' } });
     if (['/events', '/services', '/galleries', '/certificates', '/privacy', '/preferences'].includes(path)) return response({ [path.slice(1)]: [] });
     if (/^\/galleries\//.test(path)) return response({ gallery: { id: 1 } });
     return response({ accepted: true }, request.method === 'POST' ? 201 : 200);
@@ -48,7 +48,7 @@ test('real adapter maps the complete account contract and never falls back to du
   const calls = []; const local = store(); const adapter = createRealAdapter({ config, store: local, transport: fixtureTransport(calls) });
   const signedIn = await adapter.signIn({ email: user.email, password: 'test-password' });
   assert.equal(adapter.kind, 'real'); assert.equal(adapter.network, 'local-test'); assert.equal(signedIn.profile.name, '林小安');
-  assert.deepEqual(signedIn.registrations[0], { id: '9', offering: '祈福', offeringSlug: 'prayer', registrantName: '', state: 'pending', lifecycle: 'pending', paymentState: 'unpaid', readOnly: false });
+  assert.deepEqual(signedIn.registrations[0], { id: '9', offering: { id: '1', title: '祈福', slug: 'prayer', account_action: 'event', price_cents: 1200, currency: 'TWD' }, registrantName: '', registrantScope: 'self', dependentId: null, quantity: 1, totalAmountCents: 1200, state: 'pending', lifecycle: 'pending', paymentState: 'unpaid', readOnly: false });
   await adapter.signUp({ email: user.email, password: 'test-password' });
   await adapter.recoverPassword({ email: user.email }); await adapter.resetPassword({ token: 'local-reset', password: 'test-password', password_confirmation: 'test-password' });
   await adapter.refresh(); assert.equal(adapter.snapshot().profile.email, user.email);
@@ -136,7 +136,7 @@ test('real startup restoration loads every accepted collection and registration 
   const bootstrap = await restored.restoreSession();
   assert.equal(bootstrap.profile.email, user.email);
   const loaded = await restored.loadCollections();
-  assert.deepEqual(loaded.dependents, [{ id: '4', name: '家屬', relationship: '家人' }]);
+  assert.deepEqual(loaded.dependents, [{ id: '4', dependentId: '4', name: '家屬', relationship: '家人' }]);
   for (const path of ['/dependents', '/registrations', '/events', '/services', '/galleries', '/certificates']) assert.ok(calls.some(call => call.url.includes(`${path}?`)), path);
   await restored.newRegistration({ offering: 'prayer', accountAction: 'event' });
   await restored.createRegistration({ offering: 'prayer', accountAction: 'event', registration: { quantity: 1, contact_name: '林小安' } });

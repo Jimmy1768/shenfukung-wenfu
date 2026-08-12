@@ -17,12 +17,12 @@ function nativeError(status, body = {}) {
 }
 
 const nameFor = user => user?.native_name || user?.english_name || user?.email || '';
-const mapDependent = item => ({ id: String(item.id), name: item.native_name || item.english_name || '', relationship: item.relationship_label || '' });
+const mapDependent = item => ({ id: String(item.id), dependentId: item.dependent_id ? String(item.dependent_id) : String(item.id), name: item.native_name || item.english_name || '', relationship: item.relationship_label || '' });
 const mapRegistration = item => {
   const offering = item.offering || {};
   const lifecycle = item.lifecycle || item.fulfillment_status || item.status || 'pending';
   return {
-    id: String(item.id), offering: offering.title || '', offeringSlug: offering.slug || '', registrantName: item.registrant_name || '',
+    id: String(item.id), offering: { id: offering.id ? String(offering.id) : '', slug: offering.slug || '', title: offering.title || '', account_action: offering.account_action || '', price_cents: offering.price_cents ?? item.unit_price_cents ?? 0, currency: offering.currency || item.currency || '' }, registrantName: item.registrant_name || '', registrantScope: item.registrant_scope || 'self', dependentId: item.dependent_id ? String(item.dependent_id) : null, quantity: item.quantity || 1, totalAmountCents: item.total_amount_cents ?? 0,
     state: lifecycle, lifecycle, paymentState: item.payment_state || item.payment_status || null,
     readOnly: ['completed', 'fulfilled', 'cancelled'].includes(lifecycle)
   };
@@ -33,7 +33,7 @@ function snapshotFromBootstrap(payload = {}) {
     profile: { id: user.id ? String(user.id) : '', email: user.email || '', name: nameFor(user), user },
     dependents: (payload.dependents || []).map(mapDependent),
     registrations: (payload.registrations || []).map(mapRegistration),
-    certificates: payload.certificates || [], events: payload.events || [], services: payload.services || [], gallery: payload.galleries || [],
+    certificates: payload.certificates || [], events: payload.events || [], services: payload.services || [], gatherings: payload.gatherings || [], gallery: payload.galleries || [],
     preferences: payload.preferences || {}, temple: payload.temple || null
   };
 }

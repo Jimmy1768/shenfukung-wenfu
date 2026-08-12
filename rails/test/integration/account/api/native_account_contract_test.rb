@@ -118,12 +118,19 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
 
     get "/api/v1/account/native/events", params: { temple_slug: @temple.slug }, headers: bearer
     assert_response :success
-    assert_equal event.slug, response.parsed_body.fetch("events").first.fetch("slug")
+    event_payload = response.parsed_body.fetch("events").first
+    assert_equal event.slug, event_payload.fetch("slug")
+    assert_equal "event", event_payload.fetch("account_action")
+    assert_equal event.price_cents, event_payload.fetch("price_cents")
+    assert_equal event.currency, event_payload.fetch("currency")
     refute response.body.include?("guest_lists")
 
     get "/api/v1/account/native/services", params: { temple_slug: @temple.slug }, headers: bearer
     assert_response :success
-    assert_equal service.slug, response.parsed_body.fetch("services").first.fetch("slug")
+    service_payload = response.parsed_body.fetch("services").first
+    assert_equal service.slug, service_payload.fetch("slug")
+    assert_equal "service", service_payload.fetch("account_action")
+    assert_equal service.price_cents, service_payload.fetch("price_cents")
 
     get "/api/v1/account/native/galleries", params: { temple_slug: @temple.slug }, headers: bearer
     assert_response :success
@@ -150,7 +157,11 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
     }, headers: bearer
     assert_response :success
     assert_equal event.slug, response.parsed_body.dig("offering", "slug")
+    assert_equal "event", response.parsed_body.dig("offering", "account_action")
+    assert_equal event.price_cents, response.parsed_body.dig("offering", "price_cents")
+    assert_equal event.currency, response.parsed_body.dig("offering", "currency")
     assert response.parsed_body.fetch("registration").key?("quantity")
+    assert_equal "self", response.parsed_body.fetch("registrants").first.fetch("scope")
     refute response.body.include?("provider_reference")
 
     get "/api/v1/account/native/registrations/#{registration.id}/edit", params: { temple_slug: @temple.slug }, headers: bearer
@@ -158,7 +169,9 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
     contract = response.parsed_body.fetch("registration")
     assert_equal registration.reference_code, contract.fetch("reference_code")
     assert_equal registration.payment_status, contract.fetch("payment_state")
-    refute contract.key?("total_amount_cents")
+    assert_equal registration.total_price_cents, contract.fetch("total_amount_cents")
+    assert_equal registration.unit_price_cents, contract.fetch("unit_price_cents")
+    assert_equal registration.currency, contract.dig("offering", "currency")
     refute response.body.include?("checkout")
   end
 
