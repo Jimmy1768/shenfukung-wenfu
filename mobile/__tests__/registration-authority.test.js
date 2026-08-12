@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createInput, offeringCatalog, preparedRegistration, selectRegistrant, updateInput } = require('../app/account/registration_authority');
+const { createInput, offeringCatalog, preparedRegistration, quantityInputValue, selectRegistrant, updateInput } = require('../app/account/registration_authority');
 
 const snapshot = {
   profile: { id: 'account-1', name: 'Member' },
@@ -8,6 +8,17 @@ const snapshot = {
   events: [{ id: 'event-1', slug: 'blessing', title: 'Blessing', account_action: 'event', price_cents: 1200, currency: 'TWD' }],
   services: [], gatherings: []
 };
+
+test('quantity input presentation preserves an intentional empty value', () => {
+  assert.equal(quantityInputValue(undefined), '1');
+  assert.equal(quantityInputValue(null), '1');
+  assert.equal(quantityInputValue(''), '');
+  assert.equal(quantityInputValue(1), '1');
+  assert.equal(quantityInputValue('1'), '1');
+  assert.equal(quantityInputValue(2), '2');
+  assert.equal(quantityInputValue('2'), '2');
+  assert.equal(quantityInputValue(0), '0');
+});
 
 test('registration preparation owns offering, fee, and registrant choices', () => {
   const [offering] = offeringCatalog(snapshot);

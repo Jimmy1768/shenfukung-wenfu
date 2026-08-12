@@ -15,6 +15,10 @@ function cleanRegistration(input = {}) {
   }, {});
 }
 
+function quantityInputValue(value) {
+  return value === null || value === undefined ? '1' : String(value);
+}
+
 function registrantChoices({ profile, dependents = [] }, serverChoices = []) {
   if (serverChoices.length) return serverChoices.map(choice => ({ ...choice, id: String(choice.id) }));
   return [
@@ -60,4 +64,4 @@ function updateInput(prepared) {
   return { registration: cleanRegistration(prepared?.registration) };
 }
 
-module.exports = { cleanRegistration, createInput, offeringCatalog, preparedRegistration, registrantChoices, selectRegistrant, updateInput };
+module.exports = { cleanRegistration, createInput, offeringCatalog, preparedRegistration, quantityInputValue, registrantChoices, selectRegistrant, updateInput };
