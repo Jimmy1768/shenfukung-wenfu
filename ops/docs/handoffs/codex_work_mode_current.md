@@ -363,13 +363,13 @@ The foreground retry report is accepted on canonical `main` at `474834b`; its
 entry, exact Metro attachment, bundle, and normal signed-in surface passed.
 Control stopped before form mutation because canonical reset state had no
 `Runtime Dependent`, while the plan prohibited automated text and defined no
-Director callback for creating it. Cleanup passed; this is a Planning-method
-gap, not a product defect. The current Expo runtime authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_DIRECTOR_SETUP_CALLBACK_PLAN.md`
-through Control B. It adds one exact prepared-form Director callback for the
-temporary dependent name, then retains the existing self-edit and
-dependent-choice callbacks and all accepted evidence/cleanup criteria. No
-source repair, rebuild, version/build change, real API/OAuth/provider, payment,
+setup input method. The Director rejected manual callbacks and requires
+Control-owned input. The current Expo runtime authority is
+`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_CONTROL_INPUT_PLAN.md`
+through Control B. It authorizes only target-fenced, fresh-UI-verified ADB
+entry of `Runtime Dependent`, `2`, and `Runtime Contact`, plus the exact visible
+registrant and save controls. Director callbacks are prohibited. No source
+repair, rebuild, version/build change, real API/OAuth/provider, payment,
 QR/camera, production, deployment, release, or push is authorized.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
