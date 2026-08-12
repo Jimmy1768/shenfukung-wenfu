@@ -59,6 +59,7 @@
 - `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_BUILD_PLAN.md`
 - `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_DOWNLOAD_INSTALL_PLAN.md`
 - `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`
+- `ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_ROLLOUT_READINESS_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
@@ -356,6 +357,21 @@ production-data, provider, account, deployment, or historical remediation
 authority is active from this record. The exact missing owner decision is a
 Director-approved production rollout plan; historical-account remediation is a
 later distinct exact-account workflow after rollout validation.
+
+The Director requested the next OAuth phase. Planning selected rollout
+readiness before historical-account remediation and recorded the report-only
+authority in
+`ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_ROLLOUT_READINESS_PLAN.md`
+through Control A. The accepted runtime commit `82b0e52` is 110 commits ahead
+of the locally observed `release/current` baseline `99a0a69`; direct promotion
+would be a broad release. Control A must compare exact-main promotion with a
+minimal complete dependency closure, rehearse migrations locally, and return
+the proposed exact target/commit/rollback/verification/approval/monitoring
+packet. It may not contact production, move the release branch, deploy,
+migrate, restart, validate providers, change flags/accounts, or remediate the
+historical Apple-only record. The first production blocker is acceptance of an
+exact release candidate; the first remediation blocker is a safe fresh-proof
+acquisition/execution interface after rollout validation.
 
 ## Current Authorized Documentation Housekeeping
 
