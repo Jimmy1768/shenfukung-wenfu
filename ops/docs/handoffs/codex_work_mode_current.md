@@ -360,18 +360,18 @@ input/developer-inspector foreground behavior occurred before either save and
 later observation proved no partial mutation.
 
 The registration quantity JavaScript repair is complete and accepted on
-canonical `main` at `a26a48e`; Control B received
-`released_terminal_idle`. The pure tested presentation helper defaults only
-missing values to `1` and preserves intentional empty editing state; the full
-mobile suite now passes 52/52 with lint/verify. The current Expo runtime
-authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_RUNTIME_AFTER_QUANTITY_REPAIR_PLAN.md`
-through Control B. It uses the installed client plus local Metro—no rebuild—to
-prove clear/edit/reopen for the self draft, create/reopen for the dependent
-draft, paid-read-only, reset, and cleanup. Control owns all input; Director
-callbacks are prohibited. No further source repair, version/build change, real
-API/OAuth/provider, payment, QR/camera, production, deployment, release, or
-push is authorized.
+canonical `main` at `a26a48e`; its installed-client runtime validation is
+complete and accepted at `039b0fc`. On Pixel, exact quantity clear/edit,
+`Runtime Contact`, self service draft save/reopen with immutable `TWD 600`,
+Runtime Dependent blessing save/reopen with immutable `TWD 1,200`, paid
+display-only behavior, reset, and cleanup all passed. The full mobile suite is
+52/52 with lint/verify. Control B received `released_terminal_idle` and
+`active_packet: none` for Expo. The exact next decision/owner is
+Planning/Director phase selection: either authorize a separate real API/OAuth
+runtime phase after its Rails/provider deployment gates are satisfied, or
+define another explicit V1 refinement scope. Payment remains separately
+deferred. No rebuild, version/build change, provider, payment, production,
+deployment, release, or push is implied by this completion.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
