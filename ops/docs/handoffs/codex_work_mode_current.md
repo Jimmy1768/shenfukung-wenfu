@@ -359,19 +359,18 @@ edit and dependent draft create remain untested—not defects—because Android
 input/developer-inspector foreground behavior occurred before either save and
 later observation proved no partial mutation.
 
-The registration-authority evidence continuation report is accepted on
-canonical `main` at `eb41760d72be0e7b366f80587bbb3b3987156b2f`; Control B
-received `released_terminal_idle`. Entry checks passed, but the Pixel
-NotificationShade remained foreground after Metro became ready and prevented
-truthful TempleMate form setup. No callback, business mutation, or partial
-state occurred, and cleanup passed. The Director now confirms Pixel serial
-`39011FDJH00FQ8` is unlocked, NotificationShade is dismissed, and TempleMate
-is open and visible. The current Expo runtime authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_EVIDENCE_FOREGROUND_RETRY_PLAN.md`
-through Control B. It retries only self draft metadata edit and dependent draft
-create using the same two exact Director callbacks after Control prepares each
-form. No source repair, rebuild, version/build change, real API/OAuth/provider,
-payment, QR/camera, production, deployment, release, or push is authorized.
+The foreground retry report is accepted on canonical `main` at `474834b`; its
+entry, exact Metro attachment, bundle, and normal signed-in surface passed.
+Control stopped before form mutation because canonical reset state had no
+`Runtime Dependent`, while the plan prohibited automated text and defined no
+Director callback for creating it. Cleanup passed; this is a Planning-method
+gap, not a product defect. The current Expo runtime authority is
+`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_DIRECTOR_SETUP_CALLBACK_PLAN.md`
+through Control B. It adds one exact prepared-form Director callback for the
+temporary dependent name, then retains the existing self-edit and
+dependent-choice callbacks and all accepted evidence/cleanup criteria. No
+source repair, rebuild, version/build change, real API/OAuth/provider, payment,
+QR/camera, production, deployment, release, or push is authorized.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
