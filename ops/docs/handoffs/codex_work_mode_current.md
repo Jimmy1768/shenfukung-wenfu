@@ -48,6 +48,7 @@
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_RUNTIME_VALIDATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_EVIDENCE_CONTINUATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_ALIGNMENT_PLAN.md`
+- `ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_VALIDATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
@@ -338,16 +339,26 @@ as a product defect. The registration draft exposed a true product-contract
 gap: a patron could author/relabel a freeform offering instead of selecting a
 temple-defined offering with an authoritative fee, so draft edit was stopped.
 
-The current Expo source authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_ALIGNMENT_PLAN.md` through
-Control B. It copies the existing web account contract: registration begins
-from a current-temple offering in Discover, Rails supplies immutable offering
-identity/action/fee/currency and self/dependent defaults, and the patron edits
-only permitted intake/metadata fields. Dummy mode uses the same semantics with
-a deterministic admin-defined fixture catalog. Payment, checkout, admin,
-OAuth, native dependency/configuration, rebuild, version/build increment,
-device runtime, production, release, and push remain excluded. Control A
-retains the independent Rails/web OAuth rollout-readiness track.
+The Expo V1 registration-authority source phase is complete and accepted on
+canonical `main` at `92f00fd78869dfe1b2ee7d1207052bc861778a52`; Control B
+received `released_terminal_idle`. New registration now begins only from a
+current-temple offering in Discover. Rails/dummy preparation supplies immutable
+offering identity/action/fee/currency and self/owned-dependent choices; real
+requests whitelist only permitted intake/metadata fields; edit preserves
+offering/money authority; paid records remain read-only. Focused Rails/mobile
+checks passed with no dependency, native, version/build, OAuth, payment,
+provider, admin, deployment, or external change.
+
+The current Expo runtime authority is
+`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_VALIDATION_PLAN.md`
+through Control B. It reuses the installed development client and exact USB
+Metro method in dummy mode to prove Discover selection, immutable fee
+presentation, self/dependent draft create, metadata edit without offering/fee
+change or duplication, paid read-only/no payment, exact dependent create,
+reset, and cleanup. It authorizes no source repair, real API/OAuth, QR/camera,
+native rebuild, version/build increment, payment, production, deployment,
+release, or push. The separate OAuth production track remains paused pending
+the Director's Candidate B/read-only-preflight decision.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
