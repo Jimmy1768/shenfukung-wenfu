@@ -242,13 +242,23 @@ deployment, release, or push action is authorized by the repair.
 
 The signed-out copy-key repair is complete and accepted at canonical
 `1c312829da54da8fa395e56ae14552b20296e618`; Control A received
-`released_terminal_idle`. The current runtime phase is
+`released_terminal_idle`. The renewed runtime phase in
 `ops/docs/plans/EXPO_V1_DUMMY_DEVICE_VALIDATION_AFTER_RENDER_REPAIR_PLAN.md`
-through Control B. It reuses the installed binary and exact prior TempleMate
-USB/ADB Metro method, first verifies the former fatal signed-out path, then
-continues the bounded dummy account/OAuth and TempleMate in-app camera/fixture
-QR checks. No rebuild, version/build increment, real API/OAuth, provider,
-deployment, release, or push is authorized.
+is complete. Its corrected result report is accepted on canonical `main` at
+`11511d35d4fd807e4bd68c7c757c7fa206ff4529`; Control B received
+`released_terminal_idle`. The former render failure, email/account dummy paths,
+and camera permission deny/retry/grant path passed. Dummy Google and Apple each
+failed to complete with the generic fixture outcome; dependent/registration
+list transitions and physical fixture QR/binding/switch remain unconfirmed.
+
+The current source phase is
+`ops/docs/plans/EXPO_V1_DUMMY_OAUTH_SUCCESS_REPAIR_PLAN.md` through Control A.
+It diagnoses and repairs only the provider-independent, network-free dummy
+success path and closes the uncovered Expo runtime-boundary test gap. It does
+not authorize Metro/device action, real OAuth/provider/Rails work, camera/QR
+repair, dependencies, native rebuild, EAS, version/build changes, deployment,
+release, or push. After accepted integration, Planning will separately route
+renewed installed-client OAuth and in-app QR validation through Control B.
 
 ## Current Authorized Documentation Housekeeping
 
