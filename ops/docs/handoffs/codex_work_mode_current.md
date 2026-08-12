@@ -199,6 +199,19 @@ directory, exact cache-path inspection, one fresh Pixel install, and immediate
 cache/link cleanup. App launch, runtime validation, another build, source or
 dependency change, and version/build increments remain excluded.
 
+The source-backed download/install packet is complete and accepted on
+canonical `main` at `d7349a1465fff25ad093f292700e3b98cf09ba11`;
+Control B received `released_terminal_idle`. Exact EAS build
+`ca45b77c-cb45-458c-a298-6be449a9e396` produced the inspected Komainu
+development APK, and exactly one ordinary install succeeded on Pixel 8 serial
+`39011FDJH00FQ8`. Independent Planning verification confirms installed package
+`com.jimmy1768.komainu.dev`, version `1.0.0`, Android code `1`, target SDK 36,
+and `.MainActivity` launcher resolution. The app was not launched. The exact
+cached APK and temporary dependency symlink were deleted; no local artifact or
+source residue remains. A later dummy-mode launch/fixture-camera validation
+phase requires separate authorization; real API/OAuth validation remains
+separately gated.
+
 ## Current Authorized Documentation Housekeeping
 
 `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md` is the
