@@ -253,12 +253,22 @@ list transitions and physical fixture QR/binding/switch remain unconfirmed.
 
 The current source phase is
 `ops/docs/plans/EXPO_V1_DUMMY_OAUTH_SUCCESS_REPAIR_PLAN.md` through Control A.
-It diagnoses and repairs only the provider-independent, network-free dummy
-success path and closes the uncovered Expo runtime-boundary test gap. It does
-not authorize Metro/device action, real OAuth/provider/Rails work, camera/QR
-repair, dependencies, native rebuild, EAS, version/build changes, deployment,
-release, or push. After accepted integration, Planning will separately route
-renewed installed-client OAuth and in-app QR validation through Control B.
+It is complete and accepted on canonical `main` at
+`a7824ce37093210c4e2d3e5b2c133ae3b12f93f4`; Control A received
+`released_terminal_idle`. Direct evidence identified the unsupported Expo
+Crypto `BASE64URL` request; the accepted JavaScript repair uses supported
+standard Base64 output and strict Base64URL conversion while preserving S256,
+real-mode behavior, dependencies, native configuration, and `1.0.0 / 1 / 1`.
+
+The current runtime phase is
+`ops/docs/plans/EXPO_V1_DUMMY_OAUTH_AND_TEMPLE_QR_RUNTIME_VALIDATION_PLAN.md`
+through Control B. It reuses the installed development client and exact USB
+Metro method to prove Google/Apple dummy success, then completes only
+TempleMate's in-app untrusted/trusted fixture QR and confirmation-only tenant
+switch. It explicitly keeps the in-app camera session open for the two required
+Director physical-pointing callbacks. No rebuild, source change, real OAuth,
+provider/Rails action, dependency, version/build change, deployment, release,
+or push is authorized.
 
 ## Current Authorized Documentation Housekeeping
 
