@@ -359,17 +359,19 @@ edit and dependent draft create remain untested—not defects—because Android
 input/developer-inspector foreground behavior occurred before either save and
 later observation proved no partial mutation.
 
-The current Expo runtime authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_EVIDENCE_CONTINUATION_PLAN.md`
-through Control B. It reuses accepted setup and requires two exact Director
-physical-input callbacks only after Control prepares the relevant TempleMate
-forms. The Director enters quantity/contact fields or selects the dependent;
-Control verifies exact pre-save state, performs each save, reopens and verifies
-immutable offering/fee and no duplicates, then resets and cleans up. No source
-repair, ADB text substitution, rebuild, version/build increment, real API,
-OAuth/provider, payment, QR/camera, production, deployment, release, or push is
-authorized. The separate OAuth production track remains paused pending the
-Director's Candidate B/read-only-preflight decision.
+The registration-authority evidence continuation report is accepted on
+canonical `main` at `eb41760d72be0e7b366f80587bbb3b3987156b2f`; Control B
+received `released_terminal_idle`. Entry checks passed, but the Pixel
+NotificationShade remained foreground after Metro became ready and prevented
+truthful TempleMate form setup. No callback, business mutation, or partial
+state occurred, and cleanup passed. `active_packet: none`. The exact missing
+action and owner is the Director: unlock Pixel serial `39011FDJH00FQ8`, fully
+dismiss NotificationShade, open TempleMate, and leave the app surface visible.
+Planning will author and dispatch a new bounded runtime packet only after that
+confirmation. Self draft metadata edit and dependent draft create remain the
+same two untested rows; no source defect or rebuild is implied. The separate
+OAuth production track remains paused pending the Director's Candidate
+B/read-only-preflight decision.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
