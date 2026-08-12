@@ -410,14 +410,15 @@ redaction, and cleanup evidence passed.
 
 The Director accepted Candidate B as the future release boundary: exact
 `release/current` baseline `99a0a692` plus `684c9ef`, `740aa39`, `7fa60f0`,
-`6eb57c3`, and `dcc258b` in that order. The current OAuth production authority
-is
-`ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_READ_ONLY_PREFLIGHT_PLAN.md`
-through Control A. It permits only one target-fenced, sanitized, read-only
-observation of the exact host/checkout/ref, bundle, environment-key presence,
-database migration/duplicate aggregate/Boolean flags, named services,
-concurrent-operation count, and tenant-local smoke metadata. It does not
-construct or move a release ref, deploy, migrate, restart, change flags,
+`6eb57c3`, and `dcc258b` in that order. The first production-preflight attempt
+stopped locally before SSH/network because an independently accepted Planning
+documentation commit advanced canonical `main`; its truthful no-remote-action
+report is integrated at `6e5ecb7`. The current OAuth production authority is
+`ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_READ_ONLY_PREFLIGHT_RETRY_PLAN.md`
+through Control A. It retains every exact target, sanitized query/command,
+stop, non-mutation, and exclusion from the parent plan while using the exact
+isolated retry-plan worktree as the reproducible local packet source. It does
+not construct or move a release ref, deploy, migrate, restart, change flags,
 validate providers, touch accounts/sessions, or remediate history. The
 historical Apple-only record remains a separate blocked parent pending
 deployed-source validation, the 24-hour review, an exact-account inventory,
