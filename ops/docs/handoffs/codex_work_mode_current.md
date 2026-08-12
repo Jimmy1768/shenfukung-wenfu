@@ -186,6 +186,19 @@ by the unchanged APK identity fence, one fresh exact-device install, read-only
 verification, and mandatory immediate artifact cleanup. It still excludes app
 launch, Metro, runtime validation, another build, and version/build increments.
 
+That wrapper-free continuation also stopped before artifact/device mutation:
+the installed EAS CLI requires a linked Expo project as its process working
+directory. Planning then inspected the installed `eas-cli` 18.12.2 source and
+confirmed that the working directory supplies only ProjectId/config context;
+the APK is written independently to a deterministic EAS temporary-cache path.
+The current authorized packet is
+`ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_SOURCE_BACKED_DOWNLOAD_INSTALL_PLAN.md`.
+It permits a byte-identical existing dependency-tree symlink in a fresh
+isolated worktree, one exact build-ID download from that linked `mobile/`
+directory, exact cache-path inspection, one fresh Pixel install, and immediate
+cache/link cleanup. App launch, runtime validation, another build, source or
+dependency change, and version/build increments remain excluded.
+
 ## Current Authorized Documentation Housekeeping
 
 `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md` is the
