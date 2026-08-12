@@ -364,14 +364,14 @@ canonical `main` at `eb41760d72be0e7b366f80587bbb3b3987156b2f`; Control B
 received `released_terminal_idle`. Entry checks passed, but the Pixel
 NotificationShade remained foreground after Metro became ready and prevented
 truthful TempleMate form setup. No callback, business mutation, or partial
-state occurred, and cleanup passed. `active_packet: none`. The exact missing
-action and owner is the Director: unlock Pixel serial `39011FDJH00FQ8`, fully
-dismiss NotificationShade, open TempleMate, and leave the app surface visible.
-Planning will author and dispatch a new bounded runtime packet only after that
-confirmation. Self draft metadata edit and dependent draft create remain the
-same two untested rows; no source defect or rebuild is implied. The separate
-OAuth production track remains paused pending the Director's Candidate
-B/read-only-preflight decision.
+state occurred, and cleanup passed. The Director now confirms Pixel serial
+`39011FDJH00FQ8` is unlocked, NotificationShade is dismissed, and TempleMate
+is open and visible. The current Expo runtime authority is
+`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_EVIDENCE_FOREGROUND_RETRY_PLAN.md`
+through Control B. It retries only self draft metadata edit and dependent draft
+create using the same two exact Director callbacks after Control prepares each
+form. No source repair, rebuild, version/build change, real API/OAuth/provider,
+payment, QR/camera, production, deployment, release, or push is authorized.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
