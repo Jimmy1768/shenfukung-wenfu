@@ -5,6 +5,7 @@ const { nativeError, snapshotFromBootstrap, mapDependent, mapRegistration, nameF
 const nativePath = '/api/v1/account/native';
 const query = (path, tenantSlug) => `${path}${path.includes('?') ? '&' : '?'}temple_slug=${encodeURIComponent(tenantSlug)}`;
 const jsonHeaders = token => ({ Accept: 'application/json', 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) });
+const registrationFields = input => Object.fromEntries(Object.entries(input || {}).filter(([key, value]) => ['quantity', 'registrant_scope', 'dependent_id', 'contact_name', 'contact_phone', 'contact_email', 'household_notes', 'arrival_window', 'ceremony_notes'].includes(key) && value !== undefined && value !== null && value !== ''));
 
 function createRealAdapter({ config, store, transport, device = { device_id: 'local-test-client', platform: 'expo' } }) {
   if (!config?.apiBaseUrl || !config?.tenantSlug) throw Object.assign(new Error('Real mode requires explicit local/test configuration.'), { code: 'REAL_CONFIG_REQUIRED' });
@@ -53,10 +54,10 @@ function createRealAdapter({ config, store, transport, device = { device_id: 'lo
     async deleteDependent(id) { await request('DELETE', `/dependents/${id}`); return updateState('dependents', state.dependents.filter(item => item.id !== String(id))); },
     async listRegistrations() { const payload = await request('GET', '/registrations'); return updateState('registrations', payload.registrations.map(mapRegistration)); },
     showRegistration: id => request('GET', `/registrations/${id}`), newRegistration: input => request('GET', `/registrations/new?offering=${encodeURIComponent(input.offering)}&account_action=${encodeURIComponent(input.accountAction || '')}`),
-    async createRegistration(input) { const payload = await request('POST', '/registrations', { offering: input.offering, account_action: input.accountAction, registration: input.registration || { contact_name: input.registrantName } }); return updateState('registrations', [mapRegistration(payload.registration), ...state.registrations]); },
+    async createRegistration(input) { const payload = await request('POST', '/registrations', { offering: input.offering, account_action: input.accountAction, registration: registrationFields(input.registration) }); return updateState('registrations', [mapRegistration(payload.registration), ...state.registrations]); },
     editRegistration: id => request('GET', `/registrations/${id}/edit`),
-    async updateRegistration(id, input) { const registration = input.registration || { contact_name: input.registrantName }; const payload = await request('PATCH', `/registrations/${id}`, { registration }); return updateState('registrations', state.registrations.map(item => item.id === String(id) ? mapRegistration(payload.registration) : item)); },
-    async events() { const payload = await request('GET', '/events'); return updateState('events', collectionFrom(payload, 'events')); },
+    async updateRegistration(id, input) { const payload = await request('PATCH', `/registrations/${id}`, { registration: registrationFields(input.registration) }); return updateState('registrations', state.registrations.map(item => item.id === String(id) ? mapRegistration(payload.registration) : item)); },
+    async events() { const payload = await request('GET', '/events'); state = { ...state, events: collectionFrom(payload, 'events'), gatherings: collectionFrom(payload, 'gatherings') }; return state; },
     async services() { const payload = await request('GET', '/services'); return updateState('services', collectionFrom(payload, 'services')); },
     async galleries() { const payload = await request('GET', '/galleries'); return updateState('gallery', collectionFrom(payload, 'galleries')); },
     gallery: id => request('GET', `/galleries/${id}`),

@@ -52,7 +52,24 @@ module Api
         private
 
         def offering_payload(record)
-          { id: record.id, slug: record.slug, title: record.title, description: record.try(:description), status: record.try(:timeline_status) || (record.try(:available?) ? "open" : nil) }.compact
+          {
+            id: record.id,
+            slug: record.slug,
+            title: record.title,
+            account_action: account_action_for(record),
+            price_cents: record.try(:price_cents),
+            currency: record.try(:currency),
+            description: record.try(:description),
+            status: record.try(:timeline_status) || (record.try(:available?) ? "open" : nil)
+          }.compact
+        end
+
+        def account_action_for(record)
+          case record
+          when TempleService then "service"
+          when TempleGathering then "gathering"
+          else "event"
+          end
         end
 
         def assistance_params

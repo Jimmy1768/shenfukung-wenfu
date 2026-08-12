@@ -76,14 +76,20 @@ class NativeAccountResourcesTest < ActionDispatch::IntegrationTest
   end
 
   test "native registration create update duplicate and gathering lifecycle reuse account forms" do
-    event = @temple.temple_events.create!(slug: "event-#{SecureRandom.hex(3)}", title: "Native Event", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 0, currency: "TWD")
-    create_params = { temple_slug: @temple.slug, account_action: "event", offering: event.slug, registration: { quantity: 1, contact_name: "Native Owner", contact_email: @user.email } }
+    event = @temple.temple_events.create!(slug: "event-#{SecureRandom.hex(3)}", title: "Native Event", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 1_200, currency: "TWD")
+    create_params = { temple_slug: @temple.slug, account_action: "event", offering: event.slug, registration: { quantity: 2, contact_name: "Native Owner", contact_email: @user.email, price_cents: 1, unit_price_cents: 1, total_amount_cents: 1, currency: "USD" } }
     post "/api/v1/account/native/registrations", params: create_params, headers: bearer
     assert_response :created
     registration_id = response.parsed_body.dig("registration", "id")
+    assert_equal 1_200, response.parsed_body.dig("registration", "unit_price_cents")
+    assert_equal 2_400, response.parsed_body.dig("registration", "total_amount_cents")
+    assert_equal "TWD", response.parsed_body.dig("registration", "currency")
 
-    patch "/api/v1/account/native/registrations/#{registration_id}", params: { temple_slug: @temple.slug, registration: { contact_name: "Changed Owner" } }, headers: bearer
+    patch "/api/v1/account/native/registrations/#{registration_id}", params: { temple_slug: @temple.slug, registration: { contact_name: "Changed Owner", price_cents: 1, total_amount_cents: 1, currency: "USD", offering: "forged" } }, headers: bearer
     assert_response :success
+    assert_equal 1_200, response.parsed_body.dig("registration", "unit_price_cents")
+    assert_equal 2_400, response.parsed_body.dig("registration", "total_amount_cents")
+    assert_equal "TWD", response.parsed_body.dig("registration", "currency")
 
     post "/api/v1/account/native/registrations", params: create_params, headers: bearer
     assert_response :unprocessable_entity
@@ -94,6 +100,33 @@ class NativeAccountResourcesTest < ActionDispatch::IntegrationTest
     patch "/api/v1/account/native/registrations/#{gathering_registration.id}", params: { temple_slug: @temple.slug, registration: { contact_name: "No Change" } }, headers: bearer
     assert_response :forbidden
     assert_equal "registration_not_editable", response.parsed_body.fetch("code")
+  end
+
+  test "native registration preparation keeps action and registrant choices tenant scoped" do
+    service = @temple.temple_services.create!(slug: "service-#{SecureRandom.hex(3)}", title: "Native Service", status: "published", price_cents: 600, currency: "TWD")
+    gathering = @temple.temple_gatherings.create!(slug: "gathering-#{SecureRandom.hex(3)}", title: "Native Gathering", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 300, currency: "TWD")
+    dependent = Dependent.create!(english_name: "Owned Dependent")
+    @user.user_dependents.create!(dependent:, role: "family")
+
+    [[service, "service"], [gathering, "gathering"]].each do |offering, action|
+      get "/api/v1/account/native/registrations/new", params: { temple_slug: @temple.slug, offering: offering.slug, account_action: action }, headers: bearer
+      assert_response :success
+      assert_equal action, response.parsed_body.dig("offering", "account_action")
+      assert_equal offering.price_cents, response.parsed_body.dig("offering", "price_cents")
+      assert_includes response.parsed_body.fetch("registrants"), { "scope" => "dependent", "id" => dependent.id, "label" => "Owned Dependent" }
+    end
+
+    post "/api/v1/account/native/registrations", params: { temple_slug: @temple.slug, offering: service.slug, account_action: "service", registration: { quantity: 1, registrant_scope: "dependent", dependent_id: dependent.id, contact_name: "Owned Dependent" } }, headers: bearer
+    assert_response :created
+    assert_equal "dependent", response.parsed_body.dig("registration", "registrant_scope")
+    assert_equal dependent.id.to_s, response.parsed_body.dig("registration", "dependent_id")
+
+    get "/api/v1/account/native/registrations/new", params: { temple_slug: @temple.slug, offering: service.slug, account_action: "event" }, headers: bearer
+    assert_response :not_found
+
+    foreign = Dependent.create!(english_name: "Foreign Dependent")
+    post "/api/v1/account/native/registrations", params: { temple_slug: @temple.slug, offering: service.slug, account_action: "service", registration: { quantity: 1, registrant_scope: "dependent", dependent_id: foreign.id, contact_name: "Foreign" } }, headers: bearer
+    assert_response :unprocessable_entity
   end
 
   test "native preference updates create account-user audit evidence without admin fields" do

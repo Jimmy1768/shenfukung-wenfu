@@ -3,6 +3,49 @@ const { clone, seed } = require('./fixtures');
 const required = value => typeof value === 'string' && value.trim().length > 0;
 const validationError = (field, message) => ({ code: 'VALIDATION', field, message });
 
+const catalog = state => [...(state.events || []), ...(state.services || []), ...(state.gatherings || [])];
+const offeringFor = (state, input = {}) => {
+  const reference = input && typeof input === 'object' ? input : { offering: input };
+  const suppliedOffering = reference.offering;
+  const identity = suppliedOffering && typeof suppliedOffering === 'object' ? suppliedOffering : reference;
+  const id = identity.id ?? identity.offering_id;
+  const slug = identity.slug ?? (typeof suppliedOffering === 'string' ? suppliedOffering : undefined);
+  const action = identity.account_action ?? identity.accountAction ?? reference.account_action ?? reference.accountAction;
+  if (!required(action) || (!required(id) && !required(slug))) return undefined;
+
+  return catalog(state).find(item => (
+    item.account_action === action
+    && (!required(id) || String(item.id) === String(id))
+    && (!required(slug) || item.slug === slug || (!required(id) && String(item.id) === String(slug)))
+  ));
+};
+const registrantFor = (state, registration = {}) => {
+  if (registration.registrant_scope !== 'dependent') return { scope: 'self', id: state.profile.id, name: state.profile.name };
+  const dependent = state.dependents.find(item => String(item.id) === String(registration.dependent_id));
+  return dependent && { scope: 'dependent', id: dependent.id, name: dependent.name };
+};
+const validQuantity = value => Number.isInteger(Number(value)) && Number(value) > 0 && Number(value) <= 10;
+const duplicateFor = (state, offering, registrant, excludingId) => state.registrations.some(item => item.id !== excludingId && String(item.offering.id) === String(offering.id) && item.registrantScope === registrant.scope && String(item.dependentId || '') === String(registrant.scope === 'dependent' ? registrant.id : ''));
+const editPayloadFor = registration => ({
+  id: registration.id,
+  offering: clone(registration.offering),
+  quantity: registration.quantity,
+  registrant_scope: registration.registrantScope,
+  dependent_id: registration.dependentId,
+  contact_name: registration.registration?.contact_name,
+  contact_phone: registration.registration?.contact_phone,
+  contact_email: registration.registration?.contact_email,
+  household_notes: registration.registration?.household_notes,
+  arrival_window: registration.registration?.arrival_window,
+  ceremony_notes: registration.registration?.ceremony_notes,
+  total_amount_cents: registration.totalAmountCents,
+  unit_price_cents: registration.offering.price_cents,
+  currency: registration.currency,
+  payment_status: registration.paymentState,
+  fulfillment_status: registration.state,
+  read_only: registration.readOnly
+});
+
 function createDummyRepository(initial = seed) {
   let state = clone(initial);
   let credentials = { email: initial.profile.email, password: 'templemate-demo' };
@@ -61,19 +104,39 @@ function createDummyRepository(initial = seed) {
       return snapshot();
     },
     deleteDependent(id) { state.dependents = state.dependents.filter(item => item.id !== id); return snapshot(); },
-    createRegistration({ offering, registrantName }) {
-      if (!required(offering)) throw validationError('offering', '請選擇項目');
-      if (!required(registrantName)) throw validationError('registrantName', '請選擇登記人');
+    newRegistration({ offering, accountAction }) {
+      const selected = offeringFor(state, { offering, account_action: accountAction });
+      if (!selected) throw validationError('offering', '找不到宮廟項目');
+      return { offering: clone(selected), registration: { quantity: 1, registrant_scope: 'self', contact_name: state.profile.name }, registrants: [{ scope: 'self', id: state.profile.id, label: state.profile.name }, ...state.dependents.map(item => ({ scope: 'dependent', id: item.id, label: item.name }))] };
+    },
+    createRegistration({ offering, accountAction, registration = {} }) {
+      const selected = offeringFor(state, { offering, account_action: accountAction });
+      const registrant = registrantFor(state, registration);
+      if (!selected) throw validationError('offering', '請選擇宮廟項目');
+      if (!registrant) throw validationError('registrant', '請選擇登記人');
+      if (!validQuantity(registration.quantity || 1)) throw validationError('quantity', '請確認數量');
+      if (duplicateFor(state, selected, registrant)) throw validationError('registration', '此登記人已選擇這個項目');
       const id = `registration-${String(nextRegistrationNumber++).padStart(3, '0')}`;
-      state.registrations.push({ id, offering: offering.trim(), registrantName: registrantName.trim(), state: 'draft', readOnly: false });
+      const quantity = Number(registration.quantity || 1);
+      state.registrations.push({ id, offering: clone(selected), registrantName: registrant.name, registrantScope: registrant.scope, dependentId: registrant.scope === 'dependent' ? registrant.id : null, quantity, totalAmountCents: selected.price_cents * quantity, currency: selected.currency, state: 'draft', readOnly: false, registration: { ...registration, registrant_scope: registrant.scope, dependent_id: registrant.scope === 'dependent' ? registrant.id : undefined } });
       return snapshot();
     },
-    updateRegistration(id, { offering, registrantName }) {
+    editRegistration(id) {
       const registration = state.registrations.find(item => item.id === id);
       if (!registration) throw validationError('registration', '找不到登記資料');
       if (registration.readOnly) throw validationError('registration', '此示範已完成項目僅供閱讀');
-      if (!required(offering) || !required(registrantName)) throw validationError('registration', '請完成登記資料');
-      registration.offering = offering.trim(); registration.registrantName = registrantName.trim();
+      return { registration: editPayloadFor(registration), registrants: [{ scope: 'self', id: state.profile.id, label: state.profile.name }, ...state.dependents.map(item => ({ scope: 'dependent', id: item.id, label: item.name }))] };
+    },
+    updateRegistration(id, { registration: input = {} }) {
+      const registration = state.registrations.find(item => item.id === id);
+      if (!registration) throw validationError('registration', '找不到登記資料');
+      if (registration.readOnly) throw validationError('registration', '此示範已完成項目僅供閱讀');
+      const registrant = registrantFor(state, input);
+      if (!registrant) throw validationError('registrant', '請選擇登記人');
+      if (!validQuantity(input.quantity || registration.quantity || 1)) throw validationError('quantity', '請確認數量');
+      if (duplicateFor(state, registration.offering, registrant, id)) throw validationError('registration', '此登記人已選擇這個項目');
+      const quantity = Number(input.quantity || registration.quantity || 1);
+      registration.registrantName = registrant.name; registration.registrantScope = registrant.scope; registration.dependentId = registrant.scope === 'dependent' ? registrant.id : null; registration.quantity = quantity; registration.totalAmountCents = registration.offering.price_cents * quantity; registration.registration = { ...registration.registration, ...input, registrant_scope: registrant.scope, dependent_id: registrant.scope === 'dependent' ? registrant.id : undefined };
       return snapshot();
     },
     submitAssistance({ message }) {

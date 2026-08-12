@@ -37,7 +37,7 @@ module Account
           id: registration.id,
           lifecycle: registration.fulfillment_status,
           payment_state: registration.payment_status
-        ).except(:total_amount_cents)
+        )
       end
 
       def self.temple(temple)

@@ -16,16 +16,16 @@ module Api
         end
 
         def new
-          offering = find_offering_for_intent(params[:offering], params[:account_action])
+          offering = offering_for_request
           return render_error("offering_not_found", :not_found) unless offering
           return render_error("registration_intake_frozen", :forbidden) if current_native_temple.registration_intake_frozen?
 
-          render json: { offering: { id: offering.id, slug: offering.slug, title: offering.title }, registration: intake_defaults(offering) }
+          render json: { offering: offering_payload(offering), registration: intake_defaults(offering), registrants: registrant_options }
         end
 
         def create
           return render_error("registration_intake_frozen", :forbidden) if current_native_temple.registration_intake_frozen?
-          offering = find_offering_for_intent(params[:offering], params[:account_action])
+          offering = offering_for_request
           return render_error("offering_not_found", :not_found) unless offering
 
           form = ::Account::RegistrationIntakeForm.new(user: current_native_user, offering:, params: intake_params)
@@ -71,6 +71,49 @@ module Api
         def intake_defaults(offering)
           form = ::Account::RegistrationIntakeForm.new(user: current_native_user, offering: offering, params: {})
           { quantity: form.quantity, registrant_scope: form.registrant_scope, contact_name: form.contact_name, contact_phone: form.contact_phone, contact_email: form.contact_email, household_notes: form.household_notes }
+        end
+
+        def offering_for_request
+          action = params[:account_action].presence
+          offering = find_offering_for_intent(params[:offering], action)
+          return unless offering && action == account_action_for(offering)
+
+          offering
+        end
+
+        def offering_payload(offering)
+          {
+            id: offering.id,
+            slug: offering.slug,
+            title: offering.title,
+            account_action: account_action_for(offering),
+            price_cents: offering.price_cents,
+            currency: offering.currency
+          }
+        end
+
+        def account_action_for(offering)
+          case offering
+          when TempleService then "service"
+          when TempleGathering then "gathering"
+          else "event"
+          end
+        end
+
+        def registrant_options
+          self_option = {
+            scope: "self",
+            id: current_native_user.id,
+            label: current_native_user.native_name.presence || current_native_user.english_name.presence || current_native_user.email
+          }
+          dependents = current_native_user.dependents.order(:native_name, :english_name).map do |dependent|
+            {
+              scope: "dependent",
+              id: dependent.id,
+              label: dependent.native_name.presence || dependent.english_name
+            }
+          end
+          [self_option, *dependents]
         end
 
         def audit!(action, registration, fields)
