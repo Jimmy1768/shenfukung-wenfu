@@ -1,8 +1,8 @@
 # Apple OAuth Account Resolution Readiness And Implementation Plan
 
-Status: accepted for bounded local OAuth source implementation through Wenfu
-Control A; production deployment and production-account remediation remain
-separately gated
+Status: bounded local OAuth source implementation complete and accepted at
+`82b0e52e0005ee705b5ce85964a773bc7e0f7809`; production deployment and
+production-account remediation remain separately gated
 
 Created: 2026-08-12
 
@@ -19,6 +19,11 @@ Diagnosis baseline:
 Director acceptance: 2026-08-12. The Director accepted the resolution model
 and assigned the OAuth track to Control A. Control B retains the separate Expo
 app track.
+
+Accepted local outcome: Control A integrated the accepted Rails/web/shared
+contract at `82b0e52e0005ee705b5ce85964a773bc7e0f7809`. Its immutable evidence is
+`ops/docs/handoffs/2026-08-12-oauth-apple-account-resolution-control-a.md`.
+This completion does not authorize or claim production rollout or remediation.
 
 ## Accepted Dispatch Scope
 
@@ -487,8 +492,9 @@ blind database restore.
 
 ## Current Readiness Classification
 
-`apple_oauth_account_resolution_local_implementation_authorized`
+`apple_oauth_account_resolution_local_source_complete`
 
-First blocker: none for bounded local source implementation. Deployment,
-provider validation, and production-account remediation remain separate future
-authority gates.
+First blocker for the parent: a separately accepted production rollout plan
+with exact target, release commit, migration/rollback, impact, verification,
+approval, and monitoring boundaries. Historical-account remediation remains a
+distinct exact-account workflow after rollout validation.

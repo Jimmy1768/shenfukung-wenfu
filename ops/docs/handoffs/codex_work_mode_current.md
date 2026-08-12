@@ -345,10 +345,17 @@ supplied facts. Planning recommends explicit dual-proof linking, pending
 resolution for unmatched provider identities, lookup-only admin OAuth, and no
 name/email/relay heuristic. The Director accepted the seven recorded decisions
 and assigned the bounded local Rails/web OAuth source track to Control A.
-Control A may implement the shared Rails/native response contract but no Expo
-client path. Control B retains the separate Expo final-UI/runtime track. No
+The bounded local Rails/web/shared OAuth source phase is complete and accepted
+on canonical `main` at `82b0e52e0005ee705b5ce85964a773bc7e0f7809`; Control A
+received `released_terminal_idle`. The accepted implementation adds pending
+resolution without account/session minting, exact and explicit resolution
+modes, lookup-only admin behavior, legacy alignment, the Rails native response
+contract, database integrity, and a non-routed proof-gated empty-placeholder
+consolidator. Control B retains the separate Expo final-UI/runtime track. No
 production-data, provider, account, deployment, or historical remediation
-authority is active from this record; those remain separate future gates.
+authority is active from this record. The exact missing owner decision is a
+Director-approved production rollout plan; historical-account remediation is a
+later distinct exact-account workflow after rollout validation.
 
 ## Current Authorized Documentation Housekeeping
 
