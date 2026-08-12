@@ -43,6 +43,8 @@
 - `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_NATIVE_INTEGRATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`
+- `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_READINESS_SCAN_PLAN.md`
+- `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_IMPLEMENTATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
@@ -288,13 +290,23 @@ remains confirmation-only.
 
 The V1 dummy development-client functional-stabilization parent is complete.
 This does not complete real API/OAuth, payments, distribution, production, or
-final visual acceptance. The current phase is the report-only
-`ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_READINESS_SCAN_PLAN.md` through
-Control B. It inventories only concrete remaining UI work on the installed
-client, including dependent/registration interaction evidence and the prior
-CameraView presentation warning. It authorizes no source change, rebuild,
-provider/Rails action, dependency, version/build change, deployment, release,
-or push.
+final visual acceptance. The report-only final UI readiness scan is complete
+and accepted on canonical `main` at
+`74ffad700af204d6c839db6fa5e6227099d41fcf`; Control B received
+`released_terminal_idle`. It found two concrete JavaScript presentation
+defects: transient Settings feedback crosses unrelated screen/reset/locale
+boundaries, and Android Back from TempleMate's active CameraView exits to the
+Pixel launcher instead of returning home. Dependent and registration CRUD
+transitions remain device-evidence gaps, not accepted implementation defects.
+
+The current source phase is
+`ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_IMPLEMENTATION_PLAN.md` through
+Control A. It repairs only the two confirmed JavaScript behaviors with focused
+state proof. It authorizes no dependent/registration redesign, dependency,
+configuration, native rebuild, device action, real API/OAuth, provider,
+payment, version/build increment, deployment, release, or push. A later
+Control B runtime packet will validate both repairs and revisit the two CRUD
+transition evidence gaps on the installed development client.
 
 ## Current Authorized Documentation Housekeeping
 
