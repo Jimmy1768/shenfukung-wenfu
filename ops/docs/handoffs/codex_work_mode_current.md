@@ -49,6 +49,7 @@
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_EVIDENCE_CONTINUATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_ALIGNMENT_PLAN.md`
 - `ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_VALIDATION_PLAN.md`
+- `ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_EVIDENCE_CONTINUATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
@@ -349,16 +350,26 @@ offering/money authority; paid records remain read-only. Focused Rails/mobile
 checks passed with no dependency, native, version/build, OAuth, payment,
 provider, admin, deployment, or external change.
 
+The first registration-authority runtime report is accepted on canonical
+`main` at `72e8476899197f28f6ac428851d2613fe236a83d`; Control B received
+`released_terminal_idle`. Exact dependent create, Discover-only entry, all
+three offering/fee presentations, preparation/Cancel, self service-draft
+create, paid-read-only, reset, checks, and cleanup passed. Self draft metadata
+edit and dependent draft create remain untested—not defects—because Android
+input/developer-inspector foreground behavior occurred before either save and
+later observation proved no partial mutation.
+
 The current Expo runtime authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_VALIDATION_PLAN.md`
-through Control B. It reuses the installed development client and exact USB
-Metro method in dummy mode to prove Discover selection, immutable fee
-presentation, self/dependent draft create, metadata edit without offering/fee
-change or duplication, paid read-only/no payment, exact dependent create,
-reset, and cleanup. It authorizes no source repair, real API/OAuth, QR/camera,
-native rebuild, version/build increment, payment, production, deployment,
-release, or push. The separate OAuth production track remains paused pending
-the Director's Candidate B/read-only-preflight decision.
+`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_EVIDENCE_CONTINUATION_PLAN.md`
+through Control B. It reuses accepted setup and requires two exact Director
+physical-input callbacks only after Control prepares the relevant TempleMate
+forms. The Director enters quantity/contact fields or selects the dependent;
+Control verifies exact pre-save state, performs each save, reopens and verifies
+immutable offering/fee and no duplicates, then resets and cleans up. No source
+repair, ADB text substitution, rebuild, version/build increment, real API,
+OAuth/provider, payment, QR/camera, production, deployment, release, or push is
+authorized. The separate OAuth production track remains paused pending the
+Director's Candidate B/read-only-preflight decision.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
