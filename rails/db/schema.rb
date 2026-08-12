@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_08_000023) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_12_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -469,6 +469,25 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_08_000023) do
     t.index ["user_id"], name: "index_notifications_on_user_id"
   end
 
+  create_table "oauth_account_resolutions", force: :cascade do |t|
+    t.string "token_digest", null: false
+    t.string "provider", null: false
+    t.string "provider_uid", null: false
+    t.string "email"
+    t.string "display_name"
+    t.boolean "email_verified"
+    t.string "surface", default: "account", null: false
+    t.string "purpose", default: "account_resolution", null: false
+    t.datetime "expires_at", null: false
+    t.datetime "consumed_at"
+    t.string "consumed_mode"
+    t.bigint "consumed_by_user_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["expires_at"], name: "index_oauth_account_resolutions_on_expires_at"
+    t.index ["token_digest"], name: "index_oauth_account_resolutions_on_token_digest", unique: true
+  end
+
   create_table "oauth_identities", force: :cascade do |t|
     t.bigint "user_id", null: false
     t.string "provider", null: false
@@ -483,6 +502,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_08_000023) do
     t.datetime "last_login_at"
     t.index ["last_login_at"], name: "index_oauth_identities_on_last_login_at"
     t.index ["provider", "provider_uid"], name: "index_oauth_identities_on_provider_and_uid", unique: true
+    t.index ["user_id", "provider"], name: "index_oauth_identities_on_user_id_and_provider", unique: true
     t.index ["user_id"], name: "index_oauth_identities_on_user_id"
   end
 
@@ -1075,6 +1095,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_08_000023) do
   add_foreign_key "notification_preferences", "users"
   add_foreign_key "notifications", "notification_rules"
   add_foreign_key "notifications", "users"
+  add_foreign_key "oauth_account_resolutions", "users", column: "consumed_by_user_id"
   add_foreign_key "oauth_identities", "users"
   add_foreign_key "payment_webhook_logs", "temples"
   add_foreign_key "platform_billing_adjustments", "platform_billing_statements"

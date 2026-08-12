@@ -10,6 +10,8 @@ module Auth
 
     Result = Struct.new(:identity, :user, :created_identity, :linked_existing_user, keyword_init: true)
 
+    class UnmatchedIdentity < StandardError; end
+
     def self.resolve_or_link!(provider:, uid:, email:, name:, credentials: {}, metadata: {}, email_verified: nil)
       new(
         provider: provider,
@@ -42,13 +44,7 @@ module Auth
       replacement_result = replace_google_subject_if_eligible
       return replacement_result if replacement_result
 
-      identity = OAuthIdentity.new(provider: @provider, provider_uid: @uid)
-
-      linked_existing_user = false
-      user, linked_existing_user = resolve_user
-      identity.user = user
-
-      update_identity_result(identity, user, created_identity: true, linked_existing_user: linked_existing_user)
+      raise UnmatchedIdentity, "OAuth identity is not linked to an account"
     end
 
     private
@@ -124,30 +120,6 @@ module Auth
 
     def subject_fingerprint(provider_uid)
       Digest::SHA256.hexdigest("#{GOOGLE_SUBJECT_FINGERPRINT_CONTEXT}:#{provider_uid}")
-    end
-
-    def resolve_user
-      if @email.present?
-        existing = User.find_by(email: @email)
-        return [existing, true] if existing
-      end
-
-      user = User.new(
-        email: @email.presence || generated_email,
-        english_name: @name.presence || "OAuth User",
-        encrypted_password: User.password_hash(SecureRandom.hex(16)),
-        metadata: {
-          oauth_seeded: true,
-          provider: @provider,
-          oauth_identity_linked_at: Time.current.iso8601
-        }
-      )
-      user.save!
-      [user, false]
-    end
-
-    def generated_email
-      "#{@provider}_#{SecureRandom.hex(8)}@#{AppConstants::Project.slug}.oauth"
     end
 
     def merge_credentials(identity)

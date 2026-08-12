@@ -23,6 +23,7 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
 
   def setup
     @temple = create_temple(slug: "native-oauth-temple")
+    Config::EntryResolver.upsert!(key: "oauth_account_resolution", value: true)
     @return_url = "templemate://oauth/complete"
     @verifier = "v" * 43
     @challenge = Auth::NativeOAuthTransaction.s256_challenge(@verifier)
@@ -100,8 +101,11 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
     profile_central = FakeCentralOAuthClient.new({ "redirect_url" => "https://central.example.test/apple" }, identity_response(provider: "apple", uid: "profile-apple-subject", email: "profile-native@example.test", name: nil))
     profile_token = start_transaction(profile_central, provider: "apple")
     with_return_url { Auth::CentralOAuthClient.stub(:new, profile_central) { post native_exchange_path, params: exchange_params(profile_token) } }
-    assert_response :success
-    assert_equal true, response.parsed_body.dig("oauth", "profile_required")
+    assert_response :conflict
+    assert_equal "account_resolution_required", response.parsed_body.fetch("code")
+    assert_nil response.parsed_body["session"]
+    assert response.parsed_body.dig("oauth", "resolution_token").present?
+    assert_nil session[AppConstants::Sessions.key(:account)]
   end
 
   test "native exchange uses shared nested Google claims and Apple id-token fallbacks" do
@@ -120,9 +124,9 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
     )
     google_token = start_transaction(google, provider: "google")
     with_return_url { Auth::CentralOAuthClient.stub(:new, google) { post native_exchange_path, params: exchange_params(google_token) } }
-    assert_response :success
+    assert_response :conflict
     assert_equal "google", response.parsed_body.dig("oauth", "provider")
-    assert OAuthIdentity.exists?(provider: "google_oauth2", provider_uid: "nested-google-subject")
+    refute OAuthIdentity.exists?(provider: "google_oauth2", provider_uid: "nested-google-subject")
 
     apple = FakeCentralOAuthClient.new(
       { "redirect_url" => "https://central.example.test/apple" },
@@ -133,13 +137,12 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
     )
     apple_token = start_transaction(apple, provider: "apple")
     with_return_url { Auth::CentralOAuthClient.stub(:new, apple) { post native_exchange_path, params: exchange_params(apple_token) } }
-    assert_response :success
+    assert_response :conflict
     assert_equal "apple", response.parsed_body.dig("oauth", "provider")
-    assert_equal true, response.parsed_body.dig("oauth", "profile_required")
-    assert OAuthIdentity.exists?(provider: "apple", provider_uid: "nested-apple-subject")
+    refute OAuthIdentity.exists?(provider: "apple", provider_uid: "nested-apple-subject")
   end
 
-  test "a verified email user is linked through the existing Google resolver path" do
+  test "a verified email user is not linked without an explicit proof flow" do
     user = User.create!(email: "verified-link@example.test", english_name: "Verified Link", encrypted_password: User.password_hash("Password123!"), metadata: {})
     central = FakeCentralOAuthClient.new(
       { "redirect_url" => "https://central.example.test/google" },
@@ -149,10 +152,9 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
 
     with_return_url { Auth::CentralOAuthClient.stub(:new, central) { post native_exchange_path, params: exchange_params(token) } }
 
-    assert_response :success
-    assert_equal user.id, response.parsed_body.dig("user", "id")
-    identity = OAuthIdentity.find_by!(provider: "google_oauth2", provider_uid: "verified-link-subject")
-    assert_equal user.id, identity.user_id
+    assert_response :conflict
+    assert_equal "account_resolution_required", response.parsed_body.fetch("code")
+    assert_nil OAuthIdentity.find_by(provider: "google_oauth2", provider_uid: "verified-link-subject")
   end
 
   test "start rejects unsupported or malformed input missing configuration unknown temple and ignores client redirect fields" do
@@ -246,6 +248,8 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
     assert_equal "oauth_exchange_failed", response.parsed_body.fetch("code")
     assert_not_includes response.body, "arbitrary-upstream-detail"
 
+    replay_user = User.create!(email: "native-oauth@example.test", english_name: "Native OAuth", encrypted_password: User.password_hash("Password123!"), metadata: {})
+    OAuthIdentity.create!(user: replay_user, provider: "google_oauth2", provider_uid: "google-native-subject", email: replay_user.email, credentials: {}, metadata: {})
     replay = FakeCentralOAuthClient.new({ "redirect_url" => "https://central.example.test/google" }, identity_response)
     replay_token = start_transaction(replay)
     with_return_url { Auth::CentralOAuthClient.stub(:new, replay) { post native_exchange_path, params: exchange_params(replay_token) } }

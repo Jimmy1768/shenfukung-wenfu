@@ -2,7 +2,7 @@
 
 module Auth
   class NativeOAuthFlow
-    Result = Struct.new(:user, :provider, :profile_required, keyword_init: true)
+    Result = Struct.new(:user, :provider, :profile_required, :account_resolution, keyword_init: true)
 
     class Error < StandardError; end
     class ConfigurationError < Error; end
@@ -11,6 +11,7 @@ module Auth
     class ClosedAccount < Error; end
     class IdentityError < Error; end
     class InvalidGrant < Error; end
+    class ResolutionUnavailable < Error; end
 
     def initialize(temple:, central_client: Auth::CentralOAuthClient.new, transaction: Auth::NativeOAuthTransaction.new)
       @temple = temple
@@ -77,10 +78,16 @@ module Auth
 
       identity_result = Auth::OAuthExchangeIdentity.resolve!(
         response:,
-        expected_provider: transaction.fetch("provider")
+        expected_provider: transaction.fetch("provider"),
+        resolution_surface: "native"
       )
       provider = identity_result.canonical_provider
-      Result.new(user: identity_result.user, provider:, profile_required: identity_result.profile_required)
+      Result.new(
+        user: identity_result.user,
+        provider:,
+        profile_required: identity_result.profile_required,
+        account_resolution: identity_result.account_resolution
+      )
     rescue Auth::CentralOAuthClient::ConfigError
       raise ConfigurationError, "native OAuth is not configured"
     rescue Auth::CentralOAuthClient::RequestError => error
@@ -95,6 +102,8 @@ module Auth
       raise ProviderMismatch, "central OAuth provider mismatch"
     rescue Auth::OAuthExchangeIdentity::ClosedAccount
       raise ClosedAccount, "closed account cannot sign in"
+    rescue Auth::OAuthAccountResolution::FeatureDisabled
+      raise ResolutionUnavailable, "account resolution is unavailable"
     rescue ActiveRecord::RecordInvalid, ArgumentError
       raise IdentityError, "central OAuth identity is invalid"
     end

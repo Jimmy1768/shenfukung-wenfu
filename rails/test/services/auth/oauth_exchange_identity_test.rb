@@ -6,6 +6,9 @@ require "json"
 
 module Auth
   class OAuthExchangeIdentityTest < ActiveSupport::TestCase
+    setup do
+      Config::EntryResolver.upsert!(key: "oauth_account_resolution", value: true)
+    end
     test "normalizes nested Google claims into an exact existing identity and shared terms/profile result" do
       user = user_with(email: "shared-google@example.test", name: "Shared Google")
       identity = OAuthIdentity.create!(
@@ -39,8 +42,17 @@ module Auth
       assert_equal AppConstants::Legal.default_terms_version, user.metadata["terms_version"]
     end
 
-    test "links a verified Google email through the existing resolver" do
+    test "preserves the narrow verified Google subject replacement path" do
       user = user_with(email: "shared-link@example.test", name: "Shared Link")
+      OAuthIdentity.create!(
+        user:,
+        provider: "google_oauth2",
+        provider_uid: "shared-old-google-subject",
+        email: user.email,
+        email_verified: true,
+        credentials: {},
+        metadata: {}
+      )
 
       result = OAuthExchangeIdentity.resolve!(
         response: {
@@ -70,9 +82,10 @@ module Auth
 
       assert_equal "apple", result.provider
       assert_equal "apple", result.canonical_provider
-      assert_equal "shared-apple-subject", result.identity.provider_uid
-      assert_equal true, result.profile_required
-      assert_equal "OAuth User", result.user.english_name
+      assert_nil result.identity
+      assert_nil result.user
+      assert result.account_resolution.record.persisted?
+      assert_equal "apple", result.account_resolution.record.provider
     end
 
     test "fails closed for malformed, mismatched, and closed exchange identities" do

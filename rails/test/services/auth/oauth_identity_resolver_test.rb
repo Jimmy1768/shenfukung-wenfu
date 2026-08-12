@@ -2,8 +2,10 @@ require "test_helper"
 
 module Auth
   class OAuthIdentityResolverTest < ActiveSupport::TestCase
-    test "creates identity and user when no existing records match" do
-      result = OAuthIdentityResolver.resolve_or_link!(
+    test "rejects an unmatched identity instead of provisioning a user" do
+      assert_no_difference(["User.count", "OAuthIdentity.count"]) do
+        assert_raises(OAuthIdentityResolver::UnmatchedIdentity) do
+          OAuthIdentityResolver.resolve_or_link!(
         provider: "google_oauth2",
         uid: "resolver-new-uid",
         email: "resolver.new@example.com",
@@ -11,22 +13,16 @@ module Auth
         email_verified: true,
         credentials: { "token" => "abc" },
         metadata: { "source" => "test" }
-      )
-
-      assert result.identity.persisted?
-      assert result.user.persisted?
-      assert_equal result.user.id, result.identity.user_id
-      assert_equal "resolver.new@example.com", result.identity.email
-      assert_equal true, result.created_identity
-      assert_equal false, result.linked_existing_user
-      assert_equal "abc", result.identity.credentials["token"]
-      assert_equal "test", result.identity.metadata["source"]
+          )
+        end
+      end
     end
 
-    test "links identity to existing user by email" do
+    test "does not link a new provider identity to an existing user by email" do
       user = create_user("resolver.link@example.com", "Resolver Link")
 
-      result = OAuthIdentityResolver.resolve_or_link!(
+      assert_raises(OAuthIdentityResolver::UnmatchedIdentity) do
+        OAuthIdentityResolver.resolve_or_link!(
         provider: "facebook",
         uid: "resolver-link-uid",
         email: user.email,
@@ -34,23 +30,14 @@ module Auth
         email_verified: true,
         credentials: {},
         metadata: { "source" => "test-link" }
-      )
-
-      assert_equal user.id, result.user.id
-      assert_equal user.id, result.identity.user_id
-      assert_equal true, result.linked_existing_user
-      assert_equal true, result.created_identity
+        )
+      end
+      assert_empty user.oauth_identities
     end
 
     test "reuses existing identity for provider and uid" do
-      first = OAuthIdentityResolver.resolve_or_link!(
-        provider: "apple",
-        uid: "resolver-existing-uid",
-        email: "resolver.existing@example.com",
-        name: "Resolver Existing",
-        credentials: { "token" => "first" },
-        metadata: { "source" => "first" }
-      )
+      user = create_user("resolver.existing@example.com", "Resolver Existing")
+      first_identity = OAuthIdentity.create!(user:, provider: "apple", provider_uid: "resolver-existing-uid", email: user.email, credentials: { "token" => "first" }, metadata: { "source" => "first" })
 
       second = OAuthIdentityResolver.resolve_or_link!(
         provider: "apple",
@@ -61,8 +48,8 @@ module Auth
         metadata: { "source" => "second" }
       )
 
-      assert_equal first.identity.id, second.identity.id
-      assert_equal first.user.id, second.user.id
+      assert_equal first_identity.id, second.identity.id
+      assert_equal user.id, second.user.id
       assert_equal false, second.created_identity
       assert_equal "second", second.identity.credentials["token"]
       assert_equal "second", second.identity.metadata["source"]
@@ -137,7 +124,7 @@ module Auth
         { email: user.email, email_verified: false, uid: "resolver-google-unverified-subject" }
       ].each do |attributes|
         if attributes[:email].nil?
-          result = OAuthIdentityResolver.resolve_or_link!(
+          assert_raises(OAuthIdentityResolver::UnmatchedIdentity) { OAuthIdentityResolver.resolve_or_link!(
             provider: "google_oauth2",
             uid: attributes[:uid],
             email: attributes[:email],
@@ -145,10 +132,9 @@ module Auth
             email_verified: attributes[:email_verified],
             credentials: { "token" => "resolver-unverified-token" },
             metadata: {}
-          )
-          assert_not_equal user.id, result.user.id
+          ) }
         else
-          assert_raises(ActiveRecord::RecordInvalid) do
+          assert_raises(OAuthIdentityResolver::UnmatchedIdentity) do
             OAuthIdentityResolver.resolve_or_link!(
               provider: "google_oauth2",
               uid: attributes[:uid],
@@ -180,7 +166,7 @@ module Auth
         metadata: {}
       )
 
-      non_google = OAuthIdentityResolver.resolve_or_link!(
+      assert_raises(OAuthIdentityResolver::UnmatchedIdentity) { OAuthIdentityResolver.resolve_or_link!(
         provider: "facebook",
         uid: "resolver-facebook-subject",
         email: user.email,
@@ -188,9 +174,7 @@ module Auth
         email_verified: true,
         credentials: {},
         metadata: {}
-      )
-
-      assert_equal user.id, non_google.user.id
+      ) }
       assert_equal "resolver-google-conflict-old", identity.reload.provider_uid
       exact_subject = OAuthIdentityResolver.resolve_or_link!(
         provider: "google_oauth2",
@@ -210,24 +194,25 @@ module Auth
     test "does not replace an ambiguous or closed user's stale google identity" do
       ambiguous_user = create_user("resolver.google.ambiguous@example.com", "Google Ambiguous")
       first_identity = create_google_identity(ambiguous_user, "resolver-google-ambiguous-old-one")
-      OAuthIdentity.new(
+      assert_raises(ActiveRecord::RecordNotUnique) do
+        OAuthIdentity.new(
         user: ambiguous_user,
         provider: "google_oauth2",
         provider_uid: "resolver-google-ambiguous-old-two",
         email: ambiguous_user.email,
         credentials: {},
         metadata: {}
-      ).save!(validate: false)
+        ).save!(validate: false)
+      end
 
       closed_user = create_user("resolver.google.closed@example.com", "Google Closed")
       closed_identity = create_google_identity(closed_user, "resolver-google-closed-old")
       closed_user.close_account!(reason: "self_service")
 
       [
-        [ambiguous_user, "resolver-google-ambiguous-new", "Google Ambiguous"],
         [closed_user, "resolver-google-closed-new", "Google Closed"]
       ].each do |candidate, new_uid, name|
-        assert_raises(ActiveRecord::RecordInvalid) do
+        assert_raises(OAuthIdentityResolver::UnmatchedIdentity) do
           OAuthIdentityResolver.resolve_or_link!(
             provider: "google_oauth2",
             uid: new_uid,
@@ -240,9 +225,7 @@ module Auth
         end
       end
 
-      assert_equal "resolver-google-ambiguous-old-one", first_identity.reload.provider_uid
       assert_equal "resolver-google-closed-old", closed_identity.reload.provider_uid
-      assert_equal 2, ambiguous_user.oauth_identities.where(provider: "google_oauth2").count
       assert_equal 1, closed_user.oauth_identities.where(provider: "google_oauth2").count
       assert_equal 0, SystemAuditLog.where(action: "auth.oauth.google_subject_replaced").count
     end

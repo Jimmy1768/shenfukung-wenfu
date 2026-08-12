@@ -200,6 +200,9 @@ Rails.application.routes.draw do
     get "/oauth/identities", to: "oauth_identities#index", as: :oauth_identities
     post "/oauth/:provider/link", to: "oauth_identities#create", as: :oauth_link
     delete "/oauth/:provider/unlink", to: "oauth_identities#destroy", as: :oauth_unlink
+    get "/oauth/resolution", to: "oauth_resolutions#show", as: :oauth_resolution
+    post "/oauth/resolution/existing", to: "oauth_resolutions#existing", as: :oauth_resolution_existing
+    post "/oauth/resolution/new", to: "oauth_resolutions#new_account", as: :oauth_resolution_new_account
     resources :dependents, only: %i[new create edit update destroy]
     resources :registrations, only: %i[index show edit update new create] do
       member do
