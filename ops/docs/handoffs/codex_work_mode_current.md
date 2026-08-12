@@ -359,18 +359,18 @@ edit and dependent draft create remain untested—not defects—because Android
 input/developer-inspector foreground behavior occurred before either save and
 later observation proved no partial mutation.
 
-The foreground retry report is accepted on canonical `main` at `474834b`; its
-entry, exact Metro attachment, bundle, and normal signed-in surface passed.
-Control stopped before form mutation because canonical reset state had no
-`Runtime Dependent`, while the plan prohibited automated text and defined no
-setup input method. The Director rejected manual callbacks and requires
-Control-owned input. The current Expo runtime authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_CONTROL_INPUT_PLAN.md`
-through Control B. It authorizes only target-fenced, fresh-UI-verified ADB
-entry of `Runtime Dependent`, `2`, and `Runtime Contact`, plus the exact visible
-registrant and save controls. Director callbacks are prohibited. No source
-repair, rebuild, version/build change, real API/OAuth/provider, payment,
-QR/camera, production, deployment, release, or push is authorized.
+The first Control-owned input attempt is accepted on canonical `main` at
+`d9d8d1d`. Exact `Runtime Dependent` entry passed, but the still-visible IME
+intercepted the intended Create tap and appended `y`; no dependent was created,
+Control stopped immediately, and reset/cleanup passed. This is an input-method
+failure, not a source defect. The current Expo runtime authority is
+`ops/docs/plans/EXPO_V1_REGISTRATION_RUNTIME_KEYBOARD_DISMISSAL_RETRY_PLAN.md`
+through Control B. It requires one Back event only while the IME is visibly
+present, proof that the same form/value remain with keyboard absent, and fresh
+post-IME button bounds before any Create/Update. Director callbacks remain
+prohibited. No source repair, rebuild, version/build change, real API/OAuth/
+provider, payment, QR/camera, production, deployment, release, or push is
+authorized.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
