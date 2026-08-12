@@ -45,6 +45,7 @@
 - `ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_IMPLEMENTATION_PLAN.md`
+- `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_RUNTIME_VALIDATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
@@ -299,14 +300,21 @@ boundaries, and Android Back from TempleMate's active CameraView exits to the
 Pixel launcher instead of returning home. Dependent and registration CRUD
 transitions remain device-evidence gaps, not accepted implementation defects.
 
-The current source phase is
-`ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_IMPLEMENTATION_PLAN.md` through
-Control A. It repairs only the two confirmed JavaScript behaviors with focused
-state proof. It authorizes no dependent/registration redesign, dependency,
-configuration, native rebuild, device action, real API/OAuth, provider,
-payment, version/build increment, deployment, release, or push. A later
-Control B runtime packet will validate both repairs and revisit the two CRUD
-transition evidence gaps on the installed development client.
+The final UI refinement source phase is complete and accepted on canonical
+`main` at `46e8f3f94059fb7faf070e345c3df4bd54b4a9f2`; Control A received
+`released_terminal_idle`. Transient feedback now has screen ownership and
+locale-stable keys, and active CameraView Back closes only the scanner to home.
+The implementation changed no dependency, configuration, native, adapter,
+OAuth, QR trust, CRUD, version, or build behavior.
+
+The current runtime phase is
+`ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_RUNTIME_VALIDATION_PLAN.md` through
+Control B. It reuses the installed development client and exact USB Metro
+method to validate the two repaired behaviors and complete the remaining
+dependent create/edit/delete and draft-registration create/edit visible
+transition evidence. It authorizes no source repair, QR scan, real API/OAuth,
+provider, payment, dependency, native rebuild, version/build increment,
+deployment, release, or push.
 
 ## Current Authorized Documentation Housekeeping
 
