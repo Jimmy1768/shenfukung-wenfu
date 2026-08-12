@@ -14,10 +14,12 @@ import { activePresentationTenant, bindFixture, clearPriorTenant, confirmSwitch,
 import { createFixtureQrScanner, scanCameraPayload } from './app/tenant/scanner';
 import { TempleQrCamera } from './app/tenant/camera_surface';
 import { copy } from './app/ui/copy';
+import { emptyFeedback, errorFeedback, feedbackForNavigation, noticeFeedback } from './app/ui/feedback';
 import { Button, FormInput, Notice, Section } from './app/ui/primitives';
 import { paletteFor } from './app/ui/theme';
 import { createOAuthController } from './app/oauth/transaction';
 import { createExpoOAuthRuntime } from './app/oauth/runtime';
+import { resolveHardwareBack } from './app/tenant/back';
 
 const clientConfig = resolveClientConfig(Constants.expoConfig?.extra || {});
 const adapter = clientConfig.mode === 'real' ? createRealAdapter({ config: clientConfig, store: scopedStorage, transport: localTestTransport }) : createDummyAdapter();
@@ -31,15 +33,19 @@ export default function App() {
   const [locale, setLocale] = useState('zh-TW'); const [dark, setDark] = useState(false); const [binding, setBinding] = useState(initialBinding()); const [data, setData] = useState(adapter.snapshot()); const [collections, setCollections] = useState('idle');
   const [email, setEmail] = useState('member@example.test'); const [password, setPassword] = useState('templemate-demo'); const [signup, setSignup] = useState({ name: '', email: '', password: '' }); const [recoveryEmail, setRecoveryEmail] = useState('');
   const [profileName, setProfileName] = useState(data.profile.name); const [dependent, setDependent] = useState({ id: null, name: '', relationship: '家人' }); const [registration, setRegistration] = useState({ id: null, offering: '平安祈福', registrantName: data.profile.name });
-  const [connectionLink, setConnectionLink] = useState(fixtureConnectionLink(tenant)); const [supportMessage, setSupportMessage] = useState(''); const [closureConfirmation, setClosureConfirmation] = useState(''); const [pending, setPending] = useState(false); const [error, setError] = useState(null); const [notice, setNotice] = useState(null);
+  const [connectionLink, setConnectionLink] = useState(fixtureConnectionLink(tenant)); const [supportMessage, setSupportMessage] = useState(''); const [closureConfirmation, setClosureConfirmation] = useState(''); const [pending, setPending] = useState(false); const [feedback, setFeedback] = useState(emptyFeedback());
   const [oauthState, setOauthState] = useState(oauthController.snapshot()); const [cameraOpen, setCameraOpen] = useState(false);
   const t = copy[locale]; const palette = paletteFor(dark);
+  const showError = (message, owner = screen) => setFeedback(errorFeedback(message, owner));
+  const dismissError = () => setFeedback(current => ({ ...current, error: null }));
+  const navigate = destination => { setFeedback(current => feedbackForNavigation(current, destination)); setScreen(destination); };
+  const error = feedback.error?.message; const notice = feedback.notice ? t[feedback.notice.key] : null;
 
   useEffect(() => {
-    const timer = setTimeout(() => setStartup(false), 180); const resume = AppState.addEventListener('change', value => { if (value === 'active') setNotice(null); });
-    const back = BackHandler.addEventListener('hardwareBackPress', () => { if (screen !== 'home') { setScreen('home'); return true; } return false; });
+    const timer = setTimeout(() => setStartup(false), 180); const resume = AppState.addEventListener('change', value => { if (value === 'active') setFeedback(emptyFeedback()); });
+    const back = BackHandler.addEventListener('hardwareBackPress', () => { const next = resolveHardwareBack({ screen, cameraOpen }); if (!next.handled) return false; setCameraOpen(next.cameraOpen); if (next.screen !== screen) navigate(next.screen); return true; });
     return () => { clearTimeout(timer); resume.remove(); back.remove(); };
-  }, [screen]);
+  }, [screen, cameraOpen]);
   useEffect(() => {
     let mounted = true;
     if (clientConfig.mode !== 'real') { setStartup(false); return () => { mounted = false; }; }
@@ -47,20 +53,20 @@ export default function App() {
       try {
         const next = await adapter.restoreSession();
         if (next && mounted) { setData(next); setBinding(localTenantBinding(clientConfig)); setSignedIn(true); setCollections('loading'); const loaded = await adapter.loadCollections(); if (mounted) { setData(loaded); setCollections('ready'); } }
-      } catch (reason) { if (mounted) { setError(errorMessage(reason)); setSignedIn(false); setCollections('failed'); } }
+      } catch (reason) { if (mounted) { showError(errorMessage(reason)); setSignedIn(false); setCollections('failed'); } }
       finally { if (mounted) setStartup(false); }
     })();
     return () => { mounted = false; };
   }, []);
   useEffect(() => {
     let mounted = true;
-    oauthController.restore().then(next => { if (mounted) setOauthState(next); }).catch(reason => { if (mounted) setError(errorMessage(reason)); });
+    oauthController.restore().then(next => { if (mounted) setOauthState(next); }).catch(reason => { if (mounted) showError(errorMessage(reason)); });
     const callback = Linking.addEventListener('url', event => {
       oauthController.handleInterruptedReturn(event.url).then(next => {
         if (!mounted) return;
         setOauthState(next);
-        if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); if (next.phase === 'profile_required') setScreen('profile'); }
-      }).catch(reason => { if (mounted) setError(errorMessage(reason)); });
+        if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); if (next.phase === 'profile_required') navigate('profile'); }
+      }).catch(reason => { if (mounted) showError(errorMessage(reason)); });
     });
     return () => { mounted = false; callback.remove(); };
   }, []);
@@ -70,24 +76,24 @@ export default function App() {
     if (preferences.theme === 'dark' || preferences.mobile_theme_id === 'dark') setDark(true);
     if (preferences.theme === 'light' || preferences.mobile_theme_id === 'light') setDark(false);
   }, [data.preferences?.locale, data.preferences?.theme, data.preferences?.mobile_theme_id]);
-  const run = async action => { if (pending) return false; setPending(true); setError(null); setNotice(null); try { const next = await action(); if (next) setData(next); setNotice(t.saved); return true; } catch (reason) { setError(errorMessage(reason)); return false; } finally { setPending(false); } };
+  const run = async (action, { noticeOwner = screen } = {}) => { if (pending) return false; setPending(true); setFeedback(emptyFeedback()); try { const next = await action(); if (next) setData(next); setFeedback(noticeFeedback('saved', noticeOwner)); return true; } catch (reason) { showError(errorMessage(reason)); return false; } finally { setPending(false); } };
   const signIn = async () => { const ok = await run(async () => { const next = await adapter.signIn({ email, password }); if (adapter.kind === 'real') await adapter.loadCollections(); return adapter.snapshot(); }); if (ok) { setSignedIn(true); setCollections('ready'); setBinding(clientConfig.mode === 'real' ? localTenantBinding(clientConfig) : bindFixture(fixtureConnectionLink(tenant))); } };
-  const signOut = () => { oauthController.clear('idle').then(setOauthState).catch(() => null); Promise.resolve(adapter.logout?.()).catch(() => null); setSignedIn(false); setScreen('home'); setError(null); setNotice(null); };
-  const reset = () => { if (adapter.kind !== 'dummy') { setError('Real mode does not reset account data.'); return; } oauthController.clear('idle').then(setOauthState).catch(() => null); const next = adapter.reset(); setData(next); setProfileName(next.profile.name); setDependent({ id: null, name: '', relationship: '家人' }); setRegistration({ id: null, offering: '平安祈福', registrantName: next.profile.name }); setBinding(initialBinding()); setNotice(t.saved); };
+  const signOut = () => { oauthController.clear('idle').then(setOauthState).catch(() => null); Promise.resolve(adapter.logout?.()).catch(() => null); setSignedIn(false); setScreen('home'); setFeedback(emptyFeedback()); };
+  const reset = () => { if (adapter.kind !== 'dummy') { showError('Real mode does not reset account data.'); return; } oauthController.clear('idle').then(setOauthState).catch(() => null); const next = adapter.reset(); setData(next); setProfileName(next.profile.name); setDependent({ id: null, name: '', relationship: '家人' }); setRegistration({ id: null, offering: '平安祈福', registrantName: next.profile.name }); setBinding(initialBinding()); setFeedback(emptyFeedback()); };
   const beginOAuth = async provider => {
-    if (pending) return; setPending(true); setError(null); setNotice(null);
+    if (pending) return; setPending(true); setFeedback(emptyFeedback());
     try {
       const next = await oauthController.begin(provider); setOauthState(next);
-      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(clientConfig.mode === 'real' ? localTenantBinding(clientConfig) : bindFixture(fixtureConnectionLink(tenant))); if (next.phase === 'profile_required') setScreen('profile'); return; }
-      if (next.phase !== 'interrupted') setError(t.oauthOutcome[next.phase] || t.oauthOutcome.failed);
-    } catch (reason) { setError(errorMessage(reason)); }
+      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(clientConfig.mode === 'real' ? localTenantBinding(clientConfig) : bindFixture(fixtureConnectionLink(tenant))); if (next.phase === 'profile_required') navigate('profile'); return; }
+      if (next.phase !== 'interrupted') showError(t.oauthOutcome[next.phase] || t.oauthOutcome.failed);
+    } catch (reason) { showError(errorMessage(reason)); }
     finally { setPending(false); }
   };
-  const updatePreference = async next => { const previous = { locale, dark }; const payload = { ...(next.locale ? { locale: next.locale } : {}), ...(next.theme ? { mobile_theme_id: next.theme } : {}) }; const ok = await run(async () => adapter.updatePreferences(payload)); if (ok) { if (next.locale) setLocale(next.locale); if (next.theme) setDark(next.theme === 'dark'); } else { setLocale(previous.locale); setDark(previous.dark); } };
-  const shared = { t, palette, locale, setLocale, dark, setDark, screen, setScreen, data, setData, binding, setBinding, connectionLink, setConnectionLink, profileName, setProfileName, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, error, setError, notice, run, reset, signOut, collections, updatePreference, oauthState, cameraOpen, setCameraOpen };
+  const updatePreference = async next => { const previous = { locale, dark }; const payload = { ...(next.locale ? { locale: next.locale } : {}), ...(next.theme ? { mobile_theme_id: next.theme } : {}) }; const ok = await run(async () => adapter.updatePreferences(payload)); if (ok) { if (next.locale) { setFeedback(emptyFeedback()); setLocale(next.locale); } if (next.theme) setDark(next.theme === 'dark'); } else { setLocale(previous.locale); setDark(previous.dark); } };
+  const shared = { t, palette, locale, setLocale, dark, setDark, screen, setScreen: navigate, data, setData, binding, setBinding, connectionLink, setConnectionLink, profileName, setProfileName, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, error, setError: message => message ? showError(message) : dismissError(), notice, run, reset, signOut, collections, updatePreference, oauthState, cameraOpen, setCameraOpen };
   if (startup) return <Shell palette={palette}><View style={styles.center}><Text style={[styles.brand, { color: palette.text }]}>{t.appName}</Text><Text style={[styles.muted, { color: palette.textMuted }]}>{t.loading}</Text></View></Shell>;
   if (!signedIn) return <SignedOut {...shared} {...{ email, setEmail, password, setPassword, signup, setSignup, recoveryEmail, setRecoveryEmail, signIn, setSignedIn, beginOAuth }} />;
-  return <Shell palette={palette}><Header t={t} palette={palette} binding={binding} onSignOut={signOut} /><Navigation {...shared} /><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Notice palette={palette} tone="info">{t.demo}</Notice>{error && <Notice palette={palette} tone="error">{error}<Button label={t.retry} palette={palette} tone="secondary" onPress={() => setError(null)} /></Notice>}{notice && <Notice palette={palette}>{notice}</Notice>}<AccountSurface {...shared} /></ScrollView></Shell>;
+  return <Shell palette={palette}><Header t={t} palette={palette} binding={binding} onSignOut={signOut} /><Navigation {...shared} /><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Notice palette={palette} tone="info">{t.demo}</Notice>{error && <Notice palette={palette} tone="error">{error}<Button label={t.retry} palette={palette} tone="secondary" onPress={dismissError} /></Notice>}{notice && <Notice palette={palette}>{notice}</Notice>}<AccountSurface {...shared} /></ScrollView></Shell>;
 }
 
 function Shell({ palette, children }) { return <SafeAreaProvider><SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}><StatusBar style={palette.statusBar} /><KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.fill}>{children}</KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>; }
@@ -109,7 +115,7 @@ function AccountSurface(props) {
   if (screen === 'registrations') return <Section title={t.registrations} palette={palette}>{collections === 'loading' && <Text style={[styles.muted, { color: palette.textMuted }]}>{t.loading}</Text>}{data.registrations.length === 0 && <Text style={[styles.muted, { color: palette.textMuted }]}>{t.emptyRegistrations}</Text>}{data.registrations.map(item => <ListCard key={item.id} palette={palette} title={`${item.offering} · ${item.registrantName}`} caption={item.readOnly ? t.paidReadOnly : item.state === 'draft' ? t.draft : item.state} disabled={item.readOnly} onPress={async () => { if (item.readOnly) return; if (adapter.kind === 'real') { let edit; const ok = await run(async () => { edit = await adapter.editRegistration(item.id); return null; }); if (ok) { const record = edit.registration || {}; setRegistration({ id: item.id, offering: item.offering, offeringSlug: item.offeringSlug, accountAction: record.account_action || '', registrantName: record.registrant_name || item.registrantName }); } } else setRegistration({ id: item.id, offering: item.offering, registrantName: item.registrantName }); }} />)}{!(adapter.kind === 'real' && registration.id) && <FormInput label={adapter.kind === 'real' ? t.offeringSlug : t.offering} value={registration.offeringSlug || registration.offering} onChangeText={offering => setRegistration({ ...registration, offering: adapter.kind === 'real' ? '' : offering, offeringSlug: adapter.kind === 'real' ? offering : undefined })} palette={palette} />}<FormInput label={t.registrant} value={registration.registrantName} onChangeText={registrantName => setRegistration({ ...registration, registrantName })} palette={palette} /><Button label={registration.id ? t.update : t.add} palette={palette} disabled={pending} onPress={async () => { const ok = await run(async () => { let next = registration; if (!registration.id && adapter.kind === 'real') { const prepared = await adapter.newRegistration({ offering: registration.offeringSlug, accountAction: registration.accountAction || 'event' }); next = { ...registration, offering: prepared.offering?.title || '', offeringSlug: prepared.offering?.slug || registration.offeringSlug, registration: prepared.registration, accountAction: registration.accountAction || 'event' }; } return next.id ? adapter.updateRegistration(next.id, next) : adapter.createRegistration(next); }); if (ok) setRegistration({ id: null, offering: adapter.kind === 'real' ? '' : '平安祈福', offeringSlug: '', registrantName: data.profile.name }); }} /></Section>;
   if (screen === 'discover') return <>{collections === 'loading' && <Text style={[styles.muted, { color: palette.textMuted }]}>{t.loading}</Text>}{collections === 'failed' && <Notice palette={palette} tone="error">{t.collectionFailed}</Notice>}<DataSection title={t.activity} items={data.events} palette={palette} empty={t.emptyCollection} /><DataSection title={t.services} items={data.services} palette={palette} empty={t.emptyCollection} /><DataSection title={t.gallery} items={data.gallery} palette={palette} empty={t.emptyCollection} /></>;
   if (screen === 'settings') return <Section title={t.settings} palette={palette}><Preferences {...props} /><Text style={[styles.subhead, { color: palette.text }]}>{t.privacyHelp}</Text><Button label={t.needHelp} palette={palette} tone="secondary" onPress={() => setScreen('assistance')} /><Button label={t.contactTemple} palette={palette} tone="secondary" onPress={() => setScreen('contact')} /><Button label={t.privacyRequest} palette={palette} tone="secondary" onPress={() => setScreen('privacy')} /><Button label={t.closeAccount} palette={palette} tone="danger" onPress={() => setScreen('closure')} />{adapter.kind === 'dummy' && <Button label={t.resetDemo} palette={palette} tone="secondary" onPress={reset} />}</Section>;
-  if (screen === 'assistance' || screen === 'contact') { const isHelp = screen === 'assistance'; return <Section title={isHelp ? t.needHelp : t.contactTemple} palette={palette}><FormInput label={t.message} value={supportMessage} onChangeText={setSupportMessage} palette={palette} /><Button label={t.send} palette={palette} onPress={async () => { const ok = await run(() => isHelp ? adapter.submitAssistance({ message: supportMessage }) : adapter.contactTemple({ message: supportMessage })); if (ok) setScreen('settings'); }} /><Button label={t.back} palette={palette} tone="secondary" onPress={() => setScreen('settings')} /></Section>; }
+  if (screen === 'assistance' || screen === 'contact') { const isHelp = screen === 'assistance'; return <Section title={isHelp ? t.needHelp : t.contactTemple} palette={palette}><FormInput label={t.message} value={supportMessage} onChangeText={setSupportMessage} palette={palette} /><Button label={t.send} palette={palette} onPress={async () => { const ok = await run(() => isHelp ? adapter.submitAssistance({ message: supportMessage }) : adapter.contactTemple({ message: supportMessage }), { noticeOwner: 'settings' }); if (ok) setScreen('settings'); }} /><Button label={t.back} palette={palette} tone="secondary" onPress={() => setScreen('settings')} /></Section>; }
   if (screen === 'privacy') return <Section title={t.privacyRequest} palette={palette}><Button label={t.exportData} palette={palette} onPress={() => run(() => adapter.requestPrivacy({ kind: 'export' }))} /><Button label={t.deletionRequest} palette={palette} tone="danger" onPress={() => run(() => adapter.requestPrivacy({ kind: 'deletion' }))} /><Button label={t.back} palette={palette} tone="secondary" onPress={() => setScreen('settings')} /></Section>;
   if (screen === 'closure') return <Section title={t.closeAccount} palette={palette}><Text style={[styles.body, { color: palette.text }]}>{t.closeDescription}</Text><FormInput label="CLOSE" value={closureConfirmation} onChangeText={setClosureConfirmation} autoCapitalize="characters" palette={palette} /><Button label={t.closeAccount} palette={palette} tone="danger" onPress={async () => { const ok = await run(() => adapter.closeAccount({ confirmation: closureConfirmation })); if (ok) props.signOut(); }} /><Button label={t.back} palette={palette} tone="secondary" onPress={() => setScreen('settings')} /></Section>;
   if (screen === 'connection') return <Section title={t.templeConnection} palette={palette}><Text style={[styles.body, { color: palette.text }]}>{activePresentationTenant(binding)?.name || t.notConnected}</Text><Button label={t.back} palette={palette} tone="secondary" onPress={() => setScreen('home')} /></Section>;

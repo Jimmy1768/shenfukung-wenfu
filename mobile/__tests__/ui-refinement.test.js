@@ -5,6 +5,15 @@ const assert = require('node:assert/strict');
 
 const root = path.resolve(__dirname, '..');
 const read = file => fs.readFileSync(path.join(root, file), 'utf8');
+const { emptyFeedback, errorFeedback, feedbackForNavigation, noticeFeedback } = require('../app/ui/feedback');
+
+test('feedback state owns errors and destination notices across navigation, reset, and locale boundaries', () => {
+  assert.deepEqual(feedbackForNavigation(errorFeedback('Message is required', 'assistance'), 'privacy'), emptyFeedback());
+  const forwarded = noticeFeedback('saved', 'settings');
+  assert.deepEqual(feedbackForNavigation(forwarded, 'settings'), forwarded);
+  assert.deepEqual(feedbackForNavigation(forwarded, 'closure'), emptyFeedback());
+  assert.deepEqual(emptyFeedback(), { error: null, notice: null }, 'reset and locale changes clear all transient feedback');
+});
 
 test('refined presentation keeps both complete locales and explicit dummy disclosure', () => {
   const source = read('app/ui/copy.js');

@@ -6,6 +6,13 @@ const { createCameraPermissionController, createCameraSession, permissionState }
 const { fixtureConnectionLink } = require('../app/tenant/binding');
 const { tenant } = require('../app/dummy/fixtures');
 const { scanCameraPayload } = require('../app/tenant/scanner');
+const { resolveHardwareBack } = require('../app/tenant/back');
+
+test('active camera Back is consumed and closes only the scanner to home', () => {
+  assert.deepEqual(resolveHardwareBack({ screen: 'home', cameraOpen: true }), { handled: true, screen: 'home', cameraOpen: false });
+  assert.deepEqual(resolveHardwareBack({ screen: 'settings', cameraOpen: false }), { handled: true, screen: 'home', cameraOpen: false });
+  assert.deepEqual(resolveHardwareBack({ screen: 'home', cameraOpen: false }), { handled: false, screen: 'home', cameraOpen: false });
+});
 
 test('camera permission states keep preview closed until a user-initiated granted state', () => {
   assert.equal(permissionState(null), 'loading');
