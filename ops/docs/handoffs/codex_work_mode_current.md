@@ -229,6 +229,17 @@ records functional defects and UI-refinement gaps without repairing source.
 No rebuild, version/build increment, real API/OAuth, provider, deployment,
 release, or push is authorized.
 
+The first corrected USB/ADB runtime attempt reached TempleMate but failed before
+the signed-out dummy UI with `Cannot convert undefined value to object` at the
+`SignedOut` component. The accepted runtime report is canonical at
+`6445945248c4d51f7e48382d7f61f901506174cb`. Source evidence identifies a
+JavaScript-only key mismatch: `App.js` reads `t.oauthState` while both locale
+dictionaries define `oauthOutcome`. The current source phase is
+`ops/docs/plans/EXPO_V1_SIGNED_OUT_OAUTH_COPY_KEY_REPAIR_PLAN.md` through
+Control A. It permits only the exact lookup correction and focused regression
+proof. No Metro/device, dependency, native build, EAS, version/build, provider,
+deployment, release, or push action is authorized by the repair.
+
 ## Current Authorized Documentation Housekeeping
 
 `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md` is the
