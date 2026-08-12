@@ -409,19 +409,18 @@ redaction, and cleanup evidence passed.
 
 The Director accepted Candidate B as the future release boundary: exact
 `release/current` baseline `99a0a692` plus `684c9ef`, `740aa39`, `7fa60f0`,
-`6eb57c3`, and `dcc258b` in that order. The first production-preflight attempt
-stopped locally before SSH/network because an independently accepted Planning
-documentation commit advanced canonical `main`; its truthful no-remote-action
-report is integrated at `6e5ecb7`. The current OAuth production authority is
-`ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_READ_ONLY_PREFLIGHT_RETRY_PLAN.md`
-through Control A. It retains every exact target, sanitized query/command,
-stop, non-mutation, and exclusion from the parent plan while using the exact
-isolated retry-plan worktree as the reproducible local packet source. It does
-not construct or move a release ref, deploy, migrate, restart, change flags,
-validate providers, touch accounts/sessions, or remediate history. The
-historical Apple-only record remains a separate blocked parent pending
-deployed-source validation, the 24-hour review, an exact-account inventory,
-and a safe fresh-proof acquisition/execution interface.
+`6eb57c3`, and `dcc258b` in that order. The corrected read-only preflight passed
+its local and exact remote target/ref fences, then stopped because the remote
+release checkout was not clean. It performed no bundle/environment/database/
+service/smoke query and changed nothing; its report is integrated at
+`8dc3365`. The current OAuth production authority is
+`ops/docs/plans/OAUTH_PRODUCTION_RELEASE_CHECKOUT_READ_ONLY_RECONCILIATION_PLAN.md`
+through Control A. It permits one exact `git status --porcelain` inventory with
+strict path sanitization only; it cannot inspect contents or clean, stage,
+restore, reset, fetch, deploy, or resume the preflight. The historical
+Apple-only record remains a separate blocked parent pending deployed-source
+validation, the 24-hour review, an exact-account inventory, and a safe
+fresh-proof acquisition/execution interface.
 
 ## Current Authorized Documentation Housekeeping
 
