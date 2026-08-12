@@ -262,13 +262,21 @@ real-mode behavior, dependencies, native configuration, and `1.0.0 / 1 / 1`.
 
 The current runtime phase is
 `ops/docs/plans/EXPO_V1_DUMMY_OAUTH_AND_TEMPLE_QR_RUNTIME_VALIDATION_PLAN.md`
-through Control B. It reuses the installed development client and exact USB
-Metro method to prove Google/Apple dummy success, then completes only
-TempleMate's in-app untrusted/trusted fixture QR and confirmation-only tenant
-switch. It explicitly keeps the in-app camera session open for the two required
-Director physical-pointing callbacks. No rebuild, source change, real OAuth,
-provider/Rails action, dependency, version/build change, deployment, release,
-or push is authorized.
+is complete. Its runtime report is accepted on canonical `main` at
+`adb4fea710a7a384edddf4e43ba61033739a976a`; Control B received
+`released_terminal_idle`. Dummy Google/Apple success, untrusted rejection, and
+trusted binding to `竹南鎮聖福宮` passed. Selecting the switch action then
+visibly showed `尚未連結` before confirmation, so Control stopped before
+confirming or switching to `示範宮廟二號`.
+
+The current source phase is
+`ops/docs/plans/EXPO_V1_TENANT_SWITCH_CONFIRMATION_PRESENTATION_REPAIR_PLAN.md`
+through Control A. Canonical source retains the prior tenant in `switching`
+state; the observed defect is the JSX presentation condition hiding it. The
+plan repairs only that display-state mismatch and adds proof that cleanup and
+candidate binding remain confirmation-only. It authorizes no Metro/device,
+QR/camera/OAuth, dependency/native/version/build, provider/Rails, deployment,
+release, or push action.
 
 ## Current Authorized Documentation Housekeeping
 
