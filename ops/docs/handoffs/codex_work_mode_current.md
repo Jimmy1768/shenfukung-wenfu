@@ -240,6 +240,16 @@ Control A. It permits only the exact lookup correction and focused regression
 proof. No Metro/device, dependency, native build, EAS, version/build, provider,
 deployment, release, or push action is authorized by the repair.
 
+The signed-out copy-key repair is complete and accepted at canonical
+`1c312829da54da8fa395e56ae14552b20296e618`; Control A received
+`released_terminal_idle`. The current runtime phase is
+`ops/docs/plans/EXPO_V1_DUMMY_DEVICE_VALIDATION_AFTER_RENDER_REPAIR_PLAN.md`
+through Control B. It reuses the installed binary and exact prior TempleMate
+USB/ADB Metro method, first verifies the former fatal signed-out path, then
+continues the bounded dummy account/OAuth and TempleMate in-app camera/fixture
+QR checks. No rebuild, version/build increment, real API/OAuth, provider,
+deployment, release, or push is authorized.
+
 ## Current Authorized Documentation Housekeeping
 
 `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md` is the
