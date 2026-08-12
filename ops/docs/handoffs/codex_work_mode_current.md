@@ -371,20 +371,28 @@ authority is active from this record. The exact missing owner decision is a
 Director-approved production rollout plan; historical-account remediation is a
 later distinct exact-account workflow after rollout validation.
 
-The Director requested the next OAuth phase. Planning selected rollout
-readiness before historical-account remediation and recorded the report-only
-authority in
-`ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_ROLLOUT_READINESS_PLAN.md`
-through Control A. The accepted runtime commit `82b0e52` is 110 commits ahead
-of the locally observed `release/current` baseline `99a0a69`; direct promotion
-would be a broad release. Control A must compare exact-main promotion with a
-minimal complete dependency closure, rehearse migrations locally, and return
-the proposed exact target/commit/rollback/verification/approval/monitoring
-packet. It may not contact production, move the release branch, deploy,
-migrate, restart, validate providers, change flags/accounts, or remediate the
-historical Apple-only record. The first production blocker is acceptance of an
-exact release candidate; the first remediation blocker is a safe fresh-proof
-acquisition/execution interface after rollout validation.
+The OAuth account-resolution production rollout readiness phase is complete
+and accepted on canonical `main` at
+`836ea3c98bfe451f537d4a991cf140b0d4babd9a`; Control A received
+`released_terminal_idle`. Exact-main promotion from configured
+`release/current` baseline `99a0a692` is a 110-commit/185-path broad release
+and is not accepted as a narrow OAuth rollout. The readiness report recommends
+the smallest complete Rails-only Candidate B boundary: apply exact commits
+`684c9ef`, `740aa39`, `7fa60f0`, `6eb57c3`, and `dcc258b` in that order to the
+exact release baseline, then review the newly created release commit rather
+than promoting the disposable rehearsal hash. Guarded local migration,
+duplicate-stop, focused/full Rails, disabled-feature, rollback, monitoring,
+redaction, and cleanup evidence passed.
+
+No OAuth production packet is active. The exact missing Director decision is
+acceptance of Candidate B as the release boundary and authorization for a
+separately committed, target-fenced read-only production preflight. Until that
+decision, do not construct or move a release ref, contact production, deploy,
+migrate, restart services, validate providers, change flags/accounts, or
+perform historical remediation. The historical Apple-only record remains a
+separate blocked parent pending deployed-source validation, the 24-hour review,
+an exact-account inventory, and a safe fresh-proof acquisition/execution
+interface.
 
 ## Current Authorized Documentation Housekeeping
 
