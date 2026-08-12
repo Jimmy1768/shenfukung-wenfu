@@ -1,7 +1,7 @@
 import * as AuthSession from 'expo-auth-session';
 import * as WebBrowser from 'expo-web-browser';
 import * as Crypto from 'expo-crypto';
-import { verifierFromBytes } from './pkce';
+import { base64ToBase64Url, verifierFromBytes } from './pkce';
 
 export function createExpoOAuthRuntime(expectedReturnUrl) {
   const redirectUri = AuthSession.makeRedirectUri({ scheme: 'templemate', path: 'oauth/complete', isTripleSlashed: false });
@@ -9,7 +9,8 @@ export function createExpoOAuthRuntime(expectedReturnUrl) {
   return {
     createPkce: async () => {
       const verifier = verifierFromBytes(await Crypto.getRandomBytesAsync(32));
-      const challenge = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, verifier, { encoding: Crypto.CryptoEncoding.BASE64URL });
+      const digest = await Crypto.digestStringAsync(Crypto.CryptoDigestAlgorithm.SHA256, verifier, { encoding: Crypto.CryptoEncoding.BASE64 });
+      const challenge = base64ToBase64Url(digest);
       return { verifier, challenge, method: 'S256' };
     },
     openBrowser: (authorizationUrl, returnUrl) => WebBrowser.openAuthSessionAsync(authorizationUrl, returnUrl)
