@@ -271,12 +271,21 @@ confirming or switching to `示範宮廟二號`.
 
 The current source phase is
 `ops/docs/plans/EXPO_V1_TENANT_SWITCH_CONFIRMATION_PRESENTATION_REPAIR_PLAN.md`
-through Control A. Canonical source retains the prior tenant in `switching`
-state; the observed defect is the JSX presentation condition hiding it. The
-plan repairs only that display-state mismatch and adds proof that cleanup and
-candidate binding remain confirmation-only. It authorizes no Metro/device,
-QR/camera/OAuth, dependency/native/version/build, provider/Rails, deployment,
-release, or push action.
+is complete and accepted on canonical `main` at
+`874cad0a2712cf1f596a59165cb7efcad82dae92`; Control A received
+`released_terminal_idle`. A shared pure presentation selector now retains the
+prior temple across header/home/connection consumers while switching, without
+presenting the candidate or moving cleanup before confirmation.
+
+The current runtime phase is
+`ops/docs/plans/EXPO_V1_TENANT_SWITCH_CONFIRMATION_RUNTIME_VALIDATION_PLAN.md`
+through Control B. It reuses the installed development client and deterministic
+prefilled dummy connection link to isolate the repaired switch flow. It proves
+prior-tenant visibility before confirmation and the final visible switch to
+`示範宮廟二號`, correlated with unchanged confirmation-only cleanup evidence.
+It repeats no QR/OAuth validation and authorizes no source change, rebuild,
+provider/Rails action, dependency, version/build change, deployment, release,
+or push.
 
 ## Current Authorized Documentation Housekeeping
 
