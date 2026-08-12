@@ -212,6 +212,17 @@ source residue remains. A later dummy-mode launch/fixture-camera validation
 phase requires separate authorization; real API/OAuth validation remains
 separately gated.
 
+The Director opened the installed development client and explicitly authorized
+the next step. The current runtime-only packet is
+`ops/docs/plans/EXPO_V1_DUMMY_DEVICE_AND_CAMERA_VALIDATION_PLAN.md` through
+Control B. It reuses the mature DojoMate Android Metro/ADB-reverse pattern with
+TempleMate's explicit network-free dummy mode, then validates the account-only
+dummy surface, dummy Google/Apple native seams, camera denial/retry, untrusted
+and trusted fixture QR scans, and tenant switching on the exact Pixel. It
+records functional defects and UI-refinement gaps without repairing source.
+No rebuild, version/build increment, real API/OAuth, provider, deployment,
+release, or push is authorized.
+
 ## Current Authorized Documentation Housekeeping
 
 `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md` is the
