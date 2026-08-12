@@ -46,6 +46,7 @@
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_IMPLEMENTATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_RUNTIME_VALIDATION_PLAN.md`
+- `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_EVIDENCE_CONTINUATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
@@ -316,6 +317,23 @@ dependent create/edit/delete and draft-registration create/edit visible
 transition evidence. It authorizes no source repair, QR scan, real API/OAuth,
 provider, payment, dependency, native rebuild, version/build increment,
 deployment, release, or push.
+
+Control B's renewed runtime report is accepted as truthful partial evidence on
+isolated commit `396aee203b0d8d13f3e12f0fd8fa7b740ab525fa`; it received the
+paired `released_terminal_idle` receipt. Feedback scoping/localization/reset,
+CameraView Android Back, the paid read-only fixture, final reset, checks, and
+cleanup passed. CameraView Cancel was preempted by an unsolicited camera result,
+and the Pixel ADB text mechanism rejected the prescribed non-Latin temporary
+CRUD values before any mutation. These are evidence-method gaps, not accepted
+product defects.
+
+The current Expo runtime authority is
+`ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_EVIDENCE_CONTINUATION_PLAN.md`
+through Control B. It permits packet-local ASCII-only CRUD values and one
+QR-free blank-camera physical precondition for visible Cancel evidence. It
+remains observation-only and excludes source repair, QR presentation/scan,
+OAuth/provider, real API, build, version, deployment, release, and the separate
+Control A Rails/web OAuth track.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
