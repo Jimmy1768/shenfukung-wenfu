@@ -47,6 +47,7 @@
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_IMPLEMENTATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_RUNTIME_VALIDATION_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_EVIDENCE_CONTINUATION_PLAN.md`
+- `ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_ALIGNMENT_PLAN.md`
 - `ops/docs/plans/EXPO_V1_FUNCTIONAL_STABILIZATION_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_INTEGRATION_READINESS_SCAN_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
@@ -328,13 +329,25 @@ and the Pixel ADB text mechanism rejected the prescribed non-Latin temporary
 CRUD values before any mutation. These are evidence-method gaps, not accepted
 product defects.
 
-The current Expo runtime authority is
-`ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_EVIDENCE_CONTINUATION_PLAN.md`
-through Control B. It permits packet-local ASCII-only CRUD values and one
-QR-free blank-camera physical precondition for visible Cancel evidence. It
-remains observation-only and excludes source repair, QR presentation/scan,
-OAuth/provider, real API, build, version, deployment, release, and the separate
-Control A Rails/web OAuth track.
+The final UI evidence continuation is complete and accepted on canonical
+`main` at `7da778288e84a6af089c6fee82c0985160e3ff1a`; Control B received
+`released_terminal_idle`. CameraView Cancel, dependent edit/delete, the paid
+read-only fixture, reset, checks, and cleanup passed. Exact dependent-create
+evidence remains untested due input-field concatenation and is not classified
+as a product defect. The registration draft exposed a true product-contract
+gap: a patron could author/relabel a freeform offering instead of selecting a
+temple-defined offering with an authoritative fee, so draft edit was stopped.
+
+The current Expo source authority is
+`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_ALIGNMENT_PLAN.md` through
+Control B. It copies the existing web account contract: registration begins
+from a current-temple offering in Discover, Rails supplies immutable offering
+identity/action/fee/currency and self/dependent defaults, and the patron edits
+only permitted intake/metadata fields. Dummy mode uses the same semantics with
+a deterministic admin-defined fixture catalog. Payment, checkout, admin,
+OAuth, native dependency/configuration, rebuild, version/build increment,
+device runtime, production, release, and push remain excluded. Control A
+retains the independent Rails/web OAuth rollout-readiness track.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
 `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`.
