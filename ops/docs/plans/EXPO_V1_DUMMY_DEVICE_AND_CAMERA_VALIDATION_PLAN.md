@@ -50,14 +50,31 @@ mode.
 The trusted payload identifies test tenant `竹南鎮聖福宮`; the untrusted
 payload must never change the binding.
 
-## Mature Reference
+## Exact Prior TempleMate Runtime Method
 
-Read-only `/Users/jimmy1768/Projects/DojoMate-Expo/package.json` and
-`Build-Notes.md` establish the mature Android dev-client pattern: Metro 8081
-with `--dev-client --host localhost` and ADB reverse 8081. TempleMate borrows
-only this pattern. It sets its own dummy environment, does not reverse a Rails
-port, removes only its exact mapping rather than `--remove-all`, and uses no
-DojoMate product/config/dependency/provider behavior.
+The authoritative runtime reference is the already accepted TempleMate device
+evidence in
+`ops/docs/handoffs/2026-08-11-expo-v1-dev-client-ui-refinement-control-b.md`.
+That previous successful Pixel validation used exactly:
+
+- `adb reverse tcp:8081 tcp:8081` on the accepted serial;
+- `TEMPLEMATE_CLIENT_MODE=dummy BUILD_MODE=development npx expo start
+  --dev-client --localhost --port 8081`;
+- the exact local `exp+templemate` development-client URL from that Metro
+  session, opened through target-fenced ADB on the USB-connected Pixel;
+- standard Back only to dismiss the Expo developer overlay after the bundle
+  loaded;
+- exact Metro and reverse-mapping cleanup afterward.
+
+This packet reuses that method unchanged. It does not substitute a yarn
+wrapper, `--host localhost`, `--clear`, a LAN/tunnel/cloud host, a QR login to
+Metro, or a DojoMate runtime command. DojoMate remains a product/reference
+repository but is not the authority for this attachment step.
+
+The Director must never be asked to scan a Metro/Expo QR code. The connected
+Pixel's USB/ADB path is authoritative. QR images used later in this plan are
+only payloads for testing TempleMate's temple-camera feature after the app has
+already attached to Metro; they are never an attachment or login mechanism.
 
 ## Preflight And Materialization
 
@@ -91,15 +108,17 @@ Create only:
 
     adb -s 39011FDJH00FQ8 reverse tcp:8081 tcp:8081
 
-From isolated `mobile/`, start one packet-owned process:
+From isolated `mobile/`, start one packet-owned process using the exact prior
+TempleMate command:
 
-    BUILD_MODE=development TEMPLEMATE_CLIENT_MODE=dummy TEMPLEMATE_CLIENT_ENVIRONMENT=development yarn dev-client --clear --port 8081 --host localhost
+    TEMPLEMATE_CLIENT_MODE=dummy BUILD_MODE=development npx expo start --dev-client --localhost --port 8081
 
 Require the resolved app to remain dummy mode with no API base URL or tenant
-slug. Use only the safe localhost dev-client URL emitted by this Metro process
-to attach/reload the exact Komainu package. A target-fenced ADB VIEW intent for
-that emitted URL is allowed. Do not invent a URL, use Expo Go/LAN/tunnel/cloud,
-or launch another package.
+slug. Open the exact local `exp+templemate` development-client URL emitted by
+this Metro session through target-fenced ADB on the USB-connected Pixel, using
+the same method as the prior accepted TempleMate validation. Do not ask the
+Director to scan a Metro QR, introduce another attachment method, invent a URL,
+use Expo Go/LAN/tunnel/cloud, or launch another package.
 
 An unexpected network request, real-mode indicator, provider browser, or
 source-generation request is a hard failure.

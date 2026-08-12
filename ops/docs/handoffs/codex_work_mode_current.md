@@ -215,8 +215,12 @@ separately gated.
 The Director opened the installed development client and explicitly authorized
 the next step. The current runtime-only packet is
 `ops/docs/plans/EXPO_V1_DUMMY_DEVICE_AND_CAMERA_VALIDATION_PLAN.md` through
-Control B. It reuses the mature DojoMate Android Metro/ADB-reverse pattern with
-TempleMate's explicit network-free dummy mode, then validates the account-only
+Control B. It reuses the exact previously accepted TempleMate Pixel method:
+`adb reverse tcp:8081 tcp:8081`, explicit dummy/development
+`npx expo start --dev-client --localhost --port 8081`, and the exact local
+`exp+templemate` URL opened through target-fenced ADB on the USB-connected
+Pixel. Asking the Director to scan a Metro/Expo QR code is permanently banned;
+temple QR feature testing is separate. The packet then validates the account-only
 dummy surface, dummy Google/Apple native seams, camera denial/retry, untrusted
 and trusted fixture QR scans, and tenant switching on the exact Pixel. It
 records functional defects and UI-refinement gaps without repairing source.
