@@ -1,16 +1,60 @@
 # Apple OAuth Account Resolution Readiness And Implementation Plan
 
-Status: Planning recommendation for Director review; not accepted for
-implementation or dispatch
+Status: accepted for bounded local OAuth source implementation through Wenfu
+Control A; production deployment and production-account remediation remain
+separately gated
 
 Created: 2026-08-12
 
 Owner: Wenfu Planning
 
+Target: Wenfu Control A
+`019fc08d-676b-7ca2-be32-3efe42fa2fca`
+
 Repository: `/Users/jimmy1768/Projects/shengfukung-wenfu`
 
 Diagnosis baseline:
 `44815e184b08f6fe57deb6c16607f5abfb8e1779`
+
+Director acceptance: 2026-08-12. The Director accepted the resolution model
+and assigned the OAuth track to Control A. Control B retains the separate Expo
+app track.
+
+## Accepted Dispatch Scope
+
+Control A owns the bounded local Rails/web OAuth implementation:
+
+- named exact-login, explicit-link, pending-resolution, new-account, and
+  lookup-only admin resolution modes;
+- removal of generic signed-out cross-provider email attachment while
+  preserving exact provider-subject login and the narrow existing Google
+  subject-compatibility repair;
+- pending-resolution persistence, expiry/replay/concurrency behavior, terms and
+  profile-completion gating, browser account UX, and legacy callback alignment;
+- Rails native OAuth response/contract changes required to expose the shared
+  safe resolution state, but no TempleMate client implementation;
+- dual-proof consolidation service and tests for an otherwise empty
+  OAuth-seeded placeholder, with all user-work/admin/payment/privacy/closure
+  cases failing closed for separately approved adjudication;
+- database integrity, audit redaction, feature gates, rollback hooks, and the
+  local test evidence defined below.
+
+Control A must use an isolated `codex/` branch/worktree and one ephemeral
+Implementer. Transactional persistence, multi-relation identity ownership,
+replay/concurrency, rollback, and retained-state mutation make this a deeper
+bounded packet; the repository allocation permits `gpt-5.6-terra/high` with
+that rationale.
+
+Control B retains the already-authorized Expo final-UI/runtime track. It owns
+no Rails, resolver, provider-account, or production-data path from this plan.
+Later TempleMate consumption of the new native resolution contract requires a
+separate accepted Expo implementation plan through Control B.
+
+No Control may deploy, access provider credentials, inspect or change
+production data/accounts, or perform historical-account remediation from this
+plan. The production website is the critical affected surface, but urgency
+does not collapse source acceptance, deployment, and exact-account remediation
+into one authority packet.
 
 ## Objective
 
@@ -26,9 +70,9 @@ work needed for:
 - browser account, browser admin, legacy callback, and native account flows
   that currently share identity-resolution code.
 
-This document is a readiness and implementation recommendation only. It does
-not authorize source changes, provider or credential access, production-data
-inspection or mutation, deployment, account changes, or Control dispatch.
+This document authorizes only the bounded local source implementation above.
+It does not authorize provider or credential access, production-data
+inspection or mutation, deployment, account changes, or Expo implementation.
 
 ## Sanitized Observed Facts
 
@@ -251,8 +295,10 @@ operation above and therefore has more cleanup complexity.
 
 ## Recommended Implementation Sequence
 
-No phase below is authorized until the Director accepts the open decisions and
-Planning commits a bounded implementation plan.
+The Director accepted the decisions below. Phases 1 and 2, the Rails-only
+server-contract portion of Phase 3, and Phase 4 are the bounded Control A
+source packet. TempleMate implementation and Phase 5 external/production work
+remain separately gated.
 
 ### Phase 1 — Resolution policy and server contract
 
@@ -420,26 +466,29 @@ pre-state, stop on drift, and define a narrow immediate transaction rollback.
 After user activity resumes, correction is a forward reconciliation, not a
 blind database restore.
 
-## Director Decisions Required Before Dispatch
+## Accepted Director Decisions
 
-1. Accept the recommended pending-resolution design, or retain provisional
-   OAuth-seeded users and accept the additional consolidation burden.
-2. Decide whether generic signed-out exact-email attachment is removed for all
-   providers. Planning recommends removing it; exact provider-subject login and
-   the narrow existing Google compatibility repair remain separate.
-3. Decide whether native Sign-in methods/linking is part of this implementation
-   sequence or follows after the browser/server policy is accepted.
-4. Define whether an empty OAuth-seeded placeholder may be consolidated after
-   dual proof, and which source-user states require manual adjudication.
-5. Decide the legacy OmniAuth endpoint disposition: align, gate, or retire.
-6. Confirm lookup-only admin OAuth with zero provisioning.
-7. Decide whether production remediation of the observed records is desired
-   after implementation and rollout; it is not implied by fixing future flows.
+1. Use the recommended pending-resolution design; do not provision a permanent
+   user merely because an unmatched provider callback completed.
+2. Remove generic signed-out exact-email attachment for all providers. Preserve
+   exact provider-subject login and keep the narrow existing Google
+   compatibility repair isolated.
+3. Control A implements the Rails/shared contract. TempleMate Sign-in methods,
+   linking, and resolution UI follow separately through Control B.
+4. Permit consolidation of an otherwise empty OAuth-seeded placeholder only
+   after dual proof. Any user work, admin authority, payment, privacy, closure,
+   or unsupported state fails closed for separately approved adjudication.
+5. Align or gate the legacy OmniAuth callback to the same safe resolver policy;
+   it must not retain independent silent provisioning behavior.
+6. Make admin OAuth lookup-only with zero user/identity provisioning.
+7. Production remediation of the observed records is desired after accepted
+   source implementation and rollout readiness, but requires its own exact
+   production workflow and is not authorized here.
 
 ## Current Readiness Classification
 
-`apple_oauth_account_resolution_design_decision_required`
+`apple_oauth_account_resolution_local_implementation_authorized`
 
-First blocker: Director acceptance of the account-resolution model and the
-seven decisions above. There is no source, provider, or production-action
-authority yet.
+First blocker: none for bounded local source implementation. Deployment,
+provider validation, and production-account remediation remain separate future
+authority gates.

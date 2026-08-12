@@ -325,9 +325,12 @@ address did not match the existing Gmail/Google user. The records have no
 trustworthy local correlation and are not safe merge candidates from the
 supplied facts. Planning recommends explicit dual-proof linking, pending
 resolution for unmatched provider identities, lookup-only admin OAuth, and no
-name/email/relay heuristic. The plan awaits Director decisions and is not
-accepted for implementation or Control dispatch. No production-data,
-provider, account, deployment, or source authority is active from this record.
+name/email/relay heuristic. The Director accepted the seven recorded decisions
+and assigned the bounded local Rails/web OAuth source track to Control A.
+Control A may implement the shared Rails/native response contract but no Expo
+client path. Control B retains the separate Expo final-UI/runtime track. No
+production-data, provider, account, deployment, or historical remediation
+authority is active from this record; those remain separate future gates.
 
 ## Current Authorized Documentation Housekeeping
 
