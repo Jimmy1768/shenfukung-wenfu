@@ -359,15 +359,16 @@ edit and dependent draft create remain untested—not defects—because Android
 input/developer-inspector foreground behavior occurred before either save and
 later observation proved no partial mutation.
 
-The first Control-owned input attempt is accepted on canonical `main` at
-`d9d8d1d`. Exact `Runtime Dependent` entry passed, but the still-visible IME
-intercepted the intended Create tap and appended `y`; no dependent was created,
-Control stopped immediately, and reset/cleanup passed. This is an input-method
-failure, not a source defect. The current Expo runtime authority is
-`ops/docs/plans/EXPO_V1_REGISTRATION_RUNTIME_KEYBOARD_DISMISSAL_RETRY_PLAN.md`
-through Control B. It requires one Back event only while the IME is visibly
-present, proof that the same form/value remain with keyboard absent, and fresh
-post-IME button bounds before any Create/Update. Director callbacks remain
+The keyboard-dismissal retry report is accepted on canonical `main` at
+`638e3b0`. Exact Runtime Dependent creation passed. Control then stopped because
+the self-service contact field was nonempty while the plan required empty;
+reset/cleanup passed. Source proves this is intentional: dummy preparation
+defaults `contact_name` to canonical profile name `林小安`. The current Expo
+runtime authority is
+`ops/docs/plans/EXPO_V1_REGISTRATION_RUNTIME_KNOWN_CONTACT_DEFAULT_RETRY_PLAN.md`
+through Control B. It permits clearing only exact known `林小安` with three
+verified deletions before entering `Runtime Contact`, while retaining the
+one-Back IME lifecycle and fresh post-IME bounds. Director callbacks remain
 prohibited. No source repair, rebuild, version/build change, real API/OAuth/
 provider, payment, QR/camera, production, deployment, release, or push is
 authorized.
@@ -413,14 +414,16 @@ The Director accepted Candidate B as the future release boundary: exact
 its local and exact remote target/ref fences, then stopped because the remote
 release checkout was not clean. It performed no bundle/environment/database/
 service/smoke query and changed nothing; its report is integrated at
-`8dc3365`. The current OAuth production authority is
-`ops/docs/plans/OAUTH_PRODUCTION_RELEASE_CHECKOUT_READ_ONLY_RECONCILIATION_PLAN.md`
-through Control A. It permits one exact `git status --porcelain` inventory with
-strict path sanitization only; it cannot inspect contents or clean, stage,
-restore, reset, fetch, deploy, or resume the preflight. The historical
-Apple-only record remains a separate blocked parent pending deployed-source
-validation, the 24-hour review, an exact-account inventory, and a safe
-fresh-proof acquisition/execution interface.
+`8dc3365`. The subsequent read-only reconciliation is accepted at `736004b`:
+the dirty checkout consists of 86 safe untracked public paths (`rails`: 1,
+`vue`: 85), with no content inspected or mutation performed.
+`active_packet: none` for OAuth. The exact missing decision/owner is
+Planning/Director:
+preserve versus separately authorize cleanup/replacement of those public
+assets before another preflight. The historical Apple-only record remains a
+separate blocked parent pending deployed-source validation, the 24-hour review,
+an exact-account inventory, and a safe fresh-proof acquisition/execution
+interface.
 
 ## Current Authorized Documentation Housekeeping
 
