@@ -279,11 +279,20 @@ presenting the candidate or moving cleanup before confirmation.
 
 The current runtime phase is
 `ops/docs/plans/EXPO_V1_TENANT_SWITCH_CONFIRMATION_RUNTIME_VALIDATION_PLAN.md`
-through Control B. It reuses the installed development client and deterministic
-prefilled dummy connection link to isolate the repaired switch flow. It proves
-prior-tenant visibility before confirmation and the final visible switch to
-`示範宮廟二號`, correlated with unchanged confirmation-only cleanup evidence.
-It repeats no QR/OAuth validation and authorizes no source change, rebuild,
+is complete. Its accepted report is canonical at
+`9d3fcc5ef28aadb56c3889cb721f9ba2f40a419e`; Control B received
+`released_terminal_idle`. The installed client retained `竹南鎮聖福宮` before
+confirmation, kept the candidate inactive, and switched once to
+`示範宮廟二號` after confirmation with no failure. Source-correlated cleanup
+remains confirmation-only.
+
+The V1 dummy development-client functional-stabilization parent is complete.
+This does not complete real API/OAuth, payments, distribution, production, or
+final visual acceptance. The current phase is the report-only
+`ops/docs/plans/EXPO_V1_FINAL_UI_REFINEMENT_READINESS_SCAN_PLAN.md` through
+Control B. It inventories only concrete remaining UI work on the installed
+client, including dependent/registration interaction evidence and the prior
+CameraView presentation warning. It authorizes no source change, rebuild,
 provider/Rails action, dependency, version/build change, deployment, release,
 or push.
 
