@@ -408,15 +408,20 @@ than promoting the disposable rehearsal hash. Guarded local migration,
 duplicate-stop, focused/full Rails, disabled-feature, rollback, monitoring,
 redaction, and cleanup evidence passed.
 
-No OAuth production packet is active. The exact missing Director decision is
-acceptance of Candidate B as the release boundary and authorization for a
-separately committed, target-fenced read-only production preflight. Until that
-decision, do not construct or move a release ref, contact production, deploy,
-migrate, restart services, validate providers, change flags/accounts, or
-perform historical remediation. The historical Apple-only record remains a
-separate blocked parent pending deployed-source validation, the 24-hour review,
-an exact-account inventory, and a safe fresh-proof acquisition/execution
-interface.
+The Director accepted Candidate B as the future release boundary: exact
+`release/current` baseline `99a0a692` plus `684c9ef`, `740aa39`, `7fa60f0`,
+`6eb57c3`, and `dcc258b` in that order. The current OAuth production authority
+is
+`ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_READ_ONLY_PREFLIGHT_PLAN.md`
+through Control A. It permits only one target-fenced, sanitized, read-only
+observation of the exact host/checkout/ref, bundle, environment-key presence,
+database migration/duplicate aggregate/Boolean flags, named services,
+concurrent-operation count, and tenant-local smoke metadata. It does not
+construct or move a release ref, deploy, migrate, restart, change flags,
+validate providers, touch accounts/sessions, or remediate history. The
+historical Apple-only record remains a separate blocked parent pending
+deployed-source validation, the 24-hour review, an exact-account inventory,
+and a safe fresh-proof acquisition/execution interface.
 
 ## Current Authorized Documentation Housekeeping
 
