@@ -64,7 +64,8 @@ module Seeds
           contact_info: config.fetch("contact", {}),
           service_times: config.fetch("service_times", {}),
           published: config.fetch("published", true),
-          metadata: metadata_payload.merge(seed_metadata)
+          metadata: metadata_payload.merge(seed_metadata),
+          payment_provider_settings: payment_provider_settings_for(record, config)
         )
         record.save!
       end
@@ -77,7 +78,8 @@ module Seeds
 
         attrs = {
           name: config.fetch("name"),
-          metadata: metadata_payload
+          metadata: metadata_payload,
+          payment_provider_settings: payment_provider_settings_for(record, config)
         }
 
         unless record.persisted?
@@ -90,7 +92,6 @@ module Seeds
             contact_info: {},
             service_times: {},
             payment_mode: "temple",
-            payment_provider_settings: {},
             published: false
           )
         end
@@ -180,6 +181,15 @@ module Seeds
       Temple::HERO_TABS.index_with do |tab|
         data[tab].presence || data["home"].presence || DEFAULT_HERO_IMAGE
       end
+    end
+
+    def payment_provider_settings_for(record, config)
+      selection = config["patron_checkout_provider"].presence
+      return record.payment_provider_settings if selection.blank?
+
+      base = record.payment_provider_settings.is_a?(Hash) ? record.payment_provider_settings.deep_dup : {}
+      base[Payments::ProviderResolver::TENANT_PROVIDER_SETTING] = selection
+      base
     end
 
     def seed_metadata
