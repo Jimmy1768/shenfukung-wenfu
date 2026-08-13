@@ -49,12 +49,44 @@ class AdminPaymentsFlowTest < ActionDispatch::IntegrationTest
 
     assert_difference -> { SystemAuditLog.where(action: "admin.payments.created").count }, 1 do
       post admin_payments_path(registration_id: registration.id),
-        params: { temple_payment: { amount_cents: 700, currency: "TWD" } }
+        params: { temple_payment: { amount_cents: "700", currency: "TWD" } }
     end
 
     assert_redirected_to admin_event_offering_order_path(offering, registration)
     assert_equal "paid", registration.reload.payment_status
     assert_equal 1, registration.temple_payments.count
+  end
+
+  test "rejects malformed cash amount through the admin endpoint before retained mutation" do
+    temple = create_temple
+    offering = create_offering(temple:, slug: "cash-malformed", title: "Cash Malformed", price_cents: 700)
+    user = User.create!(
+      email: "cash-malformed@example.com",
+      english_name: "Cash Malformed User",
+      encrypted_password: User.password_hash("Password123!")
+    )
+    registration = create_registration(user:, offering:)
+    admin_user = create_admin_user(temple:)
+    AdminPermission.find_by!(admin_account: admin_user.admin_account, temple:).update!(record_cash_payments: true)
+    original_updated_at = registration.updated_at
+
+    sign_in_admin(admin_user)
+
+    assert_no_difference [
+      "TemplePayment.count",
+      "FinancialLedgerEntry.count",
+      "SystemAuditLog.count",
+      "PlatformBillingStatement.count",
+      "PlatformBillingUsageRecord.count",
+      "PlatformBillingAdjustment.count"
+    ] do
+      post admin_payments_path(registration_id: registration.id),
+        params: { temple_payment: { amount_cents: "500junk", currency: "TWD" } }
+    end
+
+    assert_redirected_to admin_event_offering_order_path(offering, registration)
+    assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.reload.payment_status
+    assert_equal original_updated_at, registration.updated_at
   end
 
   test "starts fake checkout through admin controller and confirms payment" do
@@ -86,6 +118,34 @@ class AdminPaymentsFlowTest < ActionDispatch::IntegrationTest
     assert_equal "fake", payment.provider
     assert_equal TemplePayment::STATUSES[:completed], payment.reload.status
     assert_equal TempleRegistration::PAYMENT_STATUSES[:paid], registration.reload.payment_status
+  end
+
+  test "cash-only tenant blocks direct admin checkout before payment or audit mutation" do
+    temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "cash_only" })
+    offering = create_offering(temple:, slug: "admin-cash-only", title: "Admin Cash Only", price_cents: 900)
+    user = User.create!(email: "admin-cash-only@example.com", english_name: "Admin Cash Only", encrypted_password: User.password_hash("Password123!"))
+    registration = create_registration(user:, offering:)
+    admin_user = create_admin_user(temple:)
+    AdminPermission.find_by!(admin_account: admin_user.admin_account, temple:).update!(record_cash_payments: true)
+    original_updated_at = registration.updated_at
+
+    sign_in_admin(admin_user)
+
+    assert_no_difference [
+      "TemplePayment.count",
+      "FinancialLedgerEntry.count",
+      "SystemAuditLog.count",
+      "PaymentWebhookLog.count",
+      "PlatformBillingStatement.count",
+      "PlatformBillingUsageRecord.count",
+      "PlatformBillingAdjustment.count"
+    ] do
+      post start_checkout_admin_payments_path(registration_id: registration.id)
+    end
+
+    assert_redirected_to admin_event_offering_order_path(offering, registration)
+    assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.reload.payment_status
+    assert_equal original_updated_at, registration.updated_at
   end
 
   test "start checkout redirects to provider checkout url when present" do

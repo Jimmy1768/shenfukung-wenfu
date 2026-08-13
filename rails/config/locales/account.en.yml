@@ -350,9 +350,12 @@ en:
           arrival: "Arrival window"
           notes: "Ceremony notes"
       payment:
+        online_unavailable_notice: "Online payment is not available for this registration. Please arrange cash payment with the temple."
+        cash_only_helper: "The temple can record the payment once it has been received."
         eyebrow: "Payment"
         title: "Complete payment for %{offering}"
         subtitle: "Review your registration summary and continue to online checkout."
+        cash_only_subtitle: "Review your registration summary and arrange cash payment with the temple."
         renewal_helper: "Each period requires a new registration. For changes or special requests, contact the temple service desk."
         view_registration: "Registration details"
         amount_label: "Amount due"

@@ -70,7 +70,8 @@ module Account
 
     def payment
       @registration_period_label = period_label_for(@registration)
-      @payment_provider_label = Payments::ProviderResolver.label_for(checkout_provider)
+      @online_checkout_available = Payments::ProviderResolver.online_checkout_available?(temple: current_temple)
+      @payment_provider_label = Payments::ProviderResolver.label_for(checkout_provider) if @online_checkout_available
       @online_payments_frozen = current_temple.registration_intake_frozen?
       @billing_grace_remaining_days = current_temple.billing_grace_remaining_days
     end
@@ -80,6 +81,7 @@ module Account
         return redirect_to payment_account_registration_path(@registration), alert: t("account.registrations.payment.online_payments_frozen")
       end
 
+      Payments::ProviderResolver.require_online_checkout!(temple: current_temple)
       provider = checkout_provider
       result = Payments::CheckoutService.new.call(
         registration: @registration,
@@ -113,6 +115,8 @@ module Account
                 end
 
       redirect_to payment_account_registration_path(@registration), notice: message
+    rescue Payments::ProviderResolver::OnlineCheckoutUnavailable
+      redirect_to payment_account_registration_path(@registration), alert: t("account.registrations.payment.online_unavailable_notice")
     rescue StandardError => e
       redirect_to payment_account_registration_path(@registration), alert: "Unable to start checkout: #{e.message}"
     end

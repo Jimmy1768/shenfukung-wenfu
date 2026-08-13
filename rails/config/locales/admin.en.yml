@@ -1192,6 +1192,7 @@ en:
           edit: "Edit"
     payments:
       flash:
+        online_checkout_unavailable: "Online checkout is unavailable for this temple."
         recorded: "Payment recorded."
         checkout_reused: "A checkout attempt already exists for this registration."
         checkout_started: "%{provider} checkout started. Awaiting confirmation."

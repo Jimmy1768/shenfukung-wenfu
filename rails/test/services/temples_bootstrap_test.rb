@@ -45,7 +45,7 @@ class TemplesBootstrapTest < ActiveSupport::TestCase
     assert_equal %w[2026-lotus-festival perennial], temple.registration_period_keys
   end
 
-  test "shengfukung bootstrap selects fake checkout without overwriting payment credentials or billing data" do
+  test "shengfukung bootstrap selects explicit cash-only checkout without overwriting payment credentials or billing data" do
     temple = create_temple(
       slug: "shengfukung-wenfu",
       payment_provider_settings: {
@@ -60,7 +60,7 @@ class TemplesBootstrapTest < ActiveSupport::TestCase
     first_settings = temple.reload.payment_provider_settings.deep_dup
     Seeds::Temples.bootstrap(slug: "shengfukung-wenfu")
 
-    assert_equal "fake", temple.reload.payment_provider_settings["patron_checkout_provider"]
+    assert_equal "cash_only", temple.reload.payment_provider_settings["patron_checkout_provider"]
     assert_equal first_settings, temple.payment_provider_settings
     assert_equal "keep-merchant", temple.payment_gateway_settings_for(:ecpay)["merchant_id"]
     assert_equal "cus_keep", temple.billing_settings["stripe_customer_id"]
