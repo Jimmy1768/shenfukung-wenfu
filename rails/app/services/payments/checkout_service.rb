@@ -13,6 +13,11 @@ module Payments
       raise ArgumentError, "idempotency_key is required" if idempotency_key.blank?
       raise ArgumentError, "intent_key is required" if intent_key.blank?
 
+      # Validate at the payment boundary, before either idempotency lookup can
+      # return a persisted payment or create_pending! can write a new one.
+      # EcpayAdapter uses this same helper to serialize the accepted amount.
+      validate_ecpay_checkout!(provider:, amount_cents:, currency:)
+
       existing = payment_repository.find_by_idempotency(
         temple: registration.temple,
         provider: provider,
@@ -78,6 +83,12 @@ module Payments
       else
         TemplePayment::PAYMENT_METHODS[:cash]
       end
+    end
+
+    def validate_ecpay_checkout!(provider:, amount_cents:, currency:)
+      return unless provider.to_s == "ecpay"
+
+      Payments::Taiwan::EcpayAmount.to_wire!(amount_cents:, currency:)
     end
   end
 end

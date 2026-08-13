@@ -31,6 +31,7 @@ module PaymentGateway
 
     def checkout(intent:, amount_cents:, currency:, metadata:, idempotency_key:)
       ensure_configured!
+      wire_amount = Payments::Taiwan::EcpayAmount.to_wire!(amount_cents:, currency:)
 
       merchant_trade_no = default_trade_no(intent)
       fields = {
@@ -38,7 +39,7 @@ module PaymentGateway
         "MerchantTradeNo" => merchant_trade_no,
         "MerchantTradeDate" => Time.current.strftime("%Y/%m/%d %H:%M:%S"),
         "PaymentType" => "aio",
-        "TotalAmount" => amount_cents.to_f.round.to_i.to_s,
+        "TotalAmount" => wire_amount,
         "TradeDesc" => truncate(metadata_value(metadata, "item_name").presence || "Temple registration payment", 200),
         "ItemName" => truncate(metadata_value(metadata, "item_name").presence || "Temple registration payment", 400),
         "ReturnURL" => ecpay_server_callback_url(metadata),
@@ -78,9 +79,14 @@ module PaymentGateway
         provider_event_id: normalized[:provider_charge_id] || normalized[:provider_reference],
         provider_reference: normalized[:provider_reference],
         status: normalized[:status],
+        wire_contract: "ecpay",
+        amount_cents: normalized[:amount_cents],
+        currency: normalized[:currency],
+        amount_valid: normalized[:amount_valid],
+        amount_error: normalized[:amount_error],
         signature_valid: signature[:valid],
         signature_reason: signature[:reason],
-        raw: payload.to_h.deep_stringify_keys
+        raw: sanitized_callback_payload(payload)
       }
     end
 
@@ -89,13 +95,22 @@ module PaymentGateway
     end
 
     def query_status(provider_payment_ref:, metadata: {})
-      normalized = normalize_payload(metadata)
+      callback_payload = metadata.to_h.with_indifferent_access[:ecpay_callback] || metadata
+      normalized = normalize_payload(callback_payload)
+      signature = verify_webhook_signature(payload: callback_payload, headers: {})
 
       {
         status: normalized[:status],
         provider_reference: normalized[:provider_reference].presence || provider_payment_ref.to_s,
+        wire_contract: "ecpay",
+        amount_cents: normalized[:amount_cents],
+        currency: normalized[:currency],
+        amount_valid: normalized[:amount_valid],
+        amount_error: normalized[:amount_error],
+        signature_valid: signature[:valid],
+        signature_reason: signature[:reason],
         raw: {
-          ecpay_result: metadata.to_h.deep_stringify_keys
+          ecpay_result: sanitized_callback_payload(callback_payload)
         }
       }
     end
@@ -169,11 +184,31 @@ module PaymentGateway
           "pending"
         end
 
+      amount_cents = Payments::Taiwan::EcpayAmount.from_wire!(
+        amount: raw["TradeAmt"],
+        currency: raw["Currency"].presence || "TWD"
+      )
+
       {
         status: status,
         provider_reference: raw["MerchantTradeNo"].presence || raw["transaction_id"].presence || raw["order_id"].presence,
-        provider_charge_id: raw["TradeNo"].presence
+        provider_charge_id: raw["TradeNo"].presence,
+        amount_cents: amount_cents,
+        currency: "TWD",
+        amount_valid: true
       }
+    rescue Payments::Taiwan::EcpayAmount::InvalidAmount, Payments::Taiwan::EcpayAmount::InvalidCurrency
+      {
+        status: status,
+        provider_reference: raw["MerchantTradeNo"].presence || raw["transaction_id"].presence || raw["order_id"].presence,
+        provider_charge_id: raw["TradeNo"].presence,
+        amount_valid: false,
+        amount_error: "invalid_trade_amount"
+      }
+    end
+
+    def sanitized_callback_payload(payload)
+      payload.to_h.deep_stringify_keys.except("CheckMacValue", "_raw_body")
     end
 
     def truncate(value, max_length)
