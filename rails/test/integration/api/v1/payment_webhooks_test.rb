@@ -71,6 +71,35 @@ module Api
         assert_equal true, body["duplicate"]
       end
 
+      test "a webhook cannot apply a payment from another temple with the same provider reference" do
+        payment_temple = create_temple(slug: "webhook-payment-temple")
+        callback_temple = create_temple(slug: "webhook-callback-temple")
+        offering = create_offering(temple: payment_temple, slug: "webhook-isolated-offering", price_cents: 1000)
+        user = User.create!(email: "webhook-isolated@example.com", english_name: "Webhook Isolated", encrypted_password: User.password_hash("Password123!"))
+        registration = create_registration(user:, offering:)
+        payment = create_payment(
+          registration: registration,
+          status: TemplePayment::STATUSES[:pending],
+          method: TemplePayment::PAYMENT_METHODS[:cash],
+          provider: "fake",
+          provider_reference: "shared_fake_reference",
+          processed_at: nil
+        )
+
+        post api_v1_payment_webhook_path(provider: "fake"), params: {
+          event_type: "payment.updated",
+          event_id: "evt_cross_tenant",
+          provider_reference: payment.provider_reference,
+          status: "completed",
+          temple_slug: callback_temple.slug
+        }.to_json, headers: { "CONTENT_TYPE" => "application/json" }
+
+        assert_response :success
+        assert_equal TemplePayment::STATUSES[:pending], payment.reload.status
+        assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.reload.payment_status
+        assert PaymentWebhookLog.exists?(temple: callback_temple, provider_reference: payment.provider_reference)
+      end
+
       test "ecpay server callback marks payment completed and responds with plain ok" do
         temple = create_temple(slug: "ecpay-webhook-temple")
         offering = create_offering(temple:, slug: "ecpay-webhook-offering", price_cents: 1000)

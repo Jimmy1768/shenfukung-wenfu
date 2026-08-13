@@ -11,15 +11,16 @@ module Payments
 
     def call(payment:, amount_cents: nil, reason: nil, idempotency_key:, operation: :refund)
       raise ArgumentError, "idempotency_key is required" if idempotency_key.blank?
+      assert_full_refund!(payment:, amount_cents:, operation:)
 
       adapter_payload = if operation.to_sym == :cancel
-        adapter(payment.provider).cancel(
+        adapter(payment.provider, temple: payment.temple).cancel(
           payment_reference: payment.provider_reference.presence || payment.external_reference.presence || payment.id.to_s,
           reason: reason,
           idempotency_key: idempotency_key
         )
       else
-        adapter(payment.provider).refund(
+        adapter(payment.provider, temple: payment.temple).refund(
           payment_reference: payment.provider_reference.presence || payment.external_reference.presence || payment.id.to_s,
           amount_cents: amount_cents,
           reason: reason,
@@ -27,12 +28,16 @@ module Payments
         )
       end
 
+      if adapter_payload[:status].to_s == "partial_refunded"
+        raise Payments::StatusMapper::UnsupportedPartialRefund, "Partial refunds are not supported"
+      end
+
       payment_repository.update_status!(
         payment: payment,
         status: Payments::StatusMapper.map(
           adapter_payload[:status],
           aliases: {
-            TemplePayment::STATUSES[:refunded] => %w[refunded partial_refunded],
+            TemplePayment::STATUSES[:refunded] => %w[refunded],
             TemplePayment::STATUSES[:failed] => %w[canceled cancelled failed error declined]
           },
           fallback: TemplePayment::STATUSES[:failed]
@@ -57,8 +62,16 @@ module Payments
 
     attr_reader :provider_resolver, :payment_repository
 
-    def adapter(provider)
-      provider_resolver.resolve(provider: provider)
+    def adapter(provider, temple:)
+      provider_resolver.resolve(provider: provider, temple: temple)
+    end
+
+    def assert_full_refund!(payment:, amount_cents:, operation:)
+      return unless operation.to_sym == :refund
+      return if amount_cents.blank? || payment.amount_cents.blank?
+      return if amount_cents.to_i == payment.amount_cents.to_i
+
+      raise Payments::StatusMapper::UnsupportedPartialRefund, "Partial refunds are not supported"
     end
 
     def log_refund_event!(payment:, operation:, reason:)

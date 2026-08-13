@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_12_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_13_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -539,9 +539,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_12_000000) do
     t.jsonb "metadata", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
-    t.index ["platform_billing_statement_id", "platform_billing_usage_record_id"], name: "idx_platform_billing_adjustments_statement_usage_record", unique: true
     t.index ["platform_billing_statement_id"], name: "idx_on_platform_billing_statement_id_06b3046824"
     t.index ["platform_billing_usage_record_id"], name: "idx_on_platform_billing_usage_record_id_cafa5732c9"
+    t.index ["platform_billing_usage_record_id"], name: "idx_platform_billing_adjustments_usage_record", unique: true
     t.index ["source_platform_billing_statement_id"], name: "idx_on_source_platform_billing_statement_id_9b215baf10"
     t.index ["temple_id"], name: "index_platform_billing_adjustments_on_temple_id"
     t.index ["temple_registration_id"], name: "index_platform_billing_adjustments_on_temple_registration_id"
@@ -589,7 +589,7 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_12_000000) do
     t.index ["platform_billing_delivery_id"], name: "idx_on_platform_billing_delivery_id_ca1e2d1d1d"
     t.index ["platform_billing_event_id"], name: "idx_on_platform_billing_event_id_e2d5f5d948"
     t.index ["temple_id"], name: "index_platform_billing_entitlements_on_temple_id", unique: true
-    t.check_constraint "state::text = ANY (ARRAY['pending_setup'::character varying, 'active'::character varying, 'suspended'::character varying]::text[])", name: "platform_billing_entitlements_state_check"
+    t.check_constraint "state::text = ANY (ARRAY['pending_setup'::character varying::text, 'active'::character varying::text, 'suspended'::character varying::text])", name: "platform_billing_entitlements_state_check"
   end
 
   create_table "platform_billing_events", force: :cascade do |t|
@@ -643,9 +643,12 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_12_000000) do
     t.jsonb "eligibility_snapshot", default: {}, null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.datetime "qualifying_at"
+    t.string "qualification_source"
     t.index ["platform_billing_statement_id", "temple_registration_id"], name: "idx_platform_billing_usage_records_statement_registration", unique: true
     t.index ["platform_billing_statement_id"], name: "idx_on_platform_billing_statement_id_26e0862d2b"
-    t.index ["temple_id", "temple_registration_id"], name: "idx_platform_billing_usage_records_temple_registration"
+    t.index ["temple_id", "qualifying_at"], name: "idx_platform_billing_usage_records_temple_qualifying_at"
+    t.index ["temple_id", "temple_registration_id"], name: "idx_platform_billing_usage_records_temple_registration", unique: true
     t.index ["temple_id"], name: "index_platform_billing_usage_records_on_temple_id"
     t.index ["temple_registration_id"], name: "index_platform_billing_usage_records_on_temple_registration_id"
   end
@@ -856,8 +859,8 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_12_000000) do
     t.datetime "updated_at", null: false
     t.string "applied_offering_type"
     t.bigint "applied_offering_id"
-    t.index ["applied_offering_type", "applied_offering_id"], name: "idx_offering_setup_drafts_on_applied_target"
     t.index ["applied_by_admin_id"], name: "index_temple_offering_setup_drafts_on_applied_by_admin_id"
+    t.index ["applied_offering_type", "applied_offering_id"], name: "idx_offering_setup_drafts_on_applied_target"
     t.index ["created_by_admin_id"], name: "index_temple_offering_setup_drafts_on_created_by_admin_id"
     t.index ["reviewed_by_admin_id"], name: "index_temple_offering_setup_drafts_on_reviewed_by_admin_id"
     t.index ["temple_id", "slug"], name: "idx_offering_setup_drafts_on_temple_slug"

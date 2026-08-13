@@ -15,36 +15,46 @@ module Billing
     end
 
     def close
-      usage = PlatformUsage.for_month(temple:, month:)
-      raise ArgumentError, "Billing period is not closed yet" if usage.period_end_at > closed_at
+      usage = nil
+      temple.with_lock do
+        usage = PlatformUsage.for_month(temple:, month:)
+        raise ArgumentError, "Billing period is not closed yet" if usage.period_end_at > closed_at
 
-      existing = temple.platform_billing_statements.find_by(period_start_at: usage.period_start_at)
-      return Result.new(statement: existing, created: false) if existing
+        existing = temple.platform_billing_statements.find_by(period_start_at: usage.period_start_at)
+        return Result.new(statement: existing, created: false) if existing
 
-      statement = nil
-      PlatformBillingStatement.transaction do
-        statement = temple.platform_billing_statements.create!(statement_attributes(usage))
-        usage.registrations.each_with_index do |registration, index|
-          statement.platform_billing_usage_records.create!(
-            temple:,
-            temple_registration: registration,
-            registration_created_at: registration.created_at,
-            unit_fee_cents: PlatformPricingPolicy.unit_fee_for_position(index + 1),
-            eligibility_snapshot: {
-              payment_status: registration.payment_status,
-              fulfillment_status: registration.fulfillment_status,
-              total_price_cents: registration.total_price_cents
-            }
-          )
+        statement = nil
+        PlatformBillingStatement.transaction do
+          statement = temple.platform_billing_statements.create!(statement_attributes(usage))
+          usage.registrations.each do |qualifying_registration|
+            registration = qualifying_registration.registration
+            statement.platform_billing_usage_records.create!(
+              temple:,
+              temple_registration: registration,
+              registration_created_at: registration.created_at,
+              qualifying_at: qualifying_registration.qualifying_at,
+              qualification_source: qualifying_registration.qualification_source,
+              unit_fee_cents: 0,
+              eligibility_snapshot: {
+                payment_status: registration.payment_status,
+                fulfillment_status: registration.fulfillment_status,
+                total_price_cents: registration.total_price_cents,
+                qualifying_at: qualifying_registration.qualifying_at.iso8601,
+                qualification_source: qualifying_registration.qualification_source
+              }
+            )
+          end
+          apply_prior_period_credits!(statement)
+          statement.refresh_adjustment_total!
         end
-        apply_prior_period_credits!(statement)
-        statement.refresh_adjustment_total!
-      end
 
-      Result.new(statement:, created: true)
+        Result.new(statement:, created: true)
+      end
     rescue ActiveRecord::RecordNotUnique
-      statement = temple.platform_billing_statements.find_by!(period_start_at: usage.period_start_at)
-      Result.new(statement:, created: false)
+      statement = temple.platform_billing_statements.find_by(period_start_at: usage&.period_start_at)
+      return Result.new(statement:, created: false) if statement
+
+      raise
     end
 
     private
@@ -86,18 +96,39 @@ module Billing
           next if reason.blank?
           next if PlatformBillingAdjustment.exists?(platform_billing_usage_record: usage_record)
 
+          source_statement = usage_record.platform_billing_statement
+          next unless source_statement.temple_id == temple.id && usage_record.temple_id == temple.id && usage_record.temple_registration.temple_id == temple.id
+
+          effective_count = source_statement.registration_count + PlatformBillingAdjustment
+            .where(source_platform_billing_statement: source_statement)
+            .sum(:registration_count_delta)
+          next if effective_count <= 0
+
+          amount_cents = progressive_adjustment_amount(effective_count)
+          raise "Platform billing correction must not increase the source quote" if amount_cents.positive?
+
           statement.platform_billing_adjustments.create!(
-            source_platform_billing_statement: usage_record.platform_billing_statement,
+            source_platform_billing_statement: source_statement,
             platform_billing_usage_record: usage_record,
             temple:,
             temple_registration: usage_record.temple_registration,
             reason:,
             registration_count_delta: -1,
-            amount_cents: -usage_record.unit_fee_cents,
+            amount_cents:,
             recognized_at: closed_at,
-            metadata: { source_period_start_at: usage_record.platform_billing_statement.period_start_at.iso8601 }
+            metadata: {
+              source_period_start_at: source_statement.period_start_at.iso8601,
+              source_registration_count_before_correction: effective_count,
+              source_registration_count_after_correction: effective_count - 1
+            }
           )
         end
+    end
+
+    def progressive_adjustment_amount(effective_count)
+      quote_before = PlatformPricingPolicy.quote(effective_count).usage_total_cents
+      quote_after = PlatformPricingPolicy.quote(effective_count - 1).usage_total_cents
+      quote_after - quote_before
     end
   end
 end

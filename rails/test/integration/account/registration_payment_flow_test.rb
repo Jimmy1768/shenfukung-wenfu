@@ -362,7 +362,7 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "start fake checkout redirects through return flow and marks payment paid" do
-    temple = create_temple
+    temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "fake" })
     offering = create_offering(temple:, slug: "fake-checkout", title: "Fake Checkout Offering", price_cents: 800)
     user = User.create!(
       email: "fakecheckout@example.com",
@@ -373,8 +373,14 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     sign_in_account(user, temple_slug: temple.slug)
     registration = create_registration(user:, offering:)
 
-    assert_difference -> { SystemAuditLog.where(action: "account.payments.checkout_started").count }, 1 do
-      post start_checkout_account_registration_path(registration)
+    Payments::ProviderResolver.stub(:current_provider, "ecpay") do
+      get payment_account_registration_path(registration)
+      assert_response :success
+      assert_includes response.body, "test checkout"
+
+      assert_difference -> { SystemAuditLog.where(action: "account.payments.checkout_started").count }, 1 do
+        post start_checkout_account_registration_path(registration)
+      end
     end
 
     assert_redirected_to checkout_return_account_registration_url(registration, provider: "fake")
@@ -414,7 +420,7 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "checkout return confirms an ecpay payment and redirects back to payment page" do
-    temple = create_temple
+    temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "fake" })
     offering = create_offering(temple:, slug: "ecpay-return", title: "ECPay Return", price_cents: 1500)
     user = User.create!(
       email: "ecpayreturn@example.com",
@@ -439,7 +445,7 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
         PaymentGateway::EcpayAdapter.stub(:new, FakeReturnAdapter.new("completed")) do
           post checkout_return_account_registration_path(
             registration,
-            provider: "ecpay",
+            provider: "fake",
             MerchantTradeNo: "trade_123",
             TradeNo: "ecpay_trade_no_123",
             RtnCode: "1",
@@ -455,6 +461,31 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "已完成付款。"
     assert_equal TempleRegistration::PAYMENT_STATUSES[:paid], registration.reload.payment_status
     assert_equal TemplePayment::STATUSES[:completed], registration.temple_payments.order(:created_at).last.reload.status
+  end
+
+  test "retry preserves the recorded provider after the temple selection changes" do
+    temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "ecpay" })
+    offering = create_offering(temple:, slug: "historical-provider", title: "Historical Provider", price_cents: 800)
+    user = User.create!(email: "historical-provider@example.com", english_name: "Historical Provider", encrypted_password: User.password_hash("Password123!"))
+    registration = create_registration(user:, offering:)
+    create_payment(
+      registration: registration,
+      amount_cents: registration.total_price_cents,
+      status: TemplePayment::STATUSES[:failed],
+      method: TemplePayment::PAYMENT_METHODS[:cash],
+      provider: "fake",
+      provider_reference: "fake_history",
+      processed_at: nil
+    )
+    temple.update!(payment_provider_settings: { "patron_checkout_provider" => "ecpay" })
+
+    sign_in_account(user, temple_slug: temple.slug)
+
+    assert_difference -> { registration.temple_payments.count }, 1 do
+      post start_checkout_account_registration_path(registration)
+    end
+
+    assert_equal "fake", registration.temple_payments.order(:created_at).last.provider
   end
 
   test "frozen registration payments hide checkout and block checkout start" do
