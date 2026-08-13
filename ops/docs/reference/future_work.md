@@ -45,7 +45,9 @@ assign equal priority or implementation readiness.
 - `ops/docs/plans/OAUTH_PROVIDERS_SETUP_PLAN.md`
 - `ops/docs/plans/PATRON_REQUEST_ASSISTANCE_ALERTS.md`
 - `ops/docs/plans/PAYMENTS_CORE_SUBSYSTEM_PLAN.md`
+- `ops/docs/plans/PLATFORM_BILLING_QUALIFYING_REGISTRATION_ACCOUNTING_PLAN.md`
 - `ops/docs/plans/SHENGFUKUNG_PAYMENT_AND_OFFERING_PHASE_ROADMAP.md`
+- `ops/docs/plans/TENANT_SCOPED_PATRON_PAYMENT_PROVIDER_PLAN.md`
 - `ops/docs/plans/REGISTRATION_LIFECYCLE_EDIT_POLICY.md`
 - `ops/docs/plans/SHENGFUKUNG_OFFERINGS_CONFIG_PLAN.md`
 - `ops/docs/plans/SYSTEM_AUDIT_COVERAGE_AND_RETENTION_PLAN.md`

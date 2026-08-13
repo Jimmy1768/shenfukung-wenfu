@@ -66,7 +66,9 @@
 - `ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_READINESS_SCAN.md`
 - `ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_CANDIDATE_B_CONSTRUCTION_PLAN.md`
 - `ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_ROLLOUT_READINESS_PLAN.md`
+- `ops/docs/plans/PLATFORM_BILLING_QUALIFYING_REGISTRATION_ACCOUNTING_PLAN.md`
 - `ops/docs/plans/SHENGFUKUNG_PAYMENT_AND_OFFERING_PHASE_ROADMAP.md`
+- `ops/docs/plans/TENANT_SCOPED_PATRON_PAYMENT_PROVIDER_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
 The Expo readiness scan remains the gap inventory. Both parallel V1 inputs are
