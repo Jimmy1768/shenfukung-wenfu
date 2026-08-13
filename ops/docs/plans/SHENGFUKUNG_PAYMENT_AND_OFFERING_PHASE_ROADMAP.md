@@ -1,6 +1,6 @@
 # Shengfukung Payment And Offering Phase Roadmap
 
-Status: accepted Planning roadmap
+Status: Phases 1–4 complete; Phase 5 deferred
 
 Accepted: 2026-08-13
 
@@ -128,6 +128,28 @@ collection are routine Control implementation choices. Every TWD 50 payment is
 fake-provider state-transition evidence: no card, real ECPay request, or money
 movement occurs.
 
+## Local Completion Record
+
+- Phase 1 qualifying-registration accounting and Phase 2 tenant-scoped patron
+  provider selection are accepted together on canonical `main` at `e9e02c9`.
+- Phase 3 is accepted at `e10d059`: the loader-ready Shengfukung catalog is
+  exactly the four approved draft services, each persisted as TWD `5000` and
+  rendered as `NT$50`; the inferred ambiguous pair is absent, while any
+  pre-existing row remains untouched and only orphaned.
+- Phase 4 is accepted at `33e59f7`: patron/admin fake checkout, cash,
+  failure/recovery, cancellation, full-refund/partial-refund rejection,
+  webhook idempotency, tenant isolation, and monthly inclusion/correction are
+  covered locally. Internal TWD `5000` now serializes to ECPay
+  `TotalAmount=50`; signed `TradeAmt=50` normalizes to internal `5000`; invalid
+  or mismatched amounts fail before payment, registration, audit, webhook-log,
+  statement, usage, or adjustment mutation.
+- Final Phase 4 evidence passed 26/166 focused, 17/147 checkout/admin, 88/533
+  broader payment, and 487/2,970 full Rails runs with no failures, errors, or
+  skips. All packet-owned disposable databases were removed.
+
+This closes the repository-local payment program. It is not live-provider,
+settlement, tax, invoice, legal, or production evidence.
+
 ### Phase 5 — Deferred External Provider Validation
 
 Phase 5 is deliberately last and does not begin while the Director is AFK. It
@@ -227,6 +249,8 @@ or requests for the same unavailable temple input.
 
 ## Current Next Action
 
-Phases 1–3 are accepted and integrated at canonical commit `e10d059`. Wenfu
-Planning may dispatch the committed Phase 4 simulated-ECPay registration QA
-plan. Phase 5 provider action and Expo payment work remain unauthorized.
+Phases 1–4 are accepted and integrated at canonical commit `33e59f7`. Both
+Controls are released and no local payment packet is active. Stop here until
+the Director separately authorizes Phase 5A Stripe sandbox readiness, or a
+real client supplies the legally usable ECPay prerequisite for Phase 5B.
+Expo payment UI/lifecycle remains a separate later phase.

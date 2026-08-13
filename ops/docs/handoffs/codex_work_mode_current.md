@@ -69,6 +69,9 @@
 - `ops/docs/plans/PAYMENT_FOUNDATION_PARALLEL_TRACK_INTEGRATION_PLAN.md`
 - `ops/docs/plans/PLATFORM_BILLING_QUALIFYING_REGISTRATION_ACCOUNTING_PLAN.md`
 - `ops/docs/plans/SHENGFUKUNG_PAYMENT_AND_OFFERING_PHASE_ROADMAP.md`
+- `ops/docs/plans/SHENGFUKUNG_FOUR_OFFERING_CONTROLLED_CONFIGURATION_PLAN.md`
+- `ops/docs/plans/SHENGFUKUNG_SIMULATED_ECPAY_REGISTRATION_QA_PLAN.md`
+- `ops/docs/plans/SHENGFUKUNG_SIMULATED_ECPAY_CHECKOUT_PREFLIGHT_CONTINUATION_PLAN.md`
 - `ops/docs/plans/TENANT_SCOPED_PATRON_PAYMENT_PROVIDER_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
@@ -376,8 +379,8 @@ display-only behavior, reset, and cleanup all passed. The full mobile suite is
 `active_packet: none` for Expo. The exact next decision/owner is
 Planning/Director phase selection: either authorize a separate real API/OAuth
 runtime phase after its Rails/provider deployment gates are satisfied, or
-define another explicit V1 refinement scope. Payment remains separately
-deferred. No rebuild, version/build change, provider, payment, production,
+define another explicit V1 refinement scope. Expo payment UI/lifecycle remains
+separately deferred. No rebuild, version/build change, provider, production,
 deployment, release, or push is implied by this completion.
 
 The separate Apple OAuth account-resolution diagnosis is recorded in
@@ -477,6 +480,23 @@ did not move. `active_packet: none` for OAuth. The next production blocker is
 still the separately gated classification/disposition of the 86 untracked
 public paths before a new candidate preflight. No production, provider, user
 22, release, push, deployment, asset-cleanup, or external action is authorized.
+
+## Current Payment Program
+
+The Shengfukung repository-local payment program through Phase 4 is complete
+on canonical `main` at `33e59f765c16a46c56346ff3b367eaa5d38d4e0c`.
+Phases 1 and 2 establish qualifying-registration accounting and tenant-scoped
+patron-provider selection; Phase 3 retains exactly four approved Shengfukung
+offerings at `NT$50`; Phase 4 proves the local fake lifecycle and corrects the
+ECPay whole-TWD wire boundary with signed amount correlation. The full Rails
+suite passed 487 runs and 2,970 assertions. Both Controls are
+`released_terminal_idle`; no local payment packet remains.
+
+Phase 5A Stripe sandbox work is deferred by Director choice. Phase 5B live
+ECPay is externally blocked until a real client supplies a legally usable
+merchant account and target-specific authority. No provider inspection,
+credential access, live payment/refund, production action, deployment, push,
+or Expo payment UI work is authorized by the local completion.
 
 ## Current Authorized Documentation Housekeeping
 
