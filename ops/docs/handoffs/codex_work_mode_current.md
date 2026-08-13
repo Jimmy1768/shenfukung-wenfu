@@ -64,6 +64,7 @@
 - `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`
 - `ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_ROADMAP.md`
 - `ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_READINESS_SCAN.md`
+- `ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_CANDIDATE_B_CONSTRUCTION_PLAN.md`
 - `ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_ROLLOUT_READINESS_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
@@ -456,6 +457,19 @@ is deliberately non-routed. The first no-new-product-decision packet is local
 Candidate B construction/review. The first production-facing packet is a new
 target-fenced read-only classification of those 86 paths; it must not clean or
 move them. No Control packet is active and user 22 remains unchanged.
+
+The current authorized OAuth packet is the local-only exact Candidate B
+construction/review in
+`ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_CANDIDATE_B_CONSTRUCTION_PLAN.md`
+through Wenfu Control A. It starts from exact `release/current` baseline
+`99a0a692`, applies only `684c9ef`, `740aa39`, `7fa60f0`, `6eb57c3`, and
+`dcc258b` in order, and retains one reviewed local candidate tip without moving
+the release ref or merging that release-derived branch into canonical `main`.
+All migration/test writes are fenced to fresh packet-owned disposable test
+databases; the shared-development database incident must not recur. Only the
+Control report/packet may integrate to canonical main. No production,
+provider, user 22, release, push, deployment, asset-cleanup, or external action
+is authorized.
 
 ## Current Authorized Documentation Housekeeping
 
