@@ -227,7 +227,6 @@ or requests for the same unavailable temple input.
 
 ## Current Next Action
 
-Phases 1 and 2 are accepted and integrated at canonical commit `e9e02c9`.
-Wenfu Planning may dispatch the committed Phase 3 four-offering controlled-
-configuration plan. No Phase 4 work begins until Phase 3 is accepted and
-integrated. Phase 5 provider action and Expo payment work remain unauthorized.
+Phases 1–3 are accepted and integrated at canonical commit `e10d059`. Wenfu
+Planning may dispatch the committed Phase 4 simulated-ECPay registration QA
+plan. Phase 5 provider action and Expo payment work remain unauthorized.
