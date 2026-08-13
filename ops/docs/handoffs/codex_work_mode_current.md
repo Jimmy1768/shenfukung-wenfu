@@ -458,18 +458,21 @@ Candidate B construction/review. The first production-facing packet is a new
 target-fenced read-only classification of those 86 paths; it must not clean or
 move them. No Control packet is active and user 22 remains unchanged.
 
-The current authorized OAuth packet is the local-only exact Candidate B
-construction/review in
+The local-only exact Candidate B construction/review in
 `ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_CANDIDATE_B_CONSTRUCTION_PLAN.md`
-through Wenfu Control A. It starts from exact `release/current` baseline
-`99a0a692`, applies only `684c9ef`, `740aa39`, `7fa60f0`, `6eb57c3`, and
-`dcc258b` in order, and retains one reviewed local candidate tip without moving
-the release ref or merging that release-derived branch into canonical `main`.
-All migration/test writes are fenced to fresh packet-owned disposable test
-databases; the shared-development database incident must not recur. Only the
-Control report/packet may integrate to canonical main. No production,
-provider, user 22, release, push, deployment, asset-cleanup, or external action
-is authorized.
+is complete and accepted on canonical `main` at `1214481`; Control A received
+`released_terminal_idle`. The retained inactive release candidate is exact tip
+`96baa5306e209364b04d0f5d77fb49b75f943019` on
+`codex/oauth-account-resolution-candidate-b`. It contains exactly five commits
+above `99a0a692`, maps in order to `684c9ef`, `740aa39`, `7fa60f0`, `6eb57c3`,
+and `dcc258b`, and has a 43-path Rails-only delta. Guarded migration up,
+rollback/forward, synthetic uniqueness-stop, focused 63/469 and 16/101 suites,
+full Rails 452/2692 suite, syntax/routes/boundary scans, patch equivalence, and
+cleanup passed. The candidate remains local and inactive; `release/current`
+did not move. `active_packet: none` for OAuth. The next production blocker is
+still the separately gated classification/disposition of the 86 untracked
+public paths before a new candidate preflight. No production, provider, user
+22, release, push, deployment, asset-cleanup, or external action is authorized.
 
 ## Current Authorized Documentation Housekeeping
 
