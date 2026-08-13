@@ -8,7 +8,7 @@ module Payments
       assert_equal TemplePayment::STATUSES[:completed], StatusMapper.map("completed")
       assert_equal TemplePayment::STATUSES[:completed], StatusMapper.map("paid")
       assert_equal TemplePayment::STATUSES[:failed], StatusMapper.map("cancelled")
-      assert_equal TemplePayment::STATUSES[:refunded], StatusMapper.map("partial_refunded")
+      assert_raises(StatusMapper::UnsupportedPartialRefund) { StatusMapper.map("partial_refunded") }
       assert_equal TemplePayment::STATUSES[:pending], StatusMapper.map("processing")
     end
 

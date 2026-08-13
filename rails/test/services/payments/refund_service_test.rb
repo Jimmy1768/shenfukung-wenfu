@@ -5,7 +5,14 @@ require "test_helper"
 module Payments
   class RefundServiceTest < ActiveSupport::TestCase
     class FakeAdapter
+      attr_reader :refund_calls
+
+      def initialize
+        @refund_calls = 0
+      end
+
       def refund(payment_reference:, amount_cents:, reason:, idempotency_key:)
+        @refund_calls += 1
         {
           status: "refunded",
           provider_reference: payment_reference,
@@ -26,6 +33,12 @@ module Payments
             idempotency_key: idempotency_key
           }
         }
+      end
+    end
+
+    class PartialRefundAdapter < FakeAdapter
+      def refund(...)
+        super.merge(status: "partial_refunded")
       end
     end
 
@@ -53,7 +66,7 @@ module Payments
     test "refund path maps to refunded" do
       temple = create_temple
       registration = create_registration(user: User.create!(email: "refund@example.com", english_name: "Refund User", encrypted_password: User.password_hash("Password123!")), offering: create_offering(temple: temple))
-      payment = TemplePayment.new(id: 101, temple: temple, temple_event_registration: registration, provider: "fake", status: TemplePayment::STATUSES[:completed], provider_reference: "pay_123")
+      payment = TemplePayment.new(id: 101, temple: temple, temple_event_registration: registration, provider: "fake", status: TemplePayment::STATUSES[:completed], provider_reference: "pay_123", amount_cents: 500)
       repository = FakeRepository.new
       service = RefundService.new(provider_resolver: FakeResolver.new(FakeAdapter.new), payment_repository: repository)
 
@@ -73,6 +86,42 @@ module Payments
 
       log = SystemAuditLog.order(created_at: :desc).find_by(action: "system.payments.refunded")
       assert_equal "refund_service", log.metadata["source"]
+    end
+
+    test "rejects a requested partial refund before calling the provider or changing registration eligibility" do
+      temple = create_temple
+      registration = create_registration(user: User.create!(email: "partial-refund@example.com", english_name: "Partial Refund", encrypted_password: User.password_hash("Password123!")), offering: create_offering(temple: temple))
+      payment = TemplePayment.new(id: 103, temple: temple, temple_event_registration: registration, provider: "fake", status: TemplePayment::STATUSES[:completed], provider_reference: "pay_789", amount_cents: 1_000)
+      repository = FakeRepository.new
+      adapter = FakeAdapter.new
+      service = RefundService.new(provider_resolver: FakeResolver.new(adapter), payment_repository: repository)
+
+      assert_raises(StatusMapper::UnsupportedPartialRefund) do
+        service.call(payment:, amount_cents: 500, reason: "partial", idempotency_key: "partial-1", operation: :refund)
+      end
+
+      assert_nil repository.updated_status
+      assert_equal TemplePayment::STATUSES[:completed], payment.status
+      assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.payment_status
+      assert_equal 0, adapter.refund_calls
+    end
+
+    test "rejects a provider-reported partial refund without changing payment or registration state" do
+      temple = create_temple
+      registration = create_registration(user: User.create!(email: "partial-response@example.com", english_name: "Partial Response", encrypted_password: User.password_hash("Password123!")), offering: create_offering(temple: temple))
+      payment = TemplePayment.new(id: 104, temple: temple, temple_event_registration: registration, provider: "fake", status: TemplePayment::STATUSES[:completed], provider_reference: "pay_partial", amount_cents: 1_000)
+      repository = FakeRepository.new
+      adapter = PartialRefundAdapter.new
+      service = RefundService.new(provider_resolver: FakeResolver.new(adapter), payment_repository: repository)
+
+      assert_raises(StatusMapper::UnsupportedPartialRefund) do
+        service.call(payment:, amount_cents: 1_000, reason: "provider partial", idempotency_key: "partial-response-1", operation: :refund)
+      end
+
+      assert_equal 1, adapter.refund_calls
+      assert_nil repository.updated_status
+      assert_equal TemplePayment::STATUSES[:completed], payment.status
+      assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.payment_status
     end
 
     test "cancel path maps to failed status with operation metadata" do
