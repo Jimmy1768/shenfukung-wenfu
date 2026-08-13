@@ -63,6 +63,7 @@
 - `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_DOWNLOAD_INSTALL_PLAN.md`
 - `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`
 - `ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_ROADMAP.md`
+- `ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_READINESS_SCAN.md`
 - `ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_ROLLOUT_READINESS_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
@@ -441,6 +442,20 @@ provider action, account mutation, deployment, or cleanup is authorized by the
 roadmap. The first executable decision remains preserve/relocate/replace of the
 86 untracked production public paths; local real-Apple validation may be
 planned in parallel under separate provider/runtime authority.
+
+The recovery readiness scan is recorded in
+`ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_READINESS_SCAN.md`. The resolver
+source and exact local Candidate B inputs are ready; the focused current suite
+passes 28 runs/163 assertions and the OAuth migration is up in the local test
+database. Production rollout is not ready because the 86 untracked public
+paths have only a safe name inventory, not enough type/provenance/runtime-use
+evidence for a cleanup decision. Historical remediation is also not ready:
+user 22 has not passed the protected empty-placeholder inventory, keeper
+password capability is unknown, and the fresh Apple consolidation-proof path
+is deliberately non-routed. The first no-new-product-decision packet is local
+Candidate B construction/review. The first production-facing packet is a new
+target-fenced read-only classification of those 86 paths; it must not clean or
+move them. No Control packet is active and user 22 remains unchanged.
 
 ## Current Authorized Documentation Housekeeping
 
