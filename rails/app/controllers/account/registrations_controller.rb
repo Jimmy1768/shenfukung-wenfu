@@ -70,7 +70,7 @@ module Account
 
     def payment
       @registration_period_label = period_label_for(@registration)
-      @payment_provider_label = Payments::ProviderResolver.label_for(Payments::ProviderResolver.current_provider)
+      @payment_provider_label = Payments::ProviderResolver.label_for(checkout_provider)
       @online_payments_frozen = current_temple.registration_intake_frozen?
       @billing_grace_remaining_days = current_temple.billing_grace_remaining_days
     end
@@ -80,7 +80,7 @@ module Account
         return redirect_to payment_account_registration_path(@registration), alert: t("account.registrations.payment.online_payments_frozen")
       end
 
-      provider = Payments::ProviderResolver.current_provider
+      provider = checkout_provider
       result = Payments::CheckoutService.new.call(
         registration: @registration,
         amount_cents: @registration.total_price_cents,
@@ -282,7 +282,12 @@ module Account
     end
 
     def checkout_return_provider
-      params[:provider].presence || @registration.temple_payments.order(created_at: :desc).limit(1).pick(:provider) || Payments::ProviderResolver.current_provider
+      checkout_provider
+    end
+
+    def checkout_provider
+      @registration.temple_payments.order(created_at: :desc).limit(1).pick(:provider).presence ||
+        Payments::ProviderResolver.provider_for(temple: current_temple)
     end
 
     def checkout_return_params

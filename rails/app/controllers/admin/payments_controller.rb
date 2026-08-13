@@ -75,7 +75,7 @@ module Admin
           alert: t("admin.payments.flash.online_payments_frozen")
       end
 
-      provider = Payments::ProviderResolver.current_provider
+      provider = checkout_provider
       result = Payments::CheckoutService.new.call(
         registration: @registration,
         amount_cents: @registration.total_price_cents,
@@ -249,7 +249,12 @@ module Admin
     end
 
     def checkout_return_provider
-      params[:provider].presence || @registration.temple_payments.order(created_at: :desc).limit(1).pick(:provider) || Payments::ProviderResolver.current_provider
+      checkout_provider
+    end
+
+    def checkout_provider
+      @registration.temple_payments.order(created_at: :desc).limit(1).pick(:provider).presence ||
+        Payments::ProviderResolver.provider_for(temple: current_temple)
     end
 
     def checkout_return_params

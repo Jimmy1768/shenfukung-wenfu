@@ -43,11 +43,14 @@ module Payments
     end
 
     class FakeResolver
+      attr_reader :resolved_kwargs
+
       def initialize(adapter)
         @adapter = adapter
       end
 
-      def resolve(provider:)
+      def resolve(provider:, **kwargs)
+        @resolved_kwargs = kwargs
         @adapter
       end
     end
@@ -86,6 +89,7 @@ module Payments
 
       log = SystemAuditLog.order(created_at: :desc).find_by(action: "system.payments.refunded")
       assert_equal "refund_service", log.metadata["source"]
+      assert_equal temple, service.send(:provider_resolver).resolved_kwargs[:temple]
     end
 
     test "rejects a requested partial refund before calling the provider or changing registration eligibility" do
@@ -143,6 +147,8 @@ module Payments
         assert_equal :cancel, repository.updated_metadata[:operation]
         assert_equal TemplePayment::STATUSES[:failed], result.payment.status
       end
+
+      assert_equal temple, service.send(:provider_resolver).resolved_kwargs[:temple]
     end
   end
 end

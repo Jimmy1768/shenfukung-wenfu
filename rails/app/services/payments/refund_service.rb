@@ -14,13 +14,13 @@ module Payments
       assert_full_refund!(payment:, amount_cents:, operation:)
 
       adapter_payload = if operation.to_sym == :cancel
-        adapter(payment.provider).cancel(
+        adapter(payment.provider, temple: payment.temple).cancel(
           payment_reference: payment.provider_reference.presence || payment.external_reference.presence || payment.id.to_s,
           reason: reason,
           idempotency_key: idempotency_key
         )
       else
-        adapter(payment.provider).refund(
+        adapter(payment.provider, temple: payment.temple).refund(
           payment_reference: payment.provider_reference.presence || payment.external_reference.presence || payment.id.to_s,
           amount_cents: amount_cents,
           reason: reason,
@@ -62,8 +62,8 @@ module Payments
 
     attr_reader :provider_resolver, :payment_repository
 
-    def adapter(provider)
-      provider_resolver.resolve(provider: provider)
+    def adapter(provider, temple:)
+      provider_resolver.resolve(provider: provider, temple: temple)
     end
 
     def assert_full_refund!(payment:, amount_cents:, operation:)

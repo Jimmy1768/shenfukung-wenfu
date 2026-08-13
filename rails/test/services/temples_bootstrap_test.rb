@@ -44,4 +44,27 @@ class TemplesBootstrapTest < ActiveSupport::TestCase
     assert_equal true, temple.published
     assert_equal %w[2026-lotus-festival perennial], temple.registration_period_keys
   end
+
+  test "shengfukung bootstrap selects fake checkout without overwriting payment credentials or billing data" do
+    temple = create_temple(
+      slug: "shengfukung-wenfu",
+      payment_provider_settings: {
+        "ecpay" => { "merchant_id" => "keep-merchant", "hash_key" => "keep-key", "hash_iv" => "keep-iv" },
+        "billing" => { "stripe_customer_id" => "cus_keep", "stripe_payment_method_id" => "pm_keep" },
+        "unrelated" => { "admin_work" => "keep" }
+      },
+      metadata: { "custom" => "keep" }
+    )
+
+    Seeds::Temples.bootstrap(slug: "shengfukung-wenfu")
+    first_settings = temple.reload.payment_provider_settings.deep_dup
+    Seeds::Temples.bootstrap(slug: "shengfukung-wenfu")
+
+    assert_equal "fake", temple.reload.payment_provider_settings["patron_checkout_provider"]
+    assert_equal first_settings, temple.payment_provider_settings
+    assert_equal "keep-merchant", temple.payment_gateway_settings_for(:ecpay)["merchant_id"]
+    assert_equal "cus_keep", temple.billing_settings["stripe_customer_id"]
+    assert_equal "keep", temple.payment_provider_settings.dig("unrelated", "admin_work")
+    assert_equal "keep", temple.metadata["custom"]
+  end
 end

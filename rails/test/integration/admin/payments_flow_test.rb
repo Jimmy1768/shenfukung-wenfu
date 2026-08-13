@@ -58,7 +58,7 @@ class AdminPaymentsFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "starts fake checkout through admin controller and confirms payment" do
-    temple = create_temple
+    temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "fake" })
     offering = create_offering(temple:, slug: "admin-fake", title: "Admin Fake", price_cents: 900)
     user = User.create!(
       email: "adminfake-user@example.com",
@@ -72,8 +72,10 @@ class AdminPaymentsFlowTest < ActionDispatch::IntegrationTest
 
     sign_in_admin(admin_user)
 
-    assert_difference -> { SystemAuditLog.where(action: "admin.payments.checkout_started").count }, 1 do
-      post start_checkout_admin_payments_path(registration_id: registration.id)
+    Payments::ProviderResolver.stub(:current_provider, "ecpay") do
+      assert_difference -> { SystemAuditLog.where(action: "admin.payments.checkout_started").count }, 1 do
+        post start_checkout_admin_payments_path(registration_id: registration.id)
+      end
     end
 
     assert_redirected_to checkout_return_admin_payments_url(registration_id: registration.id, provider: "fake")
@@ -113,7 +115,7 @@ class AdminPaymentsFlowTest < ActionDispatch::IntegrationTest
   end
 
   test "checkout return confirms ecpay payment and redirects back to admin order" do
-    temple = create_temple
+    temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "fake" })
     offering = create_offering(temple:, slug: "admin-ecpay-return", title: "Admin ECPay Return", price_cents: 1000)
     user = User.create!(
       email: "admin-ecpay-return@example.com",
@@ -141,7 +143,7 @@ class AdminPaymentsFlowTest < ActionDispatch::IntegrationTest
         PaymentGateway::EcpayAdapter.stub(:new, FakeReturnAdapter.new("completed")) do
           post checkout_return_admin_payments_path(
             registration_id: registration.id,
-            provider: "ecpay",
+            provider: "fake",
             MerchantTradeNo: "trade_admin_1",
             TradeNo: "ecpay_admin_trade_no_1",
             RtnCode: "1",
