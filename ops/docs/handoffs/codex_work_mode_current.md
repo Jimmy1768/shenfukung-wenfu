@@ -62,6 +62,7 @@
 - `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_BUILD_PLAN.md`
 - `ops/docs/plans/EXPO_EAS_ANDROID_DEVELOPMENT_CLIENT_DOWNLOAD_INSTALL_PLAN.md`
 - `ops/docs/plans/OAUTH_APPLE_ACCOUNT_RESOLUTION_READINESS_AND_IMPLEMENTATION_PLAN.md`
+- `ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_ROADMAP.md`
 - `ops/docs/plans/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_ROLLOUT_READINESS_PLAN.md`
 - `ops/docs/reference/future_work.md`
 
@@ -424,6 +425,22 @@ assets before another preflight. The historical Apple-only record remains a
 separate blocked parent pending deployed-source validation, the 24-hour review,
 an exact-account inventory, and a safe fresh-proof acquisition/execution
 interface.
+
+The phased historical-account recovery is now captured in
+`ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_ROADMAP.md`. User 22 must not be
+deleted: it preserves the exact Apple identity and audit source, and deletion
+before fixed-source deployment could merely recreate another placeholder. The
+roadmap sequences preservation, local real-Apple validation, production asset
+disposition, exact Candidate B construction, read-only preflight, disabled-flag
+deployment, account-resolution activation, protected source/keeper inventory,
+a proof-gated recovery interface, one atomic identity consolidation, and
+monitoring. The intended terminal state moves the freshly proven Apple
+identity to the freshly proven keeper, revokes source sessions, and closes but
+retains user 22 as an audited tombstone. No Control packet, production action,
+provider action, account mutation, deployment, or cleanup is authorized by the
+roadmap. The first executable decision remains preserve/relocate/replace of the
+86 untracked production public paths; local real-Apple validation may be
+planned in parallel under separate provider/runtime authority.
 
 ## Current Authorized Documentation Housekeeping
 
