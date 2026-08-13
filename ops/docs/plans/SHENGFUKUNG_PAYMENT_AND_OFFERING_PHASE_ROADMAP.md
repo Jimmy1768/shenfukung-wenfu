@@ -227,7 +227,7 @@ or requests for the same unavailable temple input.
 
 ## Current Next Action
 
-Wenfu Planning may prepare the separate immutable Phase 1 and Phase 2 plans
-for parallel Control dispatch. No implementation, provider action, offering
-activation, production mutation, deployment, or Expo payment work is
-authorized by this roadmap alone.
+Phases 1 and 2 are accepted and integrated at canonical commit `e9e02c9`.
+Wenfu Planning may dispatch the committed Phase 3 four-offering controlled-
+configuration plan. No Phase 4 work begins until Phase 3 is accepted and
+integrated. Phase 5 provider action and Expo payment work remain unauthorized.
