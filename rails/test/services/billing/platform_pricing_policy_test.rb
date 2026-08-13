@@ -3,7 +3,9 @@ require "test_helper"
 class Billing::PlatformPricingPolicyTest < ActiveSupport::TestCase
   test "quotes the agreed progressive bands without a pricing cliff" do
     assert_equal 150_000, Billing::PlatformPricingPolicy.quote(500).usage_total_cents
+    assert_equal 150_100, Billing::PlatformPricingPolicy.quote(501).usage_total_cents
     assert_equal 300_000, Billing::PlatformPricingPolicy.quote(2_000).usage_total_cents
+    assert_equal 300_125, Billing::PlatformPricingPolicy.quote(2_001).usage_total_cents
 
     quote = Billing::PlatformPricingPolicy.quote(10_000)
 
@@ -16,6 +18,7 @@ class Billing::PlatformPricingPolicyTest < ActiveSupport::TestCase
   end
 
   test "charges the higher rate only for registrations above ten thousand" do
+    assert_equal 1_300_150, Billing::PlatformPricingPolicy.quote(10_001).usage_total_cents
     quote = Billing::PlatformPricingPolicy.quote(15_000)
 
     assert_equal 5_000, quote.band_three_registration_count

@@ -11,5 +11,20 @@ class PlatformBillingAdjustment < ApplicationRecord
   validates :recognized_at, presence: true
   validates :registration_count_delta, numericality: { less_than: 0 }
   validates :amount_cents, numericality: { less_than_or_equal_to: 0 }
-  validates :platform_billing_usage_record_id, uniqueness: { scope: :platform_billing_statement_id }
+  validates :platform_billing_usage_record_id, uniqueness: true
+  validate :tenant_matches_related_records
+
+  private
+
+  def tenant_matches_related_records
+    related_temples = [
+      platform_billing_statement&.temple_id,
+      source_platform_billing_statement&.temple_id,
+      platform_billing_usage_record&.temple_id,
+      temple_registration&.temple_id
+    ].compact
+    return if related_temples.all? { |related_temple_id| related_temple_id == temple_id }
+
+    errors.add(:temple, "must match the statement, usage record, and registration temple")
+  end
 end

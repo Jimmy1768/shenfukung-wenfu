@@ -27,6 +27,7 @@ class Billing::PlatformStatementCloserTest < ActiveSupport::TestCase
         payment_status: "paid",
         created_at: Time.utc(2026, 8, 1, 1, 0, 0)
       )
+      create_payment(registration: paid_registration, processed_at: Time.utc(2026, 8, 1, 1, 0, 0))
       create_registration(
         user: @user,
         offering: @paid_offering,
