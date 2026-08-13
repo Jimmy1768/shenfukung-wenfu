@@ -128,43 +128,47 @@ collection are routine Control implementation choices. Every TWD 50 payment is
 fake-provider state-transition evidence: no card, real ECPay request, or money
 movement occurs.
 
-### Phase 5 — Stripe Platform-Billing Lifecycle Validation
+### Phase 5 — Deferred External Provider Validation
 
-Use a separately authorized provider-safe Stripe **test-mode/sandbox** packet
-to exercise the temple paying SourceGrid: setup payment, saved test payment
-method, graduated monthly reckoning, monthly close, signed test webhook
-behavior, failed payment, grace, freeze, recovery, and rollback/monitoring.
-Use only Stripe test payment data; no real credit card or money movement is
-needed. Do not repeat the already completed graduated-Price configuration
-verification absent changed evidence—the remaining work is lifecycle and
-reckoning behavior against that Price.
+Phase 5 is deliberately last and does not begin while the Director is AFK. It
+contains two independent provider-gated tracks.
 
-### Phase 6 — Live ECPay Validation
+#### Phase 5A — Stripe Platform-Billing Sandbox
+
+When the Director is ready to set up or use Stripe sandbox, use a separately
+authorized provider-safe packet to exercise the temple paying SourceGrid:
+setup payment, saved test payment method, graduated monthly reckoning, monthly
+close, signed test webhook behavior, failed payment, grace, freeze, recovery,
+and rollback/monitoring. Use only Stripe test payment data; no real credit card
+or money movement is needed. Do not repeat the already completed graduated-
+Price configuration verification absent changed evidence.
+
+#### Phase 5B — Live ECPay
 
 Deferred until a real client supplies a legally usable ECPay merchant account
 and authorizes a target-specific provider workflow. Local fake-adapter evidence
-does not complete this phase.
+does not complete this track.
 
 ## Dependency And Blocker Matrix
 
-### Phase 5
+### Phases 1–4
 
-Phase 5 does not need to wait for every Phase 1–4 task before readiness work
-starts:
+There is no known product decision, temple-information dependency, real
+provider dependency, or Director callback blocking Phases 1–4. Ordinary
+implementation defects discovered by a Control remain bounded repair work;
+they are not predeclared roadmap blockers. Phase 4 acceptance closes the local
+payment program.
 
-- Stripe sandbox readiness, configuration-shape review, protected credential
-  availability classification, webhook test-path planning, cleanup, and safe
-  receipt design may run in parallel with Phases 1–3.
-- Phase 1 is the hard source prerequisite for claiming that a Stripe monthly
-  statement contains the correct qualifying-registration count.
-- Final end-to-end Phase 5 acceptance follows Phase 4, because Phase 4 proves
-  that patron payment/cash outcomes feed the qualifying event correctly.
-- Phase 2 and Phase 3 are not independent Stripe blockers; they enter Phase 5
-  only through the integrated Phase 4 evidence.
+### Phase 5A
+
+Phase 5A follows Phase 4 by Director choice. Phase 1 supplies the qualifying-
+registration meaning that its monthly statement must use; Phases 2–4 provide
+the accepted integrated baseline. No Stripe sandbox readiness or provider
+inspection runs before that point.
 
 The retained Stripe catalog receipt proves the graduated schedule but does not
 record whether the listed Product and Price IDs are sandbox objects. Stripe
-sandbox and live objects are separate namespaces. Therefore the first Phase 5
+sandbox and live objects are separate namespaces. Therefore the first Phase 5A
 provider preflight must classify, without exposing secrets:
 
 1. availability of a TempleMate-scoped Stripe sandbox key;
@@ -173,24 +177,24 @@ provider preflight must classify, without exposing secrets:
 3. availability of a sandbox webhook-signing path for matching TempleMate
    events.
 
-If those sandbox objects already exist, Phase 5 has no Director-input blocker
-after Phase 4. If they do not exist, creating sandbox-only Products/Prices or a
-webhook endpoint is an external provider mutation and requires a separately
-accepted authorization. It never requires a real card.
+If those sandbox objects already exist, Phase 5A can proceed under its
+provider-safe authority. If they do not exist, creating sandbox-only
+Products/Prices or a webhook endpoint is an external provider mutation and
+requires a separately accepted authorization. It never requires a real card.
 
-### Phase 6
+### Phase 5B
 
-Phase 6 is not blocked by Stripe and does not wait for Phase 5. Its hard
+Phase 5B is not blocked by Stripe and does not wait for Phase 5A. Its hard
 external blocker is a real client-owned, legally usable ECPay merchant account,
 including its valid merchant identity/統一編號, credentials, and authority to
 exercise payment, callback, and refund behavior. SourceGrid cannot manufacture
 that prerequisite for the Shengfukung test tenant.
 
 Phases 1–4 can close every repository-local ECPay gap through the fake adapter.
-When a real client account becomes available, Phase 6 still requires a
+When a real client account becomes available, Phase 5B still requires a
 target-specific provider-safe plan naming the tenant, environment, operator,
 credential injection, callback target, low-value payment/refund limits,
-idempotency, rollback, monitoring, and stop conditions. Until then, Phase 6 is
+idempotency, rollback, monitoring, and stop conditions. Until then, Phase 5B is
 truthfully externally blocked rather than locally incomplete.
 
 ## AFK-Safe Execution Order
@@ -202,11 +206,12 @@ work in this order:
 2. integrate their accepted outcomes;
 3. implement Phase 3 with the four TWD 50 offerings and disabled fifth row;
 4. run Phase 4 simulated-ECPay combined QA; and
-5. complete a Phase 5 read-only/local sandbox-readiness packet.
+5. stop with the local payment program complete and Phase 5 deferred.
 
-Provider mutation or credential-bearing Stripe sandbox execution begins only
-under a separately accepted provider-safe packet. Live ECPay remains parked
-without repeated retries or requests for the same unavailable temple input.
+Do not inspect Stripe sandbox state, classify Stripe credential availability,
+create provider objects, or execute credential-bearing provider validation
+while the Director is AFK. Live ECPay remains parked without repeated retries
+or requests for the same unavailable temple input.
 
 ## Acceptance And Sequencing
 
@@ -214,9 +219,9 @@ without repeated retries or requests for the same unavailable temple input.
 - Phase 1 and Phase 2 may fan out in parallel.
 - Phase 3 uses only the four enabled offering choices recorded here.
 - Phase 4 follows the accepted local integration of Phases 1–3.
-- Phase 5 readiness may proceed in parallel, but its final end-to-end sandbox
-  acceptance follows Phase 4 and requires its separate provider-safe authority.
-- Phase 6 remains disabled externally; it does not block Phases 1–5.
+- Phase 5 is the only blocked/deferred phase. Its Stripe and ECPay tracks each
+  require their own later provider-safe authority and do not block local
+  completion through Phase 4.
 - Expo payment UI remains a later phase and consumes accepted Rails/payment
   contracts; it does not redefine them.
 
