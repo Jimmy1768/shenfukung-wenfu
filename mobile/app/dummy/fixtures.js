@@ -15,10 +15,15 @@ const alternateTenant = Object.freeze({
 const seed = Object.freeze({
   profile: { id: 'account-001', email: 'member@example.test', name: '林小安' },
   dependents: [{ id: 'dependent-001', name: '林小福', relationship: '家人' }],
-  registrations: [{ id: 'registration-001', offering: { id: 'event-001', slug: 'peace-blessing', title: '平安祈福', account_action: 'event', price_cents: 1200, currency: 'TWD' }, registrantName: '林小安', registrantScope: 'self', quantity: 1, totalAmountCents: 1200, currency: 'TWD', state: 'confirmed', readOnly: true }],
-  events: [{ id: 'event-001', slug: 'peace-blessing', title: '平安祈福', account_action: 'event', price_cents: 1200, currency: 'TWD', status: 'open', date: '2026-09-01' }],
-  services: [{ id: 'service-001', slug: 'online-blessing', title: '線上祈福服務', account_action: 'service', price_cents: 600, currency: 'TWD', status: 'open' }],
-  gatherings: [{ id: 'gathering-001', slug: 'community-gathering', title: '社群聚會', account_action: 'gathering', price_cents: 0, currency: 'TWD', status: 'open' }],
+  registrations: [{ id: 'registration-001', offering: { id: 'service-001', slug: 'incense-donation', title: '香油捐獻', account_action: 'service', price_cents: 5000, currency: 'TWD' }, registrantName: '林小安', registrantScope: 'self', quantity: 1, totalAmountCents: 5000, currency: 'TWD', state: 'completed_cash_demo', paymentState: 'completed_cash_demo', demoCashFixture: true, readOnly: true }],
+  events: [],
+  services: [
+    { id: 'service-001', slug: 'incense-donation', title: '香油捐獻', account_action: 'service', price_cents: 5000, currency: 'TWD', status: 'open' },
+    { id: 'service-002', slug: 'lamp-service', title: '點燈作業', account_action: 'service', price_cents: 5000, currency: 'TWD', status: 'open' },
+    { id: 'service-003', slug: 'ghost-festival-table', title: '普渡供桌', account_action: 'service', price_cents: 5000, currency: 'TWD', status: 'open' },
+    { id: 'service-004', slug: 'liberation-ritual', title: '拔薦', account_action: 'service', price_cents: 5000, currency: 'TWD', status: 'open' }
+  ],
+  gatherings: [],
   gallery: [{ id: 'gallery-001', title: '春季法會紀錄' }],
   certificates: [{ id: 'certificate-001', certificateNumber: 'DEMO-001', offering: { title: '平安祈福' }, issuedAt: '2026-08-01' }],
   preferences: { locale: 'zh-TW', theme: 'light' }

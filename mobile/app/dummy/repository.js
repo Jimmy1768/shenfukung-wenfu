@@ -43,6 +43,7 @@ const editPayloadFor = registration => ({
   currency: registration.currency,
   payment_status: registration.paymentState,
   fulfillment_status: registration.state,
+  demo_cash_fixture: registration.demoCashFixture,
   read_only: registration.readOnly
 });
 
@@ -118,7 +119,7 @@ function createDummyRepository(initial = seed) {
       if (duplicateFor(state, selected, registrant)) throw validationError('registration', '此登記人已選擇這個項目');
       const id = `registration-${String(nextRegistrationNumber++).padStart(3, '0')}`;
       const quantity = Number(registration.quantity || 1);
-      state.registrations.push({ id, offering: clone(selected), registrantName: registrant.name, registrantScope: registrant.scope, dependentId: registrant.scope === 'dependent' ? registrant.id : null, quantity, totalAmountCents: selected.price_cents * quantity, currency: selected.currency, state: 'draft', readOnly: false, registration: { ...registration, registrant_scope: registrant.scope, dependent_id: registrant.scope === 'dependent' ? registrant.id : undefined } });
+      state.registrations.push({ id, offering: clone(selected), registrantName: registrant.name, registrantScope: registrant.scope, dependentId: registrant.scope === 'dependent' ? registrant.id : null, quantity, totalAmountCents: selected.price_cents * quantity, currency: selected.currency, state: 'pending_cash_arrangement', paymentState: 'pending_cash_arrangement', demoCashFixture: false, readOnly: false, registration: { ...registration, registrant_scope: registrant.scope, dependent_id: registrant.scope === 'dependent' ? registrant.id : undefined } });
       return snapshot();
     },
     editRegistration(id) {
