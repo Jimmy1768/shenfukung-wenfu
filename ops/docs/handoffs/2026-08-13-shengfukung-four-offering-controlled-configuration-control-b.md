@@ -52,10 +52,16 @@
 
 - Conformance review against immutable criteria: accepted. The final loader has exactly the approved four service slugs, no event entries or duplicate slugs, and every persisted template authority is `TWD` / `price_cents: 5000`. The two inferred entries are absent from loader-ready source only. Their historical working-draft/intake/Git surfaces are unchanged.
 - Acceptance decision and rationale: accepted after an independent guarded disposable-database rerun. `TemplateParity.ensure_missing!` creates four exact draft services for a fresh test tenant. A pre-existing `peace-opera-household` row is orphaned, remains reloadable, retains its recorded price/status/metadata, and is not deleted while the approved rows are created.
-- Integration, staging, and commit evidence when accepted: pending Control staging, commit, and canonical-main integration after final clean-state verification.
+- Integration, staging, and commit evidence when accepted: accepted configuration/test/packet commit `c8750b5` on the isolated branch; canonical-main integration remains a Control action after this record closeout.
 - Immutable terminal packet direct delivery, source Control, target Planning, implementation attempt, and continuation disposition: pending direct delivery to Wenfu Planning `019fea6a-c481-75d1-b9d8-6aea367ca5b6`; intended disposition `accepted_frozen_outcome`.
 - Paired Planning receipt: `released_terminal_idle`: pending.
 - Parent classification, continuation disposition, and next owner/action: Planning owns Phase 4 only after this canonical Phase 3 acceptance.
 - `active_packet: none` only with the exact missing decision and owner: not applicable while this packet is active.
 - Residual risk, production gap, and next owner: no real temple database/provider action is attempted. Control created `wenfu_phase3_offerings_20260813` only after proving it absent, migrated and used it under `RAILS_ENV=test` / `PGDATABASE_TEST`, then dropped it and verified it absent before acceptance. Planning owns later Phase 4 authorization.
 - Authority confirmation: Planning reported evidence only; Strategy owns any cross-repository policy and the Director accepts it.
+
+## Local Evidence
+
+- Guarded disposable database lifecycle: `psql -d postgres -Atqc` proved `wenfu_phase3_offerings_20260813` absent; `env RAILS_ENV=test PGDATABASE_TEST=wenfu_phase3_offerings_20260813 bin/rails db:create db:migrate` created and migrated it; the focused suite passed; `env RAILS_ENV=test PGDATABASE_TEST=wenfu_phase3_offerings_20260813 bin/rails db:drop` removed it; the same `psql` query then returned no database row.
+- Focused matrix in that exact disposable database: `bin/rails test test/services/offerings/template_parity_test.rb test/services/offerings/readiness_synthetic_proof_test.rb test/services/offerings/setup_draft_applier_test.rb test/services/offerings/setup_field_catalog_test.rb test/services/temples_bootstrap_test.rb test/integration/account/api/payment_statuses_test.rb test/integration/admin/offering_orders_registrant_flow_test.rb` — 33 runs, 272 assertions, 0 failures, 0 errors, 0 skips.
+- Static checks: YAML catalog parser proved the exact four-item no-event/no-duplicate list and exact TWD/5000 values; `ruby -c rails/test/services/offerings/template_parity_test.rb` passed; `git diff --check` passed. The focused matrix exposed no shared-fixture or catalog coupling, so the plan does not require a full Rails-suite run.
