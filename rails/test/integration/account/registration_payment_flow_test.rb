@@ -361,6 +361,43 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "重新付款"
   end
 
+  test "cash-only tenant shows truthful pending guidance and blocks direct checkout without side effects" do
+    temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "cash_only" })
+    offering = create_offering(temple:, slug: "cash-only", title: "Cash Only", price_cents: 700)
+    user = User.create!(email: "cashonly-account@example.com", english_name: "Cash Only", encrypted_password: User.password_hash("Password123!"))
+    registration = create_registration(user:, offering:)
+    original_updated_at = registration.updated_at
+
+    sign_in_account(user, temple_slug: temple.slug)
+
+    get payment_account_registration_path(registration)
+    assert_response :success
+    assert_includes response.body, "現金付款"
+    assert_includes response.body, "與宮廟安排現金付款"
+    refute_includes response.body, "繼續進行線上付款"
+    refute_includes response.body, "test checkout"
+    refute_includes response.body, "ECPay"
+    refute_select "form[action=?]", start_checkout_account_registration_path(registration)
+
+    assert_includes I18n.t("account.registrations.payment.online_unavailable_notice", locale: :en), "Online payment is not available"
+    assert_includes I18n.t("account.registrations.payment.online_unavailable_notice", locale: :"zh-TW"), "現金付款"
+
+    assert_no_difference [
+      "TemplePayment.count",
+      "FinancialLedgerEntry.count",
+      "SystemAuditLog.count",
+      "PaymentWebhookLog.count",
+      "PlatformBillingStatement.count",
+      "PlatformBillingUsageRecord.count",
+      "PlatformBillingAdjustment.count"
+    ] do
+      post start_checkout_account_registration_path(registration)
+    end
+    assert_redirected_to payment_account_registration_path(registration)
+    assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.reload.payment_status
+    assert_equal original_updated_at, registration.updated_at
+  end
+
   test "start fake checkout redirects through return flow and marks payment paid" do
     temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "fake" })
     offering = create_offering(temple:, slug: "fake-checkout", title: "Fake Checkout Offering", price_cents: 800)

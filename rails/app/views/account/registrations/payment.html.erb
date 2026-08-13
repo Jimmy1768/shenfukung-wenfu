@@ -19,7 +19,7 @@
     <div>
       <p class="eyebrow"><%= t("account.registrations.payment.eyebrow") %></p>
       <h2><%= t("account.registrations.payment.title", offering: offering_name) %></h2>
-      <p><%= t("account.registrations.payment.subtitle") %></p>
+      <p><%= @online_checkout_available ? t("account.registrations.payment.subtitle") : t("account.registrations.payment.cash_only_subtitle") %></p>
     </div>
     <%= link_to t("account.registrations.payment.view_registration"), account_registration_path(@registration), class: "pill-link" %>
   </header>
@@ -77,6 +77,16 @@
       </div>
       <p data-payment-message><%= t("account.registrations.payment.paid_notice") %></p>
       <%= link_to t("account.registrations.payment.back_to_registration"), account_registration_path(@registration), class: "pill-link secondary" %>
+    </article>
+  <% elsif !@online_checkout_available && status_key.in?([TempleRegistration::PAYMENT_STATUSES[:pending], TempleRegistration::PAYMENT_STATUSES[:failed]]) %>
+    <article class="card payment-callout is-pending" data-payment-callout data-online-checkout-unavailable>
+      <div class="payment-amount">
+        <p class="eyebrow"><%= t("account.registrations.payment.amount_label") %></p>
+        <strong><%= amount_label %></strong>
+      </div>
+      <p class="payment-message" data-payment-message><%= t("account.registrations.payment.online_unavailable_notice") %></p>
+      <p class="muted"><%= t("account.registrations.payment.cash_only_helper") %></p>
+      <%= link_to t("account.registrations.payment.pay_later"), account_registration_path(@registration), class: "pill-link secondary" %>
     </article>
   <% elsif status_key == TempleRegistration::PAYMENT_STATUSES[:failed] %>
     <article class="card payment-callout is-failed" data-payment-callout>

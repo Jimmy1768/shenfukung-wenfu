@@ -55,7 +55,7 @@ module Admin
       recorder = Payments::CashPaymentRecorder.new(
         registration: @registration,
         admin_user: current_admin,
-        amount_cents: payment_params[:amount_cents].to_i,
+        amount_cents: payment_params[:amount_cents],
         currency: payment_params[:currency],
         notes: payment_params[:notes]
       )
@@ -67,6 +67,8 @@ module Admin
     rescue ActiveRecord::RecordInvalid => e
       @payment = e.record
       render :new, status: :unprocessable_entity
+    rescue Payments::CashPaymentRecorder::SettlementError => e
+      redirect_to offering_order_path(@registration.offering, @registration), alert: e.message
     end
 
     def start_checkout
@@ -75,6 +77,7 @@ module Admin
           alert: t("admin.payments.flash.online_payments_frozen")
       end
 
+      Payments::ProviderResolver.require_online_checkout!(temple: current_temple)
       provider = checkout_provider
       result = Payments::CheckoutService.new.call(
         registration: @registration,
@@ -115,6 +118,8 @@ module Admin
                  t("admin.payments.flash.checkout_started", provider: Payments::ProviderResolver.label_for(provider))
                end
       redirect_to offering_order_path(@registration.offering, @registration), notice: notice
+    rescue Payments::ProviderResolver::OnlineCheckoutUnavailable
+      redirect_to offering_order_path(@registration.offering, @registration), alert: t("admin.payments.flash.online_checkout_unavailable")
     rescue StandardError => e
       redirect_to offering_order_path(@registration.offering, @registration), alert: t("admin.payments.flash.checkout_failed", error: e.message)
     end

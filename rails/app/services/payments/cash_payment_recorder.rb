@@ -2,18 +2,23 @@
 
 module Payments
   class CashPaymentRecorder
+    SettlementError = Class.new(StandardError)
+
     def initialize(registration:, admin_user:, amount_cents:, currency:, notes: nil)
       @registration = registration
       @admin_user = admin_user
-      @amount_cents = amount_cents.to_i
+      @amount_cents = parse_amount_cents(amount_cents)
       @currency = currency.presence || registration.currency
       @notes = notes
     end
 
     def record!
       TemplePayment.transaction do
+        @registration = registration.class.lock.find(registration.id)
+        validate_settlement!
+        completed_at = Time.current
         ledger_entry = create_ledger_entry!
-        payment = create_payment!(ledger_entry)
+        payment = create_payment!(ledger_entry, completed_at:)
         registration.mark_paid!
 
         SystemAuditLogger.log!(
@@ -36,7 +41,35 @@ module Payments
 
     attr_reader :registration, :admin_user, :amount_cents, :currency, :notes
 
-    def create_payment!(ledger_entry)
+    def validate_settlement!
+      raise SettlementError, "Cash settlement permission is required" unless cash_permission?
+      raise SettlementError, "Cash settlement must use the registration total" unless amount_cents == registration.total_price_cents
+      raise SettlementError, "Cash settlement must use the registration currency" unless currency == registration.currency
+      raise SettlementError, "Cash settlement is not available for this registration" unless eligible_registration?
+      raise SettlementError, "Cash settlement already exists" if registration.temple_payments.completed.where(provider: "manual_cash").exists?
+    end
+
+    def parse_amount_cents(value)
+      return value if value.is_a?(Integer)
+      return Integer(value, 10) if value.is_a?(String) && /\A\d+\z/.match?(value)
+
+      raise SettlementError, "Cash settlement amount must be a whole number of cents"
+    rescue ArgumentError
+      raise SettlementError, "Cash settlement amount must be a whole number of cents"
+    end
+
+    def cash_permission?
+      admin_account = admin_user&.admin_account
+      AdminPermission.find_by(admin_account:, temple: registration.temple)&.allow?(:record_cash_payments)
+    end
+
+    def eligible_registration?
+      registration.payment_status == TempleRegistration::PAYMENT_STATUSES[:pending] &&
+        registration.fulfillment_status == TempleRegistration::FULFILLMENT_STATUSES[:open] &&
+        registration.total_price_cents.to_i.positive?
+    end
+
+    def create_payment!(ledger_entry, completed_at:)
       attrs = {
         temple: registration.temple,
         user: registration.user,
@@ -47,7 +80,7 @@ module Payments
         status: TemplePayment::STATUSES[:completed],
         amount_cents: amount_cents,
         currency: currency,
-        processed_at: Time.current,
+        processed_at: completed_at,
         payment_payload: payment_payload,
         metadata: {}
       }

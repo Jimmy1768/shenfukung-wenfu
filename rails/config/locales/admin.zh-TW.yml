@@ -1190,6 +1190,7 @@ zh-TW:
       empty: "尚未建立任何聚會。"
     payments:
       flash:
+        online_checkout_unavailable: "此宮廟目前未提供線上付款。"
         recorded: "已登記付款。"
         checkout_reused: "此報名已存在付款嘗試。"
         checkout_started: "已啟動 %{provider} 付款流程，等待確認。"

@@ -56,6 +56,20 @@ module Payments
       assert_instance_of PaymentGateway::FakeAdapter, adapter
     end
 
+    test "cash-only tenant has no online checkout while other configured providers remain resolvable" do
+      cash_only = create_temple(payment_provider_settings: { "patron_checkout_provider" => "cash_only" })
+      fake_temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "fake" })
+
+      availability = ProviderResolver.availability_for(temple: cash_only)
+      refute availability.online?
+      assert_equal :cash_only, availability.reason
+      assert_nil availability.provider
+      assert_raises(ProviderResolver::OnlineCheckoutUnavailable) { ProviderResolver.require_online_checkout!(temple: cash_only) }
+
+      assert ProviderResolver.online_checkout_available?(temple: fake_temple)
+      assert_instance_of PaymentGateway::FakeAdapter, ProviderResolver.resolve(temple: fake_temple)
+    end
+
     test "invalid tenant provider selection fails closed" do
       temple = create_temple(payment_provider_settings: { "patron_checkout_provider" => "unsupported" })
 

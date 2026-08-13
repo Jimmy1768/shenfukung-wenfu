@@ -357,9 +357,12 @@ zh-TW:
           arrival: "到場時間"
           notes: "儀式備註"
       payment:
+        online_unavailable_notice: "此報名目前不提供線上付款，請與宮廟安排現金付款。"
+        cash_only_helper: "宮廟確認收到款項後會為您完成付款紀錄。"
         eyebrow: "付款"
         title: "完成 %{offering} 的付款"
         subtitle: "確認報名摘要並繼續進行線上付款。"
+        cash_only_subtitle: "確認報名摘要，並與宮廟安排現金付款。"
         renewal_helper: "每個檔期需重新登記；如需變更或特殊協助，請洽廟方服務台。"
         view_registration: "查看報名資料"
         amount_label: "應付金額"
