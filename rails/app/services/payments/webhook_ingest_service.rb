@@ -4,6 +4,7 @@ module Payments
   class WebhookIngestService
     Result = Struct.new(:event_log, :payment, :duplicate, keyword_init: true)
     InvalidWebhookSignature = Class.new(StandardError)
+    InvalidWebhookAmount = Class.new(ArgumentError)
 
     def initialize(
       provider_resolver: ProviderResolver,
@@ -20,6 +21,14 @@ module Payments
     def call(temple:, provider:, payload:, headers: {})
       adapter_payload = adapter(provider, temple: temple).ingest_webhook(payload: payload, headers: headers)
 
+      payment = payment_repository.find_by_provider_reference(
+        temple: temple,
+        provider: provider,
+        provider_reference: adapter_payload[:provider_reference]
+      )
+
+      assert_wire_contract_matches!(provider:, payment:, adapter_payload:)
+
       event_log = event_log_repository.record_once!(
         temple: temple,
         provider: provider,
@@ -33,12 +42,6 @@ module Payments
       unless adapter_payload[:signature_valid]
         raise InvalidWebhookSignature, "Invalid #{provider} webhook signature (#{adapter_payload[:signature_reason] || 'unknown'})"
       end
-
-      payment = payment_repository.find_by_provider_reference(
-        temple: temple,
-        provider: provider,
-        provider_reference: adapter_payload[:provider_reference]
-      )
 
       if payment
         payment_repository.update_status!(
@@ -76,6 +79,16 @@ module Payments
 
     def adapter(provider, temple:)
       provider_resolver.resolve(provider: provider, temple: temple)
+    end
+
+    def assert_wire_contract_matches!(provider:, payment:, adapter_payload:)
+      return unless provider.to_s == "ecpay" && adapter_payload[:wire_contract] == "ecpay"
+
+      unless adapter_payload[:amount_valid] && payment &&
+          adapter_payload[:currency].to_s == payment.currency.to_s &&
+          adapter_payload[:amount_cents].to_i == payment.amount_cents.to_i
+        raise InvalidWebhookAmount, "ECPay webhook amount does not match payment"
+      end
     end
 
     def sanitize_for_audit(value)

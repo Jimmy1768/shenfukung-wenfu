@@ -197,5 +197,87 @@ module Payments
         assert_includes audit_logger.calls.map { |call| call[:action] }, "system.payments.reconciled"
       end
     end
+
+    test "signed ECPay return maps TradeAmt 50 to the matching internal TWD 5000 payment" do
+      registration = FakeRegistration.new("REG-5000", TempleRegistration::PAYMENT_STATUSES[:pending], FakeTemple.new(1))
+      payment = FakePayment.new(
+        id: 12, status: TemplePayment::STATUSES[:pending], provider_reference: "TMRETURN5000",
+        amount_cents: 5000, currency: "TWD", payment_payload: {}, metadata: {}, temple_registration: registration
+      )
+      repository = FakeRepository.new(payment)
+      audit_logger = FakeAuditLogger.new([])
+      registration.define_singleton_method(:temple_payments) { TemplePayment.none }
+      service = CheckoutReturnService.new(
+        provider_resolver: FakeResolver.new(PaymentGateway::EcpayAdapter.new),
+        payment_repository: repository,
+        audit_logger: audit_logger
+      )
+
+      with_ecpay_env do
+        fields = signed_ecpay_fields(reference: payment.provider_reference, amount: "50")
+        service.stub(:latest_payment_for!, payment) do
+          result = service.call(registration: registration, provider: "ecpay", params: fields)
+          assert_equal TemplePayment::STATUSES[:completed], result.payment.status
+        end
+      end
+
+      assert_equal 5000, repository.updated_attrs[:payload][:amount_cents]
+      assert_equal TempleRegistration::PAYMENT_STATUSES[:paid], registration.payment_status
+      refute_includes repository.updated_attrs[:payload].dig(:raw, :ecpay_result).keys, "CheckMacValue"
+    end
+
+    test "signed ECPay return amount mismatch fails before payment or registration mutation" do
+      registration = FakeRegistration.new("REG-5001", TempleRegistration::PAYMENT_STATUSES[:pending], FakeTemple.new(1))
+      payment = FakePayment.new(
+        id: 13, status: TemplePayment::STATUSES[:pending], provider_reference: "TMRETURNMISMATCH",
+        amount_cents: 5000, currency: "TWD", payment_payload: {}, metadata: {}, temple_registration: registration
+      )
+      repository = FakeRepository.new(payment)
+      audit_logger = FakeAuditLogger.new([])
+      registration.define_singleton_method(:temple_payments) { TemplePayment.none }
+      service = CheckoutReturnService.new(
+        provider_resolver: FakeResolver.new(PaymentGateway::EcpayAdapter.new),
+        payment_repository: repository,
+        audit_logger: audit_logger
+      )
+
+      with_ecpay_env do
+        fields = signed_ecpay_fields(reference: payment.provider_reference, amount: "49")
+        service.stub(:latest_payment_for!, payment) do
+          assert_raises(PaymentGateway::EcpayAdapter::ConfigurationError) do
+            service.call(registration: registration, provider: "ecpay", params: fields)
+          end
+        end
+      end
+
+      assert_nil repository.updated_attrs
+      assert_empty audit_logger.calls
+      assert_equal TemplePayment::STATUSES[:pending], payment.status
+      assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.payment_status
+    end
+
+    private
+
+    def with_ecpay_env
+      original = %w[ECPAY_MERCHANT_ID ECPAY_HASH_KEY ECPAY_HASH_IV].to_h { |key| [key, ENV[key]] }
+      ENV["ECPAY_MERCHANT_ID"] = "2000132"
+      ENV["ECPAY_HASH_KEY"] = "5294y06JbISpM5x9"
+      ENV["ECPAY_HASH_IV"] = "v77hoKGq4kWxNNIS"
+      yield
+    ensure
+      original.each { |key, value| value.nil? ? ENV.delete(key) : ENV[key] = value }
+    end
+
+    def signed_ecpay_fields(reference:, amount:)
+      fields = {
+        "MerchantID" => "2000132", "MerchantTradeNo" => reference, "RtnCode" => "1",
+        "TradeNo" => "2404071234567890", "TradeAmt" => amount, "TradeStatus" => "1",
+        "CheckMacValue" => ""
+      }
+      fields["CheckMacValue"] = Payments::Taiwan::EcpayChecksum.generate(
+        fields: fields, hash_key: ENV.fetch("ECPAY_HASH_KEY"), hash_iv: ENV.fetch("ECPAY_HASH_IV")
+      )
+      fields
+    end
   end
 end

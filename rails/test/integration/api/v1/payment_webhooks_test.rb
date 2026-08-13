@@ -129,7 +129,7 @@ module Api
             "RtnCode" => "1",
             "RtnMsg" => "Succeeded",
             "TradeNo" => "2404071234567890",
-            "TradeAmt" => payment.amount_cents.to_s,
+            "TradeAmt" => (payment.amount_cents / 100).to_s,
             "TradeStatus" => "1",
             "PaymentType" => "Credit_CreditCard",
             "CheckMacValue" => ""
@@ -178,7 +178,7 @@ module Api
             "RtnCode" => "0",
             "RtnMsg" => "Failed",
             "TradeNo" => "2404070000000000",
-            "TradeAmt" => payment.amount_cents.to_s,
+            "TradeAmt" => (payment.amount_cents / 100).to_s,
             "TradeStatus" => "0",
             "PaymentType" => "Credit_CreditCard",
             "CheckMacValue" => ""
@@ -197,6 +197,47 @@ module Api
         assert_equal TemplePayment::STATUSES[:failed], payment.reload.status
         assert_equal TempleRegistration::PAYMENT_STATUSES[:failed], registration.reload.payment_status
         assert_nil payment.processed_at
+      end
+
+      test "a signed ECPay TradeAmt mismatch fails before payment, registration, or audit mutation" do
+        temple = create_temple(slug: "ecpay-webhook-amount-mismatch")
+        offering = create_offering(temple:, slug: "ecpay-webhook-amount-offering", price_cents: 5000)
+        user = User.create!(email: "ecpay-amount-mismatch@example.com", english_name: "ECPay Amount Mismatch", encrypted_password: User.password_hash("Password123!"))
+        registration = create_registration(user:, offering:)
+        payment = create_payment(
+          registration: registration,
+          status: TemplePayment::STATUSES[:pending],
+          method: TemplePayment::PAYMENT_METHODS[:ecpay],
+          provider: "ecpay",
+          provider_reference: "TMAMOUNTMISMATCH",
+          processed_at: nil
+        )
+
+        with_env(
+          "ECPAY_MERCHANT_ID" => "2000132",
+          "ECPAY_HASH_KEY" => "5294y06JbISpM5x9",
+          "ECPAY_HASH_IV" => "v77hoKGq4kWxNNIS"
+        ) do
+          fields = {
+            "MerchantID" => "2000132", "MerchantTradeNo" => payment.provider_reference,
+            "RtnCode" => "1", "TradeNo" => "2404079999999999", "TradeAmt" => "49",
+            "TradeStatus" => "1", "CheckMacValue" => ""
+          }
+          fields["CheckMacValue"] = Payments::Taiwan::EcpayChecksum.generate(
+            fields: fields, hash_key: ENV.fetch("ECPAY_HASH_KEY"), hash_iv: ENV.fetch("ECPAY_HASH_IV")
+          )
+
+          assert_no_difference -> { PaymentWebhookLog.count } do
+            assert_no_difference -> { SystemAuditLog.count } do
+              post api_v1_payment_webhook_path(provider: "ecpay", temple: temple.slug), params: fields
+            end
+          end
+        end
+
+        assert_response :unprocessable_entity
+        assert_equal "0|invalid_request", response.body
+        assert_equal TemplePayment::STATUSES[:pending], payment.reload.status
+        assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.reload.payment_status
       end
 
       private

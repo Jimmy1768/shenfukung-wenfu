@@ -13,7 +13,7 @@ module PaymentGateway
       ) do
         payload = EcpayAdapter.new.checkout(
           intent: "registration:123",
-          amount_cents: 500,
+          amount_cents: 5000,
           currency: "TWD",
           metadata: {
             browser_return_url: "https://example.test/return",
@@ -32,6 +32,7 @@ module PaymentGateway
         assert_equal "2000132", payload.dig(:raw, :ecpay_form_fields, "MerchantID")
         assert_equal "https://example.test/webhooks/ecpay", payload.dig(:raw, :ecpay_form_fields, "ReturnURL")
         assert_equal "https://example.test/return", payload.dig(:raw, :ecpay_form_fields, "OrderResultURL")
+        assert_equal "50", payload.dig(:raw, :ecpay_form_fields, "TotalAmount")
         assert payload.dig(:raw, :ecpay_form_fields, "CheckMacValue").present?
       end
     end
@@ -48,7 +49,7 @@ module PaymentGateway
           "RtnCode" => "1",
           "RtnMsg" => "Succeeded",
           "TradeNo" => "2404071234567890",
-          "TradeAmt" => "500",
+          "TradeAmt" => "50",
           "TradeStatus" => "1",
           "PaymentType" => "Credit_CreditCard",
           "CheckMacValue" => ""
@@ -65,6 +66,10 @@ module PaymentGateway
         assert_equal "completed", result[:status]
         assert_equal "TM1234567890ABCD", result[:provider_reference]
         assert_equal "2404071234567890", result[:provider_event_id]
+        assert_equal 5000, result[:amount_cents]
+        assert_equal "TWD", result[:currency]
+        assert result[:amount_valid]
+        refute result[:raw].key?("CheckMacValue")
       end
     end
 
@@ -88,7 +93,7 @@ module PaymentGateway
       ) do
         payload = EcpayAdapter.new(temple: temple).checkout(
           intent: "registration:123",
-          amount_cents: 500,
+          amount_cents: 5000,
           currency: "TWD",
           metadata: {
             browser_return_url: "https://example.test/return",
@@ -101,6 +106,53 @@ module PaymentGateway
 
         assert_equal "https://payment.ecpay.com.tw/Cashier/AioCheckOut/V5", payload.dig(:raw, :ecpay_checkout_url)
         assert_equal "3002607", payload.dig(:raw, :ecpay_form_fields, "MerchantID")
+      end
+    end
+
+    test "rejects unsupported currency and fractional whole-TWD amounts before building checkout fields" do
+      with_env(
+        "ECPAY_MERCHANT_ID" => "2000132",
+        "ECPAY_HASH_KEY" => "5294y06JbISpM5x9",
+        "ECPAY_HASH_IV" => "v77hoKGq4kWxNNIS"
+      ) do
+        common = {
+          intent: "registration:123",
+          metadata: {
+            browser_return_url: "https://example.test/return",
+            server_callback_url: "https://example.test/webhooks/ecpay"
+          },
+          idempotency_key: "idem-123"
+        }
+
+        assert_raises(Payments::Taiwan::EcpayAmount::InvalidCurrency) do
+          EcpayAdapter.new.checkout(**common, amount_cents: 5000, currency: "USD")
+        end
+        assert_raises(Payments::Taiwan::EcpayAmount::InvalidAmount) do
+          EcpayAdapter.new.checkout(**common, amount_cents: 5050, currency: "TWD")
+        end
+      end
+    end
+
+    test "marks invalid callback TradeAmt values invalid without exposing checksum material" do
+      with_env(
+        "ECPAY_MERCHANT_ID" => "2000132",
+        "ECPAY_HASH_KEY" => "5294y06JbISpM5x9",
+        "ECPAY_HASH_IV" => "v77hoKGq4kWxNNIS"
+      ) do
+        fields = {
+          "MerchantID" => "2000132", "MerchantTradeNo" => "TM1234567890ABCD",
+          "RtnCode" => "1", "TradeNo" => "2404071234567890", "TradeAmt" => "0",
+          "TradeStatus" => "1", "CheckMacValue" => ""
+        }
+        fields["CheckMacValue"] = Payments::Taiwan::EcpayChecksum.generate(
+          fields: fields, hash_key: ENV.fetch("ECPAY_HASH_KEY"), hash_iv: ENV.fetch("ECPAY_HASH_IV")
+        )
+
+        result = EcpayAdapter.new.ingest_webhook(payload: fields, headers: {})
+
+        refute result[:amount_valid]
+        assert_equal "invalid_trade_amount", result[:amount_error]
+        refute_includes result[:raw].keys, "CheckMacValue"
       end
     end
 

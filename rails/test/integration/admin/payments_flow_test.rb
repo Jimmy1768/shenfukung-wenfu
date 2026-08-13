@@ -90,7 +90,7 @@ class AdminPaymentsFlowTest < ActionDispatch::IntegrationTest
 
   test "start checkout redirects to provider checkout url when present" do
     temple = create_temple
-    offering = create_offering(temple:, slug: "admin-redirect", title: "Admin Redirect", price_cents: 950)
+    offering = create_offering(temple:, slug: "admin-redirect", title: "Admin Redirect", price_cents: 5000)
     user = User.create!(
       email: "adminredirect-user@example.com",
       english_name: "Admin Redirect User",

@@ -20,6 +20,8 @@ module Payments
         metadata: adapter_metadata(registration: registration, payment: payment, params: payload_params)
       )
 
+      assert_wire_contract_matches!(provider:, payment:, adapter_payload:)
+
       payment_repository.update_status!(
         payment: payment,
         status: Payments::StatusMapper.map(adapter_payload[:status]),
@@ -70,8 +72,23 @@ module Payments
         registration_reference: registration.reference_code,
         transaction_id: params["transaction_id"],
         order_id: params["order_id"],
-        payment_id: payment.id
+        payment_id: payment.id,
+        ecpay_callback: params
       }.compact
+    end
+
+    def assert_wire_contract_matches!(provider:, payment:, adapter_payload:)
+      return unless provider.to_s == "ecpay" && adapter_payload[:wire_contract] == "ecpay"
+
+      unless adapter_payload[:signature_valid]
+        raise PaymentGateway::EcpayAdapter::ConfigurationError, "ECPay return signature is invalid"
+      end
+
+      unless adapter_payload[:amount_valid] &&
+          adapter_payload[:currency].to_s == payment.currency.to_s &&
+          adapter_payload[:amount_cents].to_i == payment.amount_cents.to_i
+        raise PaymentGateway::EcpayAdapter::ConfigurationError, "ECPay return amount does not match payment"
+      end
     end
 
     def log_reconciliation_event!(registration:, payment:, provider:, previous_status:, return_params:)
