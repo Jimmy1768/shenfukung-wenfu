@@ -16,9 +16,12 @@ test tenant only under separately authorized provider-safe packets.
 
 ## Fixed Boundaries
 
-- Stripe platform billing charges the temple for TempleMate usage.
+- Stripe platform billing charges the temple for TempleMate usage. This
+  roadmap validates that higher-priced graduated monthly billing in Stripe
+  test mode/sandbox, using Stripe test payment data and no real card or money.
 - Patron registration payments are cash or ECPay; Stripe is not the patron
-  payment provider in this Taiwan flow.
+  payment provider in this Taiwan flow. The TWD 50 offering transactions in
+  local QA are simulated ECPay/fake-adapter transactions and use no card.
 - The existing Stripe graduated Price has already been checked. Do not create
   another catalog-verification gate without changed evidence.
 - Real ECPay merchant validation is externally blocked because SourceGrid does
@@ -38,9 +41,10 @@ Shengfukung payment work:
 3. `ghost-festival-table` — 普渡供桌
 4. `liberation-ritual` — 拔薦／祖先拔薦
 
-These four may receive deliberately low controlled test pricing in the later
-offering packet. The exact TWD prices remain a packet decision; “around SGD 2”
-does not authorize an unstated conversion or provider transaction.
+All four use the accepted controlled test price **TWD 50**. This is a test-
+tenant product decision, not an unresolved business question. Later Controls
+must implement the stated value without reopening currency conversion or
+temple-pricing discovery.
 
 ### Disabled Fifth Source Entry
 
@@ -101,23 +105,39 @@ if shared payment or registration surfaces overlap.
 ### Phase 3 — Four-Offering Controlled Configuration
 
 Reconcile the controlled Shengfukung configuration to the four enabled choices
-above, assign explicitly approved low TWD test prices, and ensure the disabled
-fifth source entry cannot enter offering creation or registration evidence.
-This phase must preserve the original intake and Git history as evidence.
+above at exactly TWD 50 each, and ensure the disabled fifth source entry cannot
+enter offering creation or registration evidence. This phase must preserve the
+original intake and Git history as evidence.
 
-### Phase 4 — Local Fake-Provider Registration QA
+Phase 3 has no remaining semantic or temple-information decision. Template
+reconciliation, source checks, offering creation, authoritative-price tests,
+and cleanup are routine implementation/evidence work owned by its later
+Control packet.
 
-Exercise patron- and admin-started registration, hosted fake checkout,
+### Phase 4 — Simulated ECPay Registration QA
+
+Exercise patron- and admin-started registration, the fake adapter's simulated
+ECPay-style hosted checkout,
 callback/webhook correlation, cash completion, failed/cancelled states,
 refund behavior, idempotency, monthly qualification, and reset/cleanup using
 only local or disposable data.
 
+Phase 4 has no remaining product-design decision once Phases 1–3 are accepted
+and integrated. Its test matrix, fixtures, disposable-data setup, and evidence
+collection are routine Control implementation choices. Every TWD 50 payment is
+fake-provider state-transition evidence: no card, real ECPay request, or money
+movement occurs.
+
 ### Phase 5 — Stripe Platform-Billing Lifecycle Validation
 
-Use a separately authorized provider-safe packet to exercise setup payment,
-saved payment method, monthly close, signed webhook behavior, failed payment,
-grace, freeze, recovery, and rollback/monitoring. Do not repeat the already
-completed graduated-Price verification absent changed evidence.
+Use a separately authorized provider-safe Stripe **test-mode/sandbox** packet
+to exercise the temple paying SourceGrid: setup payment, saved test payment
+method, graduated monthly reckoning, monthly close, signed test webhook
+behavior, failed payment, grace, freeze, recovery, and rollback/monitoring.
+Use only Stripe test payment data; no real credit card or money movement is
+needed. Do not repeat the already completed graduated-Price configuration
+verification absent changed evidence—the remaining work is lifecycle and
+reckoning behavior against that Price.
 
 ### Phase 6 — Live ECPay Validation
 
