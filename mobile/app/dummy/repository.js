@@ -140,14 +140,11 @@ function createDummyRepository(initial = seed) {
       registration.registrantName = registrant.name; registration.registrantScope = registrant.scope; registration.dependentId = registrant.scope === 'dependent' ? registrant.id : null; registration.quantity = quantity; registration.totalAmountCents = registration.offering.price_cents * quantity; registration.registration = { ...registration.registration, ...input, registrant_scope: registrant.scope, dependent_id: registrant.scope === 'dependent' ? registrant.id : undefined };
       return snapshot();
     },
-    submitAssistance({ message }) {
+    submitAssistance({ channel, message }) {
       if (!required(message)) throw validationError('message', '請說明需要的協助');
-      state.assistance = { submitted: true, message: message.trim() };
-      return snapshot();
-    },
-    contactTemple({ message }) {
-      if (!required(message)) throw validationError('message', '請輸入訊息');
-      state.contact = { submitted: true, message: message.trim() };
+      if (message.trim().length > 280) throw validationError('message', '訊息不得超過 280 個字元');
+      if (channel !== 'profile') throw validationError('channel', '協助請求只能從個人資料管道送出');
+      state.assistance = { submitted: true, channel, message: message.trim(), outcome: 'fixture' };
       return snapshot();
     },
     requestPrivacy({ kind }) {

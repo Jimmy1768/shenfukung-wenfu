@@ -66,7 +66,10 @@ function createRealAdapter({ config, store, transport, device = { device_id: 'lo
       await Promise.all([this.listDependents(), this.listRegistrations(), this.events(), this.services(), this.galleries(), this.certificates()]);
       return state;
     },
-    submitAssistance: input => request('POST', '/assistance', { assistance: input }), contactTemple: input => request('POST', '/contact', { contact: input }),
+    async submitAssistance(input) {
+      const payload = await request('POST', '/assistance', { assistance: { channel: 'profile', message: input.message } });
+      return { outcome: payload.duplicate === true ? 'duplicate' : 'created' };
+    },
     preferences: () => request('GET', '/preferences'),
     async updatePreferences(input) { const payload = await request('PATCH', '/preferences', { preferences: input }); return updateState('preferences', payload.preferences || input); },
     privacy: () => request('GET', '/privacy'),

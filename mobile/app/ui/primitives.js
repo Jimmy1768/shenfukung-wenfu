@@ -5,8 +5,8 @@ export function Button({ label, onPress, palette, disabled = false, tone = 'prim
   return <Pressable accessibilityRole="button" accessibilityLabel={accessibilityLabel || label} disabled={disabled} onPress={onPress} style={[styles.button, { backgroundColor, borderColor: secondary ? palette.border : backgroundColor }, disabled && styles.disabled]}><Text style={[styles.buttonText, { color }]}>{label}</Text></Pressable>;
 }
 
-export function FormInput({ label, value, onChangeText, palette, secureTextEntry = false, autoCapitalize = 'sentences', accessibilityLabel }) {
-  return <View style={styles.field}><Text style={[styles.label, { color: palette.text }]}>{label}</Text><TextInput accessibilityLabel={accessibilityLabel || label} value={value} onChangeText={onChangeText} secureTextEntry={secureTextEntry} autoCapitalize={autoCapitalize} placeholderTextColor={palette.textMuted} style={[styles.input, { color: palette.text, borderColor: palette.border, backgroundColor: palette.card }]} /></View>;
+export function FormInput({ label, value, onChangeText, palette, secureTextEntry = false, autoCapitalize = 'sentences', accessibilityLabel, maxLength }) {
+  return <View style={styles.field}><Text style={[styles.label, { color: palette.text }]}>{label}</Text><TextInput accessibilityLabel={accessibilityLabel || label} value={value} onChangeText={onChangeText} secureTextEntry={secureTextEntry} autoCapitalize={autoCapitalize} maxLength={maxLength} placeholderTextColor={palette.textMuted} style={[styles.input, { color: palette.text, borderColor: palette.border, backgroundColor: palette.card }]} /></View>;
 }
 
 export function Section({ title, palette, children, accessibilityLabel }) { return <View accessibilityLabel={accessibilityLabel || title} style={[styles.section, { backgroundColor: palette.card, borderColor: palette.border }]}><Text style={[styles.sectionTitle, { color: palette.text }]}>{title}</Text>{children}</View>; }

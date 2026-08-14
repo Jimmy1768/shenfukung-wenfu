@@ -31,7 +31,6 @@ function createDummyAdapter(repository = createDummyRepository(), { oauthJourney
     editRegistration: id => Promise.resolve().then(() => repository.editRegistration(id)),
     updateRegistration: (id, input) => Promise.resolve().then(() => repository.updateRegistration(id, input)),
     submitAssistance: input => Promise.resolve().then(() => repository.submitAssistance(input)),
-    contactTemple: input => Promise.resolve().then(() => repository.contactTemple(input)),
     requestPrivacy: input => Promise.resolve().then(() => repository.requestPrivacy(input)),
     closeAccount: input => Promise.resolve().then(() => { pending = null; return repository.closeAccount(input); }),
     preferences: async () => repository.snapshot().preferences || {},

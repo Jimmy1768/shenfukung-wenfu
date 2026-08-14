@@ -55,7 +55,7 @@ test('real adapter maps the complete account contract and never falls back to du
   await adapter.updateProfile({ name: '新名字' }); await adapter.addPassword({ password: 'new-password', password_confirmation: 'new-password' });
   await adapter.listDependents(); await adapter.showDependent(4); await adapter.createDependent({ name: '新家屬', relationship: '子女' }); await adapter.updateDependent(4, { name: '家屬', relationship: '家人' }); await adapter.deleteDependent(5);
   await adapter.listRegistrations(); await adapter.showRegistration(9); await adapter.newRegistration({ offering: 'prayer' }); await adapter.createRegistration({ offering: 'prayer', registrantName: '林小安' }); await adapter.editRegistration(9); await adapter.updateRegistration(9, { registrantName: '林小安' });
-  await adapter.events(); await adapter.services(); await adapter.galleries(); await adapter.gallery(1); await adapter.certificates(); await adapter.submitAssistance({ message: 'help' }); await adapter.contactTemple({ subject: 'hello', message: 'help' }); await adapter.preferences(); await adapter.updatePreferences({ locale: 'zh-TW', mobile_theme_id: 'default' }); await adapter.privacy(); await adapter.requestPrivacy({ kind: 'export' });
+  await adapter.events(); await adapter.services(); await adapter.galleries(); await adapter.gallery(1); await adapter.certificates(); await adapter.submitAssistance({ message: 'help' }); await adapter.preferences(); await adapter.updatePreferences({ locale: 'zh-TW', mobile_theme_id: 'default' }); await adapter.privacy(); await adapter.requestPrivacy({ kind: 'export' });
   assert.ok(calls.every(call => call.url.includes('temple_slug=fixture-temple')));
   assert.ok(calls.some(call => call.headers.Authorization === 'Bearer access-1' || call.headers.Authorization === 'Bearer access-2'));
   const profile = calls.find(call => call.url.includes('/profile?') && call.method === 'PATCH');
@@ -63,6 +63,23 @@ test('real adapter maps the complete account contract and never falls back to du
   assert.equal(calls.some(call => /admin|oauth|checkout|provider/i.test(call.url)), false);
   assert.equal(JSON.stringify(signedIn.registrations[0]).match(/provider|checkout|payment_reference/i), null);
   await adapter.logout(); assert.equal(local.values.size, 0);
+});
+
+test('real local/test Assistance sends the exact profile-channel body, maps duplicate outcomes, and preserves the account snapshot', async () => {
+  const calls = []; const adapter = createRealAdapter({ config, store: store(), transport: fixtureTransport(calls, {}, { '/assistance': response({ assistance_request: { id: 9, status: 'open' } }, 201) }) });
+  await adapter.signIn({ email: user.email, password: 'test-password' });
+  const before = adapter.snapshot();
+  assert.deepEqual(await adapter.submitAssistance({ channel: 'ignored', message: 'help' }), { outcome: 'created' });
+  assert.deepEqual(adapter.snapshot(), before);
+  const call = calls.find(item => item.method === 'POST' && item.url.includes('/assistance?'));
+  assert.deepEqual(JSON.parse(call.body), { assistance: { channel: 'profile', message: 'help' } });
+  const duplicateCalls = []; const duplicate = createRealAdapter({ config, store: store(), transport: fixtureTransport(duplicateCalls, {}, { '/assistance': response({ assistance_request: { id: 9, status: 'open' }, duplicate: true }) }) });
+  await duplicate.signIn({ email: user.email, password: 'test-password' });
+  const duplicateBefore = duplicate.snapshot();
+  assert.deepEqual(await duplicate.submitAssistance({ message: 'again' }), { outcome: 'duplicate' });
+  assert.deepEqual(duplicate.snapshot(), duplicateBefore);
+  const duplicateCall = duplicateCalls.find(item => item.method === 'POST' && item.url.includes('/assistance?'));
+  assert.deepEqual(JSON.parse(duplicateCall.body), { assistance: { channel: 'profile', message: 'again' } });
 });
 
 test('real session expiry, replay, revocation, closure and tenant cleanup clear the scoped state without dummy fallback', async () => {

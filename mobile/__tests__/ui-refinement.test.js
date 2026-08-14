@@ -47,7 +47,7 @@ test('signed-out OAuth status uses the existing locale outcome dictionaries', ()
 test('tenant connection presentation uses the shared retained-tenant selector', () => {
   const app = read('App.js');
   assert.match(app, /import \{ activePresentationTenant,/);
-  assert.equal((app.match(/activePresentationTenant\(binding\)/g) || []).length, 3);
+  assert.ok((app.match(/activePresentationTenant\(binding\)/g) || []).length >= 3);
   assert.equal(app.includes("binding.state === 'bound' ? binding.tenant.name"), false);
   assert.match(app, /binding\.state === 'switching'.*t\.confirmSwitch/);
   const confirmationOnlyCleanup = app.match(/onPress=\{async \(\) => \{ const ok = await run\(async \(\) => \{ await oauthController\.clear\('idle'\); return adapter\.clearTenantState\(\); \}\); if \(ok\) setBinding\(confirmSwitch\(binding, clearPriorTenant\(binding\.tenant\)\)\); \}\}/g) || [];

@@ -57,3 +57,12 @@ test('dummy offering selection requires matching catalog identity and authoritat
   assert.equal(prepared.offering.id, 'service-002');
   assert.equal(prepared.offering.account_action, 'service');
 });
+
+test('dummy Assistance is a local profile-channel fixture with a required 280-character message', () => {
+  const repository = createDummyRepository();
+  assert.throws(() => repository.submitAssistance({ channel: 'profile', message: '' }), { field: 'message' });
+  assert.throws(() => repository.submitAssistance({ channel: 'profile', message: 'x'.repeat(281) }), { field: 'message' });
+  assert.throws(() => repository.submitAssistance({ channel: 'contact', message: 'help' }), { field: 'channel' });
+  const snapshot = repository.submitAssistance({ channel: 'profile', message: '  help me  ' });
+  assert.deepEqual(snapshot.assistance, { submitted: true, channel: 'profile', message: 'help me', outcome: 'fixture' });
+});
