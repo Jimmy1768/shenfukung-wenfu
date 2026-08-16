@@ -41,6 +41,28 @@ module Account
       assert_equal "pending", request_record.status
     end
 
+    test "privacy export retains the single safe reusable-default namespace" do
+      temple = create_temple(slug: "privacy-defaults-temple")
+      offering = create_offering(
+        temple:,
+        metadata: { "registration_form" => { "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => [] } } }
+      )
+      user = User.create!(
+        email: "privacy-defaults@example.com",
+        english_name: "Privacy Defaults",
+        encrypted_password: User.password_hash("Password123!")
+      )
+      Registrations::ReusableDefaults.new(user:, temple:, offering:).write!("arrival_window" => "morning")
+      request_record = PrivacyRequest.create!(user:, request_type: "data_export", status: "approved", submitted_via: "web", requested_at: Time.current)
+
+      payload = Privacy::UserDataExportFulfillment.fulfill!(privacy_request: request_record, operator: user)
+      exported = payload.metadata.fetch("payload")
+      namespace = Registrations::ReusableDefaults::NAMESPACE
+
+      assert_equal "morning", exported.dig("user", "metadata", namespace, temple.id.to_s, "TempleEvent", offering.id.to_s, "arrival_window")
+      assert_equal 1, exported.to_json.scan(namespace).length
+    end
+
     test "signed in user cannot create duplicate open privacy request" do
       temple = create_temple(slug: "privacy-duplicate-temple")
       user = User.create!(

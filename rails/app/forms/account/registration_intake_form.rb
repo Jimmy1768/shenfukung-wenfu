@@ -30,7 +30,7 @@ module Account
       @offering = offering
       normalized_params = normalize_params(params)
       @contact_fields_provided = contact_fields_provided?(normalized_params)
-      attributes = defaults_from_user.merge(normalized_params)
+      attributes = defaults_from_user.merge(defaults_from_reusable_offering).merge(normalized_params)
       super(attributes)
       apply_dependent_defaults
     end
@@ -63,7 +63,7 @@ module Account
         contact_name: user&.native_name.presence || user&.english_name || metadata["contact_name"],
         contact_phone: metadata["phone"],
         contact_email: user&.email,
-        household_notes: metadata["household_notes"]
+        household_notes: metadata["notes"].presence || metadata["household_notes"]
       }.compact
     end
 
@@ -130,14 +130,10 @@ module Account
       contact_sync_payload = dependent_selected? ? {} : contact_payload
       Registrations::UserMetadataUpdater.new(
         user:,
-        offering_slug: offering.slug,
+        offering:,
         contact_payload: contact_sync_payload,
         logistics_payload: logistics_payload,
-        ritual_metadata: user_metadata,
-        order_details: {
-          quantity: quantity,
-          certificate_number: @registration&.certificate_number
-        }
+        ritual_metadata: user_metadata
       ).update!
       sync_dependent_profile! if dependent_selected?
     end
@@ -156,6 +152,14 @@ module Account
       self.contact_phone = dependent_metadata["phone"]
       self.contact_email = dependent_metadata["email"]
       self.household_notes = dependent_metadata["notes"]
+    end
+
+    def defaults_from_reusable_offering
+      values = Registrations::ReusableDefaults.new(user:, temple: offering.temple, offering:).read
+      {
+        arrival_window: values["arrival_window"],
+        ceremony_notes: values["ceremony_notes"]
+      }.compact
     end
 
     def contact_fields_provided?(params)

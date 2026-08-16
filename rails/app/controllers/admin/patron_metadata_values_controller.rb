@@ -4,16 +4,20 @@ module Admin
   class PatronMetadataValuesController < BaseController
     before_action :require_manage_registrations!
     before_action :set_patron
+    before_action :set_offering
 
     def create
-      values = apply_change(:add)
+      values = reusable_defaults.add!(field: params.require(:field), value: params.require(:value).to_s.strip)
+      audit!("add", params.require(:field).to_s)
       render json: { values: }, status: :created
     rescue ArgumentError => e
       render json: { error: e.message }, status: :unprocessable_entity
     end
 
     def destroy
-      values = apply_change(:remove)
+      value = params[:value].to_s.strip.presence
+      values = reusable_defaults.clear!(field: params.require(:field), value:)
+      audit!("clear", params.require(:field).to_s)
       render json: { values: }
     rescue ArgumentError => e
       render json: { error: e.message }, status: :unprocessable_entity
@@ -29,47 +33,32 @@ module Admin
       require_capability!(:manage_registrations)
     end
 
-    def apply_change(action)
-      field = params.require(:field).to_s
-      value = params.require(:value).to_s.strip
-      raise ArgumentError, "Value can't be blank" if value.blank?
-
-      metadata = (@patron.metadata || {}).deep_dup
-      parent = ensure_metadata_path(metadata, field)
-      key = path_leaf(field)
-      current = Array(parent[key]).reject(&:blank?)
-
-      case action
-      when :add
-        current << value
-      when :remove
-        current.delete(value)
-      end
-
-      parent[key] = current.uniq
-      @patron.update!(metadata: metadata)
-      parent[key]
+    def set_offering
+      @offering =
+        case params.require(:offering_kind).to_s
+        when "service", "services", "TempleService"
+          current_temple.temple_services.find(params.require(:offering_id))
+        when "gathering", "gatherings", "TempleGathering"
+          current_temple.temple_gatherings.find(params.require(:offering_id))
+        when "event", "events", "TempleEvent"
+          current_temple.temple_events.find(params.require(:offering_id))
+        else
+          raise ArgumentError, "Offering kind is invalid"
+        end
     end
 
-    def ensure_metadata_path(metadata, field)
-      path = metadata_path(field)
-      leaf_parent = path[0...-1].reduce(metadata) do |memo, key|
-        memo[key] ||= {}
-      end
-      leaf_parent
+    def reusable_defaults
+      @reusable_defaults ||= Registrations::ReusableDefaults.new(user: @patron, temple: current_temple, offering: @offering)
     end
 
-    def metadata_path(field)
-      path = []
-      if params[:offering_slug].present?
-        path << "offerings" << params[:offering_slug]
-      end
-      path << field
-      path
-    end
-
-    def path_leaf(field)
-      metadata_path(field).last
+    def audit!(operation, field)
+      SystemAuditLogger.log!(
+        action: "temple.registration_defaults.#{operation}",
+        admin: current_admin,
+        target: @patron,
+        temple: current_temple,
+        metadata: { offering_id: @offering.id, registrable_type: @offering.class.base_class.name, changed_reusable_fields: [field] }
+      )
     end
   end
 end

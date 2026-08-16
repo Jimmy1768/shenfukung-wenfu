@@ -65,6 +65,145 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Family Member"
   end
 
+  test "admin self and dependent create and eligible update write identical scoped defaults" do
+    @temple.adopt_platform_billing_entitlement!.update!(state: "active")
+    @event.update!(metadata: {
+      "registration_form" => {
+        "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => ["incense_option"] },
+        "field_settings" => { "incense_option" => { "allow_multiple" => true } }
+      }
+    })
+    sign_in_admin(@admin)
+    defaults = Registrations::ReusableDefaults.new(user: @patron, temple: @temple, offering: @event)
+
+    post admin_event_offering_orders_path(@event), params: {
+      temple_event_registration: { user_id: @patron.id, quantity: 1, registrant_scope: "self", logistics_details: { arrival_window: "morning" }, ritual_metadata: { incense_option: "lotus" } }
+    }
+    self_registration = @event.temple_event_registrations.order(:id).last
+    assert_redirected_to admin_event_offering_order_path(@event, self_registration)
+    @patron.reload
+    assert_equal({ "arrival_window" => "morning", "incense_option" => ["lotus"] }, defaults.read)
+
+    patch admin_event_offering_order_path(@event, self_registration), params: {
+      temple_event_registration: { user_id: @patron.id, quantity: 1, registrant_scope: "self", logistics_details: { arrival_window: "afternoon" }, ritual_metadata: { incense_option: "rose" } }
+    }
+    assert_redirected_to admin_event_offering_order_path(@event, self_registration)
+    @patron.reload
+    assert_equal({ "arrival_window" => "afternoon", "incense_option" => ["lotus", "rose"] }, defaults.read)
+
+    post admin_event_offering_orders_path(@event), params: {
+      temple_event_registration: { user_id: @patron.id, quantity: 1, registrant_scope: "dependent", dependent_id: @dependent.id, contact_details: { primary_contact: "Family Member", phone: "0933" }, logistics_details: { arrival_window: "evening" }, ritual_metadata: { incense_option: "jasmine" } }
+    }
+    dependent_registration = @event.temple_event_registrations.order(:id).last
+    assert_redirected_to admin_event_offering_order_path(@event, dependent_registration)
+    @patron.reload
+    assert_equal({ "arrival_window" => "evening", "incense_option" => ["lotus", "rose", "jasmine"] }, defaults.read)
+    assert_equal "0933", @dependent.reload.metadata["phone"]
+
+    patch admin_event_offering_order_path(@event, dependent_registration), params: {
+      temple_event_registration: { user_id: @patron.id, quantity: 1, registrant_scope: "dependent", dependent_id: @dependent.id, logistics_details: { arrival_window: "night" } }
+    }
+    assert_redirected_to admin_event_offering_order_path(@event, dependent_registration)
+    @patron.reload
+    assert_equal "night", defaults.read["arrival_window"]
+  end
+
+  test "admin duplicate and noneditable lifecycle paths do not mutate defaults" do
+    @temple.adopt_platform_billing_entitlement!.update!(state: "active")
+    @event.update!(metadata: { "registration_form" => { "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => [] } } })
+    sign_in_admin(@admin)
+    defaults = Registrations::ReusableDefaults.new(user: @patron, temple: @temple, offering: @event)
+    defaults.write!("arrival_window" => "kept")
+    existing = create_registration(user: @patron, offering: @event, metadata: { "registrant_scope" => "self" })
+
+    post admin_event_offering_orders_path(@event), params: {
+      temple_event_registration: { user_id: @patron.id, quantity: 1, registrant_scope: "self", logistics_details: { arrival_window: "duplicate" } }
+    }
+    assert_redirected_to admin_event_offering_order_path(@event, existing)
+    assert_equal "kept", defaults.read["arrival_window"]
+
+    [
+      { payment_status: "paid", fulfillment_status: "open" },
+      { payment_status: "refunded", fulfillment_status: "open" },
+      { payment_status: "pending", fulfillment_status: "fulfilled" },
+      { payment_status: "pending", fulfillment_status: "cancelled" }
+    ].each do |state|
+      registration = create_registration(user: @patron, offering: @event, metadata: { "registrant_scope" => "dependent", "dependent_id" => @dependent.id.to_s }, **state)
+      patch admin_event_offering_order_path(@event, registration), params: {
+        temple_event_registration: { logistics_details: { arrival_window: "must not write" } }
+      }
+      assert_redirected_to admin_event_offering_order_path(@event, registration)
+      assert_equal "kept", defaults.read["arrival_window"]
+    end
+
+    locked = create_registration(user: @patron, offering: @event, metadata: { "registrant_scope" => "dependent", "dependent_id" => @dependent.id.to_s })
+    create_payment(registration: locked, status: TemplePayment::STATUSES[:pending])
+    patch admin_event_offering_order_path(@event, locked), params: {
+      temple_event_registration: { logistics_details: { arrival_window: "locked must not write" } }
+    }
+    assert_redirected_to admin_event_offering_order_path(@event, locked)
+    assert_equal "kept", defaults.read["arrival_window"]
+
+    gathering = @temple.temple_gatherings.create!(
+      slug: "read-only-#{SecureRandom.hex(3)}",
+      title: "Read only gathering",
+      status: "published",
+      price_cents: 0,
+      currency: "TWD",
+      metadata: { "registration_form" => { "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => [] } } }
+    )
+    gathering_defaults = Registrations::ReusableDefaults.new(user: @patron, temple: @temple, offering: gathering)
+    gathering_defaults.write!("arrival_window" => "gathering kept")
+    read_only = create_registration(user: @patron, offering: gathering, metadata: { "registrant_scope" => "self" })
+    patch admin_gathering_offering_order_path(gathering, read_only), params: {
+      temple_event_registration: { logistics_details: { arrival_window: "read only must not write" } }
+    }
+    assert_redirected_to admin_gathering_offering_order_path(gathering, read_only)
+    assert_equal "gathering kept", gathering_defaults.read["arrival_window"]
+  end
+
+  test "admin reusable-value editor only clears configured values in the current offering scope" do
+    @event.update!(metadata: {
+      "registration_form" => {
+        "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => ["incense_option"] },
+        "field_settings" => { "incense_option" => { "allow_multiple" => true } }
+      }
+    })
+    sign_in_admin(@admin)
+    defaults = Registrations::ReusableDefaults.new(user: @patron, temple: @temple, offering: @event)
+    defaults.write!("arrival_window" => "morning", "incense_option" => "lotus")
+
+    delete admin_patron_metadata_value_path(@patron, "arrival_window"), params: { field: "arrival_window", offering_kind: "event", offering_id: @event.id }
+    assert_response :success
+    @patron.reload
+    assert_equal({ "incense_option" => ["lotus"] }, defaults.read)
+
+    post admin_patron_metadata_values_path(@patron), params: { field: "quantity", value: "2", offering_kind: "event", offering_id: @event.id }
+    assert_response :unprocessable_content
+    @patron.reload
+    assert_equal({ "incense_option" => ["lotus"] }, defaults.read)
+
+    delete admin_patron_metadata_value_path(@patron, "incense_option"), params: { field: "incense_option", value: "lotus", offering_kind: "event", offering_id: @event.id }
+    assert_response :success
+    @patron.reload
+    assert_equal({}, defaults.read)
+  end
+
+  test "admin patron search provides only safe defaults for the exact offering" do
+    @event.update!(metadata: { "registration_form" => { "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => [] } } })
+    defaults = Registrations::ReusableDefaults.new(user: @patron, temple: @temple, offering: @event)
+    defaults.write!("arrival_window" => "safe prefill")
+    @patron.reload
+    @patron.update!(metadata: @patron.metadata.merge("offerings" => { @event.slug => { "arrival_window" => "legacy must not prefill" } }))
+    sign_in_admin(@admin)
+
+    get admin_patrons_path(format: :json, q: @patron.email, offering_kind: "event", offering_id: @event.id)
+    assert_response :success
+    patron = response.parsed_body.fetch("patrons").find { |entry| entry.fetch("id") == @patron.id }
+    assert_equal({ "arrival_window" => "safe prefill" }, patron.fetch("registration_defaults"))
+    refute patron.key?("offerings")
+  end
+
   test "expired billing grace blocks new admin registrations" do
     @temple.update!(
       payment_provider_settings: {

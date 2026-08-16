@@ -170,8 +170,29 @@ module Admin
         dependent_entries: dependent_entries,
         phone: metadata["phone"],
         notes: metadata["notes"],
-        offerings: metadata["offerings"] || {}
+        registration_defaults: reusable_defaults_for(user)
       }
+    end
+
+    def reusable_defaults_for(user)
+      offering = offering_for_reusable_defaults
+      return {} unless offering
+
+      Registrations::ReusableDefaults.new(user:, temple: current_temple, offering:).read
+    end
+
+    def offering_for_reusable_defaults
+      return @offering_for_reusable_defaults if defined?(@offering_for_reusable_defaults)
+
+      @offering_for_reusable_defaults =
+        case params[:offering_kind].to_s
+        when "event", "events", "TempleEvent"
+          current_temple.temple_events.find_by(id: params[:offering_id])
+        when "service", "services", "TempleService"
+          current_temple.temple_services.find_by(id: params[:offering_id])
+        when "gathering", "gatherings", "TempleGathering"
+          current_temple.temple_gatherings.find_by(id: params[:offering_id])
+        end
     end
 
     def patron_params

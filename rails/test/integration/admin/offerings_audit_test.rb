@@ -92,4 +92,35 @@ class AdminOfferingsAuditTest < ActionDispatch::IntegrationTest
     assert_equal offering, log.target
     assert_includes log.metadata["changes"].keys, "title"
   end
+
+  test "registration default audit records field names without entered values" do
+    AdminPermission.find_by!(admin_account: @admin.admin_account, temple: @temple).update!(manage_registrations: true)
+    offering = TempleOffering.create!(
+      temple: @temple,
+      slug: "audit-registration-defaults",
+      title: "Audit registration defaults",
+      starts_on: Date.current,
+      ends_on: Date.current + 1.day,
+      currency: "TWD",
+      price_cents: 100,
+      metadata: { "registration_form" => { "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => [] } } }
+    )
+    patron = User.create!(email: "audit-defaults@example.com", english_name: "Audit Patron", encrypted_password: User.password_hash("Password123!"))
+    registration = create_registration(user: patron, offering:, metadata: { "registrant_scope" => "self" })
+    secret = "private arrival instruction"
+
+    sign_in_admin(@admin)
+
+    assert_difference -> { SystemAuditLog.where(action: "temple.registration.update").count }, 1 do
+      patch admin_event_offering_order_path(offering, registration), params: {
+        temple_event_registration: { logistics_details: { arrival_window: secret } }
+      }
+    end
+
+    log = SystemAuditLog.where(action: "temple.registration.update").order(:id).last
+    assert_equal "admin_offering_orders", log.metadata.fetch("source")
+    assert_equal ["arrival_window"], log.metadata.fetch("changed_reusable_fields")
+    refute_includes log.metadata.to_json, secret
+    refute_includes log.metadata.to_json, patron.email
+  end
 end
