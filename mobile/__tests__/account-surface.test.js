@@ -6,7 +6,8 @@ const { accountMenu, dummyMode, isAccountScreen, isBoundPresentation, isPaidFixt
 test('account-only screen model exposes every dummy flow and no non-account mode', () => {
   for (const screen of ['home', 'profile', 'dependents', 'registrations', 'discover', 'settings', 'signup', 'recovery', 'assistance', 'privacy', 'closure', 'connection']) assert.equal(isAccountScreen(screen), true);
   assert.equal(isAccountScreen('contact'), false);
-  assert.deepEqual(accountMenu(), ['home', 'profile', 'dependents', 'registrations', 'discover', 'settings']);
+  assert.deepEqual(accountMenu(), ['home', 'profile', 'dependents', 'registrations', 'discover']);
+  assert.equal(isAccountScreen('settings'), true, 'Settings remains a valid bound account screen');
   assert.equal(isAccountScreen('admin'), false);
   assert.equal(dummyMode(createDummyAdapter()), true);
   assert.equal(isPaidFixtureReadOnly({ readOnly: true }), true);

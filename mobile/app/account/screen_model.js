@@ -3,7 +3,7 @@ const ACCOUNT_SCREENS = Object.freeze([
   'signup', 'recovery', 'assistance', 'privacy', 'closure', 'connection'
 ]);
 
-const accountMenu = () => ['home', 'profile', 'dependents', 'registrations', 'discover', 'settings'];
+const accountMenu = () => ['home', 'profile', 'dependents', 'registrations', 'discover'];
 const isAccountScreen = screen => ACCOUNT_SCREENS.includes(screen);
 const isPaidFixtureReadOnly = registration => Boolean(registration?.readOnly);
 const dummyMode = adapter => adapter?.kind === 'dummy' && adapter?.network === 'disabled';
