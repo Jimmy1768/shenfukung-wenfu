@@ -102,6 +102,60 @@ class NativeAccountResourcesTest < ActionDispatch::IntegrationTest
     assert_equal "registration_not_editable", response.parsed_body.fetch("code")
   end
 
+  test "native dependent create and eligible update share the safe write-back boundary" do
+    event = @temple.temple_events.create!(
+      slug: "native-defaults-#{SecureRandom.hex(3)}",
+      title: "Native defaults",
+      starts_on: Date.current,
+      ends_on: Date.current + 1.day,
+      status: "published",
+      price_cents: 100,
+      currency: "TWD",
+      metadata: { "registration_form" => { "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => ["ceremony_notes"] } } }
+    )
+    dependent = Dependent.create!(english_name: "Native dependent")
+    @user.user_dependents.create!(dependent:, role: "family")
+    defaults = Registrations::ReusableDefaults.new(user: @user, temple: @temple, offering: event)
+
+    post "/api/v1/account/native/registrations", params: {
+      temple_slug: @temple.slug,
+      offering: event.slug,
+      account_action: "event",
+      registration: { quantity: 1, registrant_scope: "dependent", dependent_id: dependent.id, contact_name: "Native dependent", contact_phone: "0912", arrival_window: "morning", ceremony_notes: "native initial" }
+    }, headers: bearer
+    assert_response :created
+    registration_id = response.parsed_body.dig("registration", "id")
+    @user.reload
+    assert_equal({ "arrival_window" => "morning", "ceremony_notes" => "native initial" }, defaults.read)
+    assert_equal "0912", dependent.reload.metadata["phone"]
+
+    patch "/api/v1/account/native/registrations/#{registration_id}", params: {
+      temple_slug: @temple.slug,
+      registration: { quantity: 1, registrant_scope: "dependent", dependent_id: dependent.id, contact_name: "Native dependent", arrival_window: "afternoon", ceremony_notes: "native update" }
+    }, headers: bearer
+    assert_response :success
+    @user.reload
+    assert_equal({ "arrival_window" => "afternoon", "ceremony_notes" => "native update" }, defaults.read)
+
+    before = defaults.read
+    post "/api/v1/account/native/registrations", params: {
+      temple_slug: @temple.slug,
+      offering: event.slug,
+      account_action: "event",
+      registration: { quantity: 1, registrant_scope: "dependent", dependent_id: dependent.id, contact_name: "Native dependent", arrival_window: "must not write" }
+    }, headers: bearer
+    assert_response :unprocessable_content
+    assert_equal before, defaults.read
+
+    freeform_dependent_count = Dependent.count
+    patch "/api/v1/account/native/registrations/#{registration_id}", params: {
+      temple_slug: @temple.slug,
+      registration: { contact_name: "Native dependent", ceremony_notes: "freeform ritual value" }
+    }, headers: bearer
+    assert_response :success
+    assert_equal freeform_dependent_count, Dependent.count
+  end
+
   test "native registration preparation keeps action and registrant choices tenant scoped" do
     service = @temple.temple_services.create!(slug: "service-#{SecureRandom.hex(3)}", title: "Native Service", status: "published", price_cents: 600, currency: "TWD")
     gathering = @temple.temple_gatherings.create!(slug: "gathering-#{SecureRandom.hex(3)}", title: "Native Gathering", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 300, currency: "TWD")

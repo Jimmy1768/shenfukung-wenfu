@@ -43,6 +43,8 @@ module Account
       )
       registration.quantity = quantity if core_fields_editable?
       registration.save!
+      update_user_metadata! if reusable_write_allowed?
+      true
     rescue ActiveRecord::RecordInvalid => e
       errors.merge!(e.record.errors)
       false
@@ -156,6 +158,36 @@ module Account
       return @dependent if defined?(@dependent)
 
       @dependent = user.dependents.find_by(id: dependent_id)
+    end
+
+    def reusable_write_allowed?
+      core_fields_editable? &&
+        contact_fields_editable? &&
+        registration.payment_status == TempleRegistration::PAYMENT_STATUSES[:pending] &&
+        registration.fulfillment_status == TempleRegistration::FULFILLMENT_STATUSES[:open] &&
+        registration.temple_payments.none?
+    end
+
+    def update_user_metadata!
+      Registrations::UserMetadataUpdater.new(
+        user:,
+        offering: registration.registrable,
+        contact_payload: dependent_selected? ? {} : merged_contact_payload,
+        logistics_payload: merged_logistics_payload,
+        ritual_metadata: merged_metadata.except("registration_period_key", "registrant_scope", "dependent_id", "registrant_name")
+      ).update!
+      sync_dependent_profile! if dependent_selected?
+    end
+
+    def sync_dependent_profile!
+      return unless (selected = dependent)
+
+      payload = {
+        "phone" => contact_phone.presence,
+        "email" => contact_email.presence,
+        "notes" => household_notes.presence
+      }.compact
+      selected.update!(metadata: (selected.metadata || {}).merge(payload)) if payload.present?
     end
   end
 end

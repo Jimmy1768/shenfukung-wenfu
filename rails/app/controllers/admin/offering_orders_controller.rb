@@ -85,6 +85,20 @@ module Admin
         )
       )
       @registration.save!
+      changed_reusable_fields = sync_reusable_defaults_after_update
+      SystemAuditLogger.log!(
+        action: "temple.registration.update",
+        admin: current_admin,
+        target: @registration,
+        temple: current_temple,
+        metadata: {
+          source: "admin_offering_orders",
+          offering_id: @offering.id,
+          registrable_type: @registration.registrable_type,
+          registration_id: @registration.id,
+          changed_reusable_fields:
+        }
+      )
 
       redirect_to offering_order_path(@offering, @registration), notice: t("admin.offering_orders.flash.updated")
     rescue ActiveRecord::RecordInvalid => e
@@ -205,6 +219,9 @@ module Admin
       merge_payload_defaults(@registration.contact_payload, registration_form_schema.defaults_for(:contact))
       merge_payload_defaults(@registration.logistics_payload, registration_form_schema.defaults_for(:logistics))
       merge_payload_defaults(@registration.metadata, registration_form_schema.defaults_for(:ritual_metadata))
+      reusable_defaults = Registrations::ReusableDefaults.new(user: @registration.user, temple: current_temple, offering: @offering).read
+      merge_payload_defaults(@registration.logistics_payload, reusable_defaults.slice(*registration_form_schema.fields_for(:logistics).map(&:to_s)))
+      merge_payload_defaults(@registration.metadata, reusable_defaults.slice(*registration_form_schema.fields_for(:ritual_metadata).map(&:to_s)))
     end
 
     def normalize_registrant_selection!(attrs)
@@ -310,6 +327,44 @@ module Admin
 
     def offering_id_param
       params[:offering_id] || params[:event_id] || params[:service_id] || params[:gathering_id]
+    end
+
+    def sync_reusable_defaults_after_update
+      return [] unless reusable_write_allowed?
+      return [] unless @registration.user
+
+      before = Registrations::ReusableDefaults.new(user: @registration.user, temple: current_temple, offering: @offering).read
+      dependent_selected = @registration.registrant_scope == "dependent"
+      Registrations::UserMetadataUpdater.new(
+        user: @registration.user,
+        offering: @offering,
+        contact_payload: dependent_selected ? {} : @registration.contact_payload,
+        logistics_payload: @registration.logistics_payload,
+        ritual_metadata: @registration.metadata.except("registration_period_key", "registrant_scope", "dependent_id", "registrant_name")
+      ).update!
+      sync_dependent_profile_after_update if dependent_selected
+      after = Registrations::ReusableDefaults.new(user: @registration.user, temple: current_temple, offering: @offering).read
+      (before.keys | after.keys).select { |field| before[field] != after[field] }
+    end
+
+    def reusable_write_allowed?
+      registration_lifecycle_policy.core_fields_editable? &&
+        registration_lifecycle_policy.contact_fields_editable? &&
+        @registration.payment_status == TempleRegistration::PAYMENT_STATUSES[:pending] &&
+        @registration.fulfillment_status == TempleRegistration::FULFILLMENT_STATUSES[:open] &&
+        @registration.temple_payments.none?
+    end
+
+    def sync_dependent_profile_after_update
+      dependent = @registration.user.dependents.find_by(id: @registration.metadata["dependent_id"])
+      return unless dependent
+
+      payload = {
+        "phone" => @registration.contact_payload["phone"].presence,
+        "email" => @registration.contact_payload["email"].presence,
+        "notes" => @registration.contact_payload["dependents_notes"].presence || @registration.contact_payload["notes"].presence
+      }.compact
+      dependent.update!(metadata: (dependent.metadata || {}).merge(payload)) if payload.present?
     end
   end
 end

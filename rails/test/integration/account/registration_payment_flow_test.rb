@@ -70,6 +70,56 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, api_v1_account_payment_status_path(reference: registration.reference_code)
   end
 
+  test "account self create and eligible update write safe defaults without rewriting the registration snapshot" do
+    temple = create_temple
+    offering = create_offering(
+      temple:,
+      slug: "account-defaults",
+      title: "Account defaults",
+      metadata: { "registration_form" => { "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => ["ceremony_notes"] } } }
+    )
+    user = User.create!(email: "account-defaults@example.com", english_name: "Account Defaults", encrypted_password: User.password_hash("Password123!"))
+    defaults = Registrations::ReusableDefaults.new(user:, temple:, offering:)
+
+    sign_in_account(user, temple_slug: temple.slug)
+
+    post account_registrations_path, params: {
+      offering: offering.slug,
+      account_action: "event",
+      account_registration_intake_form: { contact_name: "Account Defaults", quantity: 1, arrival_window: "morning", ceremony_notes: "first note" }
+    }
+    assert_redirected_to payment_account_registration_path(TempleEventRegistration.order(:id).last)
+    registration = TempleEventRegistration.order(:id).last
+    user.reload
+    assert_equal({ "arrival_window" => "morning", "ceremony_notes" => "first note" }, defaults.read)
+
+    patch account_registration_path(registration), params: {
+      account_registration_metadata_form: { contact_name: "Account Defaults", quantity: 1, arrival_window: "afternoon", ceremony_notes: "updated note" }
+    }
+    assert_redirected_to account_registration_path(registration)
+    user.reload
+    assert_equal({ "arrival_window" => "afternoon", "ceremony_notes" => "updated note" }, defaults.read)
+
+    defaults.write!("arrival_window" => "later default")
+    registration.reload
+    assert_equal "afternoon", registration.logistics_payload["arrival_window"]
+
+    patch account_registration_path(registration), params: {
+      account_registration_metadata_form: { contact_name: "Account Defaults", quantity: 1, arrival_window: "", ceremony_notes: "" }
+    }
+    assert_redirected_to account_registration_path(registration)
+    assert_equal "later default", defaults.read["arrival_window"]
+
+    before = defaults.read
+    post account_registrations_path, params: {
+      offering: offering.slug,
+      account_action: "event",
+      account_registration_intake_form: { contact_name: "", quantity: 1, arrival_window: "must not write" }
+    }
+    assert_response :unprocessable_content
+    assert_equal before, defaults.read
+  end
+
   test "paid gathering registration redirects to payment page" do
     temple = create_temple
     gathering = temple.temple_gatherings.create!(

@@ -33,7 +33,8 @@ end %>
   data-selected-dependents="<%= json_escape(selected_dependents.to_json) %>"
   data-selected-scope="<%= selected_scope %>"
   data-selected-dependent-id="<%= selected_dependent_id.to_s %>"
-  data-offering-slug="<%= @offering.slug %>">
+  data-offering-kind="<%= @offering.class.base_class.name %>"
+  data-offering-id="<%= @offering.id %>">
   <header>
     <h2><%= t("admin.registration_form.headings.patron") %></h2>
     <p class="muted"><%= t("admin.registration_form.hints.patron") %></p>
@@ -109,7 +110,6 @@ end %>
       const formElement = picker.closest('form[data-registration-form]') ||
         document.querySelector('form[data-registration-form]') ||
         picker.closest('form');
-      const offeringSlug = picker.dataset.offeringSlug;
       const initialDependents = JSON.parse(picker.dataset.selectedDependents || '[]');
       let debounceTimer;
       let lastQueryToken = 0;
@@ -122,21 +122,6 @@ end %>
         }
         return document.querySelector(selector);
       }
-
-      const REGISTRATION_FIELD_SELECTORS = {
-        quantity: '[name="temple_event_registration[quantity]"]',
-        unit_price_cents: '[name="temple_event_registration[unit_price_cents]"]',
-        currency: '[name="temple_event_registration[currency]"]',
-        certificate_number: '[name="temple_event_registration[certificate_number]"]',
-        preferred_date: '[name="temple_event_registration[logistics_details][preferred_date]"]',
-        preferred_slot: '[name="temple_event_registration[logistics_details][preferred_slot]"]',
-        arrival_window: '[name="temple_event_registration[logistics_details][arrival_window]"]',
-        ceremony_location: '[name="temple_event_registration[logistics_details][ceremony_location]"]',
-        ancestor_placard_name: '[name="temple_event_registration[ritual_metadata][ancestor_placard_name]"]',
-        dedication_message: '[name="temple_event_registration[ritual_metadata][dedication_message]"]',
-        incense_option: '[name="temple_event_registration[ritual_metadata][incense_option]"]',
-        certificate_notes: '[name="temple_event_registration[ritual_metadata][certificate_notes]"]'
-      };
 
       function setMessage(text, variant) {
         if (!messageNode) return;
@@ -168,6 +153,15 @@ end %>
         setContactField('phone', patron.phone);
         setContactField('dependents_notes', (patron.dependents || []).join(', '));
         setContactField('notes', patron.notes);
+      }
+
+      function populateReusableDefaults(patron) {
+        const defaults = patron.registration_defaults || {};
+        Object.keys(defaults).forEach(function(name) {
+          const field = findFormField(`[name="temple_event_registration[logistics_details][${name}]"]`) ||
+            findFormField(`[name="temple_event_registration[ritual_metadata][${name}]"]`);
+          if (field && !field.value) field.value = defaults[name];
+        });
       }
 
       function selectedDependent() {
@@ -218,27 +212,6 @@ end %>
           return;
         }
         applyRegistrantContactDefaults();
-      }
-
-      function setRegistrationField(name, value) {
-        if (!formElement || value === undefined || value === null) return;
-        const selector = REGISTRATION_FIELD_SELECTORS[name];
-        if (!selector) return;
-        const field = findFormField(selector);
-        if (!field) return;
-        field.value = value;
-        const event = new Event('input', { bubbles: true });
-        field.dispatchEvent(event);
-      }
-
-      function populateOfferingFields(patron) {
-        if (!offeringSlug) return;
-        const offerings = patron.offerings || {};
-        const offeringPayload = offerings[offeringSlug];
-        if (!offeringPayload || typeof offeringPayload !== 'object') return;
-        Object.keys(offeringPayload).forEach(function(key) {
-          setRegistrationField(key, offeringPayload[key]);
-        });
       }
 
       function openResults() {
@@ -306,6 +279,8 @@ end %>
         const requestId = ++lastQueryToken;
         const url = new URL(endpoint, window.location.origin);
         url.searchParams.set('q', trimmed);
+        url.searchParams.set('offering_kind', picker.dataset.offeringKind);
+        url.searchParams.set('offering_id', picker.dataset.offeringId);
         fetch(url.toString(), { headers: { Accept: 'application/json' } })
           .then(function(response) { return response.json(); })
           .then(function(payload) {
@@ -323,7 +298,7 @@ end %>
         selectionNode.innerHTML = `<p>${escapeHTML(picker.dataset.selectedHint.replace('%{name}', patron.name))}</p>`;
         setMessage("");
         populateContactFields(patron);
-        populateOfferingFields(patron);
+        populateReusableDefaults(patron);
         renderDependentOptions(patron.dependent_entries || [], null);
         if (registrantScopeField) {
           registrantScopeField.value = 'self';

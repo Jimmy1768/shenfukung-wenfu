@@ -81,21 +81,35 @@ module Payments
 
       Registrations::UserMetadataUpdater.new(
         user:,
-        offering_slug: registration.event_slug || offering.slug,
-        contact_payload: attributes[:contact_payload],
+        offering:,
+        contact_payload: dependent_selected? ? {} : attributes[:contact_payload],
         logistics_payload: attributes[:logistics_payload],
-        ritual_metadata: user_metadata_payload,
-        order_details: {
-          quantity: registration.quantity,
-          certificate_number: registration.certificate_number
-        },
-        multi_value_fields: multi_value_fields
+        ritual_metadata: user_metadata_payload
       ).update!
+      sync_dependent_profile!(user) if dependent_selected?
     end
 
     def user_metadata_payload
       payload = attributes[:metadata].presence || {}
       payload.except("registration_period_key", :registration_period_key)
+    end
+
+    def dependent_selected?
+      attributes.dig(:metadata, :registrant_scope) == "dependent" || attributes.dig(:metadata, "registrant_scope") == "dependent"
+    end
+
+    def sync_dependent_profile!(user)
+      dependent_id = attributes.dig(:metadata, :dependent_id) || attributes.dig(:metadata, "dependent_id")
+      dependent = user.dependents.find_by(id: dependent_id)
+      return unless dependent
+
+      contact = attributes[:contact_payload].to_h
+      payload = {
+        "phone" => contact["phone"].presence || contact[:phone].presence,
+        "email" => contact["email"].presence || contact[:email].presence,
+        "notes" => contact["dependents_notes"].presence || contact[:dependents_notes].presence || contact["notes"].presence || contact[:notes].presence
+      }.compact
+      dependent.update!(metadata: (dependent.metadata || {}).merge(payload)) if payload.present?
     end
   end
 end
