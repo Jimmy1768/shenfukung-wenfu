@@ -22,17 +22,26 @@ test('refined presentation keeps both complete locales and explicit dummy disclo
   assert.equal(source.includes('checkout'), false);
 });
 
-test('presentation uses generated token authority and a wrapped native account menu', () => {
+test('presentation uses generated token authority and a single-line native business menu', () => {
   const theme = read('app/ui/theme.js');
   const app = read('App.js');
   const primitives = read('app/ui/primitives.js');
   assert.match(theme, /getTheme/);
   assert.match(theme, /temple-1/);
   assert.match(theme, /ops-dark/);
-  assert.match(app, /flexWrap: 'wrap'/);
-  assert.equal(app.includes('<ScrollView horizontal'), false);
+  assert.match(app, /accountMenu\(\)/);
+  assert.match(app, /<ScrollView horizontal accessibilityRole="tablist"/);
+  assert.match(app, /flexWrap: 'nowrap'/);
+  assert.equal(app.includes('Text numberOfLines={1} style={{ color: screen === key'), false);
   assert.match(app, /accessibilityRole="tablist"/);
   assert.match(primitives, /accessibilityRole="alert"/);
+});
+
+test('bound header places Settings beside Sign out while the unbound gate exposes Sign out only', () => {
+  const app = read('App.js');
+  assert.match(app, /onSettings=\{\(\) => navigate\('settings'\)\}/);
+  assert.match(app, /headerUtilities.*activeTenant && <Button label=\{t\.settings\}.*<Button label=\{t\.signOut\}/);
+  assert.match(app, /<Header t=\{t\} palette=\{palette\} binding=\{binding\} onSignOut=\{signOut\} \/>/);
 });
 
 test('signed-out OAuth status uses the existing locale outcome dictionaries', () => {
