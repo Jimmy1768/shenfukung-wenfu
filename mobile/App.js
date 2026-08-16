@@ -6,12 +6,13 @@ import Constants from 'expo-constants';
 
 import { createDummyAdapter } from './app/dummy/adapter';
 import { createRealAdapter } from './app/real/adapter';
-import { resolveClientConfig, localTenantBinding } from './app/real/config';
-import { localTestTransport } from './app/real/transport';
+import { resolveClientConfig, localTenantBinding, isReleaseConfig } from './app/real/config';
+import { productionTransport } from './app/real/transport';
 import { scopedStorage } from './app/lib/auth/storage';
 import { alternateTenant } from './app/dummy/fixtures';
 import { activePresentationTenant, clearPriorTenant, confirmSwitch, fixtureConnectionLink, initialBinding, requestSwitch } from './app/tenant/binding';
 import { scanCameraPayload } from './app/tenant/scanner';
+import { createTrustedBindingStorage } from './app/tenant/storage';
 import { TempleQrCamera } from './app/tenant/camera_surface';
 import { copy } from './app/ui/copy';
 import { emptyFeedback, errorFeedback, feedbackForNavigation, noticeFeedback } from './app/ui/feedback';
@@ -25,7 +26,8 @@ import { registrationDemoPresentation } from './app/account/registration_demo_pr
 import { accountMenu } from './app/account/screen_model';
 
 const clientConfig = resolveClientConfig(Constants.expoConfig?.extra || {});
-const adapter = clientConfig.mode === 'real' ? createRealAdapter({ config: clientConfig, store: scopedStorage, transport: localTestTransport }) : createDummyAdapter();
+const trustedBindingStorage = createTrustedBindingStorage({ store: scopedStorage, config: clientConfig });
+const adapter = clientConfig.mode === 'real' ? createRealAdapter({ config: clientConfig, store: scopedStorage, transport: productionTransport, bindingStorage: trustedBindingStorage }) : createDummyAdapter();
 const oauthRuntime = createExpoOAuthRuntime(clientConfig.oauthReturnUrl);
 const oauthController = createOAuthController({ adapter, expectedReturnUrl: clientConfig.oauthReturnUrl, createPkce: oauthRuntime.createPkce, openBrowser: clientConfig.mode === 'dummy' ? adapter.openOAuthBrowser : oauthRuntime.openBrowser });
 const menuKeys = accountMenu();
@@ -55,7 +57,7 @@ export default function App() {
     (async () => {
       try {
         const next = await adapter.restoreSession();
-        if (next && mounted) { setData(next); setBinding(localTenantBinding(clientConfig)); setSignedIn(true); setCollections('loading'); const loaded = await adapter.loadCollections(); if (mounted) { setData(loaded); setCollections('ready'); } }
+        if (next && mounted) { setData(next); setBinding(isReleaseConfig(clientConfig) ? await trustedBindingStorage.load() || initialBinding() : localTenantBinding(clientConfig)); setSignedIn(true); setCollections('loading'); const loaded = await adapter.loadCollections(); if (mounted) { setData(loaded); setCollections('ready'); } }
       } catch (reason) { if (mounted) { showError(errorMessage(reason)); setSignedIn(false); setCollections('failed'); } }
       finally { if (mounted) setStartup(false); }
     })();
@@ -79,15 +81,16 @@ export default function App() {
     if (preferences.theme === 'dark' || preferences.mobile_theme_id === 'dark') setDark(true);
     if (preferences.theme === 'light' || preferences.mobile_theme_id === 'light') setDark(false);
   }, [data.preferences?.locale, data.preferences?.theme, data.preferences?.mobile_theme_id]);
-  const run = async (action, { noticeOwner = screen, noticeKey = 'saved' } = {}) => { if (pending) return false; setPending(true); setFeedback(emptyFeedback()); try { const next = await action(); if (next && !next.outcome) setData(next); setFeedback(noticeFeedback(typeof noticeKey === 'function' ? noticeKey(next) : noticeKey, noticeOwner)); return true; } catch (reason) { showError(errorMessage(reason)); return false; } finally { setPending(false); } };
-  const signIn = async () => { const ok = await run(async () => { const next = await adapter.signIn({ email, password }); if (adapter.kind === 'real') await adapter.loadCollections(); return adapter.snapshot(); }); if (ok) { setSignedIn(true); setCollections('ready'); setBinding(clientConfig.mode === 'real' ? localTenantBinding(clientConfig) : initialBinding()); } };
-  const signOut = () => { oauthController.clear('idle').then(setOauthState).catch(() => null); Promise.resolve(adapter.logout?.()).catch(() => null); setSignedIn(false); setScreen('home'); setFeedback(emptyFeedback()); };
+  const clearReleaseBinding = () => isReleaseConfig(clientConfig) ? trustedBindingStorage.clear().catch(() => null) : Promise.resolve();
+  const run = async (action, { noticeOwner = screen, noticeKey = 'saved' } = {}) => { if (pending) return false; setPending(true); setFeedback(emptyFeedback()); try { const next = await action(); if (next && !next.outcome) setData(next); setFeedback(noticeFeedback(typeof noticeKey === 'function' ? noticeKey(next) : noticeKey, noticeOwner)); return true; } catch (reason) { if (isReleaseConfig(clientConfig) && ['session_invalid', 'session_replayed', 'session_revoked', 'account_closed'].includes(reason?.code)) { clearReleaseBinding(); setBinding(initialBinding()); } showError(errorMessage(reason)); return false; } finally { setPending(false); } };
+  const signIn = async () => { const ok = await run(async () => { const next = await adapter.signIn({ email, password }); if (adapter.kind === 'real') await adapter.loadCollections(); return adapter.snapshot(); }); if (ok) { setSignedIn(true); setCollections('ready'); setBinding(clientConfig.mode === 'real' && !isReleaseConfig(clientConfig) ? localTenantBinding(clientConfig) : initialBinding()); } };
+  const signOut = () => { oauthController.clear('idle').then(setOauthState).catch(() => null); clearReleaseBinding(); Promise.resolve(adapter.logout?.()).catch(() => null); setBinding(initialBinding()); setSignedIn(false); setScreen('home'); setFeedback(emptyFeedback()); };
   const reset = () => { if (adapter.kind !== 'dummy') { showError('Real mode does not reset account data.'); return; } oauthController.clear('idle').then(setOauthState).catch(() => null); const next = adapter.reset(); setData(next); setProfileName(next.profile.name); setDependent({ id: null, name: '', relationship: '家人' }); setRegistration(null); setBinding(initialBinding()); setFeedback(emptyFeedback()); };
   const beginOAuth = async provider => {
     if (pending) return; setPending(true); setFeedback(emptyFeedback());
     try {
       const next = await oauthController.begin(provider); setOauthState(next);
-      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(clientConfig.mode === 'real' ? localTenantBinding(clientConfig) : initialBinding()); if (next.phase === 'profile_required') navigate('profile'); return; }
+      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(clientConfig.mode === 'real' && !isReleaseConfig(clientConfig) ? localTenantBinding(clientConfig) : initialBinding()); if (next.phase === 'profile_required') navigate('profile'); return; }
       if (next.phase !== 'interrupted') showError(t.oauthOutcome[next.phase] || t.oauthOutcome.failed);
     } catch (reason) { showError(errorMessage(reason)); }
     finally { setPending(false); }
@@ -105,8 +108,8 @@ function Header({ t, palette, binding, onSettings, onSignOut }) { const activeTe
 function Navigation({ t, palette, screen, setScreen }) { return <ScrollView horizontal accessibilityRole="tablist" style={[styles.navigationShell, { borderBottomColor: palette.border }]} contentContainerStyle={styles.navigation} showsHorizontalScrollIndicator={false}>{menuKeys.map(key => <Pressable accessibilityRole="tab" accessibilityState={{ selected: screen === key }} key={key} onPress={() => setScreen(key)} style={[styles.navItem, { borderColor: palette.border, backgroundColor: screen === key ? palette.primary : palette.inset }]}><Text style={{ color: screen === key ? palette.onPrimary : palette.text, fontWeight: '800' }}>{t[key]}</Text></Pressable>)}</ScrollView>; }
 
 function TenantSetupGate({ t, palette, binding, setBinding, setData, cameraOpen, setCameraOpen, setError, signOut }) {
-  const onCameraResult = result => { setCameraOpen(false); if (!result) return; setBinding(result); if (result.state === 'binding_failed') setError(t.cameraInvalidQr); else setData(adapter.snapshot()); };
-  return <Shell palette={palette}><Header t={t} palette={palette} binding={binding} onSignOut={signOut} /><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Section title={t.setupTemple} palette={palette}><Text style={[styles.body, { color: palette.text }]}>{t.setupTempleDescription}</Text>{adapter.kind === 'dummy' ? (cameraOpen ? <TempleQrCamera mode="dummy" t={t} palette={palette} onCancel={onCameraResult} onScan={payload => scanCameraPayload({ mode: 'dummy', payload })} /> : <Button label={t.scanDemoCode} palette={palette} onPress={() => setCameraOpen(true)} />) : <Notice palette={palette} tone="info">{t.realBindingUnavailable}</Notice>}</Section></ScrollView></Shell>;
+  const onCameraResult = async result => { setCameraOpen(false); if (!result) return; if (result.state === 'binding_failed') { setError(t.cameraInvalidQr); return; } if (isReleaseConfig(clientConfig)) { try { await trustedBindingStorage.save(result); } catch (_) { setError(t.cameraInvalidQr); return; } } setBinding(result); setData(adapter.snapshot()); };
+  return <Shell palette={palette}><Header t={t} palette={palette} binding={binding} onSignOut={signOut} /><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Section title={t.setupTemple} palette={palette}><Text style={[styles.body, { color: palette.text }]}>{t.setupTempleDescription}</Text>{cameraOpen ? <TempleQrCamera mode={clientConfig.mode} t={t} palette={palette} onCancel={onCameraResult} onScan={payload => scanCameraPayload({ mode: clientConfig.mode, payload, config: clientConfig, transport: productionTransport })} /> : <Button label={t.scanDemoCode} palette={palette} onPress={() => setCameraOpen(true)} />}</Section></ScrollView></Shell>;
 }
 
 function SignedOut({ t, palette, locale, setLocale, dark, setDark, screen, setScreen, email, setEmail, password, setPassword, signup, setSignup, recoveryEmail, setRecoveryEmail, pending, error, setError, notice, run, signIn, setSignedIn, beginOAuth, oauthState }) {

@@ -1,23 +1,28 @@
-const LOCAL_MODES = new Set(['dummy', 'real']);
 const { nativeOAuthReturnUrl } = require('../oauth/config');
+const RELEASE_ENVIRONMENTS = new Set(['testflight', 'production']);
+const PUBLIC_ORIGIN = 'https://shengfukung.com.tw';
+const PUBLIC_TENANT = 'shengfukung-wenfu';
+const safeUrl = value => { try { return new URL(String(value)); } catch (_) { return null; } };
 
 function resolveClientConfig(extra = {}) {
-  const mode = LOCAL_MODES.has(extra.clientMode) ? extra.clientMode : 'dummy';
-  const apiBaseUrl = String(extra.localApiBaseUrl || '').replace(/\/$/, '');
-  const tenantSlug = String(extra.localTenantSlug || '').trim();
+  const environment = String(extra.clientEnvironment || 'development').toLowerCase();
+  const release = RELEASE_ENVIRONMENTS.has(environment);
+  const mode = release ? 'real' : extra.clientMode === 'real' ? 'real' : 'dummy';
+  const apiBaseUrl = String(extra.apiBaseUrl || extra.localApiBaseUrl || '').replace(/\/$/, '');
+  const tenantSlug = String(extra.tenantSlug || extra.localTenantSlug || '').trim();
   if (mode === 'real' && (!apiBaseUrl || !tenantSlug)) {
-    const error = new Error('Real mode requires explicit localApiBaseUrl and localTenantSlug configuration.');
+    const error = new Error('Real mode requires an explicit API origin and tenant configuration.');
     error.code = 'REAL_CONFIG_REQUIRED';
     throw error;
   }
   if (mode === 'real') {
-    let url;
-    try { url = new URL(apiBaseUrl); } catch (_) { url = null; }
+    const url = safeUrl(apiBaseUrl);
     const host = url?.hostname?.toLowerCase();
     const localHost = host === 'localhost' || host === '127.0.0.1' || host === '::1' || host?.endsWith('.test');
-    if (!url || !['http:', 'https:'].includes(url.protocol) || !localHost) {
-      const error = new Error('Real mode accepts only an explicit localhost, loopback, or .test API origin.');
-      error.code = 'LOCAL_API_REQUIRED';
+    const publicExact = url?.origin === PUBLIC_ORIGIN && tenantSlug === PUBLIC_TENANT;
+    if (!url || !['http:', 'https:'].includes(url.protocol) || url.username || url.password || url.hash || url.pathname !== '/' || url.search || !(publicExact || (!release && localHost))) {
+      const error = new Error('Real mode requires an exact trusted API origin.');
+      error.code = 'TRUSTED_API_REQUIRED';
       throw error;
     }
   }
@@ -27,9 +32,10 @@ function resolveClientConfig(extra = {}) {
     error.code = 'NATIVE_OAUTH_RETURN_REQUIRED';
     throw error;
   }
-  return { mode, apiBaseUrl, tenantSlug, environment: String(extra.clientEnvironment || 'development'), oauthReturnUrl };
+  return { mode, apiBaseUrl, tenantSlug, environment, oauthReturnUrl, updateChannel: String(extra.easUpdateChannel || environment) };
 }
 
 const localTenantBinding = config => ({ state: 'bound', tenant: { id: config.tenantSlug, name: config.tenantSlug }, error: null, source: 'local-test' });
 
-module.exports = { resolveClientConfig, localTenantBinding };
+const isReleaseConfig = config => RELEASE_ENVIRONMENTS.has(config?.environment);
+module.exports = { PUBLIC_ORIGIN, PUBLIC_TENANT, RELEASE_ENVIRONMENTS, resolveClientConfig, localTenantBinding, isReleaseConfig };

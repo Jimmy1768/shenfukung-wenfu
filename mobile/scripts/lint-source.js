@@ -19,7 +19,7 @@ const sourceFailures = entries => entries.filter(({ file, source }) => {
 });
 const liveOriginFailures = entries => entries.filter(({ file, source }) => {
   const relative = path.relative(root, file);
-  if (relative === path.join('dummy', 'fixtures.js') || relative === path.join('tenant', 'binding.js')) return false;
+  if (relative === path.join('dummy', 'fixtures.js') || relative === path.join('tenant', 'binding.js') || relative === path.join('real', 'config.js')) return false;
   return /https?:\/\//i.test(source);
 });
 if (require.main === module) {

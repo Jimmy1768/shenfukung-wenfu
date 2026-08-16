@@ -5,6 +5,7 @@ const TRUSTED_ORIGINS = Object.freeze([
   { origin: alternateTenant.origin, tenantId: alternateTenant.id, tenant: alternateTenant }
 ]);
 const path = tenant.connectionPath;
+const productionConnectionPath = '/connect/templemate/v1';
 const parseConnectionLink = value => {
   try {
     const url = new URL(value);
@@ -37,4 +38,13 @@ const confirmSwitch = (binding, cleanup) => {
 };
 const activePresentationTenant = binding => binding?.tenant || null;
 const fixtureConnectionLink = target => `${target.origin}${target.connectionPath}?token=fixture-token`;
-module.exports = { TRUSTED_ORIGINS, parseConnectionLink, initialBinding, bindFixture, scanFixture, beginSwitch, requestSwitch, clearPriorTenant, confirmSwitch, activePresentationTenant, fixtureConnectionLink };
+const parseProductionConnectionLink = (value, origin) => {
+  try {
+    const url = new URL(value);
+    if (url.origin !== origin || url.protocol !== 'https:' || url.pathname !== productionConnectionPath || url.username || url.password || url.hash) return { ok: false, reason: 'invalid_connection_link' };
+    const keys = [...url.searchParams.keys()];
+    if (keys.some(key => key !== 'v') || (url.search && (keys.length !== 1 || url.searchParams.get('v') !== '1'))) return { ok: false, reason: 'invalid_connection_link' };
+    return { ok: true, origin: url.origin };
+  } catch (_) { return { ok: false, reason: 'invalid_connection_link' }; }
+};
+module.exports = { TRUSTED_ORIGINS, parseConnectionLink, parseProductionConnectionLink, productionConnectionPath, initialBinding, bindFixture, scanFixture, beginSwitch, requestSwitch, clearPriorTenant, confirmSwitch, activePresentationTenant, fixtureConnectionLink };

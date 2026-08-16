@@ -42,6 +42,21 @@ test('production config uses the public TempleMate native identifiers', () => {
   assert.equal(config.android.package, project.nativeIdentifiers.production.androidPackage);
 });
 
+test('TestFlight and production source profiles are real, public, and isolated from development', () => {
+  for (const profile of ['testflight', 'production']) {
+    const config = configFor(profile);
+    assert.equal(config.extra.clientMode, 'real');
+    assert.equal(config.extra.apiBaseUrl, 'https://shengfukung.com.tw');
+    assert.equal(config.extra.tenantSlug, 'shengfukung-wenfu');
+    assert.equal(config.extra.easUpdateChannel, profile);
+    assert.equal(config.updates.url, 'https://u.expo.dev/c7b8523a-2fad-4123-bc96-0c0c85a23dec');
+    assert.deepEqual(config.updates.runtimeVersion, { policy: 'appVersion' });
+    assert.equal(eas.build[profile].channel, profile);
+    assert.equal(eas.build[profile].distribution, 'store');
+  }
+  assert.equal(eas.build.development.channel, undefined);
+});
+
 test('both public configs declare QR-only camera access without Android audio recording', () => {
   for (const buildMode of ['development', 'production']) {
     const config = configFor(buildMode);

@@ -1,4 +1,4 @@
-const normalizeEnvironment = value => ['development', 'test', 'production'].includes(value) ? value : 'development';
+const normalizeEnvironment = value => ['development', 'test', 'testflight', 'production'].includes(value) ? value : 'development';
 const storageScope = ({ environment, tenantId } = {}) => ({
   environment: normalizeEnvironment(environment),
   tenantId: tenantId || 'unbound'

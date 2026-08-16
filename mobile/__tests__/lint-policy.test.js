@@ -12,4 +12,6 @@ test('source lint permits fetch only in the local/test real transport and reject
   assert.equal(sourceFailures([{ file: path.join(path.dirname(dummy), 'repository.js'), source: 'const mode = "OAuth"' }]).length, 1);
   assert.equal(sourceFailures([{ file: dummy, source: 'const action = "checkout"' }]).length, 1);
   assert.equal(liveOriginFailures([{ file: dummy, source: 'const origin = "https://example.com"' }]).length, 1);
+  const realConfig = path.join(path.dirname(allowedTransport), 'config.js');
+  assert.equal(liveOriginFailures([{ file: realConfig, source: 'const origin = "https://shengfukung.com.tw"' }]).length, 0);
 });

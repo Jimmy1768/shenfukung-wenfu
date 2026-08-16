@@ -36,10 +36,13 @@ function fixtureTransport(calls, failures = {}, overrides = {}) {
 }
 
 test('real mode is deliberate and cannot be configured without local tenant and API inputs', () => {
-  assert.deepEqual(resolveClientConfig({}), { mode: 'dummy', apiBaseUrl: '', tenantSlug: '', environment: 'development', oauthReturnUrl: 'templemate://oauth/complete' });
+  assert.deepEqual(resolveClientConfig({}), { mode: 'dummy', apiBaseUrl: '', tenantSlug: '', environment: 'development', oauthReturnUrl: 'templemate://oauth/complete', updateChannel: 'development' });
   assert.throws(() => resolveClientConfig({ clientMode: 'real' }), { code: 'REAL_CONFIG_REQUIRED' });
   assert.equal(resolveClientConfig({ clientMode: 'real', localApiBaseUrl: 'http://local.test/', localTenantSlug: 'fixture', clientEnvironment: 'test' }).tenantSlug, 'fixture');
-  assert.throws(() => resolveClientConfig({ clientMode: 'real', localApiBaseUrl: 'https://example.com', localTenantSlug: 'fixture' }), { code: 'LOCAL_API_REQUIRED' });
+  assert.throws(() => resolveClientConfig({ clientMode: 'real', localApiBaseUrl: 'https://example.com', localTenantSlug: 'fixture' }), { code: 'TRUSTED_API_REQUIRED' });
+  const release = resolveClientConfig({ clientEnvironment: 'testflight', apiBaseUrl: 'https://shengfukung.com.tw', tenantSlug: 'shengfukung-wenfu', easUpdateChannel: 'testflight' });
+  assert.equal(release.mode, 'real'); assert.equal(release.updateChannel, 'testflight');
+  assert.throws(() => resolveClientConfig({ clientEnvironment: 'production', apiBaseUrl: 'http://shengfukung.com.tw', tenantSlug: 'shengfukung-wenfu' }), { code: 'TRUSTED_API_REQUIRED' });
   assert.throws(() => resolveClientConfig({ nativeOAuthReturnUrl: 'templemate://wrong' }), { code: 'NATIVE_OAUTH_RETURN_REQUIRED' });
   assert.deepEqual(localTenantBinding(config), { state: 'bound', tenant: { id: 'fixture-temple', name: 'fixture-temple' }, error: null, source: 'local-test' });
 });
@@ -97,6 +100,15 @@ test('real session expiry, replay, revocation, closure and tenant cleanup clear 
   await adapter.signIn({ email: user.email, password: 'test-password' }); await adapter.closeAccount(); assert.equal(local.values.size, 0);
 });
 
+test('real retained-state cleanup clears a trusted release binding alongside the tenant session', async () => {
+  let clears = 0;
+  const bindingStorage = { clear: async () => { clears += 1; } };
+  const adapter = createRealAdapter({ config, store: store(), transport: fixtureTransport([]), bindingStorage });
+  await adapter.signIn({ email: user.email, password: 'test-password' });
+  await adapter.logout();
+  assert.equal(clears, 1);
+});
+
 test('real transport errors are surfaced and never return fixture data', async () => {
   const adapter = createRealAdapter({ config, store: store(), transport: fixtureTransport([], { '/login': response({ code: 'invalid_credentials' }, 401) }) });
   await assert.rejects(adapter.signIn({ email: user.email, password: 'bad' }), { code: 'invalid_credentials' });
@@ -115,6 +127,25 @@ test('real OAuth adapter sends only the accepted Rails native start and exchange
   assert.deepEqual(JSON.parse(exchange.body), { oauth: { code: 'return-code', transaction_token: 'opaque-native-transaction', pkce_verifier: 'v'.repeat(64) }, device: { device_id: 'local-test-client', platform: 'expo' } });
   assert.equal(calls.filter(call => /google|apple|sourcegrid/i.test(call.url)).length, 0);
   assert.ok(local.values.has(sessionKey({ environment: 'test', tenantId: 'fixture-temple' })));
+});
+
+test('TestFlight and production OAuth use only the trusted Rails-native origin with the existing scheme and PKCE envelopes', async () => {
+  for (const [environment, provider] of [['testflight', 'google'], ['production', 'apple']]) {
+    const release = resolveClientConfig({ clientEnvironment: environment, apiBaseUrl: 'https://shengfukung.com.tw', tenantSlug: 'shengfukung-wenfu', easUpdateChannel: environment });
+    const calls = [];
+    const adapter = createRealAdapter({ config: release, store: store(), transport: fixtureTransport(calls) });
+    await adapter.startOAuth({ provider, pkceChallenge: 'c'.repeat(43), pkceMethod: 'S256' });
+    await adapter.exchangeOAuth({ code: 'return-code', transactionToken: 'opaque-native-transaction', pkceVerifier: 'v'.repeat(64) });
+    const start = calls.find(call => call.url.includes('/oauth/start?'));
+    const exchange = calls.find(call => call.url.includes('/oauth/exchange?'));
+    assert.equal(release.oauthReturnUrl, 'templemate://oauth/complete');
+    assert.equal(start.url, 'https://shengfukung.com.tw/api/v1/account/native/oauth/start?temple_slug=shengfukung-wenfu');
+    assert.equal(exchange.url, 'https://shengfukung.com.tw/api/v1/account/native/oauth/exchange?temple_slug=shengfukung-wenfu');
+    assert.deepEqual(JSON.parse(start.body), { oauth: { provider, pkce_challenge: 'c'.repeat(43), pkce_method: 'S256' } });
+    assert.deepEqual(JSON.parse(exchange.body), { oauth: { code: 'return-code', transaction_token: 'opaque-native-transaction', pkce_verifier: 'v'.repeat(64) }, device: { device_id: 'local-test-client', platform: 'expo' } });
+    assert.ok(calls.every(call => new URL(call.url).origin === 'https://shengfukung.com.tw'));
+    assert.equal(calls.some(call => /google|apple|central|sourcegrid/i.test(new URL(call.url).hostname)), false);
+  }
 });
 
 test('real OAuth session cleanup removes an exchange-applied session and every scoped record', async () => {

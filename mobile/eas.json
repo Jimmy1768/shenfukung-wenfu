@@ -13,6 +13,32 @@
       "env": {
         "BUILD_MODE": "development"
       }
+    },
+    "testflight": {
+      "distribution": "store",
+      "ios": { "buildConfiguration": "Release" },
+      "channel": "testflight",
+      "env": {
+        "BUILD_MODE": "testflight",
+        "TEMPLEMATE_CLIENT_MODE": "real",
+        "TEMPLEMATE_CLIENT_ENVIRONMENT": "testflight",
+        "TEMPLEMATE_EAS_UPDATE_CHANNEL": "testflight",
+        "TEMPLEMATE_PUBLIC_API_ORIGIN": "https://shengfukung.com.tw",
+        "TEMPLEMATE_PUBLIC_TENANT_SLUG": "shengfukung-wenfu"
+      }
+    },
+    "production": {
+      "distribution": "store",
+      "ios": { "buildConfiguration": "Release" },
+      "channel": "production",
+      "env": {
+        "BUILD_MODE": "production",
+        "TEMPLEMATE_CLIENT_MODE": "real",
+        "TEMPLEMATE_CLIENT_ENVIRONMENT": "production",
+        "TEMPLEMATE_EAS_UPDATE_CHANNEL": "production",
+        "TEMPLEMATE_PUBLIC_API_ORIGIN": "https://shengfukung.com.tw",
+        "TEMPLEMATE_PUBLIC_TENANT_SLUG": "shengfukung-wenfu"
+      }
     }
   }
 }
