@@ -31,7 +31,9 @@ test('presentation uses generated token authority and a single-line native busin
   assert.match(theme, /ops-dark/);
   assert.match(app, /accountMenu\(\)/);
   assert.match(app, /<ScrollView horizontal accessibilityRole="tablist"/);
+  assert.match(app, /navigationShell: \{ flexGrow: 0, borderBottomWidth: 1 \}/);
   assert.match(app, /flexWrap: 'nowrap'/);
+  assert.match(app, /navigation: \{ flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center'/);
   assert.equal(app.includes('Text numberOfLines={1} style={{ color: screen === key'), false);
   assert.match(app, /accessibilityRole="tablist"/);
   assert.match(primitives, /accessibilityRole="alert"/);
