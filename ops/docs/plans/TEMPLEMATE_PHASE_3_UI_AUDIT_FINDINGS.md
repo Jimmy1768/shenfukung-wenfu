@@ -1,6 +1,6 @@
 # TempleMate Phase 3 UI Audit Findings
 
-Status: Director review in progress
+Status: closed for V1; historical findings retained
 
 Opened: 2026-08-14
 
@@ -16,9 +16,23 @@ Accepted runtime baseline: canonical `main` at session dispatch
 `032634234030944800c94e5792ae19abbfc64f01`
 
 This is a rolling Director-owned findings record. Observations here are review
-evidence, not source-edit authority. Planning will consolidate accepted
-findings into bounded implementation plans only after the holistic audit is
-complete enough to avoid screen-by-screen patchwork.
+evidence, not source-edit authority. The original observations below remain
+unchanged; the V1 closeout records their accepted disposition.
+
+## V1 Closeout
+
+The Director review is complete and the resulting bound TempleMate UI is
+sufficient for V1. Finding 001 maps to the accepted tenant gate, Settings
+switch placement, and device evidence. Finding 002 maps to the accepted
+Assistance/Contact presentation and retained destination distinction. Finding
+003 maps to the accepted native-form contract implementation and evidence.
+
+The later accepted Header utility repair keeps Settings beside Sign out, while
+the five business destinations form one non-wrapping horizontal line. The
+compact-height repair restored natural navigation height and centered pills;
+its bound runtime confirmation was accepted at
+`1b1cb69e74dad282793fb4ccdfe196dc48dbda76`. Noncritical observations remain
+historical future evidence rather than a newly inferred source defect.
 
 ## Finding 001 — Temple binding hierarchy and unbound gate
 
@@ -101,7 +115,7 @@ complete enough to avoid screen-by-screen patchwork.
 - Explicit non-goals: no provider, email credential, deployment, production
   message, or admin-data mutation is authorized by this audit finding.
 
-## Remaining Audit
+## Historical Audit Boundary
 
-The rest of the parent review matrix remains open. These findings do not yet
-authorize implementation or close the Phase 3 Director gate.
+The Phase 3 Director gate is closed for V1. These retained findings do not
+authorize a further source edit; future work requires its own accepted plan.

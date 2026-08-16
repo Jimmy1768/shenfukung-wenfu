@@ -133,12 +133,13 @@ latest store discussion or an older plan title as the whole product state.
 | Phase | Outcome | Dependency | Current state |
 | --- | --- | --- | --- |
 | 0 | Accepted local/web/native/payment foundations | Existing accepted work | Complete |
-| 1 | Web demo flow is truthful and repeatable | Phase 0 | Next implementation phase |
-| 2 | Development client matches the accepted web demo flow | Phase 1 | Newly explicit phase |
-| 3 | Director-led visual UI refinement on the development client | Phase 2 | Planned |
-| 4 | Store, policy, signing, runtime, and artifact readiness | Phase 3 | Planned |
-| 5 | Production-signed artifacts and staff beta distribution | Phase 4 | Planned |
-| 6 | Repeatable client-meeting demo acceptance | Phase 5 | Planned |
+| 1 | Web demo flow is truthful and repeatable | Phase 0 | Complete |
+| 2 | Development client matches the accepted web demo flow | Phase 1 | Complete |
+| 3 | Director-led visual UI refinement on the development client | Phase 2 | Complete and sufficient for V1 |
+| 4 | Real Google/Apple native OAuth readiness and runtime validation | Phase 3 | Next phase |
+| 5 | Store, policy, signing, runtime, and artifact readiness | Phase 4 | Planned |
+| 6 | Separately authorized production-identity beta artifacts and staff distribution | Phase 5 | Planned |
+| 7 | Repeatable client-meeting demo and beta observation/acceptance | Phase 6 | Planned |
 | Deferred | First-client Stripe/ECPay activation | Signed real client and provider prerequisites | Not a demo blocker |
 
 ## Phase 0 — Accepted Foundation
@@ -281,9 +282,35 @@ on the development client. Remaining issues are recorded by screen/state and
 severity; there is no unresolved critical render, navigation, data-authority,
 or accessibility failure.
 
-## Phase 4 — Distribution Readiness
+## Phase 4 — Real Google/Apple Native OAuth Readiness And Runtime Validation
 
-Only after Phase 3 acceptance, prepare the release surfaces. This phase may
+Phase 4 begins with a read-only readiness scan, followed only by separately
+accepted provider, deployment, and device-validation packets. Current evidence
+proves the Rails/native OAuth source contracts, provider-independent transaction
+handling, deterministic dummy Google/Apple behavior, and a local/test-only real
+adapter. It does not prove real mobile Google or Apple provider behavior,
+production account resolution, or production distribution configuration.
+
+The readiness scan must establish rather than infer the exact Rails/Central Auth
+deployment and account-resolution state; production and development identifiers,
+native scheme/return URL, API/trust origin, runtime mode, EAS profile, and
+provider-registration state; which console or deployment actions need separate
+authority; and a sanitized physical-device matrix for success, cancellation or
+denial, browser interruption/return, repeat sign-in, session restoration, and
+safe unmatched-account/account-resolution behavior. It must also freeze cleanup,
+privacy, account, stop, and production-data boundaries.
+
+Web OAuth and dummy OAuth are not evidence of real native OAuth. This phase
+does not delete, merge, relink, or otherwise remediate user 22; the accepted
+Apple account-resolution rollout and historical recovery remain separate
+Control A work.
+
+Exit: the real Google/Apple native readiness and device-validation gate is
+accepted. It does not authorize an artifact, upload, or public release.
+
+## Phase 5 — Distribution Readiness
+
+Only after Phase 4 acceptance, prepare the release surfaces. This phase may
 create plans and configuration but does not itself authorize artifact upload or
 public release.
 
@@ -323,7 +350,7 @@ Exit: source is release-configured and verified, store records and stable
 public documentation exist, exact build/upload plans are accepted, and no
 artifact has yet consumed Android or iOS build `1`.
 
-## Phase 5 — Production Artifacts And Staff Beta
+## Phase 6 — Production-Identity Artifacts And Staff Beta
 
 “Production artifact” here means a production-identity, production-signed iOS
 archive or Android AAB. It does not mean public production release, live
@@ -340,27 +367,23 @@ provider activation, or a claim that the beta is ready for general customers.
 - Later uploads within `1.0.0` increment only the iOS build number: `(2)`,
   `(3)`, and so on.
 
-### Google
+### Google Play AAB
 
 - Build and upload TempleMate `1.0.0`, Android version code `1`, as an AAB to
   the selected closed-testing track under `com.jimmy1768.komainu`.
 - Once that AAB is accepted into the Play upload surface, code `1` is consumed;
   the next AAB uses code `2`.
-- As verified on 2026-08-13, Google requires newly created personal developer
-  accounts subject to the rule to run a closed test with at least **12 testers
-  continuously opted in for 14 days** before applying for production access.
-  The rule is not “14 installed testers.” Official reference:
-  <https://support.google.com/googleplay/android-developer/answer/14151465?hl=en>.
-- The first temple may recruit staff testers. Collect the Google-account emails,
-  add the approved email list or group to the closed track, send the official
-  opt-in link, and ask testers to remain opted in and use the app throughout the
-  test.
-- Invite approximately 14–16 willing testers operationally so ordinary
-  dropouts do not reduce the cohort below the official minimum of 12. The Play
-  Console remains authoritative for whether this account is subject to the
-  personal-account gate and whether the continuous period is satisfied.
-- Record real feedback and engagement for the later production-access
-  questionnaire; do not treat passive enrollment as product acceptance.
+- The selected closed-testing track, tester requirements, eligibility, and
+  submission rules are temporally unstable. Reverify them from current official
+  Apple and Google sources and the applicable console at execution time; do not
+  promote historical tester counts, durations, or chat guidance into authority.
+
+### Optional Android APK
+
+- An Android APK variant is a distinct future packet, not a fallback implicit in
+  the Play AAB. Its packet must state the intended channel, runtime and
+  provider/network constraints, signing owner, update path, and separation from
+  the Play artifact.
 
 ### Shared upload boundary
 
@@ -377,7 +400,7 @@ Exit: staff can install the production-identity beta through TestFlight and/or
 Google closed testing, the build ledgers match actual upload receipts, and
 critical beta issues have an attributable correction path.
 
-## Phase 6 — Repeatable Client-Meeting Demo
+## Phase 7 — Repeatable Client-Meeting Demo And Beta Acceptance
 
 Prove the complete sales demonstration as an operating procedure rather than a
 collection of individually working screens.
@@ -412,32 +435,28 @@ app/demo evidence is sufficient for that engagement:
 - any native payment checkout/return/status surface required after the live
   web provider contract is accepted.
 
-These are not blockers to Phases 1–6. Local fake/simulated evidence remains
+These are not blockers to Phases 1–7. Local fake/simulated evidence remains
 engineering evidence only and is never reclassified as provider validation.
 
 ## Sequencing And Control Ownership
 
-- Phase 1 is the next product implementation phase.
-- Phase 2 cannot start until the Phase 1 demo behavior is accepted; this avoids
-  implementing the same unsettled copy/state contract twice.
-- Phase 3 cannot start until Phase 2 functional parity is accepted. UI
-  refinement is performed on the development client, not on an already-uploaded
-  production artifact.
-- Phase 4 cannot claim readiness until the Director accepts Phase 3 visually.
-- Phase 5 cannot build or upload production artifacts until Phase 4 closes the
-  runtime, store, policy, signing, and version gates.
-- Phase 6 consumes the accepted artifacts; it does not authorize public release.
+- Phases 1–3 are complete historical gates; their accepted evidence is retained.
+- Phase 4 is next and must close real Google/Apple native OAuth readiness and
+  device validation before distribution readiness is claimed.
+- Phase 5 decides and verifies release configuration; it does not build or
+  upload.
+- Phase 6 keeps TestFlight IPA, Play AAB, and optional Android APK authorities
+  separate. A successful build is not an upload and a beta upload is not a
+  public release.
+- Phase 7 consumes accepted beta artifacts and does not authorize public release.
 - Each implementation, deployment, provider, store-record, build, upload, and
   runtime-validation action requires its own committed accepted plan and direct
   Planning-to-Control dispatch.
 
 ## Current Gate
 
-Roadmap accepted; implementation not dispatched by this document.
-
-Current next action: Planning authors the bounded Phase 1 web demo-flow plan.
-The first concrete product gap is truthful online-payment-unavailable/cash-only
-presentation and checkout suppression for the Shengfukung test tenant while
-preserving admin cash completion and qualifying accounting. Apple OAuth
-production rollout remains an independent critical web track and is not
-silently absorbed into this payment/demo plan.
+Phases 1–3 are complete. Current next action: Planning authors the separate
+Phase 4 real Google/Apple native OAuth read-only readiness-scan plan through
+Control B, sequenced with the separate Control A Apple account-resolution
+rollout state. It does not authorize provider, account, deployment, build,
+artifact, upload, or release action.

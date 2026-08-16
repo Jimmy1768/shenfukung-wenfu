@@ -498,6 +498,29 @@ merchant account and target-specific authority. No provider inspection,
 credential access, live payment/refund, production action, deployment, push,
 or Expo payment UI work is authorized by the local completion.
 
+## Current TempleMate V1 Gate
+
+TempleMate cash-only demo Phases 1–2 and the Director-led Phase 3 UI/refinement
+are complete. The accepted bound-navigation visual confirmation is canonical at
+`1b1cb69e74dad282793fb4ccdfe196dc48dbda76`; it preserves the Header utility,
+five-item single-line business navigation, and compact natural-height layout.
+
+The next owner/action is Planning's separately committed Phase 4 real
+Google/Apple native OAuth read-only readiness scan through Control B. Web OAuth,
+dummy OAuth, and local/test adapters are not evidence that real mobile provider
+flows are validated. Control A separately owns the Apple account-resolution
+rollout and historical recovery track; no user 22 remediation or account action
+is implied here. No Control packet is active after this documentation phase
+until Planning directly dispatches Phase 4.
+
+Phase 5 is distribution readiness. Phase 6 reserves separate accepted
+production-identity authorities for a TestFlight IPA, Play AAB, and optional
+Android APK. Phase 7 covers client-meeting and beta observation/acceptance.
+DojoMate-Expo is a future operational reference only; it is not OAuth evidence
+and its identifiers, credentials, signing, versions, and commands are not
+inherited. `1.0.0 / Android 1 / iOS 1` remains unchanged. Stripe platform
+billing and live ECPay remain deferred until the first real client.
+
 ## Current Authorized Documentation Housekeeping
 
 `ops/docs/plans/DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md` is the

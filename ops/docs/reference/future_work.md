@@ -1,5 +1,25 @@
 # Future Work
 
+## TempleMate Post-UI V1 Sequence
+
+Phases 1–3 of the TempleMate cash-only demo, development-client parity, and
+Director UI refinement are complete. The next action is a separately committed
+Phase 4 read-only readiness scan for real Google/Apple native OAuth and
+physical-device validation. Current web OAuth, dummy OAuth, and local/test
+adapters do not prove real native provider behavior. The Apple account-
+resolution rollout and historical user 22 recovery remain separate Control A
+work; this sequence grants no user/account action.
+
+After Phase 4, Phase 5 is distribution readiness only. Phase 6 separately
+authorizes each production-identity TestFlight IPA, Google Play AAB, or optional
+Android APK packet. Phase 7 is client-meeting and beta observation/acceptance.
+DojoMate-Expo may later inform operational profiles, artifacts, and ledgers,
+but is not OAuth evidence and contributes no inherited identifiers, secrets,
+signing, versions, or commands. `1.0.0 / Android 1 / iOS 1` remains unchanged.
+
+Stripe platform billing and live ECPay activation remain deferred until a first
+real client and a separately authorized provider workflow.
+
 ## Deferred First-Tenant Activation
 
 First-tenant activation is deferred and is not authorized by local evidence. No
