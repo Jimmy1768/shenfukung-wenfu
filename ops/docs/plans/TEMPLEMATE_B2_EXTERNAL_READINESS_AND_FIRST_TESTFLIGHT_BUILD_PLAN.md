@@ -2,11 +2,24 @@
 
 ## Objective
 
-Validate the EAS/Apple/TestFlight pipeline end-to-end with one real iOS
-build, in parallel with Track A refinement work (independent tracks, no
-coordination needed between Control A and Control B). Dev-client already
-works; this validates build/signing/OTA infrastructure, not feature
-completeness — known-incomplete user screens are expected and fine.
+Validate the EAS/Apple/TestFlight and EAS/Apple/production-channel
+pipelines end-to-end with real iOS builds, in parallel with Track A
+refinement work (independent tracks, no coordination needed between
+Control A and Control B).
+
+**Corrected assumption, previous version of this plan had it wrong:**
+Android dev-client already works and is the primary iteration loop
+(~95% of development). iOS dev-client does not work — the Director tried
+and gave up on the ad-hoc-provisioning path, and there's no plan to
+revisit it. This packet does not depend on iOS dev-client at all. The
+actual intended iOS workflow is: build directly to two separate
+**production-configured** profiles instead of a dev-client step —
+`testflight` (tester QA loop, refined afterward via OTA — slower than
+dev-client, "enough for final touch-ups, usually CSS issues, not code
+logic") and `production` (kept on its own channel specifically so
+testers can keep iterating in TestFlight without affecting whatever is
+live in App Store distribution). Building the `production` profile here
+means producing that signed artifact, not submitting it — see Boundaries.
 
 ## Reference (read-only)
 
@@ -49,22 +62,30 @@ Each item gets a written finding (`configured`/`documented`/`observed`/
 doesn't exist or isn't ready, stop and report — do not create Apple-side
 account records; that's outside this packet's authority.
 
-### Phase 2 — authorized build (same packet, only after Phase 1 passes)
+### Phase 2 — build (same packet, only after Phase 1 passes)
 
-Director has pre-authorized this build explicitly — do not re-ask for
-build permission, but do stop and ask before anything Phase 1 flagged as
-not ready.
+**Authorization for this phase must come from the Director directly, in
+this Control B session — not from Planning's relay of the Director's
+words, however explicit that relay was.** This is a real EAS build spend
+and real Apple/App Store Connect account contact; per
+`claude_work_mode.md`'s direct-authorization rule, confirm with the
+Director here before running anything below, even though Planning
+already has the Director's go-ahead in its own transcript.
 
-- Run `yarn build:testflight` from `mobile/` (`eas build --platform ios
-  --profile testflight`). Let EAS manage iOS signing/credentials unless
-  something in Phase 1 says otherwise — standard path, avoid manual
-  certificate handling.
-- Goal: one real signed IPA through the full pipeline — build config,
-  native OAuth entitlements, EAS Update wiring. Not a UI/feature review.
-- Do **not** submit to the App Store, do not target the `production`
-  profile/channel, do not publish an OTA update yet. TestFlight internal
-  build only.
-- If the build fails, retry within this same packet after a fix. A
+- Run `yarn build:testflight` (`eas build --platform ios --profile
+  testflight`) and, once that succeeds, `yarn build:production`
+  (`eas build --platform ios --profile production`) from `mobile/`. Let
+  EAS manage iOS signing/credentials unless Phase 1 found a reason not
+  to — standard path, avoid manual certificate handling.
+- Goal: one real signed IPA on each channel through the full pipeline —
+  build config, native OAuth entitlements, EAS Update wiring. Not a
+  UI/feature review; known-incomplete screens are expected and fine.
+- Building the `production` profile produces a signed artifact only —
+  it does **not** submit anything to App Store review. Do not run
+  `eas submit`, do not open App Store Connect's release flow, do not
+  publish an OTA update yet. That's separate, later, separately-gated
+  work.
+- If a build fails, retry within this same packet after a fix. A
   fundamentally different approach (not just a config/credential fix)
   needs a new plan, not an expanded retry.
 
@@ -72,13 +93,28 @@ not ready.
 
 - No ECPay/production payment work.
 - No production Rails/data changes.
-- No App Store submission or `production` channel targeting.
+- No App Store submission (`eas submit` or App Store Connect release
+  flow) — building the `production` profile is in scope, submitting it
+  for review is not.
 - No secret values in logs, chat output, or committed files — public
   config only in `eas.json`/committed files; everything else stays in
   EAS's own environment store.
 - Web Google/Apple OAuth was already tested; native OAuth remains
   physically untested — this build validates the pipeline, not native
   OAuth end-to-end (device testing is separate, later work).
+
+## Confirmed blocker (Phase 1 finding, 2026-08-18)
+
+`https://shengfukung.com.tw/privacy`, `/terms`, and `/support` all
+return the same byte-identical 852-byte placeholder page (Golden
+Template Marketing default) — confirmed by direct fetch, not inferred.
+There is no real privacy policy, terms, or support/account-deletion
+content behind any of them; the router falls through to a marketing SPA
+catch-all. Apple requires a working privacy-policy URL and
+account-deletion path for TestFlight, internal testing included — this
+blocks Phase 2 regardless of build authorization, until real content
+exists at those URLs. This is website content work, not mobile work —
+routing it is a Planning decision, not Control B's to solve.
 
 ## Branching
 
