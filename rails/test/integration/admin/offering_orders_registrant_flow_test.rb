@@ -65,6 +65,60 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "Family Member"
   end
 
+  test "admin new and edit event registration screens render real submittable forms" do
+    @temple.adopt_platform_billing_entitlement!.update!(state: "active")
+    sign_in_admin(@admin)
+
+    get new_admin_event_offering_order_path(@event)
+    assert_response :success
+    assert_select "form[data-registration-form]" do |forms|
+      form = forms.first
+      assert_equal admin_event_offering_orders_path(@event), form["action"]
+      assert_equal "post", form["method"]
+    end
+    assert_select "input#temple_event_registration_user_id"
+    assert_select "input[type=submit]", 1
+
+    assert_difference -> { @event.temple_event_registrations.count }, 1 do
+      post admin_event_offering_orders_path(@event), params: {
+        temple_event_registration: {
+          user_id: @patron.id,
+          quantity: 1,
+          registrant_scope: "self",
+          contact_details: { primary_contact: "Household Owner", email: @patron.email },
+          logistics_details: { arrival_window: "morning" }
+        }
+      }
+    end
+    registration = @event.temple_event_registrations.order(:id).last
+    assert_redirected_to admin_event_offering_order_path(@event, registration)
+
+    get edit_admin_event_offering_order_path(@event, registration)
+    assert_response :success
+    assert_select "form[data-registration-form]" do |forms|
+      form = forms.first
+      assert_equal admin_event_offering_order_path(@event, registration), form["action"]
+    end
+    assert_select "input[name='temple_event_registration[logistics_details][arrival_window]'][value='morning']", 1
+
+    patch admin_event_offering_order_path(@event, registration), params: {
+      temple_event_registration: {
+        user_id: @patron.id,
+        quantity: 2,
+        registrant_scope: "self",
+        contact_details: { primary_contact: "Household Owner", email: @patron.email },
+        logistics_details: { arrival_window: "afternoon" }
+      }
+    }
+    assert_redirected_to admin_event_offering_order_path(@event, registration)
+    registration.reload
+    assert_equal 2, registration.quantity
+    assert_equal "afternoon", registration.logistics_payload["arrival_window"]
+
+    get admin_event_offering_order_path(@event, registration)
+    assert_response :success
+  end
+
   test "admin self and dependent create and eligible update write identical scoped defaults" do
     @temple.adopt_platform_billing_entitlement!.update!(state: "active")
     @event.update!(metadata: {
