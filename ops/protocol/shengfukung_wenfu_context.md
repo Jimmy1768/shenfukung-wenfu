@@ -12,6 +12,27 @@ temple, patron/account, offering and registration, payment (ECPay),
 deployment, or other product/runtime lifecycle semantics — those live in
 this file.
 
+## Control Track Assignment
+
+Both Codex Work Mode and Claude Work Mode use a domain-owned Control split
+in this repo, not a hand-agnostic one — inherited from how the work has
+actually run so far (Track A / Track B in
+`ops/docs/handoffs/2026-08-17-account-admin-personal-and-offering-data-alignment-control-a.md`
+and
+`ops/docs/handoffs/2026-08-17-templemate-production-runtime-eas-ota-source-control-b.md`):
+
+- **Control A** owns Rails / account / admin / offering-data work.
+- **Control B** owns TempleMate / EAS / TestFlight / OTA / native OAuth /
+  mobile work.
+- The two stay independent; cross-track coordination routes through
+  Planning, not Control-to-Control.
+
+This is an operating convention for this repo, not a Claude Work Mode rule —
+`ops/protocol/claude_work_mode.md`'s Control A/B are hand-agnostic by
+default (packet-owns-branch, either hand can pick one up). Wenfu just keeps
+them specialized because the domain split is already real and keeping each
+Control's accumulated context focused by domain is useful on its own merits.
+
 ## Codex Work Mode Local Source Map
 
 For Codex Work Mode builder-governance work, invoke `$codex-work-mode` and
