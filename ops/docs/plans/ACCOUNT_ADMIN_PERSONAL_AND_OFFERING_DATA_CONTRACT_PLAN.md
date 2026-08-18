@@ -264,7 +264,13 @@ contract safely. A schema migration is not presumed. If tenant-safe identity,
 atomicity, or backwards compatibility genuinely requires a migration, Control
 must return a Planning design gap for a separately accepted migration packet.
 
-### Phase A2 — Rails Surface Alignment
+### Phase A2 — Rails Surface Alignment — complete, 2026-08-18
+
+Pure verification, no code changes — all stated invariants confirmed
+already holding on current (post-A1) code. Two UI-consistency
+observations noted but correctly left out of scope (new work, not part
+of "keep the existing simple UX"). Evidence:
+`ops/docs/handoffs/2026-08-18-account-admin-offering-data-contract-phase-a2-control-a.md`.
 
 Keep the existing simple UX:
 
@@ -357,6 +363,6 @@ This plan does not block Control B's TestFlight work or the existing cash-only
 demo. It blocks only adding or claiming broader personal/offering-data parity
 in TempleMate before Rails semantics are accepted.
 
-Next owner/action: Phase A0 and Phase A1 are complete (evidence above).
-Planning dispatches Phase A2 — Rails Surface Alignment — to Control A next,
+Next owner/action: Phases A0, A1, and A2 are complete (evidence above).
+Planning dispatches Phase A3 — Contract Verification — to Control A next,
 per that phase's existing definition.
