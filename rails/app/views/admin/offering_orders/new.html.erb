@@ -59,6 +59,9 @@
     <% if !edit_mode || core_fields_editable %>
       <%= render "patron_picker", form:, registration: @registration %>
     <% end %>
+    <% if edit_mode && @registration.user.present? %>
+      <%= render "reusable_defaults", schema:, offering: @offering, patron: @registration.user %>
+    <% end %>
     <% if gathering_mode && !edit_mode %>
       <section class="card form-section">
         <header>

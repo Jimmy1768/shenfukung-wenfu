@@ -69,6 +69,7 @@ zh-TW:
         logistics: "時程與場域"
         ritual_metadata: "儀式細節"
         new_patron: "新增信眾"
+        reusable_defaults: "常用預設值"
       hints:
         patron: "可依姓名／信箱搜尋既有信眾，或於此快速建立。"
         patron_search: "輸入至少兩個字即可搜尋。"
@@ -88,6 +89,7 @@ zh-TW:
         manual_user_id: "若無法使用搜尋，可輸入信眾 ID。"
         save_additional: "保留原本預設值，並把此輸入存成另一個可選項。"
         registrant_scope: "選擇本筆報名是本人或家屬代辦。"
+        reusable_defaults: "此為信眾在這項供品的共用預設值，信眾自行報名時會沿用。這裡的變更會立即生效，且與這筆特定報名無關。"
       fields:
         quantity: "數量"
         unit_price: "單價"
@@ -103,6 +105,7 @@ zh-TW:
         arrival_window: "到場區間"
         ceremony_location: "法會地點"
         ancestor_placard: "祖先牌位姓名"
+        ancestor_placard_name: "祖先牌位姓名"
         dedication_message: "祈福語"
         incense_option: "香支選項"
         certificate_notes: "證書備註"
@@ -131,9 +134,18 @@ zh-TW:
         registrant_self: "本人"
         registrant_dependent: "家屬"
         no_dependent: "選擇家屬"
+        add_value: "新增數值"
+        set_value: "儲存數值"
+        clear_value: "清除"
+        no_value: "尚未設定預設值。"
+        no_extra_values: "尚無其他數值。"
       errors:
         search_failed: "目前無法搜尋信眾。"
         create_failed: "建立信眾失敗。"
+      reusable_defaults:
+        flash:
+          added: "已儲存「%{field}」的預設值。"
+          cleared: "已清除「%{field}」的預設值。"
     registration_show:
       sections:
         summary: "報名資訊"

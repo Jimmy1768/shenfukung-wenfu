@@ -1,0 +1,91 @@
+<%
+  reusable_service = Registrations::ReusableDefaults.new(user: patron, temple: current_temple, offering: offering)
+  reusable_values = reusable_service.read
+  reusable_fields = (schema.fields_for(:logistics) + schema.fields_for(:ritual_metadata))
+    .map(&:to_s)
+    .uniq
+    .select { |field| reusable_service.eligible_field?(field) }
+%>
+<% if reusable_fields.any? %>
+  <section class="card form-section" id="reusable-defaults-panel" data-testid="reusable-defaults-panel">
+    <header>
+      <h2><%= t("admin.registration_form.headings.reusable_defaults") %></h2>
+      <p class="muted"><%= t("admin.registration_form.hints.reusable_defaults") %></p>
+    </header>
+
+    <div class="field-row">
+      <% reusable_fields.each do |field| %>
+        <% multi = schema.allow_multiple?(field) %>
+        <% value = reusable_values[field] %>
+        <div class="field-panel reusable-default-field" data-reusable-default-field="<%= field %>">
+          <span class="reusable-default-label">
+            <%= t("admin.registration_form.fields.#{field}", default: field.humanize) %>
+          </span>
+
+          <% if multi %>
+            <div class="reusable-default-values" data-role="reusable-default-values">
+              <% if Array(value).any? %>
+                <% Array(value).each do |entry| %>
+                  <div class="reusable-default-value-row">
+                    <span class="reusable-default-value"><%= entry %></span>
+                    <%= button_to t("admin.registration_form.labels.clear_value"),
+                          admin_patron_metadata_value_path(patron, field),
+                          method: :delete,
+                          params: {
+                            field: field,
+                            value: entry,
+                            offering_kind: offering.class.base_class.name,
+                            offering_id: offering.id,
+                            return_to: request.fullpath
+                          },
+                          form_class: "reusable-default-clear-form",
+                          class: "btn btn-secondary btn-small" %>
+                  </div>
+                <% end %>
+              <% else %>
+                <p class="hint"><%= t("admin.registration_form.labels.no_extra_values") %></p>
+              <% end %>
+            </div>
+
+            <%= form_with url: admin_patron_metadata_values_path(patron), method: :post, local: true, class: "reusable-default-add-form" do %>
+              <%= hidden_field_tag :field, field, id: nil %>
+              <%= hidden_field_tag :offering_kind, offering.class.base_class.name, id: nil %>
+              <%= hidden_field_tag :offering_id, offering.id, id: nil %>
+              <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+              <%= text_field_tag :value, nil, placeholder: t("admin.registration_form.labels.add_value"), id: "reusable-default-#{field}-add-value" %>
+              <%= submit_tag t("admin.registration_form.labels.add_value"), class: "btn btn-secondary btn-small" %>
+            <% end %>
+          <% else %>
+            <div class="reusable-default-current">
+              <% if value.present? %>
+                <span class="reusable-default-value"><%= value %></span>
+                <%= button_to t("admin.registration_form.labels.clear_value"),
+                      admin_patron_metadata_value_path(patron, field),
+                      method: :delete,
+                      params: {
+                        field: field,
+                        offering_kind: offering.class.base_class.name,
+                        offering_id: offering.id,
+                        return_to: request.fullpath
+                      },
+                      form_class: "reusable-default-clear-form",
+                      class: "btn btn-secondary btn-small" %>
+              <% else %>
+                <span class="muted"><%= t("admin.registration_form.labels.no_value") %></span>
+              <% end %>
+            </div>
+
+            <%= form_with url: admin_patron_metadata_values_path(patron), method: :post, local: true, class: "reusable-default-set-form" do %>
+              <%= hidden_field_tag :field, field, id: nil %>
+              <%= hidden_field_tag :offering_kind, offering.class.base_class.name, id: nil %>
+              <%= hidden_field_tag :offering_id, offering.id, id: nil %>
+              <%= hidden_field_tag :return_to, request.fullpath, id: nil %>
+              <%= text_field_tag :value, value, placeholder: t("admin.registration_form.labels.set_value"), id: "reusable-default-#{field}-value" %>
+              <%= submit_tag t("admin.registration_form.labels.set_value"), class: "btn btn-secondary btn-small" %>
+            <% end %>
+          <% end %>
+        </div>
+      <% end %>
+    </div>
+  </section>
+<% end %>
