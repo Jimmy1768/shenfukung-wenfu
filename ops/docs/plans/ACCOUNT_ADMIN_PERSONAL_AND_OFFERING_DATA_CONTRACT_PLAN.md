@@ -238,7 +238,11 @@ metadata without production-data inspection.
 Evidence: `ops/docs/handoffs/2026-08-18-account-admin-offering-data-contract-phase-a0-control-a.md`.
 Findings folded into the Confirmed Gaps section above.
 
-### Phase A1 — Contract And Storage Alignment — narrowed by A0 findings
+### Phase A1 — Contract And Storage Alignment — complete, 2026-08-18
+
+Evidence: `ops/docs/handoffs/2026-08-18-account-admin-offering-data-contract-phase-a1-control-a.md`.
+Shipped as a behavior-preserving consolidation only, per the narrowed
+scope below.
 
 Implement the smallest shared Rails service boundary for prefill and reusable-
 default refresh. Align account/admin create and editable-update paths, selected
@@ -353,6 +357,6 @@ This plan does not block Control B's TestFlight work or the existing cash-only
 demo. It blocks only adding or claiming broader personal/offering-data parity
 in TempleMate before Rails semantics are accepted.
 
-Next owner/action: Phase A0 is complete (evidence above). Planning dispatches
-Phase A1 to Control A next, narrowed to the consolidation target A0 actually
-found — no tenant/storage-key correction, no asymmetry fix, both refuted.
+Next owner/action: Phase A0 and Phase A1 are complete (evidence above).
+Planning dispatches Phase A2 — Rails Surface Alignment — to Control A next,
+per that phase's existing definition.
