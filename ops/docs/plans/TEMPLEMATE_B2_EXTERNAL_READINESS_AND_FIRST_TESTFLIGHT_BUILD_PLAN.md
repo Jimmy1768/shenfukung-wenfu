@@ -21,6 +21,27 @@ testers can keep iterating in TestFlight without affecting whatever is
 live in App Store distribution). Building the `production` profile here
 means producing that signed artifact, not submitting it — see Boundaries.
 
+## Status (2026-08-18, updated live against Control B's own session)
+
+Director authorized Phase 2 directly in Control B's session, scoped to
+**`testflight` only for now** — the Director is treating `testflight` as
+the one production/internal-testing track, not building `production` in
+parallel as this plan originally scoped. `production` isn't cancelled,
+just not concurrent; revisit when Track B actually needs a distinct
+App-Store-bound artifact.
+
+`yarn build:testflight --non-interactive` failed cleanly at the expected
+first-build wall: no iOS distribution credentials exist yet, and
+non-interactive mode can't create them. Director ran `eas credentials
+--platform ios` interactively themselves (Control B had read-only
+terminal visibility only, no credential/password/2FA involvement,
+confirmed) and got to Apple's 2FA step, blocked by the only trusted
+device being physically elsewhere. **Paused overnight, resuming when the
+Director has the phone tomorrow morning** — no cleanup needed, no repo
+changes, no partially-created credentials. One harmless side effect: the
+failed attempt created the `testflight` EAS Update channel/branch,
+expected, will just get used once the real build lands.
+
 ## Reference (read-only)
 
 `/Users/jimmy1768/Projects/DojoMate-Expo` — established precedent per
