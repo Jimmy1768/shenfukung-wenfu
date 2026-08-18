@@ -53,8 +53,11 @@ Track B's terminal evidence.
    values.
 5. Native Google/Apple callback/return registration for
    `templemate://oauth/complete`.
-6. Privacy-policy, support, and account-deletion URL readiness (App Store
-   Connect requires these even for internal TestFlight testing).
+6. Privacy-policy, support, and account-deletion URL readiness — record
+   the finding, but per the Director's direct firsthand experience
+   uploading a prior app, this gates entering **distribution** (App Store
+   submission/external release), not internal TestFlight upload. Do not
+   treat it as a Phase 2 blocker.
 7. Confirm `1.0.0` (build `1`) is the correct first-upload identity.
 
 Each item gets a written finding (`configured`/`documented`/`observed`/
@@ -103,18 +106,22 @@ already has the Director's go-ahead in its own transcript.
   physically untested — this build validates the pipeline, not native
   OAuth end-to-end (device testing is separate, later work).
 
-## Confirmed blocker (Phase 1 finding, 2026-08-18)
+## Known gap, not a Phase 2 blocker (Phase 1 finding, 2026-08-18, corrected)
 
 `https://shengfukung.com.tw/privacy`, `/terms`, and `/support` all
 return the same byte-identical 852-byte placeholder page (Golden
 Template Marketing default) — confirmed by direct fetch, not inferred.
 There is no real privacy policy, terms, or support/account-deletion
-content behind any of them; the router falls through to a marketing SPA
-catch-all. Apple requires a working privacy-policy URL and
-account-deletion path for TestFlight, internal testing included — this
-blocks Phase 2 regardless of build authorization, until real content
-exists at those URLs. This is website content work, not mobile work —
-routing it is a Planning decision, not Control B's to solve.
+content behind any of them yet.
+
+**Correction: this does not block Phase 2.** An earlier version of this
+plan wrongly classified it as blocking internal TestFlight upload. The
+Director has directly done this before — on a prior app, this content
+only gated entering distribution (App Store submission/external
+release), not internal TestFlight testing. Treat it as a known gap to
+close before that later distribution step, deprioritized for now — not a
+build/upload gate. This is website content work, not mobile work, and
+not urgent today per the Director.
 
 ## Branching
 
