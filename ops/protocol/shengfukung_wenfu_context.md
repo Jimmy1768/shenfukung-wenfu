@@ -7,10 +7,10 @@ Code) reference this single file as their shared repo-context source — edit
 it here once, not per-IDE-file.
 
 Work Mode (Codex Work Mode, Claude Work Mode) governs builder coordination
-only; it does not define or change Wenfu product/runtime phase integrity,
-temple, account, payment, deployment, Worker, Incarnation, Route, Step,
-Receipt, reincarnation, or other product/runtime lifecycle semantics — those
-live in this file.
+only; it does not define or change Wenfu product/runtime phase integrity —
+temple, patron/account, offering and registration, payment (ECPay),
+deployment, or other product/runtime lifecycle semantics — those live in
+this file.
 
 ## Codex Work Mode Local Source Map
 
