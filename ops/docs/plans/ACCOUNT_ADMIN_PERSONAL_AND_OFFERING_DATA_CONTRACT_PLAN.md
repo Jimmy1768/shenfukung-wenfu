@@ -302,8 +302,16 @@ instance (`User#close_account!` on `oauth_identity.metadata`), judged a
 different bug and not fixed — status change, not anonymization, flagged
 for a future look.
 
-**Audit-metadata leak (Finding 1) remains open.** Track Acceptance
-Criteria below is not fully met until it's addressed.
+**Audit-metadata leak (Finding 1) resolved 2026-08-19 — by deletion, not
+patch.** Investigation found `Admin::PatronsController#create` (the
+action containing the leak) was dead code since the controller's first
+commit (2026-01-06) — never reachable through any real view, JS, or
+route; only `#index` (search/patron-picker) is live. Director's call:
+delete rather than fix a log line in an action that shouldn't exist.
+Evidence: `ops/docs/handoffs/2026-08-19-remove-dead-admin-patron-create-control-a.md`.
+
+**Both Phase A3 findings closed. All 12 verification items now hold.
+Track Acceptance Criteria (below) is fully met.**
 
 Prove at minimum:
 
@@ -381,6 +389,8 @@ This plan does not block Control B's TestFlight work or the existing cash-only
 demo. It blocks only adding or claiming broader personal/offering-data parity
 in TempleMate before Rails semantics are accepted.
 
-Next owner/action: Phases A0, A1, and A2 are complete (evidence above).
-Planning dispatches Phase A3 — Contract Verification — to Control A next,
-per that phase's existing definition.
+Next owner/action: Phases A0–A3 are complete, both A3 findings resolved,
+Acceptance Criteria fully met (evidence above). Only Phase A4 (Native
+Adoption Gate) remains — Planning decides which settled fields
+TempleMate actually needs, if any, as a separate later decision. No
+Control A packet is active from this roadmap alone right now.
