@@ -90,23 +90,57 @@ The plan records current behavior rather than treating the feature as new:
 
 ## Confirmed Gaps
 
+**Phase A0 (2026-08-18, Control A) verified this section against current
+code rather than assuming it — two items below were refuted with
+evidence, not just re-stated. Full field/surface matrix and findings:
+`ops/docs/handoffs/2026-08-18-account-admin-offering-data-contract-phase-a0-control-a.md`.**
+
 ### Creation and edit symmetry
 
-- Account-side creation refreshes reusable user or dependent defaults.
-- Admin-side creation refreshes reusable user defaults.
-- Account and admin edits primarily update the registration snapshot; reusable
-  defaults are not refreshed consistently.
-- Selected-dependent write-back is more complete on account creation than on
-  admin creation.
-- The complete patron/admin create/edit/prefill cycle lacks one focused
-  end-to-end contract matrix.
+- Account-side creation refreshes reusable user or dependent defaults —
+  confirmed.
+- Admin-side creation refreshes reusable user defaults — confirmed, and
+  Phase A0 found it already refreshes dependent defaults too
+  (`TempleRegistrationBuilder#sync_dependent_profile!`) — more symmetric
+  than originally assumed here.
+- ~~Account and admin edits primarily update the registration snapshot;
+  reusable defaults are not refreshed consistently.~~ **Refuted by Phase
+  A0.** Both `Account::RegistrationMetadataForm#save` and
+  `Admin::OfferingOrdersController#update` already refresh reusable
+  defaults on edit, gated by matching lifecycle conditions. Not open work.
+- ~~Selected-dependent write-back is more complete on account creation than
+  on admin creation.~~ **Refuted by Phase A0.** Both write the identical
+  three fields (phone/email/notes). The real issue: this exact logic is
+  reimplemented four separate times (`RegistrationIntakeForm`,
+  `RegistrationMetadataForm`, `TempleRegistrationBuilder`,
+  `OfferingOrdersController`) — functionally symmetric but duplicated,
+  not asymmetric. This is Phase A1's actual consolidation target, in
+  place of the assumed asymmetry.
+- The complete patron/admin create/edit/prefill cycle lacked one focused
+  end-to-end contract matrix — Phase A0's field/surface matrix (handoff
+  above) now is that matrix.
+- No admin write path exists for account-level profile fields
+  (`english_name`/`native_name`/`phone`/`city`/`notes`) or dependent
+  fields outside the registration/offering-schema flow — confirmed real
+  by Phase A0, but out of scope for A1/A2 as designed: any admin
+  extension here must stay gated by the selected offering's registration
+  schema (Phase A2's own rule), not become a standalone patron-profile
+  editor. A previously proposed packet built the latter; it was withdrawn
+  before implementation for exactly this reason.
 
 ### Scope and identity
 
-- Offering-specific defaults are currently keyed by offering slug alone.
-  Readiness must prove that the key cannot expose one temple's offering data in
-  another temple with the same slug. If it can, the smallest tenant-scoped key
-  or storage correction is required.
+- ~~Offering-specific defaults are currently keyed by offering slug alone.
+  Readiness must prove that the key cannot expose one temple's offering
+  data in another temple with the same slug. If it can, the smallest
+  tenant-scoped key or storage correction is required.~~ **Resolved by
+  Phase A0, not just traced.** `Registrations::ReusableDefaults` keys
+  strictly by `[temple.id][registrable_type][offering.id]` (the
+  offering's real DB id, never slug) plus a hard `offering.temple_id ==
+  temple.id` check in `valid_context?`. A full-app grep for other
+  slug-keyed personal-data storage found no live path. The cross-tenant
+  leak this section flagged as unconfirmed does not exist in the current
+  implementation — dropped from A1's scope.
 - Reusable contact data, dependent data, offering-specific data, and a
   registration snapshot currently share loosely structured metadata. Their
   ownership and overwrite rules are implicit.
@@ -186,7 +220,7 @@ payment, refund, and accounting fields never come from patron defaults.
 
 ## Phase Map
 
-### Phase A0 — Read-Only Contract Inventory
+### Phase A0 — Read-Only Contract Inventory — complete, 2026-08-18
 
 Trace every account/admin prefill and write path, registration schema/default,
 dependent path, multi-value mutation, lifecycle guard, audit event, JSON
@@ -201,11 +235,25 @@ serializer, and focused test. Produce a field/surface matrix with classification
 The scan must confirm the actual cross-tenant behavior of slug-keyed offering
 metadata without production-data inspection.
 
-### Phase A1 — Contract And Storage Alignment
+Evidence: `ops/docs/handoffs/2026-08-18-account-admin-offering-data-contract-phase-a0-control-a.md`.
+Findings folded into the Confirmed Gaps section above.
+
+### Phase A1 — Contract And Storage Alignment — narrowed by A0 findings
 
 Implement the smallest shared Rails service boundary for prefill and reusable-
 default refresh. Align account/admin create and editable-update paths, selected
 dependent behavior, tenant/offering scoping, blank handling, and audit metadata.
+
+Per Phase A0: the actual target is **consolidating the four separate
+reimplementations** of dependent/contact write-back logic
+(`RegistrationIntakeForm`, `RegistrationMetadataForm`,
+`TempleRegistrationBuilder`, `Admin::OfferingOrdersController`) into one
+shared service call — not fixing an asymmetry, since none was found. The
+tenant/offering-scoping correction originally anticipated here is dropped;
+Phase A0 confirmed the existing key scheme is already tenant-safe. This
+must be a behavior-preserving refactor — Phase A0 found current behavior
+correct and symmetric; A1 does not change what gets written, only where
+the logic lives.
 
 Prefer existing columns and JSON structures when they can satisfy the accepted
 contract safely. A schema migration is not presumed. If tenant-safe identity,
@@ -305,6 +353,6 @@ This plan does not block Control B's TestFlight work or the existing cash-only
 demo. It blocks only adding or claiming broader personal/offering-data parity
 in TempleMate before Rails semantics are accepted.
 
-Next owner/action: Planning may separately commit and dispatch Phase A0, the
-read-only Rails contract inventory, to Control A. No Control A packet is active
-from this roadmap alone.
+Next owner/action: Phase A0 is complete (evidence above). Planning dispatches
+Phase A1 to Control A next, narrowed to the consolidation target A0 actually
+found — no tenant/storage-key correction, no asymmetry fix, both refuted.
