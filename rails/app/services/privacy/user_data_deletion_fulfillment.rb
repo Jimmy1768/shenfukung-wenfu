@@ -56,11 +56,11 @@ module Privacy
         english_name: redacted_english_name,
         encrypted_password: User.password_hash(SecureRandom.hex(32)),
         anonymized_at: Time.current,
-        metadata: (@user.metadata || {}).merge(
+        metadata: {
           "anonymized_at" => Time.current.iso8601,
           "anonymized_by_user_id" => @operator.id,
           "anonymized_via" => "privacy_request"
-        )
+        }
       )
     end
 
@@ -77,10 +77,10 @@ module Privacy
           english_name: redacted_english_name,
           birthdate: nil,
           relationship_label: nil,
-          metadata: (dependent.metadata || {}).merge(
+          metadata: {
             "anonymized_at" => Time.current.iso8601,
             "anonymized_by_user_id" => @operator.id
-          )
+          }
         )
       end
     end
