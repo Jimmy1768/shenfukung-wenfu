@@ -145,6 +145,60 @@ class InternalPrivacyRequestsTest < ActionDispatch::IntegrationTest
     end
   end
 
+  test "completing a data deletion request clears reusable-defaults metadata from user and dependent" do
+    operator = create_operator!
+    temple = create_temple(slug: "privacy-delete-reusable-temple")
+    offering = create_offering(
+      temple:,
+      metadata: {
+        "registration_form" => {
+          "sections" => { "logistics" => ["arrival_window"], "ritual_metadata" => ["dedication_message"] }
+        }
+      }
+    )
+    user = User.create!(
+      email: "privacy-delete-reusable@example.com",
+      native_name: "王小明",
+      english_name: "Wang",
+      encrypted_password: User.password_hash("Password123!")
+    )
+    dependent = Dependent.create!(english_name: "Dependent Kid", native_name: "王小美")
+    UserDependent.create!(user:, dependent:, role: "family", relationship_label: "Child")
+
+    namespace = Registrations::ReusableDefaults::NAMESPACE
+    dedication_value = "獻給先祖王小美 - dedicated to ancestor Wang Xiao-Mei"
+    Registrations::ReusableDefaults.new(user:, temple:, offering:).write!("dedication_message" => dedication_value)
+    dependent_note = "Household notes naming 陳大同 specifically"
+    Registrations::DependentContactSync.call!(dependent:, phone: "0912345678", notes: dependent_note)
+
+    # Sanity-check the fixtures actually landed before fulfillment runs.
+    assert_equal dedication_value, user.reload.metadata.dig(namespace, temple.id.to_s, "TempleEvent", offering.id.to_s, "dedication_message")
+    assert_equal dependent_note, dependent.reload.metadata["notes"]
+    assert_equal "0912345678", dependent.metadata["phone"]
+
+    request_record = PrivacyRequest.create!(
+      user: user,
+      request_type: "data_deletion",
+      status: "approved",
+      submitted_via: "web",
+      requested_at: Time.current
+    )
+
+    Privacy::UserDataDeletionFulfillment.fulfill!(privacy_request: request_record, operator: operator)
+
+    user.reload
+    dependent.reload
+
+    refute user.metadata.key?(namespace), "expected reusable-defaults namespace cleared from user metadata, got #{user.metadata.inspect}"
+    refute_includes user.metadata.to_json, dedication_value
+    assert_equal %w[anonymized_at anonymized_by_user_id anonymized_via].sort, user.metadata.keys.sort
+
+    refute dependent.metadata.key?("notes")
+    refute dependent.metadata.key?("phone")
+    refute_includes dependent.metadata.to_json, dependent_note
+    assert_equal %w[anonymized_at anonymized_by_user_id].sort, dependent.metadata.keys.sort
+  end
+
   test "non-operator admin is redirected away from privacy requests" do
     temple = create_temple(slug: "privacy-no-access")
     user = create_admin_user(temple: temple, role: "owner")
