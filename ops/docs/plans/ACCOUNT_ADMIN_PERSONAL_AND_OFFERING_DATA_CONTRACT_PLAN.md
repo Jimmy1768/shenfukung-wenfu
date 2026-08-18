@@ -293,10 +293,17 @@ Two real, confirmed findings — a small audit-metadata leak
 value, the one outlier in this domain) and a genuine privacy-deletion
 gap (`Privacy::UserDataDeletionFulfillment` doesn't clear
 reusable-defaults data on account deletion, so free-text fields that
-can name people survive a fulfilled deletion request). Neither fixed by
-this packet — correctly left as a Planning decision. Track Acceptance
-Criteria below is not yet fully met until the deletion gap (item 11) is
-resolved.
+can name people survive a fulfilled deletion request).
+
+**Deletion gap fixed 2026-08-19**, evidence:
+`ops/docs/handoffs/2026-08-19-privacy-deletion-fulfillment-reusable-defaults-control-a.md`.
+Item 11 is now resolved. Broader grep for the same shape found one more
+instance (`User#close_account!` on `oauth_identity.metadata`), judged a
+different bug and not fixed — status change, not anonymization, flagged
+for a future look.
+
+**Audit-metadata leak (Finding 1) remains open.** Track Acceptance
+Criteria below is not fully met until it's addressed.
 
 Prove at minimum:
 
