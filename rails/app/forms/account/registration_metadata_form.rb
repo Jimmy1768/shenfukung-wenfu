@@ -180,14 +180,12 @@ module Account
     end
 
     def sync_dependent_profile!
-      return unless (selected = dependent)
-
-      payload = {
-        "phone" => contact_phone.presence,
-        "email" => contact_email.presence,
-        "notes" => household_notes.presence
-      }.compact
-      selected.update!(metadata: (selected.metadata || {}).merge(payload)) if payload.present?
+      Registrations::DependentContactSync.call!(
+        dependent:,
+        phone: contact_phone,
+        email: contact_email,
+        notes: household_notes
+      )
     end
   end
 end
