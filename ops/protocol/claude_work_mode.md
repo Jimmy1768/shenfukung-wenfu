@@ -64,3 +64,25 @@ deployment, etc.) belong in `shengfukung_wenfu_context.md`, not here.
   packet's criteria, Control tests/commits/merges to `main` without
   re-approval per step. It escalates back to Planning only for a genuinely
   new decision, a scope change, or a blocker it can't resolve alone.
+
+## Model Allocation
+
+Claude Code's `Agent` tool exposes only a `model` choice per spawn
+(`sonnet`/`opus`/`haiku`/`fable`) — unlike Codex, there's no separate
+reasoning-effort dial for subagents. That makes this coarser than Codex's
+model+reasoning ladder, and it only applies at the one place work is
+actually dispatched per-task rather than per-session.
+
+- **Strategy** — Opus. Sparse, high-value, cross-repo judgment calls, not
+  constantly running.
+- **Planning / Control A / Control B** — Director-set at session creation,
+  not reassigned per task. Default Sonnet.
+- **Ephemeral Implementers** — default Sonnet at spawn. Escalate to Opus
+  only for a bounded task that's actually failing on Sonnet, not
+  pre-emptively. This is the one per-dispatch lever we have, mirroring
+  Codex's "lowest sufficient" principle at the point where it actually
+  applies here.
+
+This is a starting default, not evidence-based yet — no packet has run
+through it. Revisit once real dispatches show what's overkill or
+insufficient.
