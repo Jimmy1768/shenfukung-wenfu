@@ -12,6 +12,15 @@ temple, patron/account, offering and registration, payment (ECPay),
 deployment, or other product/runtime lifecycle semantics — those live in
 this file.
 
+**Codex Work Mode status: archived.** This repository is now
+Claude-exclusive (see `ops/protocol/claude_work_mode.md`). The Codex Work
+Mode source map, deterministic contract, and current-snapshot files below
+are historical evidence from before the takeover — not live instructions —
+and have been moved under each directory's `archive/` subfolder so a
+session reading this repo today doesn't mistake them for current
+governance. They are kept, not deleted, per the "historical records remain
+evidence" rule further down.
+
 ## Control Track Assignment
 
 Both Codex Work Mode and Claude Work Mode use a domain-owned Control split
@@ -33,7 +42,10 @@ default (packet-owns-branch, either hand can pick one up). Wenfu just keeps
 them specialized because the domain split is already real and keeping each
 Control's accumulated context focused by domain is useful on its own merits.
 
-## Codex Work Mode Local Source Map
+## Codex Work Mode Local Source Map (archived, historical)
+
+This section describes governance from before the Claude takeover. It no
+longer applies to live work in this repository — kept as evidence only.
 
 For Codex Work Mode builder-governance work, invoke `$codex-work-mode` and
 read these Wenfu-local sources in order:
@@ -47,12 +59,14 @@ read these Wenfu-local sources in order:
 4. `ops/docs/plans/FINAL_WEB_READINESS_AND_EXPO_GATE_PLAN.md` and
    `ops/docs/plans/DEPLOYMENT_READINESS.md` — separate Wenfu product-roadmap
    pointers.
-5. `ops/docs/reference/codex_work_mode.md` — Wenfu-local boundary reference.
-6. `ops/protocol/codex_work_mode.yml` — deterministic local contract.
+5. `ops/docs/reference/archive/codex_work_mode.md` — Wenfu-local boundary
+   reference (archived).
+6. `ops/protocol/archive/codex_work_mode.yml` — deterministic local contract
+   (archived).
 7. `ops/docs/handoffs/templates/codex_control_implementation.md` —
    Control-owned implementation-packet template.
-8. `ops/docs/handoffs/codex_work_mode_current.md` — current local coordination
-   and product-roadmap pointers.
+8. `ops/docs/handoffs/archive/codex_work_mode_current.md` — current local
+   coordination and product-roadmap pointers as of the takeover (archived).
 
 The source map contains Wenfu repository paths only. The already manifested
 three-file portable package at `.agents/skills/codex-work-mode` is the sole
@@ -78,10 +92,10 @@ return evidence directly to Control. When durable evidence exists, chat
 points to its absolute repository path; historical records remain evidence
 and are not rewritten to change their meaning.
 
-> Note: this routing model is also encoded in `ops/protocol/codex_work_mode.yml`
-> (`routing` / `roles` keys). That yml is the deterministic contract; treat it
-> as the source of truth if this prose and the yml ever disagree, and reconcile
-> them when noticed.
+> Note: this routing model was also encoded in the now-archived
+> `ops/protocol/archive/codex_work_mode.yml` (`routing` / `roles` keys), from
+> when Codex governed this repo. It is historical, not a live authority —
+> Claude Work Mode (`ops/protocol/claude_work_mode.md`) governs current work.
 
 ## Safety, Phase, And Product Boundaries
 
