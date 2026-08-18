@@ -145,7 +145,7 @@ Rails.application.routes.draw do
     get "/archives/payments", to: "archives#payments_export", defaults: { format: :csv }, as: :archive_payments_export
     get "/archives/certificates", to: "archives#certificates_export", defaults: { format: :csv }, as: :archive_certificates_export
     resources :permissions, only: %i[index update], param: :admin_account_id
-    resources :patrons, only: %i[index create] do
+    resources :patrons, only: %i[index] do
       collection do
         get :oauth_duplicates
       end

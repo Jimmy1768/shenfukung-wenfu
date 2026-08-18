@@ -3,7 +3,7 @@
 module Admin
   class PatronsController < BaseController
     before_action :require_patron_access!, only: :index
-    before_action :require_manage_permissions!, only: %i[promote revoke create oauth_duplicates]
+    before_action :require_manage_permissions!, only: %i[promote revoke oauth_duplicates]
     before_action :set_patron, only: %i[promote revoke records]
 
     def index
@@ -23,16 +23,6 @@ module Admin
             patrons: patrons.limit(50).map { |user| patron_payload(user) }
           }
         end
-      end
-    end
-
-    def create
-      form = Admin::PatronForm.new(patron_params)
-      if form.save
-        log_patron_creation(form.user)
-        render json: { patron: patron_payload(form.user) }, status: :created
-      else
-        render json: { errors: form.errors.full_messages }, status: :unprocessable_entity
       end
     end
 
@@ -195,21 +185,5 @@ module Admin
         end
     end
 
-    def patron_params
-      params.require(:patron).permit(:english_name, :email, :phone, :notes)
-    end
-
-    def log_patron_creation(user)
-      SystemAuditLogger.log!(
-        action: "admin.patrons.create",
-        admin: current_admin,
-        target: user,
-        metadata: {
-          user_id: user.id,
-          email: user.email
-        },
-        temple: current_temple
-      )
-    end
   end
 end
