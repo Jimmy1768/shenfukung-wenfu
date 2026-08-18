@@ -285,7 +285,18 @@ Keep the existing simple UX:
 The existing native JSON controllers may inherit service behavior, but no
 TempleMate screen or mobile payload expansion is permitted in this phase.
 
-### Phase A3 — Contract Verification
+### Phase A3 — Contract Verification — 10/12 proven, 2/12 failed, 2026-08-18
+
+Evidence: `ops/docs/handoffs/2026-08-18-account-admin-offering-data-contract-phase-a3-control-a.md`.
+Two real, confirmed findings — a small audit-metadata leak
+(`Admin::PatronsController#log_patron_creation` logs a real email
+value, the one outlier in this domain) and a genuine privacy-deletion
+gap (`Privacy::UserDataDeletionFulfillment` doesn't clear
+reusable-defaults data on account deletion, so free-text fields that
+can name people survive a fulfilled deletion request). Neither fixed by
+this packet — correctly left as a Planning decision. Track Acceptance
+Criteria below is not yet fully met until the deletion gap (item 11) is
+resolved.
 
 Prove at minimum:
 
