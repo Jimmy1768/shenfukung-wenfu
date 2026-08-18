@@ -357,14 +357,13 @@ module Admin
 
     def sync_dependent_profile_after_update
       dependent = @registration.user.dependents.find_by(id: @registration.metadata["dependent_id"])
-      return unless dependent
 
-      payload = {
-        "phone" => @registration.contact_payload["phone"].presence,
-        "email" => @registration.contact_payload["email"].presence,
-        "notes" => @registration.contact_payload["dependents_notes"].presence || @registration.contact_payload["notes"].presence
-      }.compact
-      dependent.update!(metadata: (dependent.metadata || {}).merge(payload)) if payload.present?
+      Registrations::DependentContactSync.call!(
+        dependent:,
+        phone: @registration.contact_payload["phone"],
+        email: @registration.contact_payload["email"],
+        notes: @registration.contact_payload["dependents_notes"].presence || @registration.contact_payload["notes"].presence
+      )
     end
   end
 end

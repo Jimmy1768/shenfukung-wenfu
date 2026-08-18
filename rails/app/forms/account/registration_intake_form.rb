@@ -173,24 +173,12 @@ module Account
     end
 
     def sync_dependent_profile!
-      selected = dependent
-      return unless selected
-
-      payload = dependent_contact_payload
-      return if payload.blank?
-
-      updated_metadata = (selected.metadata || {}).merge(payload)
-      return if updated_metadata == (selected.metadata || {})
-
-      selected.update!(metadata: updated_metadata)
-    end
-
-    def dependent_contact_payload
-      {
-        "phone" => contact_phone.presence,
-        "email" => contact_email.presence,
-        "notes" => household_notes.presence
-      }.compact
+      Registrations::DependentContactSync.call!(
+        dependent:,
+        phone: contact_phone,
+        email: contact_email,
+        notes: household_notes
+      )
     end
 
     def dependent_selected?

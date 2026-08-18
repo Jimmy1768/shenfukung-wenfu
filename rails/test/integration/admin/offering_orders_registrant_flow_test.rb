@@ -496,6 +496,57 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
     assert_equal "self", registration.metadata["registrant_scope"]
   end
 
+  test "eligible dependent-scoped update routes contact sync through the shared service" do
+    @temple.adopt_platform_billing_entitlement!.update!(state: "active")
+    sign_in_admin(@admin)
+    registration = create_registration(user: @patron, offering: @event, metadata: { "registrant_scope" => "dependent", "dependent_id" => @dependent.id.to_s })
+
+    calls = []
+    tracker = ->(**kwargs) { calls << kwargs }
+
+    Registrations::DependentContactSync.stub(:call!, tracker) do
+      patch admin_event_offering_order_path(@event, registration), params: {
+        temple_event_registration: {
+          user_id: @patron.id,
+          quantity: 1,
+          registrant_scope: "dependent",
+          dependent_id: @dependent.id,
+          contact_details: { primary_contact: "Family Member", phone: "0988888888", email: "family-edit@example.com", dependents_notes: "shellfish allergy" }
+        }
+      }
+    end
+
+    assert_redirected_to admin_event_offering_order_path(@event, registration)
+    assert_equal 1, calls.size, "expected the shared DependentContactSync service to be invoked exactly once"
+    assert_equal @dependent, calls.first[:dependent]
+    assert_equal "0988888888", calls.first[:phone]
+    assert_equal "family-edit@example.com", calls.first[:email]
+    assert_equal "shellfish allergy", calls.first[:notes]
+  end
+
+  test "self-scoped update never invokes the dependent contact sync service" do
+    @temple.adopt_platform_billing_entitlement!.update!(state: "active")
+    sign_in_admin(@admin)
+    registration = create_registration(user: @patron, offering: @event, metadata: { "registrant_scope" => "self" })
+
+    calls = []
+    tracker = ->(**kwargs) { calls << kwargs }
+
+    Registrations::DependentContactSync.stub(:call!, tracker) do
+      patch admin_event_offering_order_path(@event, registration), params: {
+        temple_event_registration: {
+          user_id: @patron.id,
+          quantity: 1,
+          registrant_scope: "self",
+          contact_details: { primary_contact: "Household Owner", email: @patron.email }
+        }
+      }
+    end
+
+    assert_redirected_to admin_event_offering_order_path(@event, registration)
+    assert_empty calls
+  end
+
   private
 
   def create_dependent_for(user, name:)

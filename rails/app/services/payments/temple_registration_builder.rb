@@ -101,15 +101,14 @@ module Payments
     def sync_dependent_profile!(user)
       dependent_id = attributes.dig(:metadata, :dependent_id) || attributes.dig(:metadata, "dependent_id")
       dependent = user.dependents.find_by(id: dependent_id)
-      return unless dependent
-
       contact = attributes[:contact_payload].to_h
-      payload = {
-        "phone" => contact["phone"].presence || contact[:phone].presence,
-        "email" => contact["email"].presence || contact[:email].presence,
-        "notes" => contact["dependents_notes"].presence || contact[:dependents_notes].presence || contact["notes"].presence || contact[:notes].presence
-      }.compact
-      dependent.update!(metadata: (dependent.metadata || {}).merge(payload)) if payload.present?
+
+      Registrations::DependentContactSync.call!(
+        dependent:,
+        phone: contact["phone"].presence || contact[:phone].presence,
+        email: contact["email"].presence || contact[:email].presence,
+        notes: contact["dependents_notes"].presence || contact[:dependents_notes].presence || contact["notes"].presence || contact[:notes].presence
+      )
     end
   end
 end
