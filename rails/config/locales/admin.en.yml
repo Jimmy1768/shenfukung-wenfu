@@ -69,6 +69,7 @@ en:
         logistics: "Service logistics"
         ritual_metadata: "Ceremony notes"
         new_patron: "Create patron"
+        reusable_defaults: "Reusable defaults"
       hints:
         patron: "Search by name/email, preview dependents, or create a patron inline."
         patron_search: "Type at least two characters to find existing patrons."
@@ -88,6 +89,7 @@ en:
         manual_user_id: "If JavaScript is disabled, enter the numeric user ID."
         save_additional: "Keep the current default and store this value as another selectable choice."
         registrant_scope: "Choose whether this registration is for the patron account holder or one of their dependents."
+        reusable_defaults: "Shared per-offering values this patron's own registration form reuses as defaults. Changes here apply immediately and are independent of this specific registration."
       fields:
         quantity: "Quantity"
         unit_price: "Unit price"
@@ -103,6 +105,7 @@ en:
         arrival_window: "Arrival window"
         ceremony_location: "Ceremony location"
         ancestor_placard: "Ancestor placard name"
+        ancestor_placard_name: "Ancestor placard name"
         dedication_message: "Dedication message"
         incense_option: "Incense option"
         certificate_notes: "Certificate notes"
@@ -131,9 +134,18 @@ en:
         registrant_self: "Patron"
         registrant_dependent: "Dependent"
         no_dependent: "Select dependent"
+        add_value: "Add value"
+        set_value: "Save value"
+        clear_value: "Clear"
+        no_value: "No default set yet."
+        no_extra_values: "No additional values yet."
       errors:
         search_failed: "Unable to search patrons right now."
         create_failed: "Unable to create patron."
+      reusable_defaults:
+        flash:
+          added: "Saved default for \"%{field}\"."
+          cleared: "Cleared default for \"%{field}\"."
     registration_show:
       sections:
         summary: "Registration"

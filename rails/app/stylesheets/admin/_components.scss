@@ -199,6 +199,35 @@
   }
 }
 
+.reusable-default-field {
+  gap: var(--spacing-xs, 0.4rem);
+}
+
+.reusable-default-label {
+  font-weight: 600;
+}
+
+.reusable-default-current,
+.reusable-default-value-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+}
+
+.reusable-default-values {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.reusable-default-add-form,
+.reusable-default-set-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
 .segmented-field {
   gap: 0.5rem;
 }
