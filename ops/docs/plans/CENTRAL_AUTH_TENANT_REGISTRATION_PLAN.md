@@ -39,18 +39,27 @@ Two distinct things, don't conflate them:
   This is now the **only** remaining blocker on native OAuth — every
   Wenfu-side gap (stale deploy, missing env var) is fixed and verified.
 
-## Immediate Item — Blocked On Cross-Repo Authority, Not Wenfu Work
+## Immediate Item — Done, 2026-08-19
 
-Adding `templemate://oauth/complete` to `shengfukung`'s allowed return
-URLs is a mutation in `sourcegrid-labs`'s own database/system, not a
-Wenfu repo change. This plan does not authorize making that change from
-here. Options, Director's call:
+Dispatched directly to Codex SourceGrid Planning (a session with actual
+`sourcegrid-labs` authority — this repo never mutated that system).
+Confirmed complete, independently re-verified, not just trusted:
 
-- Director does it directly in that system (console, rake task,
-  whatever the actual mechanism is — not yet identified from here).
-- A session with actual `sourcegrid-labs` authority (its own
-  Planning/Control, if one gets set up, or Strategy given cross-repo
-  coordination is its stated role) does it as a proper packet there.
+- `templemate://oauth/complete` added as row `id=2` on the `shengfukung`
+  `AuthTenant` — additive only, nothing removed or modified.
+- `allowlisted_return_url?("templemate://oauth/complete")` re-queried
+  and confirmed `true`.
+- **Correction to this doc's own earlier claim**: live production only
+  had one pre-existing web callback
+  (`https://shengfukung.com.tw/auth/callback`), not the two recorded
+  above from the March 5 planning doc — Codex caught this discrepancy
+  against live data rather than accepting what this doc said.
+- No live `/oauth/start` replay was performed (would need the tenant's
+  confidential machine credential, correctly not accessed for this) —
+  Codex confirmed instead, at the code level, that the `422
+  invalid_return_url` branch is directly gated by the now-true allowlist
+  predicate. **Final end-to-end confirmation is a real sign-in attempt
+  on the TestFlight build**, not yet done.
 
 ## Broader Item — Explicitly Deferred, Needs Its Own Decision
 
