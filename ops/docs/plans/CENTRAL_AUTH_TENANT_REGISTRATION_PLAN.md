@@ -17,7 +17,7 @@ Two distinct things, don't conflate them:
    `sourcegrid-labs`'s own system — out of this repo's authority to
    change directly.
 
-## What's Confirmed (read-only, from `sourcegrid-labs`, not acted on)
+## What's Confirmed
 
 - `sourcegrid-labs/TENANT_OAUTH_INTEGRATION_GUIDE.md` documents the
   registration model: a tenant needs a row in `auth_tenants`, at least
@@ -27,9 +27,17 @@ Two distinct things, don't conflate them:
   exactly to `auth_tenant_redirect_uris`"* — which already exists as a
   process, it just wasn't re-run when native support was added to an
   already-onboarded tenant.
-- `sourcegrid-labs/CENTRALIZED_AUTH_SERVICE_PLAN.md` (dated March 5,
-  possibly stale) records the `shengfukung` tenant's registered return
-  URLs as only the two web callback URLs — no native scheme entry.
+- `sourcegrid-labs/CENTRALIZED_AUTH_SERVICE_PLAN.md` (dated March 5)
+  recorded the `shengfukung` tenant's registered return URLs as only
+  the two web callback URLs — no native scheme entry.
+- **Confirmed live, not just from a possibly-stale doc**: a direct
+  probe replicating `Auth::CentralOAuthClient`'s real production call
+  (correct `tenant_slug=shengfukung`, ruling out a tenant-slug mismatch
+  as a contributing cause) got `422 {"error":"invalid_return_url"}`
+  straight from `auth.sourcegridlabs.com` itself. Full trace:
+  `ops/docs/handoffs/2026-08-19-native-oauth-full-trace-confirmed-blocker.md`.
+  This is now the **only** remaining blocker on native OAuth — every
+  Wenfu-side gap (stale deploy, missing env var) is fixed and verified.
 
 ## Immediate Item — Blocked On Cross-Repo Authority, Not Wenfu Work
 
