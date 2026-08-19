@@ -30,7 +30,7 @@ is **build 2**.
 
 ### Production-Side
 
-- [ ] `/api/v1/*` namespace missing on `shengfukung.com.tw` production —
+- [x] `/api/v1/*` namespace missing on `shengfukung.com.tw` production —
       every native-API route 404s (native OAuth start, bootstrap, login,
       temples, theme), while the older `/auth/central/*` web OAuth path
       is live and healthy. Blocks all native sign-in/login/bootstrap/
@@ -48,6 +48,14 @@ is **build 2**.
       production workflow — pending Director decision on whether they
       do it directly (no pipeline exists, may need to be them regardless)
       or authorize a scoped packet.
+      **Fixed 2026-08-19**: Director deployed directly (`release/current`
+      advanced to `main`, `bundle install`, both pending migrations run,
+      services restarted). Verified via `curl` — the namespace now
+      returns `422` (real auth rejection) instead of `404` (route
+      missing). Full record:
+      `ops/docs/handoffs/2026-08-19-production-native-api-namespace-deploy-fix.md`.
+      Remaining validation: real Google/Apple sign-in on the installed
+      TestFlight build.
 
 ### Local-Fixable
 
