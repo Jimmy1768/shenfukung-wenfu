@@ -57,6 +57,40 @@ is **build 2**.
       Remaining validation: real Google/Apple sign-in on the installed
       TestFlight build.
 
+- [ ] **New, precise finding (2026-08-19), traced after the namespace fix
+      above:** real Google/Apple sign-in still fails — screen flashes
+      back to idle before the system browser opens, same symptom as
+      before the namespace was live. Root cause identified directly, not
+      hypothesized: `POST /api/v1/account/native/oauth/start` now returns
+      `503 {"error":"native_oauth_unavailable"}` for both providers, with
+      a real, correctly-shaped PKCE challenge (confirmed via a live
+      request built the same way the client does —
+      `rails/app/services/auth/native_oauth_flow.rb`'s
+      `configured_return_url!` raises `ConfigurationError` — caught and
+      rendered as this exact 503 — whenever
+      `AppConstants::OAuth.native_return_url` (`rails/app/lib/app_constants/oauth.rb`)
+      is blank, i.e. whenever `ENV["AUTH_NATIVE_RETURN_URL"]` is unset.
+      `AUTH_BASE_URL`/`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` are confirmed
+      present in production (the web `/auth/central/*` flow, which shares
+      the same `Auth::CentralOAuthClient`, works) — this is specifically
+      the native-only env key. Not a new discovery either: an already-
+      archived plan (`ops/docs/plans/archive/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_READ_ONLY_PREFLIGHT_PLAN.md`)
+      flagged this exact variable as a known potential gap back on
+      2026-08-12 and explicitly did not authorize fixing it in that
+      packet. Expected value, per that same plan and
+      `mobile/app/oauth/config.js`'s fixed return URL:
+      `AUTH_NATIVE_RETURN_URL=templemate://oauth/complete`. Fix is a
+      one-line addition to production's env file
+      (`/etc/default/shengfukung-wenfu-env` per
+      `ops/systemd/shengfukung-wenfu-puma.service`) plus a Puma restart —
+      same production-deploy-authority boundary as the namespace fix
+      above, not something Control B can do. **Open after this fix**:
+      whether the central-auth service (`auth.sourcegridlabs.com`) itself
+      accepts `templemate://oauth/complete` as an allowed return
+      destination is still unverified and was the original Phase 1
+      "unknown/deferred" flag — can't be tested until the env var exists,
+      since `start!` fails before ever reaching the central client.
+
 ### Local-Fixable
 
 - [x] Dev/demo copy strings (sign-in headline, loading text, QR-scan
