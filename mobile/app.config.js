@@ -44,7 +44,14 @@ module.exports = () => {
       ios: {
         supportsTablet: true,
         bundleIdentifier: nativeIdentifiers.iosBundleIdentifier,
-        buildNumber: versioning.iosBuildNumber
+        buildNumber: versioning.iosBuildNumber,
+        // TempleMate only uses the standard HTTPS/TLS encryption iOS provides
+        // to talk to the Rails backend -- no proprietary/custom crypto. This
+        // answers App Store Connect's export-compliance question at upload
+        // time instead of prompting for it on every build.
+        infoPlist: {
+          ITSAppUsesNonExemptEncryption: false
+        }
       },
       android: {
         package: nativeIdentifiers.androidPackage,
