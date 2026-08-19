@@ -37,22 +37,30 @@ not.**
   instance. This matches the existing `bin/deploy_vue <client-slug>`
   pattern (`ops/docs/reference/deployment_notes.md`): one build, one
   `rsync` target per client.
-- `shengfukung.com.tw` is the demo domain for one specific temple
-  (Shengfukung). It should resolve to exactly that one temple via
-  `current_temple` (Host-based, no slug/param) — it is not a sandbox for
-  creating or exposing additional temple tenants. **Do not build or
-  treat any feature as "create a new temple inside shengfukung.com.tw."**
-  A new real temple means a new domain and a new Vue deployment, not a
-  new row reachable from an existing client's demo/production site.
-- Current confusion source: `shengfukung.com.tw` is both the demo site
-  *and*, informally, the de facto identity of the centralized backend —
-  there's no separate domain for the platform/backend itself yet.
-  **Planned fix, not yet done**: acquire and use a dedicated domain
-  (e.g. `templemate.com`) for the backend/platform identity, keeping
-  `shengfukung.com.tw` purely as one demo temple's site rather than
-  conflated with the platform. `shengfukung.org.tw` would later be that
-  same real temple's real (non-demo) site — still its own single
-  domain, not multi-tenant.
+- `shengfukung.com.tw` is currently the informal identity of the
+  centralized backend (it's the only domain pointed at it so far) — that
+  backend being multi-tenant, with multiple temple rows reachable
+  through it, **is correct and was never the actual problem.** Since
+  that backend *is* the future `templemate.com` backend, this doesn't
+  change when the domain eventually swaps.
+- **The part that must stay strictly separate, and doesn't change when
+  the domain swaps, is the Vue level.** Each real client's Vue site
+  needs its own domain, its own env file, its own deploy target — a
+  browser visiting any one client's Vue site (`shengfukung.com.tw`
+  today, `temple1.org.tw` for a future client, `templemate.com` for the
+  backend's own identity later) must never expose or switch between
+  *other* temples' data from that one site's own interface. **Do not
+  build or treat any feature as "create a new temple reachable from
+  shengfukung.com.tw's own Vue frontend."** A new real temple means a
+  new domain, new env file, and new Vue deployment — the backend can
+  already serve it fine, only the frontend needs its own isolated
+  surface.
+- Planned fix for the naming confusion (not yet done): acquire and use
+  a dedicated domain (e.g. `templemate.com`) for the backend/platform's
+  own identity, so it's no longer informally borrowed from one temple's
+  demo domain. `shengfukung.org.tw` would later be that same real
+  temple's real (non-demo) Vue site — still its own single domain, still
+  isolated from other clients' Vue sites the same way.
 
 ## Control Track Assignment
 
