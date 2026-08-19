@@ -21,6 +21,39 @@ session reading this repo today doesn't mistake them for current
 governance. They are kept, not deleted, per the "historical records remain
 evidence" rule further down.
 
+## Domain And Tenancy Architecture
+
+Recurring source of confusion (Codex, and this session too) worth
+getting right once: **the Rails backend and the TempleMate mobile app
+are centralized and legitimately multi-tenant — the Vue frontend is
+not.**
+
+- Rails (backend/database) and TempleMate (`mobile/`) are shared,
+  single deployments serving every client/temple. A `temples` table
+  with multiple tenant rows, `current_temple` resolution, and
+  cross-temple switching inside those two surfaces are all legitimate.
+- **Each real client gets their own separate Vue deployment on their
+  own domain** — `temple1.org.tw`, etc. — not a shared multi-tenant Vue
+  instance. This matches the existing `bin/deploy_vue <client-slug>`
+  pattern (`ops/docs/reference/deployment_notes.md`): one build, one
+  `rsync` target per client.
+- `shengfukung.com.tw` is the demo domain for one specific temple
+  (Shengfukung). It should resolve to exactly that one temple via
+  `current_temple` (Host-based, no slug/param) — it is not a sandbox for
+  creating or exposing additional temple tenants. **Do not build or
+  treat any feature as "create a new temple inside shengfukung.com.tw."**
+  A new real temple means a new domain and a new Vue deployment, not a
+  new row reachable from an existing client's demo/production site.
+- Current confusion source: `shengfukung.com.tw` is both the demo site
+  *and*, informally, the de facto identity of the centralized backend —
+  there's no separate domain for the platform/backend itself yet.
+  **Planned fix, not yet done**: acquire and use a dedicated domain
+  (e.g. `templemate.com`) for the backend/platform identity, keeping
+  `shengfukung.com.tw` purely as one demo temple's site rather than
+  conflated with the platform. `shengfukung.org.tw` would later be that
+  same real temple's real (non-demo) site — still its own single
+  domain, not multi-tenant.
+
 ## Control Track Assignment
 
 Both Codex Work Mode and Claude Work Mode use a domain-owned Control split
