@@ -21,7 +21,21 @@ testers can keep iterating in TestFlight without affecting whatever is
 live in App Store distribution). Building the `production` profile here
 means producing that signed artifact, not submitting it — see Boundaries.
 
-## Status (2026-08-18, updated live against Control B's own session)
+## Status — succeeded 2026-08-19
+
+First TempleMate iOS build shipped end-to-end. Director completed
+`eas credentials --platform ios` interactively once back with the
+iPhone; `yarn build:testflight --non-interactive` succeeded clean;
+Director created the App Store Connect app record and uploaded via
+Transporter (deliberate choice over `eas submit`, Control B laid out
+the tradeoff). Version `1.0.0` build `1` is live under TempleMate →
+TestFlight, internal-testing groups available, no App Review needed for
+internal testers. **The Director's actual goal — sales/QA installing via
+TestFlight — is achievable now.** `production` profile build still not
+run, still in scope, not urgent. Full detail:
+`ops/docs/handoffs/2026-08-19-templemate-first-testflight-build-control-b.md`.
+
+## Status (2026-08-18, updated live against Control B's own session) — superseded by above
 
 Director authorized Phase 2 directly in Control B's session, scoped to
 **`testflight` only for now** — the Director is treating `testflight` as
