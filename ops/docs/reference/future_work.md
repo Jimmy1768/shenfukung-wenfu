@@ -56,11 +56,8 @@ assign equal priority or implementation readiness.
 - `ops/docs/plans/DEPLOYMENT_READINESS.md`
 - `ops/docs/plans/EMAIL_DELIVERY_QUEUE_AND_DEDUPE_PLAN.md`
 - `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md`
-- `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`
-- `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
 - `ops/docs/plans/EXPO_OAUTH_PHASE_PLAN.md`
 - `ops/docs/plans/EXPO_PAYMENT_PHASE_PLAN.md`
-- `ops/docs/plans/INTERNAL_TEMPLE_ACCESS_DASHBOARD_PLAN.md`
 - `ops/docs/plans/OAUTH_GOOGLE_SUBJECT_COMPATIBILITY_REPAIR_PLAN.md`
 - `ops/docs/plans/OAUTH_PROVIDERS_SETUP_PLAN.md`
 - `ops/docs/plans/PATRON_REQUEST_ASSISTANCE_ALERTS.md`
@@ -68,7 +65,6 @@ assign equal priority or implementation readiness.
 - `ops/docs/plans/PAYMENT_FOUNDATION_PARALLEL_TRACK_INTEGRATION_PLAN.md`
 - `ops/docs/plans/PLATFORM_BILLING_QUALIFYING_REGISTRATION_ACCOUNTING_PLAN.md`
 - `ops/docs/plans/SHENGFUKUNG_PAYMENT_AND_OFFERING_PHASE_ROADMAP.md`
-- `ops/docs/plans/TENANT_SCOPED_PATRON_PAYMENT_PROVIDER_PLAN.md`
 - `ops/docs/plans/REGISTRATION_LIFECYCLE_EDIT_POLICY.md`
 - `ops/docs/plans/SHENGFUKUNG_OFFERINGS_CONFIG_PLAN.md`
 - `ops/docs/plans/SYSTEM_AUDIT_COVERAGE_AND_RETENTION_PLAN.md`
@@ -77,25 +73,52 @@ assign equal priority or implementation readiness.
 
 ## Superseded Plan Pointers
 
-- `ops/docs/plans/EXPO_MULTI_ROLE_MODE_SWITCH_PLAN.md` is retained as
+- `ops/docs/plans/archive/EXPO_MULTI_ROLE_MODE_SWITCH_PLAN.md` is retained as
   historical decision evidence. Its multi-role/admin mode direction was
   superseded on 2026-08-11 by the account-only Expo direction in
   `ops/docs/plans/EXPO_ACCOUNT_APP_READINESS_AND_PARITY_PLAN.md` and the two
-  parallel plans for Rails JSON and Expo-native infrastructure.
-- `ops/docs/plans/EXPO_ACCOUNT_V1_BUILD_PLAN.md` is retained as prior planning
-  evidence. Its purpose-first selection gate, selective-CRUD framing, and
-  minimal-shell dummy objective were superseded on 2026-08-11 by
-  `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
-  `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`.
-- `ops/docs/plans/EXPO_ACCOUNT_APP_V1_ROADMAP.md`,
-  `ops/docs/plans/EXPO_DUMMY_ACCOUNT_DEVELOPMENT_CLIENT_PLAN.md`,
-  `ops/docs/plans/EXPO_NATIVE_ACCOUNT_FOUNDATION_PLAN.md`,
-  `ops/docs/plans/EXPO_CORE_ACCOUNT_PARITY_PLAN.md`, and
-  `ops/docs/plans/EXPO_V1_UI_REFINEMENT_PLAN.md` are retained as prior phase
-  decomposition evidence. Their independent pre-integration scope is
-  reorganized into the two parallel-track plans for Rails JSON and Expo-native
-  infrastructure; merging/integration and final refinement remain later
-  Planning-coordinated work through Control A.
+  parallel plans for Rails JSON and Expo-native infrastructure (both now
+  complete and archived as
+  `ops/docs/plans/archive/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
+  `ops/docs/plans/archive/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`).
+- `ops/docs/plans/archive/EXPO_ACCOUNT_V1_BUILD_PLAN.md` is retained as prior
+  planning evidence. Its purpose-first selection gate, selective-CRUD framing,
+  and minimal-shell dummy objective were superseded on 2026-08-11 by the two
+  parallel-track plans above.
+- `ops/docs/plans/archive/EXPO_ACCOUNT_APP_V1_ROADMAP.md`,
+  `ops/docs/plans/archive/EXPO_DUMMY_ACCOUNT_DEVELOPMENT_CLIENT_PLAN.md`,
+  `ops/docs/plans/archive/EXPO_NATIVE_ACCOUNT_FOUNDATION_PLAN.md`,
+  `ops/docs/plans/archive/EXPO_CORE_ACCOUNT_PARITY_PLAN.md`, and
+  `ops/docs/plans/archive/EXPO_V1_UI_REFINEMENT_PLAN.md` are retained as prior
+  phase decomposition evidence. Their independent pre-integration scope was
+  reorganized into the two parallel-track plans above, which completed and
+  integrated at canonical commit `6cab3f1b52ebaeaf68667f19a3c804f8d9c43079`.
+
+## 2026-08-19 Bulk Archival
+
+73 plans reached an explicit terminal/acceptance disposition (either the
+plan's own closing section or a directly matching `ops/docs/handoffs/`
+record) and were moved intact to `ops/docs/plans/archive/` by Control B,
+alongside this update. This covers completed Account/Admin
+personal-and-offering-data work, completed OAuth account-resolution and
+Apple-recovery scans, the completed repository-local ECPay/cash-only payment
+program (through Phase 4), the completed Expo/TempleMate account-integration,
+EAS/Android dev-client, OAuth-native-client, V1 UI-refinement, registration-
+authority, and Phase 3 tenant-gate/navigation debugging chains, plus two
+governance/housekeeping plans whose own bodies already declared themselves
+historical records (`CODEX_WORK_MODE_CURRENT_V1_POLICY_PROPAGATION_PLAN.md`,
+`DOCUMENTATION_HOUSEKEEPING_AND_FUTURE_WORK_PLAN.md`, the latter being the
+plan that originally produced this file). Durable evidence for each remains
+in its corresponding `ops/docs/handoffs/` record, which was not moved or
+altered — only the planning-surface copy was archived. Retained/active plans
+above and this file's own future-work sections were not otherwise changed.
+
+Several archived Phase 3 tenant-gate/navigation retry plans record a
+terminal *packet* disposition (Control returned to idle) without directly
+resolving the underlying issue in that specific attempt — the issue was
+carried forward and resolved by a later plan in the same chain, which is
+also archived. Archived does not mean "succeeded on the first try," only
+that the individually-scoped plan concluded.
 
 ## Archived Completed Records
 
