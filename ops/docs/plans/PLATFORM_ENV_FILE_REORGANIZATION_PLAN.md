@@ -1,68 +1,52 @@
 # Platform Env File Reorganization Plan
 
-## Objective
+## Status: paused, rescoped after a real attempt — deferred, not abandoned
+
+First attempt (`7069c38`) tried to hand-edit the rendered
+`ops/systemd/shengfukung-wenfu-{puma,sidekiq}.service` files directly.
+Reverted (`1778068`) after discovering the env file name isn't
+independently configurable — it's derived from the project slug via
+`ops/systemd/template/golden-template-*.service` (`{{project_slug}}-env`),
+rendered by `bin/stage_ops_configs`/`bin/apply_systemd_units`, which
+already ran once during this attempt and silently regenerated the
+files back to `shengfukung-wenfu-env` from the template, confirming the
+hand-edit would never have survived anyway.
+
+**Doing this properly means changing `shared/app_constants/project.json`'s
+`slug`, not just an env file name** — and that slug also drives the
+systemd service names (`{{project_slug}}-puma.service`), the nginx
+config filename, and the `WorkingDirectory` path
+(`/home/jimmy1768_user/Projects/{{project_slug}}/rails`). The server's
+actual cloned directory is still named `shengfukung-wenfu` on disk — a
+slug change without also renaming that directory would point
+`WorkingDirectory` at a path that doesn't exist and break the service
+outright. This is a real, cascading rename (services, nginx, the
+on-disk directory), not the single-file change originally scoped.
+
+## Objective (unchanged, revisit later with full scope acknowledged)
 
 The Rails backend's production env file is named `shengfukung-wenfu-env`
 — scoped to look like it belongs to one temple tenant, when it's
 actually the centralized platform config serving every temple through
 this backend (per `ops/protocol/shengfukung_wenfu_context.md`'s
-"Domain And Tenancy Architecture" section). Rename it to reflect the
-platform, not one tenant. No real clients exist yet, so this is
-in-scope to do cleanly now rather than as a careful zero-downtime
-migration later.
+"Domain And Tenancy Architecture" section). Still worth fixing, but as
+its own deliberately-scoped project-slug migration, not squeezed in
+alongside an unrelated OAuth fix.
 
-## Scope
+## Immediate unblock (separate from the rename, do this now)
 
-- Rails/backend env file only. Vue's existing per-client-domain env
-  file pattern (`bin/deploy_vue <client-slug>` →
-  `/var/www/<client-slug>`, each with its own `.env.production`) is
-  already correctly structured — not touched by this plan.
-- Rename `/etc/default/shengfukung-wenfu-env` →
-  `/etc/default/templemate-env`, matching the platform's own future
-  identity (`templemate.com`) rather than the demo temple's domain.
-- Fold in the still-pending `AUTH_NATIVE_RETURN_URL=templemate://oauth/complete`
-  addition (from the native-OAuth trace) as part of the new file's
-  initial contents, rather than adding it twice.
-- Update the systemd unit source-of-truth in this repo
-  (`ops/systemd/shengfukung-wenfu-puma.service`,
-  `ops/systemd/shengfukung-wenfu-sidekiq.service`) — change
-  `EnvironmentFile=` to point at the new path.
-- **Explicitly not in scope**: renaming the systemd service/unit files
-  themselves (`shengfukung-wenfu-puma.service` → e.g.
-  `templemate-puma.service`), or the nginx config file name. Those are
-  a bigger, separate rename (service names, log paths, existing
-  `systemctl` muscle memory) — noted here so it isn't lost, not done in
-  this pass unless explicitly asked.
+Add `AUTH_NATIVE_RETURN_URL=templemate://oauth/complete` directly to
+the **existing, currently-in-use** `/etc/default/shengfukung-wenfu-env`
+— no rename, no new file. This is what's actually referenced by the
+live (reverted-back) systemd units. Also remove the orphaned
+`/etc/default/templemate-env` created during the aborted attempt —
+unused, and exactly the kind of stale duplicate config that causes
+confusion later if left behind.
 
-## Sequence
+## Next Owner/Action
 
-1. On the droplet: copy the existing env file to the new name, add
-   `AUTH_NATIVE_RETURN_URL` to it.
-2. Update `EnvironmentFile=` in both `.service` files in this repo,
-   commit.
-3. Get the updated unit files onto the droplet (matches the existing
-   `bin/apply_systemd_units` pattern from `deployment_notes.md`, or a
-   direct copy given no automated pipeline exists).
-4. `systemctl daemon-reload`, restart both services.
-5. Verify both services `active (running)` and the native OAuth env var
-   is actually loaded (confirm via the same live-request method used
-   for the namespace fix, not just trusting the restart).
-6. Remove the old `shengfukung-wenfu-env` file once confirmed working —
-   don't leave a stale duplicate that could get edited by mistake later.
-
-## Owner
-
-No Control fits this cleanly (platform infrastructure, not Rails
-product work or TempleMate mobile work) — Director executes directly,
-same pattern as today's other production fixes, Planning provides exact
-commands and records evidence after.
-
-## Acceptance
-
-- New env file exists, correctly named, contains everything the old one
-  had plus the native return URL.
-- Old env file removed, no stale duplicate.
-- Systemd unit files in the repo match what's actually deployed.
-- Both services confirmed running on the new file.
-- Native OAuth env var confirmed actually loaded (not just present in
-  the file).
+Rename itself: on hold until the Director decides whether to take on
+the full project-slug migration (services + nginx + on-disk directory
+rename) as its own deliberately scoped, separately authorized piece of
+work. Not blocking anything — the platform runs correctly under the
+current name either way.
