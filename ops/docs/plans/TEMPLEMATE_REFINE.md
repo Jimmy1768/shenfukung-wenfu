@@ -35,9 +35,19 @@ is **build 2**.
       temples, theme), while the older `/auth/central/*` web OAuth path
       is live and healthy. Blocks all native sign-in/login/bootstrap/
       registration on the real build. Not a code defect in this repo —
-      a production deployment gap. Routing/ownership still pending
-      Director decision. Full diagnosis:
+      a production deployment gap. Full diagnosis:
       `ops/docs/handoffs/2026-08-19-production-native-api-namespace-missing-finding-control-b.md`.
+      **Root-cause hypothesis (read-only investigation, no production
+      access): production's Rails checkout is simply stale**, predating
+      the native OAuth routes commit (`7fa60f0`, 2026-08-11) — no
+      automated deploy pipeline exists anywhere in the repo, so this is
+      an ordinary manual-deploy gap, not a config/proxy defect. nginx
+      confirmed correctly proxying `/api` behaviorally. Full evidence:
+      `ops/docs/handoffs/2026-08-19-production-native-api-namespace-hypothesis-control-b.md`.
+      Actual deploy action still needs its own separately authorized
+      production workflow — pending Director decision on whether they
+      do it directly (no pipeline exists, may need to be them regardless)
+      or authorize a scoped packet.
 
 ### Local-Fixable
 
