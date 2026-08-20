@@ -104,6 +104,36 @@ is **build 2**.
       missing native-side flow (screen + state handling for
       `account_resolution_required`), once Control A's endpoint findings
       land.
+      **Control A's diagnostics landed 2026-08-19** (`c469de4`,
+      `ops/docs/handoffs/2026-08-19-oauth-account-resolution-diagnostics-control-a.md`):
+      flag confirmed never turned on, no consuming endpoint on either
+      side, and a concrete contract scoped —
+      `POST oauth/resolution/existing|new`, login-shaped response,
+      `surface: "native"` already valid in the model. Real local runtime
+      proof (fenced disposable DB) confirms native email/password signup
+      itself works end-to-end; production account creation was correctly
+      declined regardless of dispatch wording.
+      **Control B built the mobile side 2026-08-19** (`2c0da17`,
+      `df60cba`): new `account_resolution` phase in
+      `app/oauth/transaction.js`, resolution screen in `App.js` (link-
+      existing / create-new, mirroring the web controller's fields
+      exactly), `consumeOAuthResolution` in `app/real/adapter.js` wired
+      to the confirmed contract via the existing `authenticate()` helper.
+      68/68 tests (5 new), lint, verify all green. **Will 404 until Rails
+      builds the two routes** — that dispatch doesn't exist yet, Control A
+      is idle standing by for it. Everything upstream of that (detection,
+      phase, screen, both submit paths, validation) is complete and
+      reachable today.
+      One process note, no data lost: mid-build, a real branch-name
+      collision happened — both Control A's Implementer worktree and
+      Control B's own branch independently used the identical name
+      `claude/oauth-account-resolution-native` for closely-related work
+      in the same shared checkout. Control B's commits landed directly on
+      `main` instead of via a clean branch merge as a result (content
+      verified intact both times before and after committing; tests/
+      lint/verify all passed pre-commit regardless). Worth a naming
+      convention that includes which Control owns a branch for future
+      dispatches on the same topic, to avoid a repeat.
 
 ### Local-Fixable
 
