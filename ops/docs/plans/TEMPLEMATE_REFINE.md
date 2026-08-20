@@ -119,21 +119,39 @@ is **build 2**.
       existing / create-new, mirroring the web controller's fields
       exactly), `consumeOAuthResolution` in `app/real/adapter.js` wired
       to the confirmed contract via the existing `authenticate()` helper.
-      68/68 tests (5 new), lint, verify all green. **Will 404 until Rails
-      builds the two routes** — that dispatch doesn't exist yet, Control A
-      is idle standing by for it. Everything upstream of that (detection,
-      phase, screen, both submit paths, validation) is complete and
-      reachable today.
-      One process note, no data lost: mid-build, a real branch-name
-      collision happened — both Control A's Implementer worktree and
-      Control B's own branch independently used the identical name
-      `claude/oauth-account-resolution-native` for closely-related work
-      in the same shared checkout. Control B's commits landed directly on
-      `main` instead of via a clean branch merge as a result (content
-      verified intact both times before and after committing; tests/
-      lint/verify all passed pre-commit regardless). Worth a naming
-      convention that includes which Control owns a branch for future
-      dispatches on the same topic, to avoid a repeat.
+      68/68 tests (5 new), lint, verify all green.
+      Branch-naming collision from this dispatch fixed in
+      `ops/protocol/claude_work_mode.md` (`9842512`) — Planning's own
+      mistake, reusing Control B's existing branch name for Control A's
+      separate packet; no data lost, Control B's commits landed on
+      `main` directly instead of through its normal flow as the one
+      symptom.
+      **Rails side built and merged 2026-08-20** (`2290df3`,
+      `ops/docs/handoffs/2026-08-20-native-oauth-account-resolution-endpoints-control-a.md`):
+      `Api::V1::Account::NativeOAuthResolutionsController`, all three
+      routes, round-trip tests drive a real `409` through the actual
+      exchange endpoint and verify real DB state + a genuine working
+      access token. 542/3421 full suite, independently re-verified. The
+      whole chain — detection, phase, screen, both submit paths,
+      consuming endpoints — is now complete and reachable, for Apple.
+      **Real bug found, not fixed yet**: Google-specific account
+      resolution is broken end-to-end (web and native both) — a
+      provider-string mismatch (`OAuthAccountResolution` stores
+      `"google_oauth2"`, both clients hand back canonical `"google"`,
+      `validate_record!` always fails the comparison). Apple/Facebook
+      unaffected (identity-form and canonical strings are identical for
+      both). Not live-impacting today since the feature flag is still
+      off, but the flag is a single global toggle — turning it on for
+      Apple testing turns it on for Google too. Fix dispatched separately
+      to Control A, sequenced before the flag gets turned on for any
+      real end-to-end test.
+      OTA note: Control B correctly declined to publish
+      `yarn ota:testflight` off Planning's relayed "Director confirmed"
+      framing — held the direct-authorization rule even against a
+      literal quote, and separately noted publishing now would ship
+      client code pointing at 404s regardless. Correct on both the
+      process and the merits; that conversation happens with the
+      Director directly once this is fully tested end-to-end.
 
 ### Local-Fixable
 
