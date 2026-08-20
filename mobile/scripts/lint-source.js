@@ -10,7 +10,7 @@ const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).forEach(entry =
   else if (entry.name.endsWith('.js')) files.push(target);
 });
 const allowedTransport = path.join(root, 'real', 'transport.js');
-const oauthPaths = [path.join(root, 'oauth'), path.join(root, 'dummy', 'adapter.js'), path.join(root, 'dummy', 'fixtures.js'), path.join(root, 'real', 'adapter.js'), path.join(root, 'real', 'storage.js'), path.join(root, 'real', 'config.js'), path.join(root, 'ui', 'copy.js')];
+const oauthPaths = [path.join(root, 'oauth'), path.join(root, 'dummy', 'adapter.js'), path.join(root, 'dummy', 'fixtures.js'), path.join(root, 'real', 'adapter.js'), path.join(root, 'real', 'storage.js'), path.join(root, 'real', 'config.js'), path.join(root, 'real', 'response.js'), path.join(root, 'ui', 'copy.js')];
 const sourceFailures = entries => entries.filter(({ file, source }) => {
   // The real adapter's local/test transport is the only permitted fetch seam.
   const checked = file === allowedTransport ? source.replace('globalThis.fetch', '') : source;

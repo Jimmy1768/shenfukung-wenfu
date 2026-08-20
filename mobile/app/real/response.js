@@ -1,10 +1,32 @@
+// Real gap found live, 2026-08-20, testing an Apple identity whose email
+// doesn't match any existing account through the "I already have an
+// account" resolution path: the Rails side already handles this safely
+// (existing_account_proof_failed -- deliberately the same generic failure
+// for "no such email" and "wrong password", so the client can't be used to
+// enumerate which emails have accounts), but this dictionary had no entry
+// for it, or for six other resolution-specific codes
+// (rails/app/controllers/api/v1/account/native_oauth_resolutions_controller.rb's
+// full rescue set) -- all of them silently fell back to the generic
+// message below instead of something specific. Not a crash either way
+// (nativeError() always produces a valid Error, submitResolution's catch
+// always calls showError, the transaction stays in account_resolution so
+// the user can retry) -- just a worse message than it should be.
 const messageFor = code => ({
   validation_failed: 'Please review the highlighted fields.', invalid_credentials: 'Email or password is incorrect.',
   session_invalid: 'Your session is no longer valid.', session_replayed: 'Your session was replayed and has been cleared.',
   session_revoked: 'Your session has been revoked.', account_closed: 'This account is closed.',
   tenant_not_found: 'The selected temple was not found.', tenant_required: 'A temple is required.',
   not_found: 'The requested record was not found.', registration_intake_frozen: 'Registration is currently unavailable.',
-  registration_not_editable: 'This registration can no longer be edited.', invalid_preferences: 'Preferences are invalid.'
+  registration_not_editable: 'This registration can no longer be edited.', invalid_preferences: 'Preferences are invalid.',
+  // Deliberately doesn't say "no account with that email" -- matches the
+  // backend's own choice not to reveal which emails have accounts.
+  existing_account_proof_failed: "That email and password don't match an existing account.",
+  resolution_invalid: 'This sign-in link is no longer valid. Please start again.',
+  resolution_expired: 'This sign-in link has expired. Please start again.',
+  resolution_consumed: 'This sign-in link has already been used. Please start again.',
+  resolution_provider_mismatch: 'Something went wrong matching your sign-in method. Please start again.',
+  account_resolution_unavailable: "Account linking isn't available right now. Please try again later.",
+  oauth_identity_conflict: 'This sign-in method is already linked to a different account.'
 }[code] || 'The request could not be completed.');
 
 function nativeError(status, body = {}) {

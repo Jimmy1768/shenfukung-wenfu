@@ -4,6 +4,7 @@ const { createRealAdapter } = require('../app/real/adapter');
 const { resolveClientConfig, localTenantBinding } = require('../app/real/config');
 const { sessionKey } = require('../app/real/storage');
 const { createOAuthController } = require('../app/oauth/transaction');
+const { nativeError } = require('../app/real/response');
 
 const config = { mode: 'real', apiBaseUrl: 'http://local.test', tenantSlug: 'fixture-temple', environment: 'test' };
 const store = () => { const values = new Map(); return { values, getItem: async key => values.get(key) || null, setItem: async (key, value) => values.set(key, value), deleteItem: async key => values.delete(key) }; };
@@ -193,4 +194,21 @@ test('real startup restoration loads every accepted collection and registration 
   assert.deepEqual(JSON.parse(create.body), { offering: 'prayer', account_action: 'event', registration: { quantity: 1, contact_name: '林小安' } });
   const update = calls.find(call => call.method === 'PATCH' && call.url.includes('/registrations/9?'));
   assert.deepEqual(JSON.parse(update.body), { registration: { contact_name: '新名字' } });
+});
+
+test('every resolution error code rails/app/controllers/api/v1/account/native_oauth_resolutions_controller.rb can render has a specific client message, not the generic fallback', () => {
+  // Real gap found live, 2026-08-20, testing an Apple identity with no
+  // matching account through "I already have an account": the client
+  // didn't crash (nativeError always produces a valid Error either way),
+  // but existing_account_proof_failed and six sibling resolution codes had
+  // no entry in response.js's messageFor(), so they all silently showed
+  // the generic "The request could not be completed." This list is the
+  // controller's actual rescue set, kept in one place so a new rescue
+  // clause added there without a matching entry here fails loudly.
+  const genericFallback = nativeError(0, {}).message;
+  const resolutionCodes = ['resolution_invalid', 'resolution_expired', 'resolution_consumed', 'resolution_provider_mismatch', 'account_closed', 'existing_account_proof_failed', 'account_resolution_unavailable', 'oauth_identity_conflict', 'validation_failed'];
+  for (const code of resolutionCodes) assert.notEqual(nativeError(422, { code }).message, genericFallback, `${code} must have a specific message, not the generic fallback`);
+  // The one the Director specifically asked about: must not imply whether
+  // the email exists, matching the backend's own choice not to leak that.
+  assert.doesNotMatch(nativeError(422, { code: 'existing_account_proof_failed' }).message, /no account|doesn't exist|not found/i);
 });
