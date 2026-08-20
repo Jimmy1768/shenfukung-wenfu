@@ -403,7 +403,3 @@ runs, 0 failures). One piece not done: an actual look at live
 production data, which needs the Director's own direct action, not a
 peer-relayed authorization. Full record:
 `ops/docs/handoffs/2026-08-20-account-admin-data-contract-live-reverification-control-a.md`.
-**Director closed this re-verification on the code-level evidence
-alone, 2026-08-20** — a full live-data QA pass (real registrations,
-real `ReusableDefaults` rows) is planned for later, not skipped
-permanently.
