@@ -73,9 +73,20 @@ module.exports = () => {
         }],
         'expo-updates'
       ],
-      runtimeVersion: { policy: 'appVersion' },
+      // Pinned as a literal string, not a { policy: 'appVersion' } object --
+      // mirrors DojoMate-Expo's proven config/base.cjs pattern. The object-
+      // policy form is schema-valid but was silently dropped by this repo's
+      // build pipeline when it lived one level too deep (see git history);
+      // pinning the literal value removes that whole class of failure
+      // instead of trusting the policy resolves the same way every time.
+      runtimeVersion: versioning.appVersion,
       updates: {
-        url: 'https://u.expo.dev/c7b8523a-2fad-4123-bc96-0c0c85a23dec'
+        url: 'https://u.expo.dev/c7b8523a-2fad-4123-bc96-0c0c85a23dec',
+        enabled: true,
+        fallbackToCacheTimeout: 0,
+        requestHeaders: release?.easUpdateChannel
+          ? { 'expo-channel-name': release.easUpdateChannel }
+          : undefined
       },
       extra: {
         eas: {

@@ -50,7 +50,13 @@ test('TestFlight and production source profiles are real, public, and isolated f
     assert.equal(config.extra.tenantSlug, 'shengfukung-wenfu');
     assert.equal(config.extra.easUpdateChannel, profile);
     assert.equal(config.updates.url, 'https://u.expo.dev/c7b8523a-2fad-4123-bc96-0c0c85a23dec');
-    assert.deepEqual(config.updates.runtimeVersion, { policy: 'appVersion' });
+    // Real incident, 2026-08-20: this assertion used to check
+    // config.updates.runtimeVersion (nested, wrong) equal to a policy
+    // object -- which meant it happily locked in the exact bug that shipped
+    // a TestFlight build with no runtime version embedded at all. Pinned
+    // to DojoMate-Expo's proven top-level literal-string form instead.
+    assert.equal(config.runtimeVersion, versioning.appVersion);
+    assert.equal(config.updates.runtimeVersion, undefined);
     assert.equal(eas.build[profile].channel, profile);
     assert.equal(eas.build[profile].distribution, 'store');
   }

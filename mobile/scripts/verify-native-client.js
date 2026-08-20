@@ -35,8 +35,10 @@ const activeSourcePaths = [path.join(root, 'app.config.js'), path.join(root, 'ap
 const activeSourceHasRejectedIdentifier = activeSourcePaths
   .flatMap(entryPath => fs.statSync(entryPath).isDirectory() ? sourceFiles(entryPath) : [entryPath])
   .some(file => rejectedNativeIdentifiers.some(identifier => fs.readFileSync(file, 'utf8').includes(identifier)));
+const otaLane = require(path.join(root, 'scripts', 'verify-ota-lane.js'));
 const developmentConfig = configFor('development');
 const productionConfig = configFor('production');
+const testflightConfig = configFor('testflight');
 
 const fail = (message) => {
   console.error(`native-client verification failed: ${message}`);
@@ -53,6 +55,20 @@ if (developmentConfig.name !== project.developmentPublicName) fail('development 
 if (developmentConfig.ios.bundleIdentifier !== project.nativeIdentifiers.development.iosBundleIdentifier || developmentConfig.android.package !== project.nativeIdentifiers.development.androidPackage) fail('development config must use the public development identifiers');
 if (productionConfig.name !== project.publicName) fail('production launcher must be TempleMate');
 if (productionConfig.ios.bundleIdentifier !== project.nativeIdentifiers.production.iosBundleIdentifier || productionConfig.android.package !== project.nativeIdentifiers.production.androidPackage) fail('production config must use the public production identifiers');
+if (testflightConfig.name !== project.publicName || testflightConfig.ios.bundleIdentifier !== project.nativeIdentifiers.production.iosBundleIdentifier || testflightConfig.android.package !== project.nativeIdentifiers.production.androidPackage) fail('testflight config must resolve to the same public (non-dev) identity as production -- BUILD_MODE=testflight must not fall through to the development default');
+// Real incident, 2026-08-20: runtimeVersion lived one level too deep
+// (nested under `updates` instead of a sibling of it), which this suite
+// never checked -- the misplacement shipped to a real TestFlight build
+// with no runtime version embedded at all, silently unable to ever
+// receive an OTA update. Pin to DojoMate-Expo's proven literal-string
+// form and assert it directly so this can't regress unnoticed again.
+if (developmentConfig.runtimeVersion !== versioning.appVersion || productionConfig.runtimeVersion !== versioning.appVersion || testflightConfig.runtimeVersion !== versioning.appVersion) fail('runtimeVersion must be a top-level literal string equal to versioning.appVersion in every buildMode, not nested under updates or expressed as a policy object');
+// Same incident: the OTA publish script itself must inject BUILD_MODE
+// explicitly per lane (it cannot trust the calling shell's ambient env),
+// and that injected value must stay in lockstep with the matching build
+// profile's own BUILD_MODE in eas.json, or the two can silently drift
+// apart the same way they did here.
+for (const lane of ['testflight', 'production']) if (otaLane.LANE_ENV[lane]?.BUILD_MODE !== eas.build?.[lane]?.env?.BUILD_MODE) fail(`scripts/verify-ota-lane.js LANE_ENV.${lane}.BUILD_MODE must match eas.json build.${lane}.env.BUILD_MODE`);
 if (developmentConfig.android.compileSdkVersion !== 36 || developmentConfig.android.targetSdkVersion !== 36 || productionConfig.android.compileSdkVersion !== 36 || productionConfig.android.targetSdkVersion !== 36) fail('Android compile/target SDK must be 36');
 if (developmentConfig.extra.nativeOAuthReturnUrl !== nativeOAuthReturnUrl || productionConfig.extra.nativeOAuthReturnUrl !== nativeOAuthReturnUrl || nativeOAuthReturnUrl !== 'templemate://oauth/complete') fail('OAuth return must use the accepted TempleMate scheme');
 if (pkg.dependencies['expo-auth-session'] !== '~7.0.11' || pkg.dependencies['expo-web-browser'] !== '~15.0.11' || pkg.dependencies['expo-crypto'] !== '~15.0.9') fail('SDK 54 OAuth package versions differ from the accepted Expo compatibility set');
