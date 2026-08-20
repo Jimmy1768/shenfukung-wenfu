@@ -124,19 +124,17 @@ test('a 409 missing a resolution_token falls back to a normal failure instead of
   assert.equal((await controller.begin('google')).phase, 'failed');
 });
 
-test('consumeResolution completes an account_resolution into authenticated/profile_required, passing the retained token and provider through', async () => {
-  for (const [profileRequired, expectedPhase] of [[false, 'authenticated'], [true, 'profile_required']]) {
-    const adapter = fakeAdapter({
-      exchange: Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: { provider: 'apple', resolution_token: 'tok-1' } }),
-      consumeResolution: input => ({ snapshot: { profile: { email: input.email } }, oauth: { provider: input.provider, profile_required: profileRequired } })
-    });
-    const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
-    assert.equal((await controller.begin('apple')).phase, 'account_resolution');
-    const next = await controller.consumeResolution({ mode: 'new', email: 'new@example.test', password: 'secret', name: 'New User', termsAccepted: true });
-    assert.equal(next.phase, expectedPhase);
-    const call = adapter.calls.find(item => item.kind === 'consumeResolution').input;
-    assert.equal(call.provider, 'apple'); assert.equal(call.resolutionToken, 'tok-1'); assert.equal(call.mode, 'new'); assert.equal(call.email, 'new@example.test');
-  }
+test('consumeResolution completes an account_resolution into authenticated, passing the retained token and provider through -- the contract is login-shaped, no profile_required branch', async () => {
+  const adapter = fakeAdapter({
+    exchange: Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: { provider: 'apple', resolution_token: 'tok-1' } }),
+    consumeResolution: { user: { id: 1 }, session: { access_token: 'a', refresh_token: 'r' } }
+  });
+  const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
+  assert.equal((await controller.begin('apple')).phase, 'account_resolution');
+  const next = await controller.consumeResolution({ mode: 'new', email: 'new@example.test', password: 'secret', name: 'New User', termsAccepted: true });
+  assert.equal(next.phase, 'authenticated'); assert.equal(next.provider, 'apple');
+  const call = adapter.calls.find(item => item.kind === 'consumeResolution').input;
+  assert.equal(call.provider, 'apple'); assert.equal(call.resolutionToken, 'tok-1'); assert.equal(call.mode, 'new'); assert.equal(call.email, 'new@example.test'); assert.equal(call.termsAccepted, true);
 });
 
 test('consumeResolution rejects without disturbing state when the adapter rejects (wrong password, duplicate email, etc.)', async () => {
@@ -158,14 +156,4 @@ test('consumeResolution refuses to run outside account_resolution, and refuses a
   const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
   assert.equal((await controller.begin('google')).phase, 'account_resolution');
   await assert.rejects(() => controller.consumeResolution({ mode: 'existing', email: 'x@example.test', password: 'y' }));
-});
-
-test('a malformed consumeResolution result is rejected the same way a malformed exchange result is', async () => {
-  const adapter = fakeAdapter({
-    exchange: Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: { provider: 'google', resolution_token: 'tok-4' } }),
-    consumeResolution: { snapshot: null, oauth: { provider: 'google', profile_required: false } }
-  });
-  const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
-  assert.equal((await controller.begin('google')).phase, 'account_resolution');
-  assert.equal((await controller.consumeResolution({ mode: 'new', email: 'x@example.test', password: 'y', name: 'N', termsAccepted: true })).phase, 'failed');
 });

@@ -110,9 +110,12 @@ function createOAuthController({ adapter, createPkce, openBrowser, expectedRetur
     if (state.phase !== 'account_resolution') throw new Error('No account resolution is in progress.');
     if (typeof adapter.consumeOAuthResolution !== 'function') throw new Error('This adapter cannot complete account resolution.');
     const provider = state.provider; const resolutionToken = state.detail;
-    const result = await adapter.consumeOAuthResolution({ mode, provider, resolutionToken, email, password, name, termsAccepted });
-    if (!validExchangeResult(result, provider)) return rejectExchange(provider, 'invalid_resolution_response');
-    return setState(result.oauth.profile_required ? 'profile_required' : 'authenticated', provider);
+    // Unlike exchangeOAuth, the resolution-consuming contract is login-shaped
+    // (plain { user, session }, confirmed by Control A -- no oauth wrapper,
+    // no profile_required): the resolution form always collects a complete
+    // profile upfront, so a successful call is unconditionally 'authenticated'.
+    await adapter.consumeOAuthResolution({ mode, provider, resolutionToken, email, password, name, termsAccepted });
+    return setState('authenticated', provider);
   }
 
   async function restore() {

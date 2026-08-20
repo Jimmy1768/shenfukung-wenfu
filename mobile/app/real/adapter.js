@@ -47,13 +47,19 @@ function createRealAdapter({ config, store, transport, bindingStorage, device = 
       return { snapshot: state, oauth: payload.oauth };
     },
     async clearOAuthSession() { session = null; state = snapshotFromBootstrap(); await clearRetainedState(); },
-    // Rails has no consuming endpoint yet for account_resolution_required --
-    // only the web account/oauth_resolutions#existing|new_account actions
-    // exist (rails/app/controllers/account/oauth_resolutions_controller.rb).
-    // Deliberately not wired to a guessed path/shape; wire this once the
-    // native contract is confirmed (Control A). State machine and UI above
-    // this are otherwise complete and reachable.
-    async consumeOAuthResolution() { throw Object.assign(new Error('Account resolution is not yet available on this build.'), { code: 'oauth_resolution_unavailable' }); },
+    // Contract confirmed by Control A's diagnostics
+    // (ops/docs/handoffs/2026-08-19-oauth-account-resolution-diagnostics-control-a.md):
+    // POST oauth/resolution/existing|new -> same session-issuing shape as
+    // NativeSessionsController#login (plain { user, session }, no oauth
+    // wrapper -- the resolution form always collects a complete profile
+    // upfront, so there's no profile_required concept here the way a bare
+    // provider exchange has). Routes don't exist on Rails yet -- this will
+    // 404 until Control A builds them -- but the client-side shape is
+    // final, not a guess.
+    consumeOAuthResolution: ({ mode, provider, resolutionToken, email, password, name, termsAccepted }) => authenticate(
+      mode === 'new' ? '/oauth/resolution/new' : '/oauth/resolution/existing',
+      { oauth: { token: resolutionToken, provider }, account: mode === 'new' ? { email, password, name, terms_accepted: termsAccepted } : { email, password } }
+    ),
     signUp: input => authenticate('/signup', { signup: { email: input.email, password: input.password, password_confirmation: input.passwordConfirmation || input.password } }),
     signIn: input => authenticate('/login', { session: input }),
     recoverPassword: input => request('POST', '/password/recovery', input, false),
