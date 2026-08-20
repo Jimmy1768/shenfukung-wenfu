@@ -183,6 +183,25 @@ class NativeAccountResourcesTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  test "native registration preparation prefills a returning patron's cached arrival_window, same as the web account form" do
+    service = @temple.temple_services.create!(slug: "service-#{SecureRandom.hex(3)}", title: "Native Service", status: "published", price_cents: 600, currency: "TWD")
+    Registrations::ReusableDefaults.new(user: @user, temple: @temple, offering: service).write!({ "arrival_window" => "上午" })
+
+    get "/api/v1/account/native/registrations/new", params: { temple_slug: @temple.slug, offering: service.slug, account_action: "service" }, headers: bearer
+    assert_response :success
+    assert_equal "上午", response.parsed_body.dig("registration", "arrival_window")
+    # ceremony_notes is intentionally included for the same reason arrival_window
+    # is -- RegistrationIntakeForm exposes it and the web account flow gets it
+    # "for free" -- but it's genuinely never cache-eligible
+    # (Registrations::ReusableDefaults#eligible_fields only covers the schema's
+    # logistics+ritual_metadata sections, which don't include ceremony_notes;
+    # ceremony_location is the schema field, a different one). So it's always
+    # nil here today, on both web and native alike -- not a native gap, just
+    # confirming the key exists and doesn't error, not asserting a value that
+    # can't currently be true.
+    assert response.parsed_body.fetch("registration").key?("ceremony_notes")
+  end
+
   test "native preference updates create account-user audit evidence without admin fields" do
     preference = UserPreference.for_user(@user)
     next_locale = preference.locale.to_s == "en" ? "zh-TW" : "en"

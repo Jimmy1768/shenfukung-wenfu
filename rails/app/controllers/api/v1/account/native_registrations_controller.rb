@@ -70,7 +70,14 @@ module Api
 
         def intake_defaults(offering)
           form = ::Account::RegistrationIntakeForm.new(user: current_native_user, offering: offering, params: {})
-          { quantity: form.quantity, registrant_scope: form.registrant_scope, contact_name: form.contact_name, contact_phone: form.contact_phone, contact_email: form.contact_email, household_notes: form.household_notes }
+          # The form already merges reusable-offering defaults (arrival_window,
+          # ceremony_notes) into its own attributes in its constructor -- the web
+          # account flow gets them "for free" because it re-renders the same form
+          # object. This JSON payload is a separate hand-rolled extraction and was
+          # missing these two, so a returning patron's native app showed an empty
+          # field the web account app would have prefilled from the exact same
+          # cached value. Everything else in this hash was already correct.
+          { quantity: form.quantity, registrant_scope: form.registrant_scope, contact_name: form.contact_name, contact_phone: form.contact_phone, contact_email: form.contact_email, household_notes: form.household_notes, arrival_window: form.arrival_window, ceremony_notes: form.ceremony_notes }
         end
 
         def offering_for_request
