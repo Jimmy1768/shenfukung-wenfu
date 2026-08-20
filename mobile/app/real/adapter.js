@@ -16,7 +16,16 @@ function createRealAdapter({ config, store, transport, bindingStorage, device = 
   const request = async (method, path, body, authenticated = true) => {
     const result = await transport({ method, url: `${config.apiBaseUrl}${query(`${nativePath}${path}`, config.tenantSlug)}`, headers: jsonHeaders(authenticated ? session?.access_token : null), body: body === undefined ? undefined : JSON.stringify(body) });
     const payload = result?.body || {};
-    if (!result?.ok) { const error = nativeError(result?.status || 0, payload); if (['session_invalid', 'session_replayed', 'session_revoked', 'account_closed'].includes(error.code)) await clearRetainedState(); throw error; }
+    if (!result?.ok) {
+      const error = nativeError(result?.status || 0, payload);
+      // account_resolution_required (exchange 409) carries { oauth: { provider,
+      // resolution_token } } instead of `details` -- nativeError() stays generic
+      // (no OAuth-specific fields), so attach it here where the file is already
+      // allowed to know about OAuth (scripts/lint-source.js's oauthPaths).
+      error.oauth = payload.oauth || null;
+      if (['session_invalid', 'session_replayed', 'session_revoked', 'account_closed'].includes(error.code)) await clearRetainedState();
+      throw error;
+    }
     return payload;
   };
   const applySession = async next => { session = next; await scoped.saveSession(next); };
@@ -38,6 +47,13 @@ function createRealAdapter({ config, store, transport, bindingStorage, device = 
       return { snapshot: state, oauth: payload.oauth };
     },
     async clearOAuthSession() { session = null; state = snapshotFromBootstrap(); await clearRetainedState(); },
+    // Rails has no consuming endpoint yet for account_resolution_required --
+    // only the web account/oauth_resolutions#existing|new_account actions
+    // exist (rails/app/controllers/account/oauth_resolutions_controller.rb).
+    // Deliberately not wired to a guessed path/shape; wire this once the
+    // native contract is confirmed (Control A). State machine and UI above
+    // this are otherwise complete and reachable.
+    async consumeOAuthResolution() { throw Object.assign(new Error('Account resolution is not yet available on this build.'), { code: 'oauth_resolution_unavailable' }); },
     signUp: input => authenticate('/signup', { signup: { email: input.email, password: input.password, password_confirmation: input.passwordConfirmation || input.password } }),
     signIn: input => authenticate('/login', { session: input }),
     recoverPassword: input => request('POST', '/password/recovery', input, false),

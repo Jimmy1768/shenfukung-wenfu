@@ -1,5 +1,5 @@
 const providers = new Set(['google', 'apple']);
-const phases = new Set(['idle', 'pending', 'browser_opened', 'returned', 'exchanging', 'authenticated', 'profile_required', 'cancelled', 'denied', 'failed', 'invalid', 'expired', 'interrupted', 'closed']);
+const phases = new Set(['idle', 'pending', 'browser_opened', 'returned', 'exchanging', 'authenticated', 'profile_required', 'cancelled', 'denied', 'failed', 'invalid', 'expired', 'interrupted', 'closed', 'account_resolution']);
 
 const safeUrl = value => { try { return new URL(value); } catch (_) { return null; } };
 const returnMatches = (actual, expected) => {
@@ -52,6 +52,13 @@ function createOAuthController({ adapter, createPkce, openBrowser, expectedRetur
       if (!validExchangeResult(result, record.provider)) return rejectExchange(record.provider, 'invalid_exchange_response');
       return setState(result.oauth.profile_required ? 'profile_required' : 'authenticated', record.provider);
     } catch (error) {
+      // Unmatched identity: the exchange envelope is real (Rails returned a
+      // resolution_token, not a session), so no session was ever applied --
+      // nothing to clear. Stay pre-auth in a dedicated phase instead of
+      // failing; the resolution_token is kept in memory only (state.detail),
+      // never written to storage or logs, same discipline as the pending
+      // PKCE record above.
+      if (error?.code === 'account_resolution_required' && error?.oauth?.resolution_token) return setState('account_resolution', record.provider, error.oauth.resolution_token);
       if (typeof adapter.clearOAuthSession === 'function') await adapter.clearOAuthSession();
       else if (typeof adapter.clearTenantState === 'function') await adapter.clearTenantState();
       return clear(error?.code === 'account_closed' ? 'closed' : 'failed', record.provider, error?.code || 'exchange_failed');
@@ -89,6 +96,25 @@ function createOAuthController({ adapter, createPkce, openBrowser, expectedRetur
     }
   }
 
+  // Completes an in-progress account_resolution (link to an existing account,
+  // or create a new one) once Rails exposes a native consuming endpoint. On
+  // failure this rejects rather than swallowing the error, matching the rest
+  // of this controller's philosophy: only genuinely unexpected errors
+  // propagate as rejections, but here the caller (App.js) drives its own
+  // pending/error UI the same way it does for every other adapter action
+  // (via the shared `run` helper), so staying in account_resolution on
+  // failure and letting the caller show the reason is the right shape --
+  // unlike begin()/handleReturn(), which are fire-and-forget browser flows
+  // with no per-attempt form the user is actively editing.
+  async function consumeResolution({ mode, email, password, name, termsAccepted }) {
+    if (state.phase !== 'account_resolution') throw new Error('No account resolution is in progress.');
+    if (typeof adapter.consumeOAuthResolution !== 'function') throw new Error('This adapter cannot complete account resolution.');
+    const provider = state.provider; const resolutionToken = state.detail;
+    const result = await adapter.consumeOAuthResolution({ mode, provider, resolutionToken, email, password, name, termsAccepted });
+    if (!validExchangeResult(result, provider)) return rejectExchange(provider, 'invalid_resolution_response');
+    return setState(result.oauth.profile_required ? 'profile_required' : 'authenticated', provider);
+  }
+
   async function restore() {
     const record = await adapter.oauthStorage.loadPending();
     if (!record) return setState('idle');
@@ -97,7 +123,7 @@ function createOAuthController({ adapter, createPkce, openBrowser, expectedRetur
     return setState('interrupted', record.provider, 'pending_return');
   }
 
-  return { begin, handleReturn, handleInterruptedReturn, restore, clear, snapshot: () => ({ ...state }) };
+  return { begin, handleReturn, handleInterruptedReturn, restore, clear, consumeResolution, snapshot: () => ({ ...state }) };
 }
 
 module.exports = { createOAuthController, returnMatches, validPending, providers };

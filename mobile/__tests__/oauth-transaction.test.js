@@ -6,13 +6,14 @@ const { createPkce, validVerifier } = require('../app/oauth/pkce');
 const returnUrl = 'templemate://oauth/complete';
 const memoryStorage = () => { let pending = null; return { savePending: async value => { pending = { ...value }; }, loadPending: async () => pending && { ...pending }, clearPending: async () => { pending = null; } }; };
 const pkce = (() => { let byte = 0; return async () => createPkce({ randomBytes: async count => Uint8Array.from({ length: count }, () => ++byte), sha256: async value => `challenge-${value}`.replace(/[^A-Za-z0-9_-]/g, '').padEnd(43, 'x').slice(0, 43) }); })();
-const fakeAdapter = ({ storage = memoryStorage(), exchange = null, start = null, clearOAuthSession = null } = {}) => {
+const fakeAdapter = ({ storage = memoryStorage(), exchange = null, start = null, clearOAuthSession = null, consumeResolution = undefined } = {}) => {
   const calls = [];
   return {
     calls, oauthStorage: storage,
     startOAuth: async input => { calls.push({ kind: 'start', input }); return start || { authorization_url: 'https://central.example.test/authorize', redirect_uri: returnUrl, transaction_token: 'opaque-transaction', provider: input.provider, expires_in: 60 }; },
     exchangeOAuth: async input => { calls.push({ kind: 'exchange', input }); if (exchange instanceof Error) throw exchange; return typeof exchange === 'function' ? exchange(input) : exchange || { snapshot: { profile: { email: 'member@example.test' } }, oauth: { provider: 'google', profile_required: false } }; },
-    ...(clearOAuthSession ? { clearOAuthSession } : {})
+    ...(clearOAuthSession ? { clearOAuthSession } : {}),
+    ...(consumeResolution !== undefined ? { consumeOAuthResolution: async input => { calls.push({ kind: 'consumeResolution', input }); if (consumeResolution instanceof Error) throw consumeResolution; return typeof consumeResolution === 'function' ? consumeResolution(input) : consumeResolution; } } : {})
   };
 };
 
@@ -101,4 +102,70 @@ test('malformed and provider-mismatched exchange results clear an adapter-applie
     assert.equal(applied, false);
     assert.equal(await adapter.oauthStorage.loadPending(), null);
   }
+});
+
+test('an unmatched identity enters account_resolution with the token kept only in memory, not cleared like a failure', async () => {
+  let sessionCleared = false;
+  const exchangeError = Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: { provider: 'google', resolution_token: 'resolve-me' } });
+  const adapter = fakeAdapter({ exchange: exchangeError, clearOAuthSession: async () => { sessionCleared = true; } });
+  const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
+  const next = await controller.begin('google');
+  assert.equal(next.phase, 'account_resolution');
+  assert.equal(next.provider, 'google');
+  assert.equal(next.detail, 'resolve-me');
+  assert.equal(sessionCleared, false, 'no session was ever applied for an unmatched identity, so nothing should be cleared');
+  assert.equal(await adapter.oauthStorage.loadPending(), null, 'pending was already consumed before exchange, same as any other outcome');
+});
+
+test('a 409 missing a resolution_token falls back to a normal failure instead of entering an unusable resolution phase', async () => {
+  const exchangeError = Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: null });
+  const adapter = fakeAdapter({ exchange: exchangeError });
+  const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=bad` }) });
+  assert.equal((await controller.begin('google')).phase, 'failed');
+});
+
+test('consumeResolution completes an account_resolution into authenticated/profile_required, passing the retained token and provider through', async () => {
+  for (const [profileRequired, expectedPhase] of [[false, 'authenticated'], [true, 'profile_required']]) {
+    const adapter = fakeAdapter({
+      exchange: Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: { provider: 'apple', resolution_token: 'tok-1' } }),
+      consumeResolution: input => ({ snapshot: { profile: { email: input.email } }, oauth: { provider: input.provider, profile_required: profileRequired } })
+    });
+    const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
+    assert.equal((await controller.begin('apple')).phase, 'account_resolution');
+    const next = await controller.consumeResolution({ mode: 'new', email: 'new@example.test', password: 'secret', name: 'New User', termsAccepted: true });
+    assert.equal(next.phase, expectedPhase);
+    const call = adapter.calls.find(item => item.kind === 'consumeResolution').input;
+    assert.equal(call.provider, 'apple'); assert.equal(call.resolutionToken, 'tok-1'); assert.equal(call.mode, 'new'); assert.equal(call.email, 'new@example.test');
+  }
+});
+
+test('consumeResolution rejects without disturbing state when the adapter rejects (wrong password, duplicate email, etc.)', async () => {
+  const adapter = fakeAdapter({
+    exchange: Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: { provider: 'google', resolution_token: 'tok-2' } }),
+    consumeResolution: Object.assign(new Error('bad credentials'), { code: 'invalid_credentials' })
+  });
+  const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
+  assert.equal((await controller.begin('google')).phase, 'account_resolution');
+  await assert.rejects(() => controller.consumeResolution({ mode: 'existing', email: 'x@example.test', password: 'wrong' }), { code: 'invalid_credentials' });
+  assert.equal(controller.snapshot().phase, 'account_resolution', 'a rejected attempt should leave the user able to retry, not fail the whole flow');
+});
+
+test('consumeResolution refuses to run outside account_resolution, and refuses against an adapter that cannot complete it', async () => {
+  const idleController = createOAuthController({ adapter: fakeAdapter({ consumeResolution: {} }), createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'cancel' }) });
+  await assert.rejects(() => idleController.consumeResolution({ mode: 'existing', email: 'x@example.test', password: 'y' }));
+  const adapter = fakeAdapter({ exchange: Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: { provider: 'google', resolution_token: 'tok-3' } }) });
+  delete adapter.consumeOAuthResolution;
+  const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
+  assert.equal((await controller.begin('google')).phase, 'account_resolution');
+  await assert.rejects(() => controller.consumeResolution({ mode: 'existing', email: 'x@example.test', password: 'y' }));
+});
+
+test('a malformed consumeResolution result is rejected the same way a malformed exchange result is', async () => {
+  const adapter = fakeAdapter({
+    exchange: Object.assign(new Error('unmatched'), { code: 'account_resolution_required', oauth: { provider: 'google', resolution_token: 'tok-4' } }),
+    consumeResolution: { snapshot: null, oauth: { provider: 'google', profile_required: false } }
+  });
+  const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
+  assert.equal((await controller.begin('google')).phase, 'account_resolution');
+  assert.equal((await controller.consumeResolution({ mode: 'new', email: 'x@example.test', password: 'y', name: 'N', termsAccepted: true })).phase, 'failed');
 });
