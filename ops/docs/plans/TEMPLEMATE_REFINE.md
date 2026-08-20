@@ -166,6 +166,28 @@ is **build 2**.
       process and the merits; that conversation happens with the
       Director directly once this is fully tested end-to-end.
 
+      **Production deployed and OTA-blocked, 2026-08-20** (Director
+      confirmed directly, in-session): backend redeployed to `main`
+      (`ead42e2`), `oauth_account_resolution` flag turned on in
+      production, both verified live. Mobile side hit two real bugs on
+      the first actual OTA publish — `runtimeVersion` was silently
+      unread by the EAS build pipeline (nested one level too deep) and
+      the publish script didn't set `BUILD_MODE` (first publish shipped
+      dev identity under the testflight channel). Both root-caused to
+      `mobile/`'s Expo/EAS config having diverged from
+      `~/Projects/DojoMate-Expo`'s proven pattern instead of following
+      it; fixed to match it exactly, with guardrail tests added so
+      either regressing is loud, not silent. Full record:
+      `ops/docs/handoffs/2026-08-20-ota-runtimeversion-buildmode-fix-planning.md`.
+      **Hard blocker found**: the already-installed TestFlight binary
+      (build 1, `9f36c64`, 2026-08-19) predates the config fix and has
+      no runtime version embedded at all — confirmed by unzipping the
+      real `.ipa` and inspecting `Expo.plist`. No OTA publish can ever
+      reach it. A new TestFlight build (build 2) from the fixed config
+      is required before Google/Apple sign-in can be tested live again
+      — pending Director go-ahead (real App-Store-Connect-touching
+      action, not self-authorized).
+
 ### Local-Fixable
 
 - [x] Dev/demo copy strings (sign-in headline, loading text, QR-scan

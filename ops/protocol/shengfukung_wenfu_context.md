@@ -83,6 +83,32 @@ default (packet-owns-branch, either hand can pick one up). Wenfu just keeps
 them specialized because the domain split is already real and keeping each
 Control's accumulated context focused by domain is useful on its own merits.
 
+## Mobile/Expo Reference Pattern
+
+`~/Projects/DojoMate-Expo` is the Director's mature, proven Expo/EAS
+project — its `app.config.js`/`config/base.cjs` (runtimeVersion,
+updates, per-buildMode identity), `eas.json` build profiles, and
+`scripts/publish-ota.mjs` / `scripts/check-ota-lane-guardrails.mjs`
+patterns are the reference for any Expo/EAS config question on
+TempleMate (`mobile/`), not something to work out from scratch against
+the Expo docs. **Check it before editing `app.config.js`, `eas.json`, or
+any OTA/build script here — don't invent a new shape.**
+
+Real incident, 2026-08-20: `runtimeVersion` was placed one level too
+deep in `mobile/app.config.js` (nested under `expo.updates` instead of
+a sibling of it) — schema-valid, but silently unread by the actual EAS
+build pipeline. A real TestFlight build shipped with no runtime version
+embedded at all, structurally unable to ever receive an OTA update,
+undetected because the local test suite asserted the wrong (nested)
+shape as correct instead of the real one. The same session also
+published an OTA update without explicitly setting `BUILD_MODE`, which
+silently fell through to the development identity. Both fixed by
+matching DojoMate-Expo's actual proven pattern exactly — literal-string
+`runtimeVersion` pinned to `versioning.appVersion`, and the OTA script
+injecting each lane's `BUILD_MODE` itself rather than trusting the
+caller's shell. Full record:
+`ops/docs/handoffs/2026-08-20-ota-runtimeversion-buildmode-fix-planning.md`.
+
 ## Codex Work Mode Local Source Map (archived, historical)
 
 This section describes governance from before the Claude takeover. It no
