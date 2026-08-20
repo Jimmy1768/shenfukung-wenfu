@@ -343,6 +343,91 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
     assert_equal user.id, response.parsed_body.dig("user", "id")
   end
 
+  test "resolution/new for Google turns a real account_resolution_required 409 into a working new-account session" do
+    # Regression test for the provider-string mismatch: the resolution record is
+    # stored with the identity-form provider ("google_oauth2"), but the client is
+    # handed back (and must round-trip) the canonical provider ("google"). Apple's
+    # identity-form and canonical strings are identical, so the equivalent Apple
+    # test above cannot catch this -- only Google (or Facebook) can.
+    central = FakeCentralOAuthClient.new(
+      { "redirect_url" => "https://central.example.test/google" },
+      identity_response(provider: "google", uid: "resolution-new-google-subject", email: "resolution-new-google@example.test", name: "Resolution New Google")
+    )
+    token = start_transaction(central, provider: "google")
+
+    with_return_url { Auth::CentralOAuthClient.stub(:new, central) { post native_exchange_path, params: exchange_params(token) } }
+    assert_response :conflict
+    assert_equal "account_resolution_required", response.parsed_body.fetch("code")
+    resolution_token = response.parsed_body.dig("oauth", "resolution_token")
+    provider = response.parsed_body.dig("oauth", "provider")
+    assert resolution_token.present?
+    assert_equal "google", provider
+    assert_nil User.find_by(email: "resolution-new-google@example.test")
+
+    # This is the exact request shape the native client is instructed to send:
+    # the resolution/new endpoint consumed with the captured canonical provider.
+    post native_resolution_new_path, params: {
+      oauth: { token: resolution_token, provider: },
+      account: { email: "resolution-new-google@example.test", password: "Password123!", name: "Resolution New Google", terms_accepted: true }
+    }
+
+    assert_response :created
+    body = response.parsed_body
+    user = User.find_by(email: "resolution-new-google@example.test")
+    assert user.present?
+    assert_equal user.id, body.dig("user", "id")
+    assert_equal "google", body.dig("oauth", "provider")
+    # Storage stays identity-form: the fix must not leak canonical form into OAuthIdentity.
+    assert OAuthIdentity.exists?(user:, provider: "google_oauth2", provider_uid: "resolution-new-google-subject")
+    refute OAuthIdentity.exists?(user:, provider: "google")
+    assert OAuthAccountResolution.find_by(provider: "google_oauth2", provider_uid: "resolution-new-google-subject").consumed_at.present?
+
+    access_token = body.dig("session", "access_token")
+    assert access_token.present?
+
+    get native_profile_path, headers: { "Authorization" => "Bearer #{access_token}" }
+    assert_response :success
+    assert_equal user.id, response.parsed_body.dig("user", "id")
+  end
+
+  test "resolution/existing for Google turns a real account_resolution_required 409 into a working linked session" do
+    user = User.create!(email: "resolution-existing-google@example.test", english_name: "Resolution Existing Google", encrypted_password: User.password_hash("Password123!"), metadata: {})
+    central = FakeCentralOAuthClient.new(
+      { "redirect_url" => "https://central.example.test/google" },
+      identity_response(provider: "google", uid: "resolution-existing-google-subject", email: "unrelated-google-email@example.test", name: "Resolution Existing Google")
+    )
+    token = start_transaction(central, provider: "google")
+
+    with_return_url { Auth::CentralOAuthClient.stub(:new, central) { post native_exchange_path, params: exchange_params(token) } }
+    assert_response :conflict
+    resolution_token = response.parsed_body.dig("oauth", "resolution_token")
+    provider = response.parsed_body.dig("oauth", "provider")
+    assert_equal "google", provider
+    refute OAuthIdentity.exists?(user:, provider: "google_oauth2")
+
+    # Before the fix, consuming with the canonical "google" the API contract
+    # actually handed back raised Auth::OAuthAccountResolution::ProviderMismatch
+    # because the resolution record was stored as "google_oauth2".
+    post native_resolution_existing_path, params: {
+      oauth: { token: resolution_token, provider: },
+      account: { email: user.email, password: "Password123!" }
+    }
+
+    assert_response :success
+    body = response.parsed_body
+    assert_equal user.id, body.dig("user", "id")
+    assert_equal "google", body.dig("oauth", "provider")
+    assert OAuthIdentity.exists?(user:, provider: "google_oauth2", provider_uid: "resolution-existing-google-subject")
+    refute OAuthIdentity.exists?(user:, provider: "google")
+
+    access_token = body.dig("session", "access_token")
+    assert access_token.present?
+
+    get native_profile_path, headers: { "Authorization" => "Bearer #{access_token}" }
+    assert_response :success
+    assert_equal user.id, response.parsed_body.dig("user", "id")
+  end
+
   test "resolution endpoints reject a wrong password proof, a reused token, and an unregistered token" do
     user = User.create!(email: "resolution-wrong-pw@example.test", english_name: "Resolution Wrong", encrypted_password: User.password_hash("Password123!"), metadata: {})
     central = FakeCentralOAuthClient.new(

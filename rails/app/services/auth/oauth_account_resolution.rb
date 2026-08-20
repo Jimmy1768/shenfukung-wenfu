@@ -158,11 +158,27 @@ module Auth
 
     def validate_record!(record, provider:, surface:, purpose:)
       raise InvalidToken unless record
-      raise ProviderMismatch unless secure_equal?(record.provider, provider.to_s)
+      raise ProviderMismatch unless secure_equal?(canonicalize_provider(record.provider), canonicalize_provider(provider))
       raise SurfaceMismatch unless secure_equal?(record.surface, surface.to_s)
       raise InvalidToken unless secure_equal?(record.purpose, purpose)
       raise Consumed if record.consumed_at.present?
       raise Expired if record.expired?
+    end
+
+    # record.provider is always stored in identity form (e.g. "google_oauth2" --
+    # see #link_to_user!, which hands it straight to Auth::OAuthIdentityLinker
+    # and must match every other OAuthIdentity#provider value in the system).
+    # Callers of this comparison are not uniform, though: the web/native
+    # resolution controllers hand back the *canonical* provider (e.g. "google")
+    # to their clients and pass that back in via find!/consume_existing!/
+    # consume_new!, while Auth::OAuthEmptyPlaceholderConsolidator passes
+    # identity-form straight through to consume_consolidation_proof! (it needs
+    # identity-form itself, to look up OAuthIdentity rows by provider).
+    # Canonicalizing both sides makes the comparison correct for either calling
+    # convention without the two forms ever being compared against each other
+    # by accident.
+    def canonicalize_provider(value)
+      Auth::OAuthExchangeIdentity::IDENTITY_TO_CANONICAL_PROVIDER.fetch(value.to_s, value.to_s)
     end
 
     def link_to_user!(record, user)
