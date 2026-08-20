@@ -62,6 +62,35 @@ lane — mirroring DojoMate-Expo's `scripts/publish-ota.mjs`
 Republished correctly afterward; verified via the same `channel:view`
 check that the manifest now carries the real production identity.
 
+### Bug 3 — `isDevelopmentClient()` failed unsafe on unset env, found by `eas submit`
+
+Same class of bug, a third call site: `isDevelopmentClient()` defaulted
+the *unset* case (neither `BUILD_MODE` nor `EAS_BUILD_PROFILE` present)
+to `'development'`. `eas build`/`eas update` always set `BUILD_MODE`
+explicitly, so this never surfaced through them. `eas submit` resolves
+the project's bundle identifier by evaluating `app.config.js` in a bare
+process with neither var set, independent of the `--profile` flag on
+its own command line — it silently pointed App Store Connect credential
+lookup at `com.jimmy1768.komainu.dev` for a `--profile testflight`
+submit. Caught live, mid-submission, from the Director's own terminal
+output (not something this session's tooling surfaced on its own).
+
+Root-caused and fixed at the shared resolution logic itself rather than
+patching `eas submit` as a new special case, since three separate call
+sites hit the same defect in one day: `isDevelopmentClient()` (and the
+adjacent `buildMode` fallback in the same function) now return
+"unknown, not dev" when the env is genuinely unset, mirroring
+DojoMate-Expo's actual proven form (`isDev = BUILD === 'development'`
+— strict equality against `undefined` is `false`) instead of asserting
+a specific default for an ambiguous context. Verified directly: ran
+`app.config.js` with all three relevant env vars deleted and confirmed
+`ios.bundleIdentifier` resolves to `com.jimmy1768.komainu`, not `.dev`.
+
+Also added `mobile/eas.json`'s `submit.testflight` profile (`ascAppId`
+only) — actual Apple API-key/auth setup is the Director's own
+interactive action, per the same "not self-authorized" rule as the
+build itself; this session does not perform it.
+
 ## Hardening
 
 Both bugs shipped invisibly — nothing in the existing test/verify
@@ -84,21 +113,24 @@ buggy shape as correct:
   `app.config.js`/`eas.json`/OTA scripts here, instead of re-deriving
   Expo/EAS config from the docs each time.
 
-68/68 tests, lint, verify all green. Committed directly to `main`:
-`ead42e2` (runtimeVersion fix, mid-incident), `3febcb3` (the hardening
-above).
+69/69 tests, lint, verify all green. Committed directly to `main`:
+`ead42e2` (runtimeVersion fix, mid-incident), `3febcb3` (hardening for
+bugs 1 and 2), `5e1e3cd` (iOS build number bumped to 2, Director
+instruction), `6fe68fe` (bug 3 fix and regression test).
 
-## Still Open
+## Resolved Since
 
-The already-installed TestFlight binary (build 1, `9f36c64`) cannot be
-fixed by any OTA publish — it has no runtime version embedded at all.
-A new TestFlight build compiled from the now-fixed config is required
-before OTA can reach a real device again. That build is a real
-App-Store-Connect-touching action and needs the Director's own explicit
-go-ahead in this session, not a relayed authorization — still pending
-as of this record.
+Director authorized and a new TestFlight build (build `2a7dee90`, iOS
+build number 2, version 1.0.0 unchanged) was produced and verified
+directly — downloaded the real `.ipa` and confirmed
+`EXUpdatesRuntimeVersion => "1.0.0"` is now actually embedded, unlike
+build 1. `eas submit --non-interactive` hit bug 3 (above) mid-attempt;
+fixed, and submission proceeds via the Director's own interactive
+`eas submit` run (Apple API-key setup cannot be non-interactive or
+performed by this session).
 
 ## Closeout
 
 No branch/worktree to clean up (direct-to-main). Planning standing by
-on the new-build decision.
+once the Director's interactive submit completes, to confirm the build
+lands correctly under TestFlight processing.
