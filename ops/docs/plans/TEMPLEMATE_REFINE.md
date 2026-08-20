@@ -179,14 +179,22 @@ is **build 2**.
       it; fixed to match it exactly, with guardrail tests added so
       either regressing is loud, not silent. Full record:
       `ops/docs/handoffs/2026-08-20-ota-runtimeversion-buildmode-fix-planning.md`.
-      **Hard blocker found**: the already-installed TestFlight binary
-      (build 1, `9f36c64`, 2026-08-19) predates the config fix and has
-      no runtime version embedded at all — confirmed by unzipping the
-      real `.ipa` and inspecting `Expo.plist`. No OTA publish can ever
-      reach it. A new TestFlight build (build 2) from the fixed config
-      is required before Google/Apple sign-in can be tested live again
-      — pending Director go-ahead (real App-Store-Connect-touching
-      action, not self-authorized).
+      **Hard blocker found and cleared, 2026-08-20**: the already-
+      installed TestFlight binary (build 1, `9f36c64`, 2026-08-19)
+      predated the config fix and had no runtime version embedded at
+      all — confirmed by unzipping the real `.ipa`. A third instance of
+      the same fail-unsafe-default bug also surfaced live via `eas
+      submit` (bundle identifier resolved to `.dev` for a `--profile
+      testflight` submit); fixed at the shared resolution logic, not
+      patched per call site. Director authorized and completed: new
+      build (`2a7dee90`, iOS build number 2, version 1.0.0 unchanged),
+      verified `EXUpdatesRuntimeVersion => "1.0.0"` actually embedded
+      this time, submitted to App Store Connect and processing. Full
+      record:
+      `ops/docs/handoffs/2026-08-20-ota-runtimeversion-buildmode-fix-planning.md`.
+      Remaining: install build 2 via TestFlight, relaunch twice for the
+      already-published OTA update to apply, then the QA checklist
+      items below.
 
 ### Local-Fixable
 

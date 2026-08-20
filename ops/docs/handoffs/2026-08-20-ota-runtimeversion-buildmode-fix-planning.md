@@ -125,12 +125,16 @@ build number 2, version 1.0.0 unchanged) was produced and verified
 directly — downloaded the real `.ipa` and confirmed
 `EXUpdatesRuntimeVersion => "1.0.0"` is now actually embedded, unlike
 build 1. `eas submit --non-interactive` hit bug 3 (above) mid-attempt;
-fixed, and submission proceeds via the Director's own interactive
-`eas submit` run (Apple API-key setup cannot be non-interactive or
-performed by this session).
+fixed, and the Director completed submission interactively (Apple
+API-key setup cannot be non-interactive or performed by this session).
+Confirmed uploaded and processing at
+`https://appstoreconnect.apple.com/apps/6802948571/testflight/ios`.
 
 ## Closeout
 
-No branch/worktree to clean up (direct-to-main). Planning standing by
-once the Director's interactive submit completes, to confirm the build
-lands correctly under TestFlight processing.
+No branch/worktree to clean up (direct-to-main). Remaining step is the
+Director's own real-device verification once Apple finishes processing
+(build install, relaunch twice for the already-published OTA update to
+apply, then live Google/Apple sign-in through the account-resolution
+flow) — not something this session can do itself. QA checklist in
+`ops/docs/plans/TEMPLEMATE_REFINE.md` tracks that.
