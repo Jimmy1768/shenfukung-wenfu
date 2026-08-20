@@ -129,4 +129,4 @@ function createOAuthController({ adapter, createPkce, openBrowser, expectedRetur
   return { begin, handleReturn, handleInterruptedReturn, restore, clear, consumeResolution, snapshot: () => ({ ...state }) };
 }
 
-module.exports = { createOAuthController, returnMatches, validPending, providers };
+module.exports = { createOAuthController, returnMatches, validPending, providers, phases };

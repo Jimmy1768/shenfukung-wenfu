@@ -14,7 +14,7 @@ import { activePresentationTenant, clearPriorTenant, confirmSwitch, fixtureConne
 import { scanCameraPayload } from './app/tenant/scanner';
 import { createTrustedBindingStorage } from './app/tenant/storage';
 import { TempleQrCamera } from './app/tenant/camera_surface';
-import { copy } from './app/ui/copy';
+import { copy, oauthErrorPhases } from './app/ui/copy';
 import { emptyFeedback, errorFeedback, feedbackForNavigation, noticeFeedback } from './app/ui/feedback';
 import { Button, FormInput, Notice, Section } from './app/ui/primitives';
 import { paletteFor } from './app/ui/theme';
@@ -91,7 +91,7 @@ export default function App() {
     try {
       const next = await oauthController.begin(provider); setOauthState(next);
       if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(clientConfig.mode === 'real' && !isReleaseConfig(clientConfig) ? localTenantBinding(clientConfig) : initialBinding()); if (next.phase === 'profile_required') navigate('profile'); return; }
-      if (next.phase !== 'interrupted') showError(t.oauthOutcome[next.phase] || t.oauthOutcome.failed);
+      if (oauthErrorPhases.has(next.phase)) showError(t.oauthOutcome[next.phase]);
     } catch (reason) { showError(errorMessage(reason)); }
     finally { setPending(false); }
   };

@@ -1,7 +1,8 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { createOAuthController, returnMatches } = require('../app/oauth/transaction');
+const { createOAuthController, returnMatches, phases } = require('../app/oauth/transaction');
 const { createPkce, validVerifier } = require('../app/oauth/pkce');
+const { copy, oauthErrorPhases } = require('../app/ui/copy');
 
 const returnUrl = 'templemate://oauth/complete';
 const memoryStorage = () => { let pending = null; return { savePending: async value => { pending = { ...value }; }, loadPending: async () => pending && { ...pending }, clearPending: async () => { pending = null; } }; };
@@ -156,4 +157,24 @@ test('consumeResolution refuses to run outside account_resolution, and refuses a
   const controller = createOAuthController({ adapter, createPkce: pkce, expectedReturnUrl: returnUrl, openBrowser: async () => ({ type: 'success', url: `${returnUrl}?code=unmatched` }) });
   assert.equal((await controller.begin('google')).phase, 'account_resolution');
   await assert.rejects(() => controller.consumeResolution({ mode: 'existing', email: 'x@example.test', password: 'y' }));
+});
+
+test("App.js's oauthErrorPhases allowlist stays a strict subset of the real phase set and excludes every non-error outcome", () => {
+  // Real bug, 2026-08-20: App.js's beginOAuth used to treat every phase
+  // except an ad hoc exclusion list ('authenticated', 'profile_required',
+  // 'interrupted') as an error. When account_resolution was added later,
+  // nobody updated that list, so a legitimate new-account/link-account
+  // transition rendered "External sign-in did not complete" over the
+  // resolution screen it had just successfully reached. oauthErrorPhases
+  // inverts this to a closed allowlist so the same class of mistake can't
+  // recur silently -- a new non-error phase does nothing until someone
+  // deliberately adds it to the error set, instead of erroring until
+  // someone remembers to exclude it.
+  for (const phase of oauthErrorPhases) assert.ok(phases.has(phase), `${phase} must be a real transaction phase`);
+  for (const phase of ['account_resolution', 'authenticated', 'profile_required', 'interrupted', 'idle', 'pending', 'browser_opened', 'returned', 'exchanging']) {
+    assert.equal(oauthErrorPhases.has(phase), false, `${phase} is not an error outcome and must not be in oauthErrorPhases`);
+  }
+  for (const locale of Object.keys(copy)) {
+    for (const phase of oauthErrorPhases) assert.ok(copy[locale].oauthOutcome[phase], `copy.${locale}.oauthOutcome.${phase} must have text for every error phase`);
+  }
 });

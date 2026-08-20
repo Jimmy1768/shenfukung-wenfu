@@ -16,3 +16,16 @@ export const copy = {
     certificates: 'Certificates', certificateFixture: 'Peace blessing participation certificate', appearance: 'Appearance', language: 'Language', light: 'Light', dark: 'Dark', privacyHelp: 'Privacy & help', assistance: 'Assistance', assistanceDescription: 'Request help from temple staff through the assistance queue.', assistanceDestination: 'This request goes to the temple staff assistance queue; it does not claim email or inbox delivery.', assistanceFixture: 'Demo mode: this request stays in the local fixture and is not delivered to temple staff.', assistanceCreated: 'Assistance request created.', assistanceDuplicate: 'An assistance request is already open.', assistanceFixtureSubmitted: 'Demo assistance request retained locally.', privacyRequest: 'Privacy request', exportData: 'Export data', deletionRequest: 'Deletion request', closeAccount: 'Close account', closeDescription: 'Enter CLOSE to confirm closing this demo account.', closeDescriptionRelease: 'Enter CLOSE to confirm closing your account.', resetDemo: 'Reset demo data', message: 'Message', send: 'Send', offering: 'Offering', registrant: 'Registrant', quantity: 'Quantity', contactName: 'Contact name', householdNotes: 'Household notes', arrivalWindow: 'Arrival window', ceremonyNotes: 'Ceremony notes', register: 'Register', createRegistration: 'Create registration', cancel: 'Cancel', discoverOfferings: 'Browse temple offerings', registrationDiscoverHint: 'Start from an offering provided by this temple.', draft: 'Draft', paidReadOnly: 'Completed (display only; cannot be edited)', pendingCashArrangement: 'Online payment is unavailable. Arrange cash payment with the temple.', completedCashDemo: 'Cash completed (demo data; display only and cannot be edited)', saved: 'Saved', welcome: 'Hello, ', activity: 'Events', services: 'Services', gallery: 'Gallery', emptyDependents: 'No dependents yet.', emptyRegistrations: 'No registrations yet.', emptyCertificates: 'No certificates yet.', emptyCollection: 'No records yet.', collectionFailed: 'Unable to load account records. Try again later.', notFound: 'Page unavailable', notFoundDescription: 'This page is unavailable; your account data remains safe.', bindingFailed: 'Connection failed. Check the demo link and try again.'
   }
 };
+
+// The subset of app/oauth/transaction.js's phase set that actually means
+// "show an error banner." Deliberately a closed allowlist, not "everything
+// except a couple of known-good phases" -- real bug, 2026-08-20, found live
+// via the first real Apple new-account test: App.js's sign-in starter used
+// to exclude only 'authenticated'/'profile_required'/'interrupted' and
+// treat every other phase as an error, so when account_resolution (a
+// legitimate success outcome) was added later, it fell through to the
+// generic "failed" copy and rendered an error banner overlapping the
+// resolution screen it was transitioning into. A closed list of actual
+// error phases can't repeat that failure mode when a new non-error phase
+// is added -- it just does nothing until someone deliberately adds it here.
+export const oauthErrorPhases = new Set(['failed', 'invalid', 'expired', 'cancelled', 'denied', 'closed']);
