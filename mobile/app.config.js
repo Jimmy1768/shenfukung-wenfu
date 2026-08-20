@@ -73,9 +73,9 @@ module.exports = () => {
         }],
         'expo-updates'
       ],
+      runtimeVersion: { policy: 'appVersion' },
       updates: {
-        url: 'https://u.expo.dev/c7b8523a-2fad-4123-bc96-0c0c85a23dec',
-        runtimeVersion: { policy: 'appVersion' }
+        url: 'https://u.expo.dev/c7b8523a-2fad-4123-bc96-0c0c85a23dec'
       },
       extra: {
         eas: {
