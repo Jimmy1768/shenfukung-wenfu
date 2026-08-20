@@ -57,39 +57,53 @@ is **build 2**.
       Remaining validation: real Google/Apple sign-in on the installed
       TestFlight build.
 
-- [ ] **New, precise finding (2026-08-19), traced after the namespace fix
-      above:** real Google/Apple sign-in still fails — screen flashes
-      back to idle before the system browser opens, same symptom as
-      before the namespace was live. Root cause identified directly, not
-      hypothesized: `POST /api/v1/account/native/oauth/start` now returns
-      `503 {"error":"native_oauth_unavailable"}` for both providers, with
-      a real, correctly-shaped PKCE challenge (confirmed via a live
-      request built the same way the client does —
-      `rails/app/services/auth/native_oauth_flow.rb`'s
-      `configured_return_url!` raises `ConfigurationError` — caught and
-      rendered as this exact 503 — whenever
-      `AppConstants::OAuth.native_return_url` (`rails/app/lib/app_constants/oauth.rb`)
-      is blank, i.e. whenever `ENV["AUTH_NATIVE_RETURN_URL"]` is unset.
-      `AUTH_BASE_URL`/`AUTH_CLIENT_ID`/`AUTH_CLIENT_SECRET` are confirmed
-      present in production (the web `/auth/central/*` flow, which shares
-      the same `Auth::CentralOAuthClient`, works) — this is specifically
-      the native-only env key. Not a new discovery either: an already-
-      archived plan (`ops/docs/plans/archive/OAUTH_ACCOUNT_RESOLUTION_PRODUCTION_READ_ONLY_PREFLIGHT_PLAN.md`)
-      flagged this exact variable as a known potential gap back on
-      2026-08-12 and explicitly did not authorize fixing it in that
-      packet. Expected value, per that same plan and
-      `mobile/app/oauth/config.js`'s fixed return URL:
-      `AUTH_NATIVE_RETURN_URL=templemate://oauth/complete`. Fix is a
-      one-line addition to production's env file
-      (`/etc/default/shengfukung-wenfu-env` per
-      `ops/systemd/shengfukung-wenfu-puma.service`) plus a Puma restart —
-      same production-deploy-authority boundary as the namespace fix
-      above, not something Control B can do. **Open after this fix**:
-      whether the central-auth service (`auth.sourcegridlabs.com`) itself
-      accepts `templemate://oauth/complete` as an allowed return
-      destination is still unverified and was the original Phase 1
-      "unknown/deferred" flag — can't be tested until the env var exists,
-      since `start!` fails before ever reaching the central client.
+- [x] `AUTH_NATIVE_RETURN_URL` missing from production env — fixed
+      2026-08-19, added to `/etc/default/shengfukung-wenfu-env`, Puma
+      restarted. Full trace:
+      `ops/docs/handoffs/2026-08-19-native-oauth-full-trace-confirmed-blocker.md`.
+
+- [x] `templemate://oauth/complete` not registered with the central
+      auth service (`auth.sourcegridlabs.com`) for the `shengfukung`
+      tenant — confirmed live via a direct probe (`422
+      invalid_return_url`), fixed 2026-08-19 by Codex SourceGrid
+      Planning (additive, independently re-verified). Full record:
+      `ops/docs/plans/CENTRAL_AUTH_TENANT_REGISTRATION_PLAN.md`.
+
+- [ ] **New finding, 2026-08-19 — first real sign-in succeeded (Apple:
+      dialogue, account selection, FaceID, all successful) but the app
+      never leaves the sign-in screen.** Root cause identified directly:
+      `oauth/start` returns `201`, but `oauth/exchange` returns `503`.
+      Traced to `Auth::OAuthIdentityResolver#resolve_or_link!`
+      (`rails/app/services/auth/oauth_identity_resolver.rb`) — it has
+      **no path that creates a new account**. Any identity that isn't an
+      exact existing `OAuthIdentity` match (or the narrow Google-subject-
+      replacement edge case) raises `UnmatchedIdentity`, which routes to
+      `Auth::OAuthAccountResolution.create!` — gated behind the
+      `oauth_account_resolution` feature flag, currently off in
+      production. This means **no genuinely new identity has ever been
+      able to sign up via native OAuth**, regardless of provider — not
+      specific to this test.
+      Turning the flag on would not by itself fix this: the web side has
+      a real, complete resolution flow
+      (`rails/app/controllers/account/oauth_resolutions_controller.rb`,
+      `consume_new!`/`consume_existing!`), but the **native side has no
+      equivalent** — grepped the entire mobile app for
+      `resolution_token`/`account_resolution_required`, zero matches.
+      The backend would correctly return `409` with a resolution token;
+      the app has no code to recognize or act on it, and would just show
+      a generic failure.
+      Confirmed **not** a general "can't create accounts" gap — native
+      email/password signup (`NativeSessionsController#signup` via
+      `Account::RegistrationForm`) is a fully separate code path,
+      untouched by the OAuth resolver or the feature flag. Code-level
+      confirmed only, not live-tested end-to-end.
+      **Dispatched 2026-08-19**: Control A — further diagnostics (why the
+      flag is off, whether a native resolution-consuming endpoint needs
+      building or already exists somewhere unfound, whether native
+      email/password signup actually works live). Control B — build the
+      missing native-side flow (screen + state handling for
+      `account_resolution_required`), once Control A's endpoint findings
+      land.
 
 ### Local-Fixable
 
@@ -103,8 +117,12 @@ is **build 2**.
 
 ## QA Checklist
 
-- [ ] Google sign-in succeeds on a real TestFlight build against
-      production.
-- [ ] Apple sign-in succeeds on a real TestFlight build against
-      production.
+- [x] Apple sign-in reaches the real central-auth exchange on a real
+      TestFlight build against production (2026-08-19) — first time
+      ever. Blocked next by the account-resolution gap above, not by
+      anything already fixed.
+- [ ] Google sign-in succeeds end-to-end on a real TestFlight build
+      against production.
+- [ ] A genuinely new identity (Google or Apple) can complete signup on
+      native and land in the app.
 - [ ] No dev/demo copy visible in a release-config build.
