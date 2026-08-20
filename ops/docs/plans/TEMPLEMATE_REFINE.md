@@ -142,9 +142,22 @@ is **build 2**.
       unaffected (identity-form and canonical strings are identical for
       both). Not live-impacting today since the feature flag is still
       off, but the flag is a single global toggle — turning it on for
-      Apple testing turns it on for Google too. Fix dispatched separately
-      to Control A, sequenced before the flag gets turned on for any
-      real end-to-end test.
+      Apple testing turns it on for Google too.
+      **Fixed 2026-08-20** (`bcf8131`,
+      `ops/docs/handoffs/2026-08-20-oauth-google-provider-mismatch-fix-control-a.md`):
+      canonicalized both sides of the comparison rather than just the
+      stored side — a one-sided fix would have silently broken Google
+      consolidation the same way (a third caller intentionally passes
+      identity-form). New regression tests use Google specifically and
+      assert storage stayed identity-form. Chain is now correct for
+      Google, Apple, and Facebook alike, still gated behind the
+      still-off feature flag.
+      Also found, not fixed, deferred like the env-file rename: shared
+      local test-database contention traced to `rails/config/database.yml`
+      defaulting `PGDATABASE_TEST` to the literal unparameterized
+      `golden_template_test` — same pattern as today's other unrendered-
+      template-default findings. Not urgent; fenced disposable databases
+      already avoid the actual risk in every packet.
       OTA note: Control B correctly declined to publish
       `yarn ota:testflight` off Planning's relayed "Director confirmed"
       framing — held the direct-authorization rule even against a
