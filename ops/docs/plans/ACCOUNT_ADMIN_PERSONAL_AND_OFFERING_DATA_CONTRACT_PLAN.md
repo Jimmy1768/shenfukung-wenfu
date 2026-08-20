@@ -331,12 +331,53 @@ Prove at minimum:
 - full Rails regression evidence passes in an exactly fenced disposable test
   database when database writes are required.
 
-### Phase A4 — Native Adoption Gate
+### Phase A4 — Native Adoption Gate — complete, 2026-08-20
 
-After Rails acceptance, Planning decides which settled fields TempleMate
-actually needs. Absence from Expo is not a Rails defect and does not block the
-TestFlight demo. Any native expansion requires its own later Control B plan
-against the accepted Rails contract.
+Dispatched by Planning after Phases A0-A3 closed. Control B scoped and
+built. Evidence: commit `b6e3b3c` (merged `68bd48b..HEAD`).
+
+Scope decision, laid against the Phase A0 field/surface matrix and
+TempleMate's actual current coverage, not a "port everything" exercise:
+
+- Reusable account fields (`english_name`/`native_name`/`phone`/`city`/
+  `notes`) and reusable dependent fields — Phase A0 already confirmed
+  these are exposed via `NativeProfileController`/
+  `NativeDependentsController`. Nothing to build.
+- Reusable tenant-offering `ritual_metadata` fields
+  (`ancestor_placard_name`, `dedication_message`, `incense_option`,
+  `certificate_notes`) — confirmed real and actively used by the pilot
+  temple's actual offerings (`rails/db/temples/offerings/shengfukung-wenfu.yml`),
+  but confirmed these are only ever collected through the *admin* surface
+  (staff assisting a registration), never through *any* patron self-
+  service path — web account included, not just native. Adding them to
+  the native patron-facing app would be new capability beyond the
+  accepted Rails contract, not adoption of existing behavior. Correctly
+  out of scope; TempleMate is already at parity with the web account app
+  here.
+- `arrival_window` and `ceremony_notes` — TempleMate already had both
+  fields end-to-end (mobile UI, native controller, adapter allowlist).
+  The actual gap: `NativeRegistrationsController#new`'s prefill payload
+  hand-extracted 6 of the shared form's 8 attributes, silently dropping
+  the 2 that carry the reusable-offering cache forward. One-line fix. No
+  mobile-side change needed — the client already consumes whatever the
+  server sends via its existing generic field-allowlist mechanism.
+
+Secondary finding, not a bug introduced here, flagged not fixed:
+`ceremony_notes` turns out to never actually be cache-eligible
+(`Registrations::ReusableDefaults#eligible_fields` only covers the
+schema's `logistics`+`ritual_metadata` sections, which don't include it —
+`ceremony_location` is the real schema field). Pre-existing on both web
+and native alike; changing it means touching the already-accepted A0-A3
+eligibility rules, out of scope for a native-adoption packet.
+
+Test added confirming a returning patron's cached `arrival_window` value
+round-trips through the native new-registration prefill screen. Focused
+suite green on the change; 7 pre-existing, unrelated errors in the same
+test file (`ActiveModel::MissingAttributeError` on `temple_id` inside
+`SystemAuditLogger`, affecting dependent-creation/preference/privacy
+tests that never touch this code path) are test-database schema drift,
+present before this change, unaffected by it, and out of scope here —
+flagged for whoever owns Rails test infrastructure.
 
 ## Likely Rails Paths
 
