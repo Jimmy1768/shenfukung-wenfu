@@ -17,7 +17,7 @@
   `New patrons (this month)`, `Pending registrations`, `Unpaid registrations`, `Revenue (this month)`.
 - [x] Add second dashboard KPI/queue row for operations alerts (phase-in as features land).
 - [x] Include `Expiring unpaid holds` in second row (required reminder, not optional).
-- [ ] Add `Open assistance requests` in second row when Request Assistance workflow ships.
+- [x] Add `Open assistance requests` in second row when Request Assistance workflow ships (stale -- workflow shipped and this was already wired into `Admin::DashboardController`'s metrics, confirmed directly, 2026-08-20).
 - [ ] Add `Unread contact inquiries` in second row when inquiry inbox/queue tracking exists.
 
 Notes:
