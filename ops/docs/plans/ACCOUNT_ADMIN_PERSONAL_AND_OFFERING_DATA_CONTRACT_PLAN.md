@@ -394,3 +394,12 @@ Acceptance Criteria fully met (evidence above). Only Phase A4 (Native
 Adoption Gate) remains — Planning decides which settled fields
 TempleMate actually needs, if any, as a separate later decision. No
 Control A packet is active from this roadmap alone right now.
+
+**Live re-verified, 2026-08-20** (two days after A0-A3 acceptance, ahead
+of Phase A4 dispatch): still holds at the code/regression level —
+zero drift on any file this contract touches, full suite green (544
+runs), and the 12 Acceptance Criteria tests specifically re-run (72
+runs, 0 failures). One piece not done: an actual look at live
+production data, which needs the Director's own direct action, not a
+peer-relayed authorization. Full record:
+`ops/docs/handoffs/2026-08-20-account-admin-data-contract-live-reverification-control-a.md`.
