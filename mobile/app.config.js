@@ -2,9 +2,23 @@ const versioning = require('./versioning');
 const project = require('./app/lib/app_constants/project');
 const { nativeOAuthReturnUrl } = require('./app/oauth/config');
 
+// Fails safe toward production, mirroring DojoMate-Expo's proven
+// `isDev = BUILD === 'development'` (strict equality against an unset
+// variable is false). Real incident, 2026-08-20: this used to default
+// the *unset* case to 'development' -- correct for `eas build`/`eas
+// update`, which always set BUILD_MODE explicitly, but `eas submit`
+// resolves the project's bundle identifier in a bare process with
+// neither BUILD_MODE nor EAS_BUILD_PROFILE set, regardless of which
+// --profile was passed on the command line. That silently pointed
+// credential lookup at the dev bundle ID (com.jimmy1768.komainu.dev)
+// for a `--profile testflight` submit. Same class of bug as the OTA
+// publish script needing BUILD_MODE injected explicitly -- this fixes
+// it at the root instead of patching each new call site that turns out
+// not to set it.
 const isDevelopmentClient = () => {
-  const value = String(process.env.BUILD_MODE || process.env.EAS_BUILD_PROFILE || 'development').toLowerCase();
-  return ['development', 'dev', 'debug'].includes(value);
+  const raw = process.env.BUILD_MODE || process.env.EAS_BUILD_PROFILE;
+  if (!raw) return false;
+  return ['development', 'dev', 'debug'].includes(String(raw).toLowerCase());
 };
 
 const releaseConfiguration = buildMode => {
@@ -21,7 +35,11 @@ const releaseConfiguration = buildMode => {
 
 module.exports = () => {
   const development = isDevelopmentClient();
-  const buildMode = String(process.env.BUILD_MODE || process.env.EAS_BUILD_PROFILE || 'development').toLowerCase();
+  // Same fail-safe direction as isDevelopmentClient: an ambiguous/unset
+  // context should resolve to "unknown, not release" here (releaseConfiguration
+  // returns null for anything outside testflight/production), never to a
+  // specific asserted buildMode string it wasn't actually told.
+  const buildMode = String(process.env.BUILD_MODE || process.env.EAS_BUILD_PROFILE || '').toLowerCase();
   const release = releaseConfiguration(buildMode);
   const nativeIdentifiers = project.nativeIdentifiers[development ? 'development' : 'production'];
 

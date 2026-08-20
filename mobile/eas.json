@@ -40,5 +40,12 @@
         "TEMPLEMATE_PUBLIC_TENANT_SLUG": "shengfukung-wenfu"
       }
     }
+  },
+  "submit": {
+    "testflight": {
+      "ios": {
+        "ascAppId": "6802948571"
+      }
+    }
   }
 }

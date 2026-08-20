@@ -15,6 +15,32 @@ const configFor = buildMode => {
   }
 };
 
+test('bare process env (no BUILD_MODE/EAS_BUILD_PROFILE set) resolves to production identity, never dev', () => {
+  // Real incident, 2026-08-20: `eas submit` resolves the project's
+  // bundle identifier by evaluating app.config.js in a bare process
+  // with neither var set, regardless of which --profile was passed on
+  // its own command line -- this used to default that ambiguous case to
+  // development, silently pointing App Store Connect credential lookup
+  // at com.jimmy1768.komainu.dev for a TestFlight submission. Must fail
+  // safe toward production instead, mirroring DojoMate-Expo.
+  const previousBuildMode = process.env.BUILD_MODE;
+  const previousProfile = process.env.EAS_BUILD_PROFILE;
+  const previousClientEnv = process.env.TEMPLEMATE_CLIENT_ENVIRONMENT;
+  delete process.env.BUILD_MODE;
+  delete process.env.EAS_BUILD_PROFILE;
+  delete process.env.TEMPLEMATE_CLIENT_ENVIRONMENT;
+  try {
+    const config = require('../app.config.js')().expo;
+    assert.equal(config.name, project.publicName);
+    assert.equal(config.ios.bundleIdentifier, project.nativeIdentifiers.production.iosBundleIdentifier);
+    assert.equal(config.android.package, project.nativeIdentifiers.production.androidPackage);
+  } finally {
+    if (previousBuildMode === undefined) delete process.env.BUILD_MODE; else process.env.BUILD_MODE = previousBuildMode;
+    if (previousProfile === undefined) delete process.env.EAS_BUILD_PROFILE; else process.env.EAS_BUILD_PROFILE = previousProfile;
+    if (previousClientEnv === undefined) delete process.env.TEMPLEMATE_CLIENT_ENVIRONMENT; else process.env.TEMPLEMATE_CLIENT_ENVIRONMENT = previousClientEnv;
+  }
+});
+
 test('development config uses TempleMate identity and preserves local version authority', () => {
   const config = configFor('development');
   assert.equal(project.name, 'komainu');
