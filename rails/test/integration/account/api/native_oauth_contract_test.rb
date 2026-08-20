@@ -271,6 +271,107 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
     assert_equal "account_closed", response.parsed_body.fetch("code")
   end
 
+  test "resolution/new turns a real account_resolution_required 409 into a working new-account session" do
+    central = FakeCentralOAuthClient.new(
+      { "redirect_url" => "https://central.example.test/apple" },
+      identity_response(provider: "apple", uid: "resolution-new-apple-subject", email: "resolution-new@example.test", name: "Resolution New")
+    )
+    token = start_transaction(central, provider: "apple")
+
+    with_return_url { Auth::CentralOAuthClient.stub(:new, central) { post native_exchange_path, params: exchange_params(token) } }
+    assert_response :conflict
+    assert_equal "account_resolution_required", response.parsed_body.fetch("code")
+    resolution_token = response.parsed_body.dig("oauth", "resolution_token")
+    provider = response.parsed_body.dig("oauth", "provider")
+    assert resolution_token.present?
+    assert_equal "apple", provider
+    assert_nil User.find_by(email: "resolution-new@example.test")
+
+    post native_resolution_new_path, params: {
+      oauth: { token: resolution_token, provider: },
+      account: { email: "resolution-new@example.test", password: "Password123!", name: "Resolution New", terms_accepted: true }
+    }
+
+    assert_response :created
+    body = response.parsed_body
+    user = User.find_by(email: "resolution-new@example.test")
+    assert user.present?
+    assert_equal user.id, body.dig("user", "id")
+    assert_equal "apple", body.dig("oauth", "provider")
+    assert OAuthIdentity.exists?(user:, provider: "apple", provider_uid: "resolution-new-apple-subject")
+    assert OAuthAccountResolution.find_by(provider: "apple", provider_uid: "resolution-new-apple-subject").consumed_at.present?
+
+    access_token = body.dig("session", "access_token")
+    assert access_token.present?
+
+    get native_profile_path, headers: { "Authorization" => "Bearer #{access_token}" }
+    assert_response :success
+    assert_equal user.id, response.parsed_body.dig("user", "id")
+  end
+
+  test "resolution/existing turns a real account_resolution_required 409 into a working linked session" do
+    user = User.create!(email: "resolution-existing@example.test", english_name: "Resolution Existing", encrypted_password: User.password_hash("Password123!"), metadata: {})
+    central = FakeCentralOAuthClient.new(
+      { "redirect_url" => "https://central.example.test/apple" },
+      identity_response(provider: "apple", uid: "resolution-existing-apple-subject", email: "unrelated-apple-email@example.test", name: "Resolution Existing")
+    )
+    token = start_transaction(central, provider: "apple")
+
+    with_return_url { Auth::CentralOAuthClient.stub(:new, central) { post native_exchange_path, params: exchange_params(token) } }
+    assert_response :conflict
+    resolution_token = response.parsed_body.dig("oauth", "resolution_token")
+    provider = response.parsed_body.dig("oauth", "provider")
+    assert_equal "apple", provider
+    refute OAuthIdentity.exists?(user:, provider: "apple")
+
+    post native_resolution_existing_path, params: {
+      oauth: { token: resolution_token, provider: },
+      account: { email: user.email, password: "Password123!" }
+    }
+
+    assert_response :success
+    body = response.parsed_body
+    assert_equal user.id, body.dig("user", "id")
+    assert_equal "apple", body.dig("oauth", "provider")
+    assert OAuthIdentity.exists?(user:, provider: "apple", provider_uid: "resolution-existing-apple-subject")
+
+    access_token = body.dig("session", "access_token")
+    assert access_token.present?
+
+    get native_profile_path, headers: { "Authorization" => "Bearer #{access_token}" }
+    assert_response :success
+    assert_equal user.id, response.parsed_body.dig("user", "id")
+  end
+
+  test "resolution endpoints reject a wrong password proof, a reused token, and an unregistered token" do
+    user = User.create!(email: "resolution-wrong-pw@example.test", english_name: "Resolution Wrong", encrypted_password: User.password_hash("Password123!"), metadata: {})
+    central = FakeCentralOAuthClient.new(
+      { "redirect_url" => "https://central.example.test/apple" },
+      identity_response(provider: "apple", uid: "resolution-wrong-pw-apple-subject", email: "wrong-pw-apple@example.test", name: "Resolution Wrong")
+    )
+    token = start_transaction(central, provider: "apple")
+    with_return_url { Auth::CentralOAuthClient.stub(:new, central) { post native_exchange_path, params: exchange_params(token) } }
+    assert_response :conflict
+    resolution_token = response.parsed_body.dig("oauth", "resolution_token")
+    provider = response.parsed_body.dig("oauth", "provider")
+
+    post native_resolution_existing_path, params: { oauth: { token: resolution_token, provider: }, account: { email: user.email, password: "not-the-password" } }
+    assert_response :unauthorized
+    assert_equal "existing_account_proof_failed", response.parsed_body.fetch("code")
+    refute OAuthIdentity.exists?(user:, provider: "apple")
+
+    get native_resolution_path(token: "not-a-real-token", provider:)
+    assert_response :unauthorized
+    assert_equal "resolution_invalid", response.parsed_body.fetch("code")
+
+    post native_resolution_existing_path, params: { oauth: { token: resolution_token, provider: }, account: { email: user.email, password: "Password123!" } }
+    assert_response :success
+
+    post native_resolution_existing_path, params: { oauth: { token: resolution_token, provider: }, account: { email: user.email, password: "Password123!" } }
+    assert_response :unauthorized
+    assert_equal "resolution_consumed", response.parsed_body.fetch("code")
+  end
+
   private
 
   def native_start_path(temple_slug: @temple.slug)
@@ -279,6 +380,22 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
 
   def native_exchange_path(temple_slug: @temple.slug)
     "/api/v1/account/native/oauth/exchange?temple_slug=#{temple_slug}"
+  end
+
+  def native_resolution_path(temple_slug: @temple.slug, token:, provider:)
+    "/api/v1/account/native/oauth/resolution?temple_slug=#{temple_slug}&token=#{token}&provider=#{provider}"
+  end
+
+  def native_resolution_existing_path(temple_slug: @temple.slug)
+    "/api/v1/account/native/oauth/resolution/existing?temple_slug=#{temple_slug}"
+  end
+
+  def native_resolution_new_path(temple_slug: @temple.slug)
+    "/api/v1/account/native/oauth/resolution/new?temple_slug=#{temple_slug}"
+  end
+
+  def native_profile_path(temple_slug: @temple.slug)
+    "/api/v1/account/native/profile?temple_slug=#{temple_slug}"
   end
 
   def start_params(provider: "google", pkce_method: "S256")
