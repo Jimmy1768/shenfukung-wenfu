@@ -38,6 +38,9 @@ Rails.application.routes.draw do
           post "password/reset", to: "native_sessions#password_reset"
           post "oauth/start", to: "native_oauth#start"
           post "oauth/exchange", to: "native_oauth#exchange"
+          get "oauth/resolution", to: "native_oauth_resolutions#show"
+          post "oauth/resolution/existing", to: "native_oauth_resolutions#existing"
+          post "oauth/resolution/new", to: "native_oauth_resolutions#new_account"
           get "bootstrap", to: "native_bootstrap#show"
           resource :profile, controller: "native_profile", only: %i[show update] do
             post :password
