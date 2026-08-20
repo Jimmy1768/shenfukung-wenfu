@@ -35,6 +35,20 @@ deployment, etc.) belong in `shengfukung_wenfu_context.md`, not here.
   `EnterWorktree(name: "<slug>")` itself — Planning never enters a worktree;
   it stays anchored in the main checkout so its own context never tangles
   with one packet's branch.
+- **Branch names always include which Control owns them — never assign
+  the same branch name to two different Controls, even for closely-related
+  work.** Real incident: Planning saw Control B already had an
+  uncommitted branch for a topic, told Control A to use that exact same
+  branch name for its own related-but-separate Rails packet ("different
+  files, no conflict") — wrong reasoning. Two Controls sharing one
+  branch identity breaks the branch-per-packet model itself, not just
+  file-level content; Control B's own commits ended up landing on `main`
+  directly instead of through its normal branch/merge flow as a result
+  (no data was lost, but it was a real deviation, not a hypothetical
+  risk). Use a distinct slug per Control even when the natural topic
+  name would otherwise be identical — e.g. include the Control letter in
+  the slug, or otherwise disambiguate, rather than assuming shared
+  file-level scope makes a shared branch safe.
 - **Monitoring**: Planning doesn't babysit. Control spawns/monitors its own
   ephemeral Implementer(s) (`Agent` tool, `run_in_background: true`,
   `isolation: "worktree"`) and reports back only at terminal states —
