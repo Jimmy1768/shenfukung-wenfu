@@ -1,10 +1,13 @@
 # Admin Billing Panel Findings Plan
 
 Status: findings gathered, organized into 3 phases by dependency/risk.
-Phase 1 and Phase 2 implemented and tested on this branch. Phase 3 not
-yet started (safety gate: wiring the scheduler to actually fire real
-Stripe charges needs the Director's own direct confirmation of live/test
-key status first — see Phase 3 below).
+Phase 1, Phase 2, and Phase 3's code (job split + systemd templates) are
+implemented and tested on this branch. The safety gate itself is still
+in force and untouched: nothing on this branch installs or enables any
+timer on production, and actually wiring the scheduler to fire real
+Stripe charges still needs the Director's own direct confirmation of
+live/test key status and an explicit decision to start Phase 5A — see
+Phase 3 below.
 
 Owner: Wenfu Planning / Director
 
@@ -78,34 +81,73 @@ constant, and the tests for both. No dependency on Phase 1 or Phase 3.
   fixtures) is unrelated to platform billing. 559/559 green on a fenced
   disposable test DB.
 
-### Phase 3 — Two-phase monthly billing scheduling (highest risk, real infrastructure, explicit safety gate)
+### Phase 3 — Two-phase monthly billing scheduling (highest risk, real infrastructure, explicit safety gate) — CODE DONE, NOT ACTIVATED
 
-The biggest, riskiest piece — real scheduling infrastructure that doesn't
-exist yet, not just a business-logic change. Sequenced last deliberately.
+The biggest, riskiest piece — real scheduling infrastructure. Sequenced
+last deliberately.
 
 - Design Decision 1: split `PlatformBillingMonthlyCloseJob` into a
   capture/review step (1st of month) and a separate collection/charge
-  step 2–4 days later (3rd or 5th — never the 4th).
-- Readiness Scan finding 1: requires deciding on and adding actual
-  scheduling infrastructure first (no `whenever`/`sidekiq-cron`/
-  `sidekiq-scheduler` exists in the `Gemfile` today) — a system
-  cron/systemd timer invoking a rake task is the lowest-footprint option,
-  matching how Puma/Sidekiq are already managed on the droplet.
-- Readiness Scan finding 3: the one existing job test hardcodes "close and
-  dispatch happen in the same call" as its core assertion — this phase
-  means deliberately rewriting that test, not extending it.
+  step 2–4 days later (3rd or 5th — never the 4th). Done — the old job
+  is gone, replaced by `PlatformBillingMonthlyReviewJob` (closes the
+  statement, creates the pending delivery, no dispatch) and
+  `PlatformBillingMonthlyCollectionJob` (dispatches every pending monthly
+  delivery review left behind).
+- **Correction to Readiness Scan finding 1, found while implementing**:
+  the original claim ("no scheduling infrastructure exists... a
+  cron/systemd timer is the lowest-footprint option") was incomplete. A
+  prior commit (`af459d9`, 2026-08-03, "prepare TempleMate billing
+  scheduler") had already built systemd timer/service *templates* for the
+  old single-job design, and — contrary to what a first read of
+  `bin/apply_systemd_units` suggests (it only ever installs
+  puma/sidekiq) — those units were, per
+  `ops/docs/reference/templemate_platform_billing_runtime.md`, actually
+  installed on the production host directly, just left disabled pending
+  a first-tenant decision. Verified this directly against the host:
+  both `shengfukung-wenfu-platform-billing-monthly-close.timer` and
+  `-lifecycle.timer` are loaded from `/etc/systemd/system/` and
+  `Active: inactive (dead)` — confirmed non-firing, not just
+  assumed. Presented this conflict (single daily-atomic design already
+  built vs. the two-phase design decided earlier in this doc) to the
+  Director directly rather than guessing; decision was to proceed with
+  the two-phase split as planned and treat the old templates as
+  superseded. The old `golden-template-platform-billing-monthly-close.*`
+  templates are deleted, replaced by
+  `golden-template-platform-billing-monthly-{review,collection}.*`;
+  `ops/scripts/render_ops_templates.rb` and
+  `ops/scripts/verify_templemate_phase4a.rb` updated to match, and the
+  reference doc above updated with the new schedule table. Review runs
+  daily (idempotent, same self-healing property as the old design);
+  collection deliberately runs on a single fixed calendar day (the 5th)
+  rather than daily, since running it every day would eventually
+  dispatch the *following* month's pending delivery before that month's
+  own buffer had elapsed. **The old disabled units already installed on
+  the host reference a job class that no longer exists after this
+  change** — inert since they were never enabled, but flagged in the
+  reference doc for cleanup whenever someone with production access next
+  re-runs the systemd staging step; this branch does not touch the host.
+- Readiness Scan finding 3: the one existing job test hardcoded "close
+  and dispatch happen in the same call" as its core assertion. Done —
+  that test is deleted, replaced by two new test files
+  (`platform_billing_monthly_review_job_test.rb` and
+  `platform_billing_monthly_collection_job_test.rb`), each proving its
+  job's actual new behavior including per-temple/per-delivery failure
+  isolation.
 - Design Decisions 2 and 3 (no minimum-threshold/carry-forward, no
   timezone handling) are already-settled scope reductions for this same
-  phase, not separate work.
+  phase — no code needed for either, since they're both "don't build
+  this" decisions.
 
-**Explicit safety gate, not optional**: Finding 3 already established the
-collection code is real (genuine `Stripe::Invoice.create` with
-`collection_method: "charge_automatically"`) and the Director's stated
-belief (not yet independently verified against the Stripe dashboard) is
-that the configured key is live mode. Building the two-phase code in this
-phase does not mean wiring it to actually fire automatically — activating
-real scheduled execution stays gated on the Director confirming live/test
-key status directly and deliberately choosing to start Phase 5A of
+**Explicit safety gate, not optional — still fully in force**: Finding 3
+already established the collection code is real (genuine
+`Stripe::Invoice.create` with `collection_method: "charge_automatically"`)
+and the Director's stated belief (not yet independently verified against
+the Stripe dashboard) is that the configured key is live mode. Building
+the two-phase code in this phase does not mean wiring it to actually fire
+automatically — nothing in this phase installs, enables, or starts either
+new timer on production. Activating real scheduled execution stays gated
+on the Director confirming live/test key status directly and deliberately
+choosing to start Phase 5A of
 `SHENGFUKUNG_PAYMENT_AND_OFFERING_PHASE_ROADMAP.md`, independent of when
 the code itself is merged.
 

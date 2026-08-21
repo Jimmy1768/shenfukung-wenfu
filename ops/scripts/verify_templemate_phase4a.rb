@@ -19,8 +19,8 @@ REQUIRED_ENV_KEYS = %w[
 ].freeze
 
 EXPECTED_UNITS = {
-  "#{SLUG}-platform-billing-monthly-close.service" => {
-    job: "PlatformBillingMonthlyCloseJob",
+  "#{SLUG}-platform-billing-monthly-review.service" => {
+    job: "PlatformBillingMonthlyReviewJob",
     assertions: [
       "Type=oneshot",
       "Restart=on-failure",
@@ -29,12 +29,30 @@ EXPECTED_UNITS = {
       "StartLimitBurst=3"
     ]
   },
-  "#{SLUG}-platform-billing-monthly-close.timer" => {
+  "#{SLUG}-platform-billing-monthly-review.timer" => {
     assertions: [
       "OnCalendar=*-*-* 00:20:00 Asia/Taipei",
       "Persistent=true",
       "RandomizedDelaySec=0",
-      "Unit=#{SLUG}-platform-billing-monthly-close.service"
+      "Unit=#{SLUG}-platform-billing-monthly-review.service"
+    ]
+  },
+  "#{SLUG}-platform-billing-monthly-collection.service" => {
+    job: "PlatformBillingMonthlyCollectionJob",
+    assertions: [
+      "Type=oneshot",
+      "Restart=on-failure",
+      "RestartSec=5min",
+      "StartLimitIntervalSec=1h",
+      "StartLimitBurst=3"
+    ]
+  },
+  "#{SLUG}-platform-billing-monthly-collection.timer" => {
+    assertions: [
+      "OnCalendar=*-*-05 00:20:00 Asia/Taipei",
+      "Persistent=true",
+      "RandomizedDelaySec=0",
+      "Unit=#{SLUG}-platform-billing-monthly-collection.service"
     ]
   },
   "#{SLUG}-platform-billing-lifecycle.service" => {
@@ -94,7 +112,8 @@ Dir.mktmpdir("templemate-phase4a-") do |output_dir|
   end
 
   {
-    "#{SLUG}-platform-billing-monthly-close.timer" => "OnCalendar=*-*-* 00:20:00 Asia/Taipei\n",
+    "#{SLUG}-platform-billing-monthly-review.timer" => "OnCalendar=*-*-* 00:20:00 Asia/Taipei\n",
+    "#{SLUG}-platform-billing-monthly-collection.timer" => "OnCalendar=*-*-05 00:20:00 Asia/Taipei\n",
     "#{SLUG}-platform-billing-lifecycle.timer" => "OnCalendar=*-*-* *:05:00 Asia/Taipei\n"
   }.each do |unit_name, expected_calendar|
     calendars = File.readlines(File.join(systemd_dir, unit_name)).grep(/\AOnCalendar=/)

@@ -1,0 +1,11 @@
+[Unit]
+Description={{project_name}} platform billing monthly-review schedule
+
+[Timer]
+OnCalendar=*-*-* 00:20:00 Asia/Taipei
+Persistent=true
+RandomizedDelaySec=0
+Unit={{project_slug}}-platform-billing-monthly-review.service
+
+[Install]
+WantedBy=timers.target
