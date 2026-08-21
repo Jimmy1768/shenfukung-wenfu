@@ -111,6 +111,38 @@ until the Director is ready). For the demo temple today, it's genuinely
 inert on both counts (no scheduler, no saved payment method), independent
 of whatever Stripe mode is configured.
 
+### 4. The same class of gap exists on the patron-facing side too — both directions
+
+Director asked to extend the sweep to `account/` (patron-facing) views.
+Confirmed first that the account portal genuinely supports both locales
+(`account_locale_path`, a real switcher in `layouts/account.html.erb`) —
+so a locale mismatch on these screens is a real defect, not moot.
+
+Two different directions of the same underlying problem, not one:
+
+- **Hardcoded Traditional Chinese, no English fallback ever** —
+  `account/dependents/new.html.erb`, `account/temples/index.html.erb`,
+  `account/registrations/edit.html.erb`. A patron on the English locale
+  would see Chinese on these three screens regardless.
+- **Hardcoded English, same as every admin-side hit** —
+  `account/oauth_resolutions/show.html.erb`. Worth flagging specifically:
+  this is the **web equivalent of the exact native OAuth account-resolution
+  screen built and tested extensively earlier today** ("I already have an
+  account" / "Create a new account") — the feature is real and working,
+  it has simply never been localized on the web surface, same as the
+  admin login page.
+- **`payments/ecpay_checkouts/show.html.erb`** — the actual ECPay checkout
+  redirect page real patrons see mid-payment ("Redirecting to ECPay...").
+  Hardcoded English, zero `t()` calls. Unlike the Stripe platform-billing
+  finding above, ECPay is the live, active provider real patrons pay
+  through today — not a deferred phase.
+
+One checked and ruled out: `demo/playground/show.html.erb` looked like a
+hit on the same sweep, but all its text comes from controller-passed
+instance variables (`@hero`, `@features`, `@cta`), not hardcoded in the
+view — any gap there would be a data/controller question, not a template
+one, and it's a playground/demo page rather than a real patron surface.
+
 ## Open Questions, Not Yet Answered
 
 - Is the configured `STRIPE_SECRET_KEY` live or test/sandbox mode? Only
@@ -119,9 +151,11 @@ of whatever Stripe mode is configured.
 - Should `PlatformBillingMonthlyCloseJob` ever run automatically (a real
   cron/scheduler), or is manual triggering the intended model even once
   Phase 5A starts?
-- How far does the "never localized" pattern extend beyond `admin/`
-  views? Not yet checked: `account/` (patron-facing) views, public
-  marketing pages, and native/mobile-adjacent server-rendered fragments.
+- Public marketing pages are Vue-based, not Rails ERB — the sweep method
+  used here (grep for `t("` across `.erb` files) doesn't apply there.
+  Not yet checked at all; would need a different approach (Vue's own
+  i18n mechanism, whatever that is) if the Director wants that covered
+  too.
 
 ## Next Step
 
