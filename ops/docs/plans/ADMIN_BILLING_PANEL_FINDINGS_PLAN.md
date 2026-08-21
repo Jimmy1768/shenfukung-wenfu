@@ -226,6 +226,48 @@ a minimum-collection-threshold/carry-forward mechanism for small amounts).
    while still meaningfully longer than a typical consumer-SaaS dunning
    window, appropriate for a B2B/community-institution relationship.
 
+## Readiness Scan — Inconsistencies And Gaps Before Implementation Starts
+
+Checked for things likely to trip up the actual fix work, ahead of time
+rather than mid-implementation.
+
+1. **No scheduler infrastructure exists at all, at the gem level.** Not
+   just "nothing currently calls the job" (already known) — checked the
+   `Gemfile` itself: Sidekiq is the configured `ActiveJob` adapter, but
+   there is no `whenever`, `sidekiq-cron`, or `sidekiq-scheduler`, nothing
+   that could run a job on a schedule at all today. Implementing the
+   two-phase design (Design Decision 1) requires deciding on and adding
+   an actual scheduling mechanism first — a system-level cron/systemd
+   timer invoking a rake task (matches how Puma/Sidekiq are already
+   managed on the droplet) is the lowest-footprint option, versus adding
+   a new gem. This is infrastructure work, not just business logic —
+   worth sequencing explicitly, not discovering mid-implementation.
+2. **A second, independent, dead `30` constant exists.**
+   `Admin::PaymentMethodsForm::DEFAULT_BILLING_GRACE_DAYS = 30` — defined,
+   never referenced anywhere else in that file or elsewhere. The actual
+   displayed/used grace value comes from `Temple#billing_grace_days`
+   (`billing_settings["grace_days"] || 30`), a completely separate code
+   path from this constant. Changing the grace period (Design Decision 4)
+   without also removing this dead constant would leave a stale "30"
+   sitting in the code that could mislead a future reader into thinking
+   it's the source of truth, or that there's a real inconsistency to
+   chase down. Worth deleting in the same change, not a separate cleanup.
+3. **The existing job test hardcodes "close and dispatch happen in the
+   same job call" as core behavior**, not incidentally. `test/jobs/platform_billing_monthly_close_job_test.rb`
+   asserts `PlatformBillingMonthlyCloseJob.perform_now` closes the
+   statement *and* dispatches collection in one call, immediately
+   verifiable in the same test. Splitting into two phases 2-4 days apart
+   means deliberately rewriting this test's core assertions, not just
+   adding new coverage alongside it — the single existing test would
+   otherwise keep asserting a behavior the redesign removes.
+4. **Good news, checked rather than assumed: `grace_days` is read-only
+   everywhere.** No admin UI, form, or controller ever writes
+   `billing_settings["grace_days"]` for any temple — it's a pure
+   code-level default with no per-temple override capability today.
+   Changing the default from 30 to 14 applies uniformly to every temple
+   immediately; there's no risk of a stale explicit "30" lingering on any
+   temple's stored settings to cause drift.
+
 ## Next Step
 
 Continue gathering findings — nothing here is scoped for a fix yet.
