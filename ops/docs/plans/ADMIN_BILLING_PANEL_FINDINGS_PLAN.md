@@ -474,3 +474,21 @@ review/merge step itself — no further phase work or design decisions are
 outstanding. The activation safety gate (actually enabling either new
 timer on production) is separate from merging this branch's code and
 stays with the Director alone, independent of when the merge happens.
+**Worth restating explicitly at merge time, per Strategy, so "merged"
+isn't read as "safe to enable": the period-scoping fix is what makes
+activation less dangerous than it would have been before this branch —
+first activation now charges exactly one period instead of sweeping
+every never-collected delivery across every past month. That fix
+changes the risk of eventually enabling the timer; it does not change
+who gets to decide when.**
+
+Branch review status: OperatorKit Strategy reviewed Phases 1-3 directly
+(not just this doc) and clears the branch, full stop — found and the
+unbounded-collection defect was fixed and pinned with a real end-to-end
+test, and the (b) hold/void-status question was decided by the Director
+on the record. Two non-blocking items Strategy asked to keep attached to
+the branch as it moves: the merge-time restatement above, and tracking
+the stale disabled systemd units on the production host (see "Correction
+to Readiness Scan finding 1" under Phase 3) as its own follow-up rather
+than only a line in this doc, since that item lives outside this branch
+entirely and is easy to lose.
