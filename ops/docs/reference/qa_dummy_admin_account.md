@@ -20,9 +20,25 @@ freely fabricated the same way.
 
 ## Account
 
-- Email: `qa-dummy-admin@sourcegridlabs.com`
+- Email: `qa-dummy-admin@sourcegridlabs.com` (`AppConstants::Emails.qa_dummy_admin_email`)
 - One shared identity across every temple it's ever assigned to — not
   recreated per temple.
+
+## Login is gated by the env var, not the stored password hash
+
+`Admin::SessionsController#can_sign_in?` checks this one account's password
+against the current `QA_DUMMY_ADMIN_PASSWORD` environment value directly,
+not its `encrypted_password` column. Every other account is unaffected --
+this is a narrow, email-scoped special case, not a change to how
+authentication works generally.
+
+Practical effect: the password lives only in `/etc/default/shengfukung-wenfu-env`
+in production (never in git), and removing that line makes the account
+unusable immediately, even though its database row and hash still exist.
+Rotating the password means updating that one env line -- the account
+picks it up on the next login attempt, no re-running the seed task
+required (though re-running it also keeps the stored hash in sync, as a
+fallback that isn't actually load-bearing for login itself).
 
 ## Usage
 

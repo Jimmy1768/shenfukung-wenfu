@@ -8,6 +8,7 @@ module AppConstants
     OPS_ALERT                  = 'admin@sourcegridlabs.com'.freeze
     THREDDED_NOTIFICATION      = 'no-reply@sourcegridlabs.com'.freeze
     CONTACT_INBOX              = 'admin@sourcegridlabs.com'.freeze
+    QA_DUMMY_ADMIN             = 'qa-dummy-admin@sourcegridlabs.com'.freeze
 
     class << self
       def dev_app_notification_email
@@ -36,6 +37,10 @@ module AppConstants
 
       def contact_inbox
         CONTACT_INBOX
+      end
+
+      def qa_dummy_admin_email
+        QA_DUMMY_ADMIN
       end
     end
   end

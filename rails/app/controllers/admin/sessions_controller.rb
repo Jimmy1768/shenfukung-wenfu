@@ -29,7 +29,24 @@ module Admin
       return false unless user&.admin_account&.active?
       return false if user.closed_account?
 
-      secure_compare(user.encrypted_password, User.password_hash(password.to_s))
+      # The persistent QA dummy admin (ops/docs/reference/qa_dummy_admin_account.md)
+      # authenticates against the current QA_DUMMY_ADMIN_PASSWORD env value
+      # directly, not its stored password hash -- deliberately, so removing
+      # the env var makes the account unusable even though its DB row and
+      # hash still exist, without touching every other account's normal
+      # hash-based check.
+      if user.email == AppConstants::Emails.qa_dummy_admin_email
+        qa_dummy_admin_password_matches?(password)
+      else
+        secure_compare(user.encrypted_password, User.password_hash(password.to_s))
+      end
+    end
+
+    def qa_dummy_admin_password_matches?(password)
+      expected = ENV["QA_DUMMY_ADMIN_PASSWORD"]
+      return false if expected.blank?
+
+      secure_compare(expected, password.to_s)
     end
 
     def login_failure_message(user)
