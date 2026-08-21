@@ -1,6 +1,7 @@
 # Admin Billing Panel Findings Plan
 
-Status: gathering findings, not yet accepted for implementation
+Status: findings gathered, organized into 3 phases by dependency/risk; no
+phase yet accepted for implementation
 
 Owner: Wenfu Planning / Director
 
@@ -15,6 +16,76 @@ problems first, don't just patch as they're found.
 
 No implementation, deployment, or production action is authorized by this
 document. It's a findings record.
+
+## Implementation Phases
+
+Ordered by dependency and risk, not by discovery order. Each phase is
+independent of the others unless stated — nothing here requires the whole
+doc to land in one shot.
+
+### Phase 1 — Localization + tier chart (low risk, purely additive, no dependencies)
+
+Pure view-layer work: add `t()` calls, add locale keys, render data that
+already exists. No behavior change, no schema change, no shared
+infrastructure touched. Safe to ship independently of everything else in
+this doc.
+
+- Finding 1: localize all 3 admin screens (`platform_billing/show`,
+  `payments/new`, `sessions/new`).
+- Finding 4: localize all patron-side hits, both directions
+  (`dependents/new`, `temples/index`, `registrations/edit` need English
+  added; `oauth_resolutions/show`, `payments/ecpay_checkouts/show` need
+  Chinese added).
+- Finding 2: render the real 3-band tier chart instead of the one-sentence
+  summary. Data already computed by `PlatformPricingPolicy::Quote` — view
+  work only.
+
+### Phase 2 — Grace period + dead-constant cleanup (small, contained behavior change)
+
+A real behavior change (shortens how long a temple keeps service after a
+failed charge), but self-contained — touches one service, one dead
+constant, and the tests for both. No dependency on Phase 1 or Phase 3.
+
+- Design Decision 4: `Billing::PlatformBillingLifecycle::GRACE_WINDOW`
+  30 days → 14 days (7 + 14 = 21 total, down from 37).
+- Readiness Scan finding 2: delete the dead
+  `Admin::PaymentMethodsForm::DEFAULT_BILLING_GRACE_DAYS` constant in the
+  same change — leaving it would go stale as an unreferenced, misleading
+  duplicate of the number this phase is changing.
+- Readiness Scan finding 4 confirms this is safe to apply uniformly:
+  `grace_days` has no per-temple override path today, so there's no stale
+  stored value on any temple to conflict with a new code-level default.
+
+### Phase 3 — Two-phase monthly billing scheduling (highest risk, real infrastructure, explicit safety gate)
+
+The biggest, riskiest piece — real scheduling infrastructure that doesn't
+exist yet, not just a business-logic change. Sequenced last deliberately.
+
+- Design Decision 1: split `PlatformBillingMonthlyCloseJob` into a
+  capture/review step (1st of month) and a separate collection/charge
+  step 2–4 days later (3rd or 5th — never the 4th).
+- Readiness Scan finding 1: requires deciding on and adding actual
+  scheduling infrastructure first (no `whenever`/`sidekiq-cron`/
+  `sidekiq-scheduler` exists in the `Gemfile` today) — a system
+  cron/systemd timer invoking a rake task is the lowest-footprint option,
+  matching how Puma/Sidekiq are already managed on the droplet.
+- Readiness Scan finding 3: the one existing job test hardcodes "close and
+  dispatch happen in the same call" as its core assertion — this phase
+  means deliberately rewriting that test, not extending it.
+- Design Decisions 2 and 3 (no minimum-threshold/carry-forward, no
+  timezone handling) are already-settled scope reductions for this same
+  phase, not separate work.
+
+**Explicit safety gate, not optional**: Finding 3 already established the
+collection code is real (genuine `Stripe::Invoice.create` with
+`collection_method: "charge_automatically"`) and the Director's stated
+belief (not yet independently verified against the Stripe dashboard) is
+that the configured key is live mode. Building the two-phase code in this
+phase does not mean wiring it to actually fire automatically — activating
+real scheduled execution stays gated on the Director confirming live/test
+key status directly and deliberately choosing to start Phase 5A of
+`SHENGFUKUNG_PAYMENT_AND_OFFERING_PHASE_ROADMAP.md`, independent of when
+the code itself is merged.
 
 ## Confirmed Findings
 
@@ -270,4 +341,5 @@ rather than mid-implementation.
 
 ## Next Step
 
-Continue gathering findings — nothing here is scoped for a fix yet.
+Phases ordered above. Still nothing implemented — awaiting the Director's
+go-ahead on which phase to start with.
