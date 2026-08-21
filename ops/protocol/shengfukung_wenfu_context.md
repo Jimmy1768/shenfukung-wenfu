@@ -109,6 +109,15 @@ injecting each lane's `BUILD_MODE` itself rather than trusting the
 caller's shell. Full record:
 `ops/docs/handoffs/2026-08-20-ota-runtimeversion-buildmode-fix-planning.md`.
 
+## QA Dummy Admin Account
+
+For debugging real, limited-permission admin behavior on production (menu
+visibility, permission gates) without using a real staff member's account:
+`ops/docs/reference/qa_dummy_admin_account.md`. Never granted `owner` role
+anywhere, so it also proves owner-only gates (Billing) stay blocked, not
+just that capability gates work. Local dev/test database work is unrelated
+— fabricate throwaway users there freely, same as any other fixture.
+
 ## Codex Work Mode Local Source Map (archived, historical)
 
 This section describes governance from before the Claude takeover. It no
