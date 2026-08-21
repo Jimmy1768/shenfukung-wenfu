@@ -171,20 +171,27 @@ delivery review created through the actual closer/creator path is
 exactly the delivery collection dispatches — no hand-built
 `period_start_at` anywhere. 565/565 green.
 
-**Still open, not resolved by the fix above — a real product/workflow
-question, not an engineering one**: Strategy separately flagged that
-`PlatformBillingDelivery::STATUSES` has no hold/void/skip state. A human
-who spots a mistake during the review-to-collection buffer has no
-affirmative way to pull that one delivery out of the collection pass —
-leaving it "pending" is the only option, and "pending" is exactly the
-state collection acts on. The 4-day buffer only protects against a
-mistake if there's a way to actually act on it; right now there isn't
-one. Not fixed here — inventing a new status/workflow unilaterally would
-be a real scope and product-design expansion beyond "split the job in
-two," not a pure bug fix. This needs the Director's decision (see Next
-Step) before Phase 3 can be said to actually deliver on its stated
-purpose, independent of the (already-untouched) activation safety gate
-below.
+**Resolved by the Director — no hold/void status needed**: Strategy had
+separately flagged that `PlatformBillingDelivery::STATUSES` has no
+hold/void/skip state, so an operator has no affirmative way to pull one
+delivery out of the collection pass during the buffer. Director's
+decision: keep it simple. The buffer is intentionally passive, not a
+gate — it's a chance for the temple admin to notice and flag a problem
+during the window, not a self-service hold mechanism. If it's ignored,
+the charge goes through as designed; that's the correct default, not a
+gap. A notification system prompting admins to check during the window
+is a real future improvement, explicitly deferred, not part of this
+phase.
+
+This is already supported by what Phase 1 built, not just a policy
+statement with nothing behind it: `admin/platform_billing/show.html.erb`
+(the same page the tier chart lives on) lists closed statements each
+with their delivery's live collection status — once review closes a
+period, that statement and its "Pending" delivery appear there
+immediately, visible to any owner who checks during the buffer window.
+No new status or UI needed for the Director's intended design; the
+existing view already surfaces exactly what a checking admin needs to
+see.
 
 **Explicit safety gate, not optional — still fully in force**: Finding 3
 already established the collection code is real (genuine
@@ -454,15 +461,16 @@ rather than mid-implementation.
 ## Next Step
 
 All 3 phases implemented and tested on `claude/platform-billing-findings`;
-nothing merged to `main` yet.
+nothing merged to `main` yet. No open decisions remain — the
+hold/void-status question is resolved (see the "Resolved by the
+Director" note under Phase 3): the buffer is intentionally passive, a
+chance for the temple admin to notice via the existing platform-billing
+view, not a self-service gate; ignoring it means the charge proceeds as
+designed. A future notification system to prompt admins to check is a
+deliberately deferred improvement, not a blocker.
 
-One open decision before this can be considered done, not just merged:
-**how does an operator actually withhold one bad delivery from the
-monthly-collection pass?** Right now there's no such mechanism (see the
-"Still open" note under Phase 3 above) — the Director needs to decide
-either (a) add a real hold/void status to `PlatformBillingDelivery` with
-an operator-facing action to set it, or (b) accept that for now the only
-real safeguard is not enabling the collection timer at all until each
-period's review output has been manually eyeballed, and document that
-explicitly as the interim process. Either is a legitimate answer; picking
-one is not an engineering call to make unilaterally.
+Remaining before this branch can be merged is only the standard
+review/merge step itself — no further phase work or design decisions are
+outstanding. The activation safety gate (actually enabling either new
+timer on production) is separate from merging this branch's code and
+stays with the Director alone, independent of when the merge happens.
