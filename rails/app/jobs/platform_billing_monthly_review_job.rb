@@ -14,8 +14,7 @@ class PlatformBillingMonthlyReviewJob < ActiveJob::Base
   queue_as :default
 
   def perform(reference_time: Time.current)
-    zone = Billing::PlatformUsage::TIME_ZONE
-    month = reference_time.in_time_zone(zone).to_date.beginning_of_month.prev_month
+    month = Billing::PlatformUsage.previous_month(reference_time)
     Temple.find_each do |temple|
       result = Billing::PlatformStatementCloser.close(temple:, month:, closed_at: reference_time)
       Billing::PlatformBillingDeliveryCreator.create_monthly!(statement: result.statement)

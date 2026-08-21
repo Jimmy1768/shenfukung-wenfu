@@ -138,6 +138,41 @@ last deliberately.
   phase — no code needed for either, since they're both "don't build
   this" decisions.
 
+**Post-merge-review defect, found and fixed**: OperatorKit Strategy
+reviewed the branch directly and found `PlatformBillingMonthlyCollectionJob`
+collected *every* pending monthly delivery ever created, unbounded by
+period — `reference_time` reached only the error-log metadata, never
+scoped the query. Verified independently before touching anything: `.monthly.where(status: "pending")`
+had no period filter, `PlatformBillingCollectionDispatcher` guards only
+kind/status/currency (no period guard either), and all 3 original tests
+created their delivery in the current period only — the backlog case was
+untested. Consequence: the first real collection run after any gap in
+scheduling (including first activation, since the old timers have been
+sitting disabled this whole time) would have charged every
+never-collected delivery across every past month in one pass, to live
+cards. Fixed: added `Billing::PlatformUsage.previous_month`/
+`.period_start_at_for` as the single shared computation both jobs use, so
+`reference_time` means the identical period in both; collection now
+scopes to `status: "pending", period_start_at: <that period>` instead of
+an unbounded query. Added the regression test Strategy asked for (a
+pending delivery from an earlier period, asserted not collected). 564/564
+green.
+
+**Still open, not resolved by the fix above — a real product/workflow
+question, not an engineering one**: Strategy separately flagged that
+`PlatformBillingDelivery::STATUSES` has no hold/void/skip state. A human
+who spots a mistake during the review-to-collection buffer has no
+affirmative way to pull that one delivery out of the collection pass —
+leaving it "pending" is the only option, and "pending" is exactly the
+state collection acts on. The 4-day buffer only protects against a
+mistake if there's a way to actually act on it; right now there isn't
+one. Not fixed here — inventing a new status/workflow unilaterally would
+be a real scope and product-design expansion beyond "split the job in
+two," not a pure bug fix. This needs the Director's decision (see Next
+Step) before Phase 3 can be said to actually deliver on its stated
+purpose, independent of the (already-untouched) activation safety gate
+below.
+
 **Explicit safety gate, not optional — still fully in force**: Finding 3
 already established the collection code is real (genuine
 `Stripe::Invoice.create` with `collection_method: "charge_automatically"`)
@@ -405,5 +440,16 @@ rather than mid-implementation.
 
 ## Next Step
 
-Phases ordered above. Still nothing implemented — awaiting the Director's
-go-ahead on which phase to start with.
+All 3 phases implemented and tested on `claude/platform-billing-findings`;
+nothing merged to `main` yet.
+
+One open decision before this can be considered done, not just merged:
+**how does an operator actually withhold one bad delivery from the
+monthly-collection pass?** Right now there's no such mechanism (see the
+"Still open" note under Phase 3 above) — the Director needs to decide
+either (a) add a real hold/void status to `PlatformBillingDelivery` with
+an operator-facing action to set it, or (b) accept that for now the only
+real safeguard is not enabling the collection timer at all until each
+period's review output has been manually eyeballed, and document that
+explicitly as the interim process. Either is a legitimate answer; picking
+one is not an engineering call to make unilaterally.

@@ -7,9 +7,23 @@ module Billing
     QualifyingRegistration = Data.define(:registration, :qualifying_at, :qualification_source)
     Result = Data.define(:period_start_at, :period_end_at, :registrations, :quote)
 
-    def self.for_month(temple:, month: TIME_ZONE.today)
+    # The calendar month a reference time's billing cycle covers: the month
+    # prior to whatever month reference_time itself falls in. Both the
+    # monthly-review job (which closes this month) and the monthly-collection
+    # job (which must dispatch only deliveries from this exact month, not an
+    # unbounded backlog) need this same value -- centralized here so the two
+    # can't silently drift out of sync with each other.
+    def self.previous_month(reference_time)
+      reference_time.in_time_zone(TIME_ZONE).to_date.beginning_of_month.prev_month
+    end
+
+    def self.period_start_at_for(month)
       date = month.to_date
-      period_start_at = TIME_ZONE.local(date.year, date.month, 1).beginning_of_day
+      TIME_ZONE.local(date.year, date.month, 1).beginning_of_day
+    end
+
+    def self.for_month(temple:, month: TIME_ZONE.today)
+      period_start_at = period_start_at_for(month)
       period_end_at = period_start_at + 1.month
       registrations = qualifying_registrations(temple:)
         .select { |entry| entry.qualifying_at >= period_start_at && entry.qualifying_at < period_end_at }
