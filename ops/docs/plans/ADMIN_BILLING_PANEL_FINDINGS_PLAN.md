@@ -111,6 +111,21 @@ until the Director is ready). For the demo temple today, it's genuinely
 inert on both counts (no scheduler, no saved payment method), independent
 of whatever Stripe mode is configured.
 
+**Director's stated belief (2026-08-21, not independently verified by this
+session): the configured `STRIPE_SECRET_KEY` is live mode, not test/sandbox.**
+Worth being precise about the actual implication, since Phase 5A's whole
+premise was validating against sandbox data first: if that belief is
+correct, the two inert-today conditions above (no scheduler, no saved
+payment method) are the *only* things currently preventing a real charge
+attempt — there is no sandbox layer underneath them. Any future work that
+populates a real `stripe_customer_id`/`stripe_payment_method_id` on any
+temple's `billing_settings`, or that manually invokes
+`PlatformBillingMonthlyCloseJob`/`StripePlatformBillingCollection`
+without deliberately checking this first, would be operating against
+real money, not test data. Worth the Director confirming this directly
+against the actual Stripe dashboard before any Phase 5A work proceeds,
+rather than relying on a recalled belief.
+
 ### 4. The same class of gap exists on the patron-facing side too — both directions
 
 Director asked to extend the sweep to `account/` (patron-facing) views.
@@ -145,9 +160,10 @@ one, and it's a playground/demo page rather than a real patron surface.
 
 ## Open Questions, Not Yet Answered
 
-- Is the configured `STRIPE_SECRET_KEY` live or test/sandbox mode? Only
-  the Director can answer this safely; not something this session
-  determines by inspecting the key itself.
+- ~~Is the configured `STRIPE_SECRET_KEY` live or test/sandbox mode?~~
+  **Partially resolved.** Director's stated belief is live mode (see
+  Finding 3) — not independently verified against the Stripe dashboard.
+  Treat as provisional until confirmed there directly.
 - Should `PlatformBillingMonthlyCloseJob` ever run automatically (a real
   cron/scheduler), or is manual triggering the intended model even once
   Phase 5A starts?
