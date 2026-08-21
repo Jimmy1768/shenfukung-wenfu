@@ -158,6 +158,19 @@ an unbounded query. Added the regression test Strategy asked for (a
 pending delivery from an earlier period, asserted not collected). 564/564
 green.
 
+Strategy then traced the full value chain by reading (review job →
+`PlatformStatementCloser` → `PlatformBillingDeliveryCreator` → collection
+job) and confirmed the fix holds by construction, not convention — but
+flagged that every test still hand-builds its delivery's `period_start_at`
+with the same helper the job calls, which proves the job's query is
+self-consistent but never proves a delivery born from the *real* path
+lands somewhere collection actually finds. Added
+`test/jobs/platform_billing_monthly_review_to_collection_test.rb`: runs
+the real review job, then the real collection job, and asserts the
+delivery review created through the actual closer/creator path is
+exactly the delivery collection dispatches — no hand-built
+`period_start_at` anywhere. 565/565 green.
+
 **Still open, not resolved by the fix above — a real product/workflow
 question, not an engineering one**: Strategy separately flagged that
 `PlatformBillingDelivery::STATUSES` has no hold/void/skip state. A human
