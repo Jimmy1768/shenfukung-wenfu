@@ -3,30 +3,30 @@
     <section class="card stack-item stack-item--xl stack-item--with-gutter">
       <header class="admin-section-header">
         <div>
-          <p class="muted">Platform billing</p>
-          <h1>Monthly registration usage</h1>
-          <p class="muted">Preview for <%= @current_usage.period_start_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m") %>. This local view does not create a charge.</p>
+          <p class="muted"><%= t(".eyebrow") %></p>
+          <h1><%= t(".title") %></h1>
+          <p class="muted"><%= t(".preview_note", period: @current_usage.period_start_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m")) %></p>
         </div>
       </header>
 
       <% quote = @current_usage.quote %>
       <div class="billing-facts-grid">
         <article class="billing-fact-card">
-          <span class="billing-fact-card__label">Completed active registrations</span>
+          <span class="billing-fact-card__label"><%= t(".facts.completed_registrations") %></span>
           <strong><%= quote.registration_count %></strong>
         </article>
         <article class="billing-fact-card">
-          <span class="billing-fact-card__label">Included registrations</span>
+          <span class="billing-fact-card__label"><%= t(".facts.included_registrations") %></span>
           <strong><%= quote.included_registration_count %></strong>
         </article>
         <article class="billing-fact-card">
-          <span class="billing-fact-card__label">Projected platform fee</span>
+          <span class="billing-fact-card__label"><%= t(".facts.projected_fee") %></span>
           <strong><%= Currency::Symbols.format_amount(quote.usage_total_cents, Billing::PlatformPricingPolicy::CURRENCY) %></strong>
         </article>
         <article class="billing-fact-card billing-fact-card--wide">
-          <span class="billing-fact-card__label">Pricing policy</span>
+          <span class="billing-fact-card__label"><%= t(".facts.pricing_policy") %></span>
           <strong><%= Billing::PlatformPricingPolicy::VERSION %></strong>
-          <p>NT$1,500 base includes 500 registrations. Progressive usage begins at registration 501; payment value and donations are not used.</p>
+          <p><%= t(".facts.pricing_policy_note") %></p>
         </article>
       </div>
     </section>
@@ -36,8 +36,64 @@
     <section class="card stack-item stack-item--fluid admin-table-card">
       <header class="admin-section-header">
         <div>
-          <h2>Closed statements</h2>
-          <p class="muted">Statements and their TempleMate collection evidence.</p>
+          <h2><%= t(".tier_chart.title") %></h2>
+        </div>
+      </header>
+
+      <table class="admin-table">
+        <thead>
+          <tr>
+            <th><%= t(".tier_chart.tier") %></th>
+            <th><%= t(".tier_chart.range") %></th>
+            <th><%= t(".tier_chart.unit_fee") %></th>
+            <th><%= t(".tier_chart.count") %></th>
+            <th><%= t(".tier_chart.subtotal") %></th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><%= t(".tier_chart.base.label") %></td>
+            <td><%= t(".tier_chart.base.range") %></td>
+            <td><%= t(".tier_chart.base.unit_fee") %></td>
+            <td><%= quote.included_registration_count %></td>
+            <td><%= Currency::Symbols.format_amount(quote.base_fee_cents, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+          </tr>
+          <tr>
+            <td><%= t(".tier_chart.band_one.label") %></td>
+            <td><%= t(".tier_chart.band_one.range") %></td>
+            <td><%= Currency::Symbols.format_amount(Billing::PlatformPricingPolicy::BAND_ONE_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+            <td><%= quote.band_one_registration_count %></td>
+            <td><%= Currency::Symbols.format_amount(quote.band_one_fee_cents, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+          </tr>
+          <tr>
+            <td><%= t(".tier_chart.band_two.label") %></td>
+            <td><%= t(".tier_chart.band_two.range") %></td>
+            <td><%= Currency::Symbols.format_amount(Billing::PlatformPricingPolicy::BAND_TWO_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+            <td><%= quote.band_two_registration_count %></td>
+            <td><%= Currency::Symbols.format_amount(quote.band_two_fee_cents, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+          </tr>
+          <tr>
+            <td><%= t(".tier_chart.band_three.label") %></td>
+            <td><%= t(".tier_chart.band_three.range") %></td>
+            <td><%= Currency::Symbols.format_amount(Billing::PlatformPricingPolicy::BAND_THREE_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+            <td><%= quote.band_three_registration_count %></td>
+            <td><%= Currency::Symbols.format_amount(quote.band_three_fee_cents, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+          </tr>
+          <tr>
+            <td colspan="4"><strong><%= t(".tier_chart.total") %></strong></td>
+            <td><strong><%= Currency::Symbols.format_amount(quote.usage_total_cents, Billing::PlatformPricingPolicy::CURRENCY) %></strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+  </div>
+
+  <div class="admin-stack__row">
+    <section class="card stack-item stack-item--fluid admin-table-card">
+      <header class="admin-section-header">
+        <div>
+          <h2><%= t(".statements.title") %></h2>
+          <p class="muted"><%= t(".statements.subtitle") %></p>
         </div>
       </header>
 
@@ -45,13 +101,13 @@
         <table class="admin-table">
           <thead>
             <tr>
-              <th>Period</th>
-              <th>Registrations</th>
-              <th>Usage fee</th>
-              <th>Credits</th>
-              <th>Total</th>
-              <th>Closed</th>
-              <th>Collection</th>
+              <th><%= t(".statements.table.period") %></th>
+              <th><%= t(".statements.table.registrations") %></th>
+              <th><%= t(".statements.table.usage_fee") %></th>
+              <th><%= t(".statements.table.credits") %></th>
+              <th><%= t(".statements.table.total") %></th>
+              <th><%= t(".statements.table.closed") %></th>
+              <th><%= t(".statements.table.collection") %></th>
             </tr>
           </thead>
           <tbody>
@@ -63,13 +119,13 @@
                 <td><%= Currency::Symbols.format_amount(statement.adjustment_total_cents, statement.currency) %></td>
                 <td><strong><%= Currency::Symbols.format_amount(statement.total_cents, statement.currency) %></strong></td>
                 <td><%= statement.closed_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m-%d") %></td>
-                <td><%= statement.platform_billing_delivery&.status&.titleize || "Pending" %><% if statement.platform_billing_delivery&.due_at %> · due <%= statement.platform_billing_delivery.due_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m-%d") %><% end %></td>
+                <td><%= statement.platform_billing_delivery&.status&.titleize || t(".statements.pending") %><% if statement.platform_billing_delivery&.due_at %> · <%= t(".statements.due") %> <%= statement.platform_billing_delivery.due_at.in_time_zone(Billing::PlatformUsage::TIME_ZONE).strftime("%Y-%m-%d") %><% end %></td>
               </tr>
             <% end %>
           </tbody>
         </table>
       <% else %>
-        <p class="muted">No statement has been closed yet.</p>
+        <p class="muted"><%= t(".statements.empty") %></p>
       <% end %>
     </section>
   </div>

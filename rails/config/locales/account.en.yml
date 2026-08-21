@@ -305,6 +305,10 @@ en:
           ceremony_notes: "Notes"
         submit: "Submit registration"
         duplicate_error: "You already have a registration for this offering."
+      edit:
+        eyebrow: "Registration details"
+        title: "Update contact information"
+        subtitle: "If your schedule or contact details have changed, update them here."
       index:
         eyebrow: "My registrations"
         title: "Participation history"
@@ -500,7 +504,15 @@ en:
         copy_hint: "If the button does not work, copy and paste the link above into your browser."
         ignore_notice: "If you did not request a reset, you can safely ignore this email."
         signoff_html: "Thanks,<br />The %{brand} team"
+    temples:
+      index:
+        title: "Choose a temple to sign in to"
+        subtitle: "Pick the temple you want to manage, then sign in to your account to register and pay."
     dependents:
+      new_header:
+        eyebrow: "Add dependent"
+        title: "Add a person you care for"
+        subtitle: "Fill in details for a family member or dependent you register on behalf of."
       edit_header:
         eyebrow: "Edit dependent"
         subtitle: "Update contact details and notes."
@@ -530,3 +542,29 @@ en:
         period_default: "Ongoing blessing"
         cta: "Register this service"
       empty: "No services are currently published. Please check back later."
+    oauth_resolutions:
+      show:
+        eyebrow: "Sign-in method"
+        title: "Continue with %{provider}"
+        subtitle: "Choose whether to add this sign-in method to an existing account or create a new account."
+        existing:
+          title: "I already have an account"
+          subtitle: "Sign in to prove ownership before this method is linked."
+          email_placeholder: "Email"
+          password_placeholder: "Password"
+          submit: "Link to my account"
+        new_account:
+          title: "Create a new account"
+          subtitle: "Provide your profile and accept the terms before continuing."
+          email_placeholder: "Email"
+          name_placeholder: "Name"
+          password_placeholder: "Password"
+          terms_label: "I accept the current terms."
+          submit: "Create account"
+    payments:
+      ecpay_checkouts:
+        show:
+          title: "Redirecting to ECPay"
+          body: "We're opening the secure ECPay payment page for this registration."
+          noscript_notice: "JavaScript is required to continue automatically."
+          submit: "Continue to ECPay"

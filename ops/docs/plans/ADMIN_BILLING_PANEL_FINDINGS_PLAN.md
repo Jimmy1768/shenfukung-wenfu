@@ -1,7 +1,8 @@
 # Admin Billing Panel Findings Plan
 
-Status: findings gathered, organized into 3 phases by dependency/risk; no
-phase yet accepted for implementation
+Status: findings gathered, organized into 3 phases by dependency/risk.
+Phase 1 implemented and tested (558/558 green) on this branch. Phase 2/3
+not yet started.
 
 Owner: Wenfu Planning / Director
 
@@ -23,7 +24,7 @@ Ordered by dependency and risk, not by discovery order. Each phase is
 independent of the others unless stated — nothing here requires the whole
 doc to land in one shot.
 
-### Phase 1 — Localization + tier chart (low risk, purely additive, no dependencies)
+### Phase 1 — Localization + tier chart (low risk, purely additive, no dependencies) — DONE
 
 Pure view-layer work: add `t()` calls, add locale keys, render data that
 already exists. No behavior change, no schema change, no shared
@@ -31,14 +32,25 @@ infrastructure touched. Safe to ship independently of everything else in
 this doc.
 
 - Finding 1: localize all 3 admin screens (`platform_billing/show`,
-  `payments/new`, `sessions/new`).
+  `payments/new`, `sessions/new`). Done — new `admin.platform_billing.show.*`,
+  `admin.payments.new.*`, `admin.sessions.new.*` namespaces in both
+  `admin.en.yml` and `admin.zh-TW.yml`.
 - Finding 4: localize all patron-side hits, both directions
   (`dependents/new`, `temples/index`, `registrations/edit` need English
   added; `oauth_resolutions/show`, `payments/ecpay_checkouts/show` need
-  Chinese added).
+  Chinese added). Done — note `payments/ecpay_checkouts/show.html.erb` is
+  actually `Payments::EcpayCheckoutsController` (no `Account::` module), so
+  it uses explicit `account.payments.ecpay_checkouts.show.*` keys rather
+  than relative lookup.
 - Finding 2: render the real 3-band tier chart instead of the one-sentence
   summary. Data already computed by `PlatformPricingPolicy::Quote` — view
-  work only.
+  work only. Done — full tier breakdown table (base/band 1/2/3 + total) added
+  to `platform_billing/show.html.erb`.
+- Fallout fixed: 3 existing integration tests
+  (`oauth_account_resolution_test.rb`, `oauth_identity_management_test.rb`,
+  `admin/platform_billing_test.rb`) asserted the old hardcoded-English copy
+  literally; updated to assert via `I18n.t(...)`, matching the rest of the
+  suite's convention. 558/558 green on a fenced disposable test DB.
 
 ### Phase 2 — Grace period + dead-constant cleanup (small, contained behavior change)
 

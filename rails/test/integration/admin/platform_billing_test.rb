@@ -14,8 +14,10 @@ class Admin::PlatformBillingTest < ActionDispatch::IntegrationTest
     get admin_platform_billing_path
 
     assert_response :success
-    assert_includes response.body, "Monthly registration usage"
-    assert_includes response.body, "Closed statements"
+    assert_includes response.body, I18n.t("admin.platform_billing.show.title")
+    assert_includes response.body, I18n.t("admin.platform_billing.show.statements.title")
+    assert_includes response.body, I18n.t("admin.platform_billing.show.tier_chart.title")
+    assert_includes response.body, I18n.t("admin.platform_billing.show.tier_chart.band_one.label")
   end
 
   test "non-owner cannot view platform billing" do

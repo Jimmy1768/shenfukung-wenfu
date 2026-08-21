@@ -1,31 +1,31 @@
 <section class="account-section">
   <header class="section-header">
     <div>
-      <p class="eyebrow">Sign-in method</p>
-      <h2>Continue with <%= @provider.titleize %></h2>
-      <p>Choose whether to add this sign-in method to an existing account or create a new account.</p>
+      <p class="eyebrow"><%= t(".eyebrow") %></p>
+      <h2><%= t(".title", provider: @provider.titleize) %></h2>
+      <p><%= t(".subtitle") %></p>
     </div>
   </header>
 
   <div class="dependent-grid">
     <article class="dependent-card">
-      <div><h3>I already have an account</h3><p class="muted">Sign in to prove ownership before this method is linked.</p></div>
+      <div><h3><%= t(".existing.title") %></h3><p class="muted"><%= t(".existing.subtitle") %></p></div>
       <%= form_with url: account_oauth_resolution_existing_path, method: :post do |form| %>
         <%= hidden_field_tag :token, params[:token] %><%= hidden_field_tag :provider, params[:provider] %>
-        <%= form.email_field "account[email]", placeholder: "Email", required: true %>
-        <%= form.password_field "account[password]", placeholder: "Password", required: true %>
-        <%= form.submit "Link to my account", class: "pill-link primary" %>
+        <%= form.email_field "account[email]", placeholder: t(".existing.email_placeholder"), required: true %>
+        <%= form.password_field "account[password]", placeholder: t(".existing.password_placeholder"), required: true %>
+        <%= form.submit t(".existing.submit"), class: "pill-link primary" %>
       <% end %>
     </article>
     <article class="dependent-card">
-      <div><h3>Create a new account</h3><p class="muted">Provide your profile and accept the terms before continuing.</p></div>
+      <div><h3><%= t(".new_account.title") %></h3><p class="muted"><%= t(".new_account.subtitle") %></p></div>
       <%= form_with url: account_oauth_resolution_new_account_path, method: :post do |form| %>
         <%= hidden_field_tag :token, params[:token] %><%= hidden_field_tag :provider, params[:provider] %>
-        <%= form.email_field "account[email]", placeholder: "Email", required: true %>
-        <%= form.text_field "account[name]", placeholder: "Name", required: true %>
-        <%= form.password_field "account[password]", placeholder: "Password", required: true %>
-        <label><%= check_box_tag "account[terms_accepted]", "true", false %> I accept the current terms.</label>
-        <%= form.submit "Create account", class: "pill-link primary" %>
+        <%= form.email_field "account[email]", placeholder: t(".new_account.email_placeholder"), required: true %>
+        <%= form.text_field "account[name]", placeholder: t(".new_account.name_placeholder"), required: true %>
+        <%= form.password_field "account[password]", placeholder: t(".new_account.password_placeholder"), required: true %>
+        <label><%= check_box_tag "account[terms_accepted]", "true", false %> <%= t(".new_account.terms_label") %></label>
+        <%= form.submit t(".new_account.submit"), class: "pill-link primary" %>
       <% end %>
     </article>
   </div>
