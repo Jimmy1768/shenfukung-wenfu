@@ -22,8 +22,8 @@ module Account
       assert_redirected_to /account\/oauth\/resolution/
       assert_nil session[AppConstants::Sessions.key(:account)]
       follow_redirect!
-      assert_includes response.body, "I already have an account"
-      assert_includes response.body, "Create a new account"
+      assert_includes response.body, I18n.t("account.oauth_resolutions.show.existing.title")
+      assert_includes response.body, I18n.t("account.oauth_resolutions.show.new_account.title")
     end
 
     test "existing-account proof links pending Apple identity and consumes it once" do

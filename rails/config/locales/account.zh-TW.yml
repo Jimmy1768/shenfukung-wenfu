@@ -312,6 +312,10 @@ zh-TW:
           ceremony_notes: "其他備註"
         submit: "送出報名"
         duplicate_error: "此供品已完成報名，若需協助請聯絡廟方。"
+      edit:
+        eyebrow: "報名資料"
+        title: "更新聯絡資訊"
+        subtitle: "若行程或聯絡方式有變動，可在此調整。"
       index:
         eyebrow: "我的報名"
         title: "參與紀錄"
@@ -507,7 +511,15 @@ zh-TW:
         copy_hint: "若按鈕無法使用，請複製上方連結到瀏覽器開啟。"
         ignore_notice: "若您沒有發出重設請求，可忽略此封郵件。"
         signoff_html: "感謝您，<br />%{brand} 團隊"
+    temples:
+      index:
+        title: "選擇要登入的寺廟"
+        subtitle: "請先挑選要管理的寺廟，再登入會員專區進行報名與付款。"
     dependents:
+      new_header:
+        eyebrow: "新增家屬"
+        title: "新增受照護者"
+        subtitle: "填寫想要代為報名的家人或成員資料。"
       edit_header:
         eyebrow: "編輯家屬"
         subtitle: "更新聯絡方式與備註。"
@@ -537,3 +549,29 @@ zh-TW:
         period_default: "長期祈福"
         cta: "登入並報名"
       empty: "目前沒有公開的祈福服務。"
+    oauth_resolutions:
+      show:
+        eyebrow: "登入方式"
+        title: "使用 %{provider} 繼續"
+        subtitle: "請選擇將此登入方式加入現有帳號，或建立新帳號。"
+        existing:
+          title: "我已經有帳號"
+          subtitle: "請先登入以驗證帳號歸屬，再連結此登入方式。"
+          email_placeholder: "電子郵件"
+          password_placeholder: "密碼"
+          submit: "連結至我的帳號"
+        new_account:
+          title: "建立新帳號"
+          subtitle: "請填寫個人資料並同意條款後繼續。"
+          email_placeholder: "電子郵件"
+          name_placeholder: "姓名"
+          password_placeholder: "密碼"
+          terms_label: "我同意目前的服務條款。"
+          submit: "建立帳號"
+    payments:
+      ecpay_checkouts:
+        show:
+          title: "正在前往 ECPay"
+          body: "系統正在為此筆報名開啟 ECPay 安全付款頁面。"
+          noscript_notice: "需要啟用 JavaScript 才能自動繼續。"
+          submit: "前往 ECPay"

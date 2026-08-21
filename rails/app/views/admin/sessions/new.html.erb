@@ -2,15 +2,15 @@
 
 <section class="card login-card">
   <header>
-    <h1>Temple Management System</h1>
-    <p>Sign in to manage offerings, orders, and patron communications for your temple.</p>
+    <h1><%= t(".title") %></h1>
+    <p><%= t(".subtitle") %></p>
   </header>
 
   <div class="login-grid single-temple">
     <div class="login-credentials field-panel register-panel register-social">
       <div class="login-panel-head">
-        <h2 class="login-subhead">Continue with OAuth</h2>
-        <p class="muted">Use the provider your owner or admin approved.</p>
+        <h2 class="login-subhead"><%= t(".oauth_heading") %></h2>
+        <p class="muted"><%= t(".oauth_subtitle") %></p>
       </div>
       <% if oauth_links.any? %>
         <div class="oauth-button-grid">
@@ -24,34 +24,34 @@
           <% end %>
         </div>
       <% else %>
-        <p class="muted">OAuth providers are not configured yet.</p>
+        <p class="muted"><%= t(".oauth_unavailable") %></p>
       <% end %>
-      <p class="muted">Need access? Ask your owner admin to invite you.</p>
+      <p class="muted"><%= t(".oauth_request_access") %></p>
     </div>
 
     <div class="login-actions field-panel register-panel register-email">
       <div class="login-panel-head">
-        <h2 class="login-subhead">Sign in with email</h2>
-        <p class="muted">Use the credentials from your onboarding email.</p>
+        <h2 class="login-subhead"><%= t(".email_heading") %></h2>
+        <p class="muted"><%= t(".email_subtitle") %></p>
       </div>
       <%= form_with url: admin_sessions_path, scope: :session, local: true, class: "login-form" do |f| %>
         <div class="form-field">
-          <%= f.label :email, "Email" %>
+          <%= f.label :email, t(".email_label") %>
           <%= f.email_field :email, required: true, autofocus: true, value: params.dig(:session, :email),
-            placeholder: "admin@example.com" %>
+            placeholder: t(".email_placeholder") %>
         </div>
         <div class="form-field">
-          <%= f.label :password, "Password" %>
+          <%= f.label :password, t(".password_label") %>
           <%= f.password_field :password, required: true, placeholder: "••••••••" %>
         </div>
-        <%= f.submit "Sign in", class: "btn btn-primary" %>
+        <%= f.submit t(".submit"), class: "btn btn-primary" %>
       <% end %>
     </div>
   </div>
 
   <footer class="login-footer">
     <p class="muted">
-      Each admin account is scoped to a single temple. Owners can grant or revoke admin access anytime.
+      <%= t(".footer") %>
     </p>
   </footer>
 </section>

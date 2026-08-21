@@ -260,6 +260,20 @@ zh-TW:
         invalid_credentials: "帳號或密碼不正確，請使用有效的管理員帳號。"
         not_admin: "此帳號尚未取得宮廟管理權限，請聯絡擁有者管理員。"
         inactive: "此管理權限目前為停用狀態，請聯絡擁有者管理員。"
+      new:
+        title: "宮廟管理系統"
+        subtitle: "登入以管理您宮廟的供品、訂單與信眾聯繫。"
+        oauth_heading: "使用 OAuth 繼續"
+        oauth_subtitle: "請使用擁有者或管理員核准的登入方式。"
+        oauth_unavailable: "尚未設定 OAuth 登入方式。"
+        oauth_request_access: "需要權限嗎？請聯絡擁有者管理員邀請您。"
+        email_heading: "使用電子郵件登入"
+        email_subtitle: "請使用您收到的邀請信中的帳號密碼。"
+        email_label: "電子郵件"
+        email_placeholder: "admin@example.com"
+        password_label: "密碼"
+        submit: "登入"
+        footer: "每個管理員帳號僅限單一宮廟使用。擁有者可隨時授予或撤銷管理權限。"
     temple_switches:
       flash:
         owner_only: "只有擁有者帳號可以切換宮廟。"
@@ -348,6 +362,52 @@ zh-TW:
         billing_setup_return_missing: "Stripe 未回傳 checkout session。"
         review_errors: "請檢查帳務設定。"
         owner_only: "只有擁有者管理員可以修改帳務設定。"
+    platform_billing:
+      show:
+        eyebrow: "平台帳務"
+        title: "每月報名使用量"
+        preview_note: "%{period} 預覽。此頁面僅供檢視，不會產生實際扣款。"
+        facts:
+          completed_registrations: "已完成的有效報名數"
+          included_registrations: "已包含報名數"
+          projected_fee: "預估平台費用"
+          pricing_policy: "計價方案"
+          pricing_policy_note: "NT$1,500 基本費已包含 500 筆報名。第 501 筆起採階梯式計價；付款金額與添油香金額不列入計算。"
+        tier_chart:
+          title: "各階梯費用明細"
+          tier: "階梯"
+          range: "報名區間"
+          unit_fee: "單筆費用"
+          count: "本階梯筆數"
+          subtotal: "小計"
+          total: "總計"
+          base:
+            label: "基本費"
+            range: "前 500 筆報名"
+            unit_fee: "已包含"
+          band_one:
+            label: "第一階"
+            range: "第 501–2,000 筆報名"
+          band_two:
+            label: "第二階"
+            range: "第 2,001–10,000 筆報名"
+          band_three:
+            label: "第三階"
+            range: "第 10,001 筆以上"
+        statements:
+          title: "已結算帳單"
+          subtitle: "帳單及其 TempleMate 收款證明。"
+          empty: "尚未結算任何帳單。"
+          pending: "待處理"
+          due: "到期日"
+          table:
+            period: "期間"
+            registrations: "報名數"
+            usage_fee: "使用費"
+            credits: "折抵"
+            total: "總計"
+            closed: "結算日期"
+            collection: "收款狀態"
     internal:
       layout:
         brand: "內部工具"
@@ -1252,6 +1312,15 @@ zh-TW:
           recorded_by: "紀錄人員"
           processed: "處理時間"
           view: "檢視"
+      new:
+        title: "登記現金收款"
+        total_due: "應收金額"
+        amount_label: "金額（分）"
+        currency_label: "幣別"
+        notes_label: "備註"
+        notes_hint: "選填－註明收款人或收據相關資訊。"
+        submit: "登記現金收款"
+        start_online_checkout: "改用線上付款"
       filters:
         title: "篩選付款"
         subtitle: "可依信眾、供品、付款方式或自訂日期區間搜尋。"

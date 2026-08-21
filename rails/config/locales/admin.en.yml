@@ -260,6 +260,20 @@ en:
         invalid_credentials: "Those credentials did not match. Use an active admin account."
         not_admin: "That account hasn't been granted temple admin access yet. Ask your owner admin to invite you."
         inactive: "Your temple admin access is inactive. Contact your owner admin for help."
+      new:
+        title: "Temple Management System"
+        subtitle: "Sign in to manage offerings, orders, and patron communications for your temple."
+        oauth_heading: "Continue with OAuth"
+        oauth_subtitle: "Use the provider your owner or admin approved."
+        oauth_unavailable: "OAuth providers are not configured yet."
+        oauth_request_access: "Need access? Ask your owner admin to invite you."
+        email_heading: "Sign in with email"
+        email_subtitle: "Use the credentials from your onboarding email."
+        email_label: "Email"
+        email_placeholder: "admin@example.com"
+        password_label: "Password"
+        submit: "Sign in"
+        footer: "Each admin account is scoped to a single temple. Owners can grant or revoke admin access anytime."
     temple_switches:
       flash:
         owner_only: "Temple switching is limited to owner accounts."
@@ -348,6 +362,52 @@ en:
         billing_setup_return_missing: "Stripe did not return a checkout session."
         review_errors: "Please review the billing settings."
         owner_only: "Only owner admins can change billing settings."
+    platform_billing:
+      show:
+        eyebrow: "Platform billing"
+        title: "Monthly registration usage"
+        preview_note: "Preview for %{period}. This local view does not create a charge."
+        facts:
+          completed_registrations: "Completed active registrations"
+          included_registrations: "Included registrations"
+          projected_fee: "Projected platform fee"
+          pricing_policy: "Pricing policy"
+          pricing_policy_note: "NT$1,500 base includes 500 registrations. Progressive usage begins at registration 501; payment value and donations are not used."
+        tier_chart:
+          title: "Fee breakdown by tier"
+          tier: "Tier"
+          range: "Registrations"
+          unit_fee: "Unit fee"
+          count: "Count in tier"
+          subtotal: "Subtotal"
+          total: "Total"
+          base:
+            label: "Base fee"
+            range: "First 500 registrations"
+            unit_fee: "Included"
+          band_one:
+            label: "Tier 1"
+            range: "Registrations 501–2,000"
+          band_two:
+            label: "Tier 2"
+            range: "Registrations 2,001–10,000"
+          band_three:
+            label: "Tier 3"
+            range: "Registrations 10,001+"
+        statements:
+          title: "Closed statements"
+          subtitle: "Statements and their TempleMate collection evidence."
+          empty: "No statement has been closed yet."
+          pending: "Pending"
+          due: "due"
+          table:
+            period: "Period"
+            registrations: "Registrations"
+            usage_fee: "Usage fee"
+            credits: "Credits"
+            total: "Total"
+            closed: "Closed"
+            collection: "Collection"
     internal:
       layout:
         brand: "Internal Tools"
@@ -1254,6 +1314,15 @@ en:
           recorded_by: "Recorded by"
           processed: "Processed"
           view: "View"
+      new:
+        title: "Record Cash Payment"
+        total_due: "Total due"
+        amount_label: "Amount (cents)"
+        currency_label: "Currency"
+        notes_label: "Notes"
+        notes_hint: "Optional – note who provided the cash or any receipt details."
+        submit: "Record cash payment"
+        start_online_checkout: "Start online checkout"
       filters:
         title: "Filter payments"
         subtitle: "Search patrons, offerings, payment methods, or provide a custom date range."

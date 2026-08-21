@@ -1,6 +1,6 @@
 <section style="max-width: 40rem; margin: 3rem auto; padding: 0 1rem; font-family: system-ui, sans-serif;">
-  <h1>Redirecting to ECPay</h1>
-  <p>We’re opening the secure ECPay payment page for this registration.</p>
+  <h1><%= t("account.payments.ecpay_checkouts.show.title") %></h1>
+  <p><%= t("account.payments.ecpay_checkouts.show.body") %></p>
 
   <form id="ecpay-checkout-form" action="<%= @checkout_url %>" method="post">
     <% @form_fields.each do |key, value| %>
@@ -8,8 +8,8 @@
     <% end %>
 
     <noscript>
-      <p>JavaScript is required to continue automatically.</p>
-      <button type="submit">Continue to ECPay</button>
+      <p><%= t("account.payments.ecpay_checkouts.show.noscript_notice") %></p>
+      <button type="submit"><%= t("account.payments.ecpay_checkouts.show.submit") %></button>
     </noscript>
   </form>
 </section>

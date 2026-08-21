@@ -110,18 +110,34 @@ create a customer, subscription, invoice, charge, payment, or entitlement.
 ## Deterministic enqueue schedule
 
 Rendered units are created by
-`ops/scripts/render_ops_templates.rb --slug <slug> --output <directory>`:
+`ops/scripts/render_ops_templates.rb --slug <slug> --output <directory>`.
+
+Monthly close was split into two separate steps, run on two separate
+schedules, deliberately -- so a mistake caught in the gap between them can
+be fixed before any charge fires:
 
 | Timer | Service action | Calendar | Delivery behavior |
 | --- | --- | --- | --- |
-| `<slug>-platform-billing-monthly-close.timer` | `PlatformBillingMonthlyCloseJob.perform_later` | daily at 00:20 Asia/Taipei | idempotently closes the prior month; the next daily run is the deterministic retry for recorded per-temple close failures |
+| `<slug>-platform-billing-monthly-review.timer` | `PlatformBillingMonthlyReviewJob.perform_later` | daily at 00:20 Asia/Taipei | idempotently closes the prior month and creates the (still-pending, uncharged) delivery; the next daily run is the deterministic retry for recorded per-temple review failures |
+| `<slug>-platform-billing-monthly-collection.timer` | `PlatformBillingMonthlyCollectionJob.perform_later` | the 5th of the month only, at 00:20 Asia/Taipei | dispatches/charges every delivery review left pending. Deliberately **not** daily, unlike review: running it every day would eventually dispatch the following month's pending delivery before that month's own review-to-collection buffer had elapsed |
 | `<slug>-platform-billing-lifecycle.timer` | `PlatformBillingLifecycleJob.perform_later` | hourly at minute 05 Asia/Taipei | advances persisted overdue/grace deadlines independently of webhook replays |
 
-Both timers are persistent and have `RandomizedDelaySec=0`. Each one-shot
+All timers are persistent and have `RandomizedDelaySec=0`. Each one-shot
 service retries an enqueue failure after five minutes, with a start limit of
 three attempts in a one-hour window. The units are installed but disabled: no
 automatic close, collection, or lifecycle advancement runs until an explicit
 first-tenant onboarding decision enables them.
+
+The original design (a single `PlatformBillingMonthlyCloseJob` running daily,
+closing and dispatching in the same call) was replaced by the two-step split
+above. The old `<slug>-platform-billing-monthly-close.service`/`.timer` units
+installed on the host from the original `af459d9` rollout reference a job
+class that no longer exists after this change; they were already disabled
+and never fired, so this is inert, but they should be removed (and the new
+review/collection units installed in their place) the next time someone with
+production access re-runs the systemd unit staging step -- this change does
+not do that itself, since installing/enabling units on the host is a
+separate, deliberate step from building the code.
 
 ## First-tenant gate and preserved boundaries
 

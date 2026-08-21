@@ -167,8 +167,10 @@ nginx_output_dir = File.join(output_root, "nginx")
 templates = {
   File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-puma.service") => File.join(systemd_output_dir, "#{slug}-puma.service"),
   File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-sidekiq.service") => File.join(systemd_output_dir, "#{slug}-sidekiq.service"),
-  File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-platform-billing-monthly-close.service") => File.join(systemd_output_dir, "#{slug}-platform-billing-monthly-close.service"),
-  File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-platform-billing-monthly-close.timer") => File.join(systemd_output_dir, "#{slug}-platform-billing-monthly-close.timer"),
+  File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-platform-billing-monthly-review.service") => File.join(systemd_output_dir, "#{slug}-platform-billing-monthly-review.service"),
+  File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-platform-billing-monthly-review.timer") => File.join(systemd_output_dir, "#{slug}-platform-billing-monthly-review.timer"),
+  File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-platform-billing-monthly-collection.service") => File.join(systemd_output_dir, "#{slug}-platform-billing-monthly-collection.service"),
+  File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-platform-billing-monthly-collection.timer") => File.join(systemd_output_dir, "#{slug}-platform-billing-monthly-collection.timer"),
   File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-platform-billing-lifecycle.service") => File.join(systemd_output_dir, "#{slug}-platform-billing-lifecycle.service"),
   File.join(ROOT_DIR, "ops", "systemd", "template", "golden-template-platform-billing-lifecycle.timer") => File.join(systemd_output_dir, "#{slug}-platform-billing-lifecycle.timer")
 }

@@ -198,7 +198,7 @@ module Account
       follow_redirect!
 
       assert_response :success
-      assert_includes response.body, "I already have an account"
+      assert_includes response.body, I18n.t("account.oauth_resolutions.show.existing.title")
       assert_nil User.find_by(email: "apple-missing-name@example.com")
       assert_nil session[AppConstants::Sessions.key(:account)]
     end

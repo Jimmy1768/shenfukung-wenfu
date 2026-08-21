@@ -1,0 +1,20 @@
+# Enqueues the idempotent prior-month TempleMate close + pending-delivery
+# creation through Rails. Deliberately does not collect/charge -- see
+# golden-template-platform-billing-monthly-collection.service for that,
+# run separately a few days later.
+# This unit only enqueues platform-billing work.
+
+[Unit]
+Description={{project_name}} platform billing monthly-review enqueue
+After=network.target
+StartLimitIntervalSec=1h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=jimmy1768_user
+WorkingDirectory=/home/jimmy1768_user/Projects/{{project_slug}}/rails
+EnvironmentFile=/etc/default/{{project_slug}}-env
+ExecStart=/usr/bin/bash -lc 'bundle exec rails runner "PlatformBillingMonthlyReviewJob.perform_later"'
+Restart=on-failure
+RestartSec=5min

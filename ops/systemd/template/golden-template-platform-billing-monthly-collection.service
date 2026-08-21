@@ -1,0 +1,22 @@
+# Enqueues collection/charge dispatch for every monthly delivery left
+# pending by the earlier monthly-review step. Deliberately scheduled for a
+# single fixed day each month (see the .timer's OnCalendar), never daily --
+# unlike review, running this unconditionally every day would eventually
+# dispatch the FOLLOWING month's pending delivery before that month's own
+# review-to-collection buffer has elapsed.
+# This unit only enqueues platform-billing work.
+
+[Unit]
+Description={{project_name}} platform billing monthly-collection enqueue
+After=network.target
+StartLimitIntervalSec=1h
+StartLimitBurst=3
+
+[Service]
+Type=oneshot
+User=jimmy1768_user
+WorkingDirectory=/home/jimmy1768_user/Projects/{{project_slug}}/rails
+EnvironmentFile=/etc/default/{{project_slug}}-env
+ExecStart=/usr/bin/bash -lc 'bundle exec rails runner "PlatformBillingMonthlyCollectionJob.perform_later"'
+Restart=on-failure
+RestartSec=5min
