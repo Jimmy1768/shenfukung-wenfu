@@ -151,11 +151,15 @@ one, and it's a playground/demo page rather than a real patron surface.
 - Should `PlatformBillingMonthlyCloseJob` ever run automatically (a real
   cron/scheduler), or is manual triggering the intended model even once
   Phase 5A starts?
-- Public marketing pages are Vue-based, not Rails ERB — the sweep method
-  used here (grep for `t("` across `.erb` files) doesn't apply there.
-  Not yet checked at all; would need a different approach (Vue's own
-  i18n mechanism, whatever that is) if the Director wants that covered
-  too.
+- ~~Public marketing pages are Vue-based...~~ **Resolved, not open.**
+  Checked the Vue router (`vue/src/layouts/classic/routes.js`) directly:
+  it only exposes marketing/informational routes (home, about, events,
+  archive, news, services, contact) — no login, registration, account, or
+  payment routes anywhere. All real functionality (login, registrations,
+  payments, account management) is server-rendered by Rails under
+  `/account`, confirmed, not assumed. Out of scope for this findings doc
+  for that reason — nothing "functional" there to have a localization or
+  billing gap in.
 
 ## Next Step
 
