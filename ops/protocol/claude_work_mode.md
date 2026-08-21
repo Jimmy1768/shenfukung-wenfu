@@ -30,6 +30,32 @@ deployment, etc.) belong in `shengfukung_wenfu_context.md`, not here.
   as reference docs.
 - Test until green on the branch, then merge back into `main`.
 
+## Before Editing A Governance File
+
+Governance files are frequently contract-tested. Before editing anything
+under `ops/protocol/`, `.agents/`, or any `AGENTS.md`/`CLAUDE.md`, grep the
+test suite for that filename first:
+
+```
+grep -rl "<filename>" test/ spec/ tests/
+```
+
+If a test references it, that test is an owned path of the change being
+made, not fallout to discover after the fact. Two failure modes, both
+real, both already hit once:
+
+- **Content assertions.** A test asserts an exact phrase appears in a
+  specific governance file. Relocating that phrase — even to a more
+  correct home — breaks the test. Watch line wrapping too: a substring
+  match fails when a phrase is split across a newline, which looks like
+  missing content but isn't.
+- **Digest pins.** A manifest records a file's hash. Any edit invalidates
+  it. Regenerate the digest last, after the file is actually final, not
+  before.
+
+This rule applies to itself: before editing this file, grep for
+`claude_work_mode.md` the same way.
+
 ## Roles
 
 - **Planning** — the session where the Director and the model actually
