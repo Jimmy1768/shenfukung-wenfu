@@ -51,7 +51,7 @@ module Admin
     private
 
     def require_owner_admin!
-      return if can_manage_admins_for_current_temple?
+      return if owner_admin_for_current_temple?
 
       redirect_to admin_dashboard_path, alert: t("admin.payment_methods.flash.owner_only")
     end

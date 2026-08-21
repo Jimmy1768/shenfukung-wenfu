@@ -14,7 +14,7 @@ module Admin
     private
 
     def require_owner_admin!
-      return if can_manage_admins_for_current_temple?
+      return if owner_admin_for_current_temple?
 
       redirect_to admin_dashboard_path, alert: "Only the temple owner can view platform billing."
     end

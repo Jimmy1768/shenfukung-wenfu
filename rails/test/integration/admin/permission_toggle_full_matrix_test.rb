@@ -18,7 +18,7 @@ class AdminPermissionToggleFullMatrixTest < ActionDispatch::IntegrationTest
   CAPABILITY_MATRIX = {
     manage_registrations: { nav_adds: ["報名", "訂單", "信眾與管理員"], protected_get: :admin_registrations_path },
     view_financials: { nav_adds: ["收款資料", "年度資料"], protected_get: :admin_payments_path },
-    manage_permissions: { nav_adds: ["信眾與管理員", "管理員權限", "帳務設定"], protected_get: :admin_permissions_path },
+    manage_permissions: { nav_adds: ["信眾與管理員", "管理員權限"], protected_get: :admin_permissions_path },
     manage_profile: { nav_adds: ["宮廟資料"], protected_get: :admin_temple_profile_path },
     manage_news: { nav_adds: ["最新消息"], protected_get: :admin_news_posts_path },
     manage_gallery: { nav_adds: ["活動回顧"], protected_get: :admin_gallery_entries_path }
@@ -76,46 +76,42 @@ class AdminPermissionToggleFullMatrixTest < ActionDispatch::IntegrationTest
     assert_equal BASELINE_ITEMS.sort, visible_titles.sort
   end
 
-  test "Billing is gated by manage_permissions specifically, not literally by role -- confirmed, not assumed" do
+  test "Billing is gated by real temple-owner membership, not any capability -- fixed, 2026-08-20" do
     temple = create_temple
 
-    # Every OTHER capability, deliberately excluding manage_permissions --
-    # this is the actual gate (require_owner_admin! -> can_manage_admins_for_current_temple?
-    # -> current_admin_permissions&.allow?(:manage_permissions)), not role == "owner"
-    # itself, despite the method/flash naming. Confirmed by reading the code,
-    # then proving it here rather than trusting the name.
-    almost_everything = create_admin_user(
+    # Real bug found and fixed: this used to check the manage_permissions
+    # *capability* instead of actual owner membership (owner_admin_for_current_temple?
+    # -> AdminAccount#owner_for_temple?), despite every caller's own naming/flash
+    # text already stating "owner_only" / "Only the temple owner can view
+    # platform billing." Billing means real money (Stripe owed to SourceGrid)
+    # and ECPay provider credentials -- deliberately not delegable via any
+    # capability grant, only actual ownership.
+    admin_with_every_other_capability = create_admin_user(
       temple:, role: "admin", membership_role: "admin",
       permission_overrides: {
         manage_offerings: true, manage_registrations: true, view_financials: true, export_financials: true,
-        view_guest_lists: true, manage_profile: true, manage_news: true, manage_gallery: true, record_cash_payments: true
+        view_guest_lists: true, manage_permissions: true, manage_profile: true, manage_news: true,
+        manage_gallery: true, record_cash_payments: true
       }
     )
-    sign_in_admin(almost_everything)
+    sign_in_admin(admin_with_every_other_capability)
     get admin_dashboard_path
     assert_response :success
-    assert_not_includes visible_titles, "帳務設定"
+    assert_not_includes visible_titles, "帳務設定", "no capability grant, including manage_permissions, should unlock Billing"
     get admin_payment_methods_path
     assert_redirected_to admin_dashboard_path
+    get admin_platform_billing_path
+    assert_redirected_to admin_dashboard_path
 
-    # role: "admin" (not "owner") but WITH manage_permissions -- this is the
-    # thing that actually unlocks Billing, regardless of role column.
-    admin_with_manage_permissions = create_admin_user(temple:, role: "admin", membership_role: "admin", permission_overrides: { manage_permissions: true })
-    sign_in_admin(admin_with_manage_permissions)
-    get admin_dashboard_path
-    assert_response :success
-    assert_includes visible_titles, "帳務設定"
-    get admin_payment_methods_path
-    assert_response :success
-
-    # role: "owner" defaults manage_permissions to true (create_admin_user's
-    # own default), which is why it reaches Billing -- same gate, not a
-    # separate "owner" check.
     owner = create_admin_user(temple:, role: "owner", membership_role: "owner")
     sign_in_admin(owner)
     get admin_dashboard_path
     assert_response :success
     assert_includes visible_titles, "帳務設定"
+    get admin_payment_methods_path
+    assert_response :success
+    get admin_platform_billing_path
+    assert_response :success
   end
 
   # --- Part 2: does hiding the button actually block the feature? ---
