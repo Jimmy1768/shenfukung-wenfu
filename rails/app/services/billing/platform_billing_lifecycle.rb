@@ -3,7 +3,7 @@
 module Billing
   class PlatformBillingLifecycle
     OVERDUE_WINDOW = 7.days
-    GRACE_WINDOW = 30.days
+    GRACE_WINDOW = 14.days
 
     def self.record_success!(...) = new(...).record_success!
     def self.record_failure!(...) = new(...).record_failure!

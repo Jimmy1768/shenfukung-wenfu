@@ -1,6 +1,11 @@
 require "test_helper"
 
 class Billing::PlatformBillingLifecycleTest < ActiveSupport::TestCase
+  test "overdue and grace windows total 21 days (7 + 14), not the old 37" do
+    assert_equal 7.days, Billing::PlatformBillingLifecycle::OVERDUE_WINDOW
+    assert_equal 14.days, Billing::PlatformBillingLifecycle::GRACE_WINDOW
+  end
+
   test "persists and audits failed collection through overdue grace and frozen" do
     temple = create_temple(payment_provider_settings: { "billing" => { "stripe_payment_method_id" => "pm_1" } })
     entitlement = temple.adopt_platform_billing_entitlement!
@@ -18,9 +23,9 @@ class Billing::PlatformBillingLifecycleTest < ActiveSupport::TestCase
     assert_equal "grace", temple.platform_billing_state(failed_at + 7.days)
     assert_equal "active", entitlement.reload.state
     refute temple.registration_intake_frozen?
-    Billing::PlatformBillingLifecycle.advance!(delivery:, now: failed_at + 37.days)
+    Billing::PlatformBillingLifecycle.advance!(delivery:, now: failed_at + 21.days)
     assert_equal "frozen", delivery.reload.status
-    assert_equal "frozen", temple.platform_billing_state(failed_at + 37.days)
+    assert_equal "frozen", temple.platform_billing_state(failed_at + 21.days)
     assert_equal "suspended", entitlement.reload.state
     assert temple.registration_intake_frozen?
     assert_equal %w[overdue grace frozen], SystemAuditLog.where(action: "platform_billing.delivery_transition", target: delivery).order(:created_at).map { |log| log.metadata["to"] }

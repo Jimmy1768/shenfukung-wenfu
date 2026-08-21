@@ -1,8 +1,10 @@
 # Admin Billing Panel Findings Plan
 
 Status: findings gathered, organized into 3 phases by dependency/risk.
-Phase 1 implemented and tested (558/558 green) on this branch. Phase 2/3
-not yet started.
+Phase 1 and Phase 2 implemented and tested on this branch. Phase 3 not
+yet started (safety gate: wiring the scheduler to actually fire real
+Stripe charges needs the Director's own direct confirmation of live/test
+key status first — see Phase 3 below).
 
 Owner: Wenfu Planning / Director
 
@@ -52,21 +54,29 @@ this doc.
   literally; updated to assert via `I18n.t(...)`, matching the rest of the
   suite's convention. 558/558 green on a fenced disposable test DB.
 
-### Phase 2 — Grace period + dead-constant cleanup (small, contained behavior change)
+### Phase 2 — Grace period + dead-constant cleanup (small, contained behavior change) — DONE
 
 A real behavior change (shortens how long a temple keeps service after a
 failed charge), but self-contained — touches one service, one dead
 constant, and the tests for both. No dependency on Phase 1 or Phase 3.
 
 - Design Decision 4: `Billing::PlatformBillingLifecycle::GRACE_WINDOW`
-  30 days → 14 days (7 + 14 = 21 total, down from 37).
+  30 days → 14 days (7 + 14 = 21 total, down from 37). Done.
 - Readiness Scan finding 2: delete the dead
   `Admin::PaymentMethodsForm::DEFAULT_BILLING_GRACE_DAYS` constant in the
   same change — leaving it would go stale as an unreferenced, misleading
-  duplicate of the number this phase is changing.
+  duplicate of the number this phase is changing. Done.
 - Readiness Scan finding 4 confirms this is safe to apply uniformly:
   `grace_days` has no per-temple override path today, so there's no stale
   stored value on any temple to conflict with a new code-level default.
+- Updated the one test with a hardcoded `37.days` total
+  (`test/services/billing/platform_billing_lifecycle_test.rb`) to
+  `21.days`, and added a direct constant-value regression test so a future
+  accidental change to either window is caught immediately. Confirmed via
+  full-repo grep that every other `30.days`/`37.days` hit in the codebase
+  (JWT refresh TTL, session-preference seed expiry, report date-range
+  fixtures) is unrelated to platform billing. 559/559 green on a fenced
+  disposable test DB.
 
 ### Phase 3 — Two-phase monthly billing scheduling (highest risk, real infrastructure, explicit safety gate)
 
