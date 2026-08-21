@@ -177,6 +177,55 @@ one, and it's a playground/demo page rather than a real patron surface.
   for that reason — nothing "functional" there to have a localization or
   billing gap in.
 
+## Design Decisions For Future Monthly Billing Scheduling
+
+Not implementation yet — decisions to build against once this doc moves
+past gathering. Reference: `Combatives-Rails`'s
+`MonthlyDispatcherJob`/`MonthlyChannelBillingReviewWorker`/
+`ChannelBillingCollectionWorker` (a real, running two-phase
+capture-then-collect pattern with a deliberate gap between the two, plus
+a minimum-collection-threshold/carry-forward mechanism for small amounts).
+
+1. **Two-phase schedule, Wenfu-scaled dates.** Combatives runs review on
+   day 5/6 and collection on day 7/8 specifically because it's already
+   Sidekiq-heavy across many entities and needs the load spread out.
+   Wenfu doesn't have that constraint (far fewer temples, no daily/weekly
+   per-temple jobs, only monthly billing) — so the capture/review step
+   runs on the **1st of the month**, with collection following 2–4 days
+   later. Deliberately **not the 4th** — considered inauspicious in a
+   temple context (homophone for death in Mandarin/Taiwanese), a real
+   product constraint for this specific customer base, not a technical
+   one. **3rd or 5th** are the accepted candidates for the actual collection
+   date; exact choice still open.
+2. **No minimum-collection-threshold/carry-forward needed.** Confirmed
+   the reasoning, not just accepted it: Combatives needs this because
+   its charges are usage-only and can land on tiny per-period amounts.
+   Wenfu's base fee is a flat NT$1,500/month regardless of usage — there
+   is no tiny-amount scenario to guard against, so this piece of the
+   reference pattern is deliberately not carried over.
+3. **No timezone-handling needed, for a specific and durable reason, not
+   just current scope.** This product is Taiwan-only by deliberate
+   choice — roughly 12,000 temples in Taiwan is the actual addressable
+   market, and the stated priority is converting those before considering
+   expansion to other Chinese-diaspora markets. Worth recording precisely:
+   even a future mainland China expansion would stay the same timezone
+   (China Standard Time = Taiwan time, both UTC+8) — so this isn't a
+   "we'll deal with it later" gap, it's a genuinely low-probability-ever
+   problem for this product's realistic growth path. The separate concern
+   Combatives' timezone-spread machinery actually solves — spreading cron/
+   Sidekiq load — is a real future consideration if temple count grows
+   large, but Wenfu has far less recurring-job volume than Combatives to
+   begin with (monthly billing only, no daily/weekly per-temple jobs), so
+   even that concern is smaller in shape. Not a today problem either way.
+4. **Grace period: shorten from the current 30 (37 total) days to 7 +
+   14 = 21 days.** Current `Billing::PlatformBillingLifecycle` runs
+   `OVERDUE_WINDOW = 7.days` then `GRACE_WINDOW = 30.days` — 37 days
+   total from a failed charge to freezing the temple's account. Accepted
+   direction: keep the 7-day overdue window, shorten the grace window to
+   14 days (21 total) — closer to common practice than the current 37,
+   while still meaningfully longer than a typical consumer-SaaS dunning
+   window, appropriate for a B2B/community-institution relationship.
+
 ## Next Step
 
 Continue gathering findings — nothing here is scoped for a fix yet.
