@@ -7,9 +7,27 @@ deployment, etc.) belong in `shengfukung_wenfu_context.md`, not here.
 
 - This repository is Claude-exclusive post-migration. Codex Work Mode does
   not apply here.
-- `main` is protected — never build implementation work directly on it.
-  Every long implementation session gets its own `claude/<slug>` branch, to
-  keep `main` clean. Docs-only edits can go straight to `main`.
+- `main` is protected — never write to it directly, for any file, including
+  docs. Every long implementation session gets its own `claude/<slug>`
+  branch, to keep `main` clean. There is no docs-only carve-out; that
+  existed only because plan docs used to span multiple sessions and needed
+  a stable shared location while still being written. A plan doc is
+  finished in one sitting now, so the carve-out was papering over a
+  limitation that's gone — and it caused exactly the cross-session branch
+  contention it was meant to avoid, two builders both needing `main`
+  checked out for doc-only edits.
+- Plan docs (`ops/docs/plans/`) belong to and live on the implementation
+  branch they plan. They merge to `main` together with that branch's code,
+  at the same single approved merge point — never edited on `main`
+  directly, never given their own separate branch just to keep editing
+  across sessions.
+- Reference docs (`ops/docs/reference/`) describe currently-true shipped
+  behavior, so their content is `main`-scoped — but they still reach `main`
+  only through a branch and an explicit merge. Usually a quick
+  self-contained branch, often bundled with the merge of the change they
+  document.
+- Protocol docs (`ops/protocol/`), this file included, follow the same rule
+  as reference docs.
 - Test until green on the branch, then merge back into `main`.
 
 ## Roles
@@ -25,7 +43,10 @@ deployment, etc.) belong in `shengfukung_wenfu_context.md`, not here.
   authorize/proceed. Planning is the one that assigns and coordinates
   Control, not the Director.
 - Small, self-contained work (docs edits, one-off fixes) doesn't need to
-  route through Control at all — Planning just does it directly.
+  route through Control at all — Planning just does it directly, on its
+  own quick `claude/<slug>` branch, merged immediately once green. Not
+  routing through Control is about who does the work, not an exemption
+  from branch protection.
 
 ## Planning Orchestrates Control
 
