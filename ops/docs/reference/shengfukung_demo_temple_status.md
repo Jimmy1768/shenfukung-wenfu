@@ -16,6 +16,29 @@ itself would freeze registration intake (see
 paying relationship. Both problems needed solving together, not by
 completing a fake Stripe setup checkout to "fix" the freeze.
 
+## Current state (applied, not just built)
+
+As of 2026-08-22, `release/current` deployed `92a1e25` to the Wenfu host
+and `admin_controls:unlock_demo_registrations[shengfukung-wenfu]` has
+actually been run against production. Verified directly on the host
+immediately after:
+
+```text
+registration_intake_frozen?: false
+demo_registration_unlocked?: true
+entitlement state (untouched): pending_setup
+counted as platform_billing_adopted (real client)?: false
+```
+
+This is the live, current state — not just a mechanism that exists and
+could be applied. If a future session finds `registration_intake_frozen?`
+true again for this temple, the unlock was reversed (intentionally or
+not); re-running the rake task below restores it. If it finds the
+entitlement no longer `pending_setup`, something completed a real Stripe
+setup checkout for this temple — stop and confirm with the Director
+before assuming that's correct, since the whole point of this setup was
+to avoid exactly that.
+
 ## How each half is handled
 
 ### 1. It is excluded from real-client billing
