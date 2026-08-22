@@ -1,0 +1,59 @@
+---
+# <repo>_config.yml — repository configuration VALUES.
+#
+# Schema is identical across every repo; only values differ. Rules,
+# boundaries, authority, and anything needing a "because" live in
+# <repo>_context.md instead. If you are tempted to add a sentence
+# explaining why a value is what it is, that sentence belongs there.
+#
+# Every key below must be present. Use null for a key that genuinely does
+# not apply to this repo, with a trailing comment saying why. Do not delete
+# keys, do not add keys, do not reorder. Schema conformance is checked.
+#
+# Replace every TBD. A file merged with TBD in it is not finished.
+
+repo: shengfukung-wenfu             # directory name, e.g. apprelay-core
+rails_root: rails/                  # "." if the app is at the repo root, else "rails/"
+
+domain:
+  primary: shengfukung.com.tw       # e.g. sourcecombatives.com; null if not web-served
+  subdomains: [www, staging]        # e.g. [www, api, staging]; [] if none
+
+# Port convention: 1 = local, 2 = staging, 3 = release/current.
+# X00 is left permanently vacant so tools reaching for a default
+# (rails new, npm run dev, Phoenix on 4000) never collide.
+ports:
+  series: 40                        # the hundreds prefix, e.g. 33 for 33xx; null if no server
+  local: 4001
+  staging: 4002
+  release: 4003
+  migration_pending: false          # true if this repo has not yet moved to the convention
+
+deployment:
+  droplets:                         # DigitalOcean names, not terminal hostnames
+    web: taiwan-01-web
+    worker: null                    # null if web and worker share one droplet
+  hostname_note: "web droplet's shell hostname is ubuntu-s-1vcpu-1gb-sgp1-01, differs from its DigitalOcean name"
+  nginx_conf: ops/nginx/shengfukung-wenfu.conf   # repo-relative path; null if not nginx-served
+  systemd_dir: ops/systemd          # repo-relative path; null if no units
+  units:
+    puma: shengfukung-wenfu-puma
+    puma_staging: shengfukung-wenfu-staging-puma       # null if staging is not standing infrastructure
+    sidekiq: shengfukung-wenfu-sidekiq                 # null if this repo runs no background worker
+    sidekiq_staging: shengfukung-wenfu-staging-sidekiq
+
+databases:
+  development: shengfukung_wenfu_development   # the name actually resolved, not the scaffold fallback
+  test: shengfukung_wenfu_development           # same database as development -- no separate test database
+  staging: shengfukung_wenfu_staging             # null if no standing staging
+  production_env_keys: [PGHOST, PGPORT, PGDATABASE, PGUSER]   # e.g. [DATABASE_URL] or [PGDATABASE_PROD, PGUSER_PROD]
+
+checkouts:
+  primary: /Users/jimmy1768/Projects/shengfukung-wenfu   # absolute path of the main working tree
+  secondary: null                   # set where a repo has a second dedicated checkout
+
+co_tenancy:
+  codex_present: false              # true if Codex also works in this repository
+
+verification:
+  smoke: bin/run_smoke_tests        # repo-relative path to a port-aware smoke script, if any
