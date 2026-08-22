@@ -12,6 +12,7 @@ require "test_helper"
 class PlatformBillingMonthlyReviewToCollectionTest < ActiveSupport::TestCase
   test "the delivery review creates through the real closer/creator path is exactly what collection dispatches" do
     temple = create_temple
+    temple.adopt_platform_billing_entitlement!.update!(state: "active")
     reference_time = Time.current
 
     PlatformBillingMonthlyReviewJob.perform_now(reference_time: reference_time)

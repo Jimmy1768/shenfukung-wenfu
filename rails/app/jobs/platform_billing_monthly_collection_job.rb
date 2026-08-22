@@ -17,14 +17,27 @@
 # Billing::PlatformBillingCollectionDispatcher already no-ops on anything
 # that isn't a pending monthly delivery and swallows/logs its own collection
 # failures, so this job stays a thin per-delivery loop.
+#
+# Deliveries only exist for real clients (review only creates them for
+# Temple.platform_billing_adopted temples), so this is already transitively
+# scoped to real clients. Still logs an explicit skip when there's nothing
+# pending for the period, matching review's behavior, rather than a silent
+# no-op that's indistinguishable from the job never having run.
 class PlatformBillingMonthlyCollectionJob < ActiveJob::Base
   queue_as :default
 
   def perform(reference_time: Time.current)
     month = Billing::PlatformUsage.previous_month(reference_time)
     period_start_at = Billing::PlatformUsage.period_start_at_for(month)
+    deliveries = PlatformBillingDelivery.monthly.where(status: "pending", period_start_at:)
 
-    PlatformBillingDelivery.monthly.where(status: "pending", period_start_at:).find_each do |delivery|
+    if deliveries.none?
+      SystemAuditLogger.log!(action: "platform_billing.monthly_collection_skipped",
+        metadata: { reason: "no_pending_deliveries", month: month.iso8601 })
+      return
+    end
+
+    deliveries.find_each do |delivery|
       Billing::PlatformBillingCollectionDispatcher.dispatch!(delivery:)
     rescue StandardError => e
       SystemAuditLogger.log!(action: "platform_billing.monthly_collection_failed", target: delivery, temple: delivery.temple,

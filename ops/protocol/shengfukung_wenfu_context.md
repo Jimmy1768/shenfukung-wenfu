@@ -118,6 +118,18 @@ anywhere, so it also proves owner-only gates (Billing) stay blocked, not
 just that capability gates work. Local dev/test database work is unrelated
 — fabricate throwaway users there freely, same as any other fixture.
 
+## shengfukung.com.tw Is a Demo Temple, Not a Real Client
+
+`shengfukung-wenfu` (public domain `shengfukung.com.tw`) is used to demo
+TempleMate to prospective clients and is deliberately unlocked to create
+registrations without paying the platform setup fee — but it is
+deliberately excluded from real platform-billing (no statement, delivery,
+or charge is ever generated for it). These are two independent
+mechanisms, not one flag: `ops/docs/reference/shengfukung_demo_temple_status.md`.
+Do not complete a real Stripe setup checkout for it to "fix" anything, and
+do not assume unlocked-for-registrations implies real-client, or vice
+versa.
+
 ## Codex Work Mode Local Source Map (archived, historical)
 
 This section describes governance from before the Claude takeover. It no
