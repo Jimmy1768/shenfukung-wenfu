@@ -1,0 +1,20 @@
+<section class="account-section">
+  <header class="section-header">
+    <div>
+      <p class="eyebrow"><%= t(".eyebrow") %></p>
+      <h2><%= t(".title", provider: oauth_provider_label(@provider)) %></h2>
+      <p><%= t(".subtitle") %></p>
+    </div>
+  </header>
+
+  <div class="dependent-grid">
+    <article class="dependent-card">
+      <%= form_with url: account_oauth_consolidation_path, method: :post do |form| %>
+        <%= hidden_field_tag :token, params[:token] %><%= hidden_field_tag :provider, params[:provider] %>
+        <%= form.password_field "account[password]", placeholder: t(".password_placeholder"), required: true, autocomplete: "current-password" %>
+        <label><%= check_box_tag "account[confirmed]", "true", false, required: true %> <%= t(".confirm_label") %></label>
+        <%= form.submit t(".submit"), class: "pill-link primary" %>
+      <% end %>
+    </article>
+  </div>
+</section>

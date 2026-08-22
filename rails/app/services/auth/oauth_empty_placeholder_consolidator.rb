@@ -19,6 +19,14 @@ module Auth
       new.consolidate!(keeper_user:, keeper_password:, provider:, uid:, source_proof_token:, confirmed:)
     end
 
+    # Read-only eligibility check, safe to call before offering the recovery
+    # journey at all -- same predicate #consolidate! itself re-checks inside
+    # its own locked transaction, so this is a UI-offer hint, not the
+    # authoritative gate.
+    def self.empty_placeholder?(user, identity)
+      new.empty_placeholder?(user, identity)
+    end
+
     def consolidate!(keeper_user:, keeper_password:, provider:, uid:, source_proof_token:, confirmed:)
       raise FeatureDisabled unless FeatureFlags::Evaluator.enabled?("oauth_account_consolidation", actor: keeper_user)
       raise ProofFailed unless confirmed && password_matches?(keeper_user, keeper_password)
@@ -58,8 +66,6 @@ module Auth
       end
     end
 
-    private
-
     def empty_placeholder?(user, identity)
       metadata = user.metadata.is_a?(Hash) ? user.metadata : {}
       return false unless metadata["oauth_seeded"] == true
@@ -74,6 +80,8 @@ module Auth
 
       true
     end
+
+    private
 
     def meaningful_user_work?(user)
       [

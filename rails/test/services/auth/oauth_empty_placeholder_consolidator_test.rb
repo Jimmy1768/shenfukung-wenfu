@@ -48,6 +48,19 @@ module Auth
       assert_nil proof.record.reload.consumed_at
     end
 
+    test "empty_placeholder? matches the predicate consolidate! itself enforces" do
+      keeper = create_user("keeper-four@example.test", "Keeper")
+      empty_source = create_user("placeholder-four@example.test", "OAuth User", oauth_seeded: true)
+      identity = OAuthIdentity.create!(user: empty_source, provider: "apple", provider_uid: "empty-four", email: empty_source.email, credentials: {}, metadata: {})
+      assert OAuthEmptyPlaceholderConsolidator.empty_placeholder?(empty_source, identity)
+      refute OAuthEmptyPlaceholderConsolidator.empty_placeholder?(keeper, identity)
+
+      busy_source = create_user("placeholder-five@example.test", "OAuth User", oauth_seeded: true)
+      busy_identity = OAuthIdentity.create!(user: busy_source, provider: "apple", provider_uid: "busy-five", email: busy_source.email, credentials: {}, metadata: {})
+      busy_source.refresh_tokens.create!(token_digest: "refresh-token-#{SecureRandom.hex(8)}", expires_at: 1.day.from_now)
+      refute OAuthEmptyPlaceholderConsolidator.empty_placeholder?(busy_source, busy_identity)
+    end
+
     test "does not mint a consolidation proof from an arbitrary local uid" do
       assert_raises(OAuthAccountResolution::InvalidToken) do
         OAuthAccountResolution.create_consolidation_proof_from_exchange!(

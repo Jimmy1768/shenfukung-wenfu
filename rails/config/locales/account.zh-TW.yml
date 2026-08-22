@@ -158,6 +158,11 @@ zh-TW:
         unavailable: "目前無法使用 OAuth 帳號連結功能。"
         unlinked: "已解除 %{provider} 與此帳號的綁定。"
         complete_profile: "請先完成個人資料，再繼續使用帳號功能。"
+        consolidation_offered: "這個登入方式目前綁定在一個未使用的暫存帳號上。請確認後將它移到您的帳號。"
+        consolidation_unavailable: "這個請求已經失效。"
+        consolidation_complete: "已完成連結，原本的暫存帳號已關閉。"
+        consolidation_proof_failed: "無法驗證您的密碼。"
+        consolidation_failed: "無法完成此操作，如持續發生請聯絡客服。"
       index:
         eyebrow: "登入方式"
         title: "管理已連結的登入方式"
@@ -568,6 +573,14 @@ zh-TW:
           password_placeholder: "密碼"
           terms_label: "我同意目前的服務條款。"
           submit: "建立帳號"
+    oauth_consolidations:
+      show:
+        eyebrow: "登入方式"
+        title: "將 %{provider} 移到您的帳號"
+        subtitle: "這個登入方式目前綁定在一個沒有其他活動紀錄的暫存帳號上。請輸入密碼確認後移轉；原本的暫存帳號會被關閉，不會被刪除。"
+        password_placeholder: "您的帳號密碼"
+        confirm_label: "我了解這會將登入方式移到此帳號，並關閉另一個帳號。"
+        submit: "移轉登入方式"
     payments:
       ecpay_checkouts:
         show:

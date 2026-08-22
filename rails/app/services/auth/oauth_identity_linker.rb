@@ -3,7 +3,14 @@
 module Auth
   class OAuthIdentityLinker
     class Error < StandardError; end
-    class ConflictError < Error; end
+    class ConflictError < Error
+      attr_reader :identity
+
+      def initialize(message, identity: nil)
+        super(message)
+        @identity = identity
+      end
+    end
     class ProviderAlreadyLinkedError < Error; end
 
     Result = Struct.new(:identity, :created_identity, :already_linked, keyword_init: true)
@@ -37,7 +44,10 @@ module Auth
 
       existing = OAuthIdentity.find_by(provider: @provider, provider_uid: @uid)
       if existing.present? && existing.user_id != @user.id
-        raise ConflictError, "That #{provider_label} identity is already linked to another account. Sign in with that provider instead or contact support for help merging accounts."
+        raise ConflictError.new(
+          "That #{provider_label} identity is already linked to another account. Sign in with that provider instead or contact support for help merging accounts.",
+          identity: existing
+        )
       end
 
       identity = existing || @user.oauth_identities.find_or_initialize_by(provider: @provider)

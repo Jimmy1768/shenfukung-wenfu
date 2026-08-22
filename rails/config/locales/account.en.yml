@@ -151,6 +151,11 @@ en:
         unavailable: "OAuth provider linking is unavailable right now."
         unlinked: "%{provider} has been unlinked from your account."
         complete_profile: "Please complete your profile before continuing."
+        consolidation_offered: "That sign-in method is linked to an inactive placeholder account. Review and confirm to move it to your account."
+        consolidation_unavailable: "That request is no longer available."
+        consolidation_complete: "Linked. The previous placeholder account was closed."
+        consolidation_proof_failed: "We could not verify your password."
+        consolidation_failed: "We could not complete that action. Contact support if this keeps happening."
       index:
         eyebrow: "Sign-in methods"
         title: "Manage connected providers"
@@ -561,6 +566,14 @@ en:
           password_placeholder: "Password"
           terms_label: "I accept the current terms."
           submit: "Create account"
+    oauth_consolidations:
+      show:
+        eyebrow: "Sign-in method"
+        title: "Move %{provider} to your account"
+        subtitle: "This sign-in method is currently linked to an inactive placeholder account with no other activity. Confirm your password to move it here; the placeholder account will be closed, not deleted."
+        password_placeholder: "Your account password"
+        confirm_label: "I understand this moves the sign-in method to this account and closes the other one."
+        submit: "Move sign-in method here"
     payments:
       ecpay_checkouts:
         show:
