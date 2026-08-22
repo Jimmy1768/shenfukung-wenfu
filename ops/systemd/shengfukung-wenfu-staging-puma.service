@@ -1,0 +1,28 @@
+# ops/systemd/shengfukung-wenfu-staging-puma.service
+#
+# Systemd unit for the staging Puma web server. Mirrors
+# shengfukung-wenfu-puma.service exactly except for the working
+# directory (a separate checkout, not shared with production) and the
+# environment file (separate secrets/config, including a separate
+# database and PUMA_PORT=4002 -- see ops/env/template.temple-staging.env).
+#
+# Staging runs from its own clone on its own branch (main), independent
+# of the production checkout (release/current) at
+# /home/jimmy1768_user/Projects/shengfukung-wenfu -- so promoting main
+# to release/current can never be blocked by, or interfere with, a
+# staging deploy in progress.
+
+[Unit]
+Description=竹南鎮聖福宮 Puma HTTP Server (Staging)
+After=network.target
+
+[Service]
+Type=simple
+User=jimmy1768_user
+WorkingDirectory=/home/jimmy1768_user/Projects/shengfukung-wenfu-staging/rails
+EnvironmentFile=/etc/default/shengfukung-wenfu-staging-env
+ExecStart=/usr/bin/bash -lc "/home/jimmy1768_user/.rbenv/bin/rbenv exec bundle exec puma -C config/puma.rb"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
