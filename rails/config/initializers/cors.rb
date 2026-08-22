@@ -20,13 +20,13 @@ Rails.application.config.middleware.insert_before 0, Rack::Cors do
     allowed_origins = []
 
     # Development and production ports differ:
-    # - Production: 3000
-    # - Development: 3001
+    # - Production: 4003
+    # - Development: 4001
 
     if Rails.env.development?
       # Rails UI (dev mode)
-      allowed_origins << "http://localhost:3001"
-      allowed_origins << "http://127.0.0.1:3001"
+      allowed_origins << "http://localhost:4001"
+      allowed_origins << "http://127.0.0.1:4001"
 
       # Vite / Vue dev server (unchanged)
       allowed_origins << "http://localhost:5173"

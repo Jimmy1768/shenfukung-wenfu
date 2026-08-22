@@ -47,7 +47,7 @@ Use this when you need representative data locally or on staging:
 >
 > - Use `ops/env/template.temple.env` as your non-secret checklist template.
 > - Keep third-party credentials out of git: local goes in `.env.development`; production goes in `/etc/default/<slug>-env`.
-> - Load a specific temple’s secrets by prefixing any command with `bin/load_temple_env <slug> -- <command>`. For local development, use `bin/load_temple_env shengfukung-wenfu -- (cd rails && bundle exec rails server -p 3001)`.
+> - Load a specific temple’s secrets by prefixing any command with `bin/load_temple_env <slug> -- <command>`. For local development, use `bin/load_temple_env shengfukung-wenfu -- (cd rails && bundle exec rails server -p 4001)`.
 > - The loader sources `.env`, `.env.<env>`, then `/etc/default/<slug>-env` when readable (falling back to `.env.development`), so Vue/Expo builds and Rails share the same credential set for the active temple.
 
 ### Generate + Deploy Env Files
@@ -106,7 +106,7 @@ Slug convention:
   1. `bin/load_temple_env <slug> -- (cd vue && npm install && npm run dev)`
   2. Visit `http://localhost:5173` and verify copy/assets match the expected temple.
   3. Repeat with another palette (`VITE_TEMPLE_THEME=temple-2`) to capture approval screenshots. Layout should remain identical; only tokens change.
-- The local Vue server proxies tenant-local API requests to Rails on `http://localhost:3001`. Port `3000` is live production and `3002` is live staging; neither belongs in a public Vue bundle.
+- The local Vue server proxies tenant-local API requests to Rails on `http://localhost:4001`. Port `4003` is live production and `4002` is live staging; neither belongs in a public Vue bundle.
 - Document the chosen layout/theme in the temple’s YAML or ops checklist so future deploys keep the same combo.
 
 1. **Author profile YAML**

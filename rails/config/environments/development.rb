@@ -42,7 +42,7 @@ Rails.application.configure do
   # Host for URL helpers inside emails (password reset links, etc.).
   config.action_mailer.default_url_options = {
     host: ENV.fetch("WEB_DOMAIN", "localhost"),
-    port: 3001
+    port: 4001
   }
 
   # === Static files / assets ================================================
@@ -64,7 +64,7 @@ Rails.application.configure do
   # === Action Cable (Realtime / WebSockets) =================================
 
   # Local Action Cable endpoint.
-  config.action_cable.url = "ws://localhost:3001/cable"
+  config.action_cable.url = "ws://localhost:4001/cable"
 
   # Allow connections from localhost.
   config.action_cable.allowed_request_origins = [
