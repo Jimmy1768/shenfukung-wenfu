@@ -79,7 +79,7 @@ module Admin
       tokens = query.split(/\s+/).presence || [query]
 
       conditions = tokens.each_with_index.map do |_, index|
-        "(english_name ILIKE :token#{index} OR native_name ILIKE :token#{index} OR email ILIKE :token#{index})"
+        "(users.english_name ILIKE :token#{index} OR users.native_name ILIKE :token#{index} OR users.email ILIKE :token#{index})"
       end.join(" AND ")
       bindings = tokens.each_with_index.to_h do |token, index|
         ["token#{index}".to_sym, "%#{token}%"]
@@ -99,10 +99,18 @@ module Admin
     end
 
     def admin_user_scope
+      # No .distinct: admin_temple_memberships has a unique index on
+      # (admin_account_id, temple_id) and User has_one :admin_account, so
+      # this join can never produce more than one row per user for a single
+      # temple_id filter -- distinct was a no-op here, and a harmful one:
+      # combined with the CASE-WHEN ORDER BY in sanitized_order_clause (only
+      # built when a search query is present), Postgres rejects "SELECT
+      # DISTINCT ... ORDER BY <expression not in select list>" outright,
+      # which is exactly what broke this view's search and not the default
+      # patron view's (which never had .distinct to begin with).
       patron_scope
         .joins(admin_account: :admin_temple_memberships)
         .where(admin_temple_memberships: { temple_id: current_temple.id })
-        .distinct
     end
 
     def permitted_view
@@ -114,7 +122,7 @@ module Admin
       exact_match = "#{ActiveRecord::Base.sanitize_sql_like(first_token)}%"
       ApplicationRecord.send(
         :sanitize_sql_array,
-        ["CASE WHEN english_name ILIKE :exact THEN 0 ELSE 1 END, english_name ASC NULLS LAST", { exact: exact_match }]
+        ["CASE WHEN users.english_name ILIKE :exact THEN 0 ELSE 1 END, users.english_name ASC NULLS LAST", { exact: exact_match }]
       )
     end
 
