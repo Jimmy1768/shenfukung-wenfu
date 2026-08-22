@@ -125,16 +125,21 @@ Dir.mktmpdir("wenfu-tenant-local-api-") do |output_dir|
   )
   verify!(status.success?, "Vue build failed: #{stderr.empty? ? stdout : stderr}")
 
-  # Binary asset formats (images, icons) are excluded: a leaked port/URL
-  # string could only ever meaningfully appear in text output (JS/CSS/HTML),
-  # never in compressed image bytes -- and compressed binary data can and
-  # does coincidentally contain any given short digit sequence by chance,
-  # which made this check non-deterministically fragile against whichever
-  # port number happened to be chosen. Real incident: 4001 collided with
-  # random bytes inside one compiled PNG the first time this was tried.
-  binary_extensions = %w[.png .jpg .jpeg .webp .ico .gif .woff .woff2 .ttf .eot]
+  # Scoped to an allowlist of text formats, not a denylist of binary ones: a
+  # leaked port/URL string could only ever meaningfully appear in text output
+  # (JS/CSS/HTML/JSON/sourcemaps), never in compressed image/font bytes --
+  # and compressed binary data can and does coincidentally contain any given
+  # short digit sequence by chance (real incident: port 4001 collided with
+  # random bytes inside one compiled PNG the first time this check ran with
+  # the new port numbers). An allowlist fails safe here: a future binary
+  # format the build starts emitting (.avif, .pdf, whatever) is silently
+  # skipped rather than needing this list updated to avoid a false alarm;
+  # only a genuinely new *text* format needs adding, and forgetting to add
+  # one just means under-scanning, not a false leak report. .svg is text
+  # (XML) and could genuinely carry a leaked URL, so it stays in scope.
+  text_extensions = %w[.js .mjs .cjs .css .html .json .map .txt .svg]
   artifact = Dir.glob(File.join(output_dir, "**", "*"))
-    .select { |path| File.file?(path) && !binary_extensions.include?(File.extname(path).downcase) }
+    .select { |path| File.file?(path) && text_extensions.include?(File.extname(path).downcase) }
     .map { |path| File.read(path, encoding: "UTF-8", invalid: :replace, undef: :replace) }.join("\n")
   forbidden = {
     "localhost" => /localhost/i,
