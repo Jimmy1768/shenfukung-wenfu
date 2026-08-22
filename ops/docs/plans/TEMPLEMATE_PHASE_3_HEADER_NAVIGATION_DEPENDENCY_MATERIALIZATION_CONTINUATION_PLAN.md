@@ -14,7 +14,8 @@ Repository: `/Users/jimmy1768/Projects/shengfukung-wenfu`
 Canonical plan/base: `98ee9180ba488870281f96e5f035e89ff0c110a0`
 
 Parent plan:
-`ops/docs/plans/TEMPLEMATE_PHASE_3_HEADER_UTILITY_AND_SINGLE_LINE_NAVIGATION_PLAN.md`
+TEMPLEMATE_PHASE_3_HEADER_UTILITY_AND_SINGLE_LINE_NAVIGATION_PLAN.md (deleted
+2026-08-22 in the plans/archive cleanup; recoverable via `git log --grep`)
 
 Stopped attempt evidence:
 `ops/docs/handoffs/2026-08-16-templemate-phase3-header-utility-single-line-navigation-control-b.md`

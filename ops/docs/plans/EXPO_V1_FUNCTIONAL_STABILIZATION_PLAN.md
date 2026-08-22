@@ -16,7 +16,8 @@ Observed canonical baseline:
 `4aef52bc21f66886257f67bf0b11cac35baac252`
 
 Predecessor:
-`ops/docs/plans/EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md`
+EXPO_V1_DEV_CLIENT_UI_REFINEMENT_PLAN.md (deleted 2026-08-22 in the
+plans/archive cleanup; recoverable via `git log --grep`)
 
 Mature read-only reference:
 `/Users/jimmy1768/Projects/DojoMate-Expo`

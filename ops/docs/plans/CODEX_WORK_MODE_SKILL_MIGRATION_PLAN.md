@@ -2,6 +2,6 @@
 
 Completion classification: completed historical record.
 
-Archived record: [archive/CODEX_WORK_MODE_SKILL_MIGRATION_PLAN.md](archive/CODEX_WORK_MODE_SKILL_MIGRATION_PLAN.md)
+Archived record: deleted 2026-08-22 in the plans/archive cleanup; recoverable via `git log --grep`.
 
 Current sources: [Codex Work Mode reference](../reference/codex_work_mode.md), [current coordination](../handoffs/codex_work_mode_current.md)

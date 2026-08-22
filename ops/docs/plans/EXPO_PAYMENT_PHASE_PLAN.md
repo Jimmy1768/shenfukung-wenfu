@@ -7,8 +7,9 @@ Created: 2026-08-11
 
 Owner: Wenfu Planning
 
-Core-track predecessors: `ops/docs/plans/EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md`
-and `ops/docs/plans/EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`
+Core-track predecessors: EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md and
+EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md (both deleted 2026-08-22 in the
+plans/archive cleanup; recoverable via `git log --grep`)
 
 ## Objective
 

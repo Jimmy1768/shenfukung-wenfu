@@ -2,6 +2,6 @@
 
 Completion classification: completed historical record.
 
-Archived record: [archive/FINAL_WEB_READINESS_AND_EXPO_GATE_PLAN.md](archive/FINAL_WEB_READINESS_AND_EXPO_GATE_PLAN.md)
+Archived record: deleted 2026-08-22 in the plans/archive cleanup; recoverable via `git log --grep`.
 
 Current source: [future work](../reference/future_work.md)

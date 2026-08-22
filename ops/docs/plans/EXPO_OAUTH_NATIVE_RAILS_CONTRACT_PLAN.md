@@ -19,7 +19,8 @@ Readiness authority:
 `ops/docs/handoffs/2026-08-11-expo-oauth-integration-readiness-control-b.md`
 
 Dependent client plan:
-`ops/docs/plans/EXPO_OAUTH_NATIVE_CLIENT_PLAN.md`
+EXPO_OAUTH_NATIVE_CLIENT_PLAN.md (deleted 2026-08-22 in the plans/archive
+cleanup; recoverable via `git log --grep`)
 
 ## Objective
 
