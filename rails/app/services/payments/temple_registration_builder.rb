@@ -47,7 +47,6 @@ module Payments
         quantity: attributes[:quantity].presence || 1,
         unit_price_cents: unit_price_cents,
         currency: attributes[:currency].presence || offering.currency,
-        certificate_number: attributes[:certificate_number],
         event_slug: attributes[:event_slug].presence || offering.slug,
         contact_payload: attributes[:contact_payload].presence || {},
         logistics_payload: attributes[:logistics_payload].presence || {},
@@ -55,8 +54,17 @@ module Payments
       }
     end
 
+    # certificate_number is a metadata-backed virtual attribute
+    # (TempleRegistration#certificate_number= writes into self.metadata).
+    # It must not be a separate key in registration_attributes above:
+    # ActiveRecord processes a new(hash)/assign_attributes(hash) in the
+    # hash's own key order, and a later metadata: assignment in the same
+    # call fully replaces whatever certificate_number= had just written,
+    # silently dropping it. Folding it into this same merged hash instead
+    # of a sibling key removes the ordering hazard entirely.
     def merged_metadata
       payload = attributes[:metadata].presence || {}
+      payload = payload.merge("certificate_number" => attributes[:certificate_number]) if attributes[:certificate_number].present?
       key = resolved_registration_period_key
       payload = payload.merge("registration_period_key" => key) if key.present? && payload["registration_period_key"].blank?
       payload

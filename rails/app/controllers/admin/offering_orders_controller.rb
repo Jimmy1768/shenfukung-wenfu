@@ -75,7 +75,16 @@ module Admin
 
       merged_metadata = merge_payload(@registration.metadata, attrs.delete(:metadata))
       merged_metadata["registration_period_key"] ||= @registration.metadata.to_h["registration_period_key"]
+      certificate_number = attrs.delete(:certificate_number)
+      merged_metadata["certificate_number"] = certificate_number if certificate_number.present?
 
+      # certificate_number must not be its own key in this assign_attributes
+      # call: it's a metadata-backed virtual attribute
+      # (TempleRegistration#certificate_number= writes into self.metadata),
+      # and processing it as a sibling of metadata: in the same hash means
+      # whichever comes second in the hash's key order wins outright --
+      # silently discarding the other. Folded into merged_metadata above
+      # instead, so there's exactly one metadata write.
       @registration.assign_attributes(
         attrs.except(:contact_payload, :logistics_payload, :multi_value_fields).merge(
           contact_payload: merge_payload(@registration.contact_payload, attrs[:contact_payload]),
