@@ -14,7 +14,8 @@ Owner: Wenfu Planning
 - Phase 1 plan:
   `ops/docs/plans/PLATFORM_BILLING_QUALIFYING_REGISTRATION_ACCOUNTING_PLAN.md`
 - Phase 2 plan:
-  `ops/docs/plans/TENANT_SCOPED_PATRON_PAYMENT_PROVIDER_PLAN.md`
+  TENANT_SCOPED_PATRON_PAYMENT_PROVIDER_PLAN.md (deleted 2026-08-22 in the
+  plans/archive cleanup; recoverable via `git log --grep`)
 
 Both checkpoints are accepted immutable pre-integration outcomes from the same
 base. This plan authorizes their local integration through Control A.

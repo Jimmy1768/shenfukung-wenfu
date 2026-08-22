@@ -58,6 +58,8 @@ This document captures what exists in the admin portal today so future work can 
   - `Temple Profile` nav requires `manage_profile`, matching `/admin/temple/profile` controller gate.
   - `Permissions` nav requires `manage_permissions`, matching permissions controller gate.
   - `Archives` nav requires `view_financials` or `export_financials`; `/admin/archives` index now enforces the same access rule.
+  - `manage_offerings` gates *authoring* only. Gatherings and Offerings list/browse routes stay visible and reachable without it — `Admin::NavigationHelper#nav_item_read_only?` marks those two nav items read-only rather than hiding them.
+  - `record_cash_payments` and `view_guest_lists` are action-only capabilities with no standalone nav item of their own.
 - Mutation paths remain capability-gated server-side via `require_capability!` and should not rely on UI hiding alone.
 - Ongoing refinement target: keep nav visibility, page-level read access, and action-level mutation permissions fully consistent for each admin capability.
 

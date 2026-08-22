@@ -127,6 +127,42 @@
 - EAS projects: `app.config.js` now reads the Expo Application Services project ID from `EAS_PROJECT_ID` (env) or `shared/app_constants/project.json` (`easProjectId`). Populate that per client so `extra.eas.projectId` matches their slug, or leave it blank during initial setup and run `bin/setup_expo_once` (wraps `npx eas init` and stores the ID) inside Golden Template before the first build.
 - Config plugins: Golden Template keeps a local copy under `mobile/plugins-local/` so we can iterate on Expo config plugins (edge-to-edge tweaks, manifest fixes, cutout mode, large-screen overrides, APNs entitlements, and release Gradle flags) without touching the shared package. `bin/local-only/new_client_from_template.sh` excludes that folder when cloning a client. Run `bin/pull_expo_plugins [../expo-config-plugins [../sourcegrid-labs/mobile/plugins-local]]` to copy your shared `expo-config-plugins` repo into `mobile/plugins-local/` (or pass an explicit target like `../sourcegrid-labs/mobile/plugins-local` when you need to update another repo), and run `bin/local-only/sync_expo_plugins [../expo-config-plugins]` after editing so your changes flow back into the shared repo. After syncing, publish/bump it and set `GOLDEN_TEMPLATE_EXPO_PLUGIN` (or install the `@golden-template/expo-config-plugins` package) inside each client project so `app.config.js` can resolve the plugin module during `expo prebuild`. Runtime toggles: set `APN_ENV=development|production` to force the iOS entitlement, `EXPO_SKIP_MAIN_ORIENTATION_UNLOCK=true` if a client insists on keeping the portrait lock, and `EXPO_LEGACY_EDGE_TO_EDGE=true` to fall back to the legacy `WindowCompat` shim.
 
+#### Physical Android device runtime testing (Wenfu/TempleMate-specific)
+
+Recurring facts from repeated physical-device QA cycles on a Pixel 8, worth
+knowing before repeating this from scratch:
+
+- Dummy-mode Metro/ADB attach recipe, reused unchanged across many device QA
+  sessions:
+  ```
+  adb -s <serial> reverse tcp:8081 tcp:8081
+  TEMPLEMATE_CLIENT_MODE=dummy BUILD_MODE=development npx expo start --dev-client --localhost --port 8081
+  ```
+- A long-running device session can go to sleep/lock (Android "Dozing")
+  between Planning/Control round-trips. From the outside this looks like a
+  stuck system surface fighting the app for focus — a real diagnosis packet
+  once confirmed the actual state was `Dozing` with window focus on
+  `NotificationShade`, not an app bug — and no in-app gesture (Back, swipe,
+  status-bar collapse, Home+relaunch) substitutes for an actual physical
+  wake+unlock. If a session keeps losing device foreground, check for a
+  simple sleep/lock state before trying gesture-based recovery.
+- The durable mitigation for the above: a temporary, explicitly-scoped
+  `stay_on_while_plugged_in` (USB-only stay-awake) device-setting change —
+  read the prior value first, set it to `2`, and restore the exact prior
+  value when done. Treat a disconnect before restoring as needing manual
+  reconciliation; don't leave the setting changed.
+- ADB's stock `input text` cannot reliably type CJK/Unicode text on this
+  device — automated form-filling QA needs ASCII placeholder values, not
+  realistic Traditional Chinese data.
+- The on-screen keyboard (IME) can intercept a tap meant for a button behind
+  it. Before tapping a button after text entry, dismiss the IME with one
+  Back press, verify the field's value is unchanged, then re-resolve the
+  button's on-screen bounds before tapping — tapping through an open IME can
+  silently type into the wrong target instead of activating the button.
+- zsh's `status` is a reserved read-only variable; a wrapper script that
+  assigns `status=$(...)` around a CLI command silently fails to capture
+  output/exit state. Use a different variable name.
+
 #### Deferred integrations (documented only)
 - **Amazon S3 uploads** – Rails already ships the scaffolding (`rails/config/initializers/storage_s3.rb`, `rails/config/storage.yml`, and the placeholder `UploadsController`). When a client actually needs uploads, set `S3_BUCKET`, `S3_REGION`, `S3_ACCESS_KEY_ID`, and `S3_SECRET_ACCESS_KEY` in their env file, then plug the controller into `Storage::S3Service` for presigned URLs or ActiveStorage. Leave those env vars empty inside the template repo so each client can point at their own bucket.
 - **Expo push + JWT refresh** – Messaging tables, `Notifications::Push::Delivery`, and `Auth::JwtService` exist, but no production infrastructure is wired up yet. When a mobile build becomes necessary, configure Expo (or APNs/FCM) credentials per client, persist mobile push tokens through the existing `/api` endpoints, and finish the refresh-token rotation logic so Expo can swap expired JWTs without forcing a new login. Until then, keep the placeholders and reference this section so teammates know why push/refresh endpoints are dormant.
@@ -280,3 +316,4 @@
 - 2026-03-05: Fixed nginx asset split docs: Vue static assets are `/frontend/assets/*`, Rails asset pipeline routes are `/backend/assets/*`; added explicit post-render/certbot verification guidance.
 - 2026-03-08: Reorganized the OAuth section so core OAuth configuration comes first, account-linking is documented as an optional extension, and reference/ticket docs replace the completed account-linking plan.
 - 2026-03-08: Corrected stale reference-doc links, removed duplicate command entries, and moved the changelog back to the bottom of the file.
+- 2026-08-22: Added a Wenfu/TempleMate-specific "Physical Android device runtime testing" note (Metro/ADB attach recipe, device-sleep-looks-like-a-focus-bug gotcha, stay-awake fence-and-restore technique, ADB Unicode input limitation, IME-dismissal-before-tap discipline) distilled from 78 archived plan docs before their deletion.

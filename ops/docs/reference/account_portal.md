@@ -21,9 +21,18 @@ Snapshot of what the patron-facing account portal already delivers so future wor
 - After authentication, `Account::RegistrationsController` checks for an existing registration on that slug. If one exists, patrons land on the detail page; otherwise they see the new-registration form.
 - The intake form begins with a "Who is this for?" selector (self vs. dependent). Selecting a dependent prefills contact fields from that profile and persists `dependent_id` + `registrant_scope` into the registration metadata for duplicate guardrails.
 - The selector now renders as a set of cards (Myself + each dependent). Choosing a registrant with an existing entry loads the inline edit form for that registration; otherwise the new-registration form appears prefilled for the selected person.
-- Personal info fields prefill from the `users` table and write back on save. Offering-specific fields (ancestor names, dedications, etc.) remain read-only outside the registration form; admins control edits.
+- Personal info fields prefill from the `users` table and write back on save. Offering-specific contact/logistics fields (ancestor names, dedications, etc.) can now be saved as **reusable defaults** and reused across registrations by both patrons and admins — see "Reusable Registration Defaults" below; they are no longer read-only outside the registration form.
 - Registrations lock once fulfilled or past the start time. Cancel/refund actions surface only while the offering is open; otherwise we show guidance to contact the temple.
 - Duplicate guardrails allow exactly one active registration per registrant scope (self or dependent), offering slug, and period key.
+
+## Reusable Registration Defaults
+
+- `Registrations::ReusableDefaults` (`rails/app/services/registrations/reusable_defaults.rb`) lets patrons and admins save offering-specific contact/logistics field values once and reuse them across future registrations for the same offering, instead of retyping them each time.
+- Keyed by exact `(temple.id, registrable_type, registrable.id)` — never by slug alone, because a bare slug is not tenant-safe (two temples can reuse the same offering slug).
+- A fixed set of fields can never enter reusable storage even if the offering's form schema would otherwise render them: quantity, price, currency, certificate number, offering/service slugs, registrant scope, dependent ID, and any payment/lifecycle data.
+- The legacy unscoped `metadata["offerings"][slug]` storage path is preserved byte-for-byte for old records but is dead code going forward — nothing reads or writes it anymore.
+- Registrations that already have payment, refund, cancellation, or fulfillment recorded never write back to reusable defaults.
+- Admins can view/add/edit/clear a patron's reusable defaults directly from the offering-orders screen (`rails/app/controllers/admin/patron_metadata_values_controller.rb`), not just via raw API calls.
 
 ## Member Surfaces
 
@@ -51,7 +60,9 @@ Snapshot of what the patron-facing account portal already delivers so future wor
 
 ## Mobile Alignment
 
-- Expo clients consume the same scoped payloads (`/account/api/...`) so we avoid divergent contracts. Mobile focuses on light interactions; anything heavy (dependents, payments, certificates) remains on the web portal for now.
+- Expo clients consume the same scoped payloads (`/account/api/...`) so we avoid divergent contracts.
+- TempleMate mobile ships full dependent CRUD and full registration create/edit natively, with Rails remaining sole authority for offering identity and price/fee resolution (patrons pick from a Discover catalog of admin-defined offerings rather than typing one in; registrant is restricted to self or an owned dependent). This is no longer a "light interactions only" surface for those two flows.
+- Payments and certificates still remain web-portal-only/read-only from mobile as of this writing.
 
 ## Next Steps / TODOs
 

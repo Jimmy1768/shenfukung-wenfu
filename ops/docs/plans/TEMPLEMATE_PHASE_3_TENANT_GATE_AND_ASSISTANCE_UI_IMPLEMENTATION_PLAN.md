@@ -15,19 +15,21 @@ Accepted baseline: canonical `main`
 `c969f39851dffb207952e8d19f40780e975678fc`
 
 Parent audit:
-`ops/docs/plans/TEMPLEMATE_PHASE_3_DIRECTOR_HOLISTIC_UI_AUDIT_PLAN.md`
+TEMPLEMATE_PHASE_3_DIRECTOR_HOLISTIC_UI_AUDIT_PLAN.md (deleted 2026-08-22 in
+the plans/archive cleanup; recoverable via `git log --grep`)
 
 Accepted findings:
-`ops/docs/plans/TEMPLEMATE_PHASE_3_UI_AUDIT_FINDINGS.md`
+TEMPLEMATE_PHASE_3_UI_AUDIT_FINDINGS.md (deleted 2026-08-22 in the
+plans/archive cleanup; recoverable via `git log --grep`)
 
 Accepted readiness evidence:
 `ops/docs/handoffs/2026-08-14-templemate-phase-3-tenant-and-support-ui-readiness-control-a.md`
 
-Parallel runtime packet: Control B owns the active dummy development-client
-audit session under
-`ops/docs/plans/TEMPLEMATE_PHASE_3_UI_AUDIT_RUNTIME_SESSION_PLAN.md`.
-This source packet must not stop, reload, attach to, automate, or otherwise
-interfere with that session.
+Parallel runtime packet: Control B owned the (now-completed) dummy
+development-client audit session under TEMPLEMATE_PHASE_3_UI_AUDIT_RUNTIME_SESSION_PLAN.md
+(deleted 2026-08-22 in the plans/archive cleanup; recoverable via
+`git log --grep`). This source packet was not to stop, reload, attach to,
+automate, or otherwise interfere with that session.
 
 ## Accepted Director Decisions
 

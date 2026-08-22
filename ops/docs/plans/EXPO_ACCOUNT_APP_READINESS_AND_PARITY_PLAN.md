@@ -1,9 +1,10 @@
 # Expo Account App Readiness And Parity Plan
 
 Status: completed initial readiness inventory; retained as supporting evidence
-for `EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
-`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; implementation and Control dispatch
-not authorized by this document
+for the now-deleted EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md and
+EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md (both integrated, then deleted
+2026-08-22 in the plans/archive cleanup; recoverable via `git log --grep`);
+implementation and Control dispatch not authorized by this document
 
 Created: 2026-08-11
 
@@ -103,10 +104,11 @@ The following criteria are frozen for any later implementation packet:
 
 ## Prior Expo Plan Disposition
 
-`ops/docs/plans/EXPO_MULTI_ROLE_MODE_SWITCH_PLAN.md` records an older direction
+EXPO_MULTI_ROLE_MODE_SWITCH_PLAN.md (deleted 2026-08-22 in the plans/archive
+cleanup; recoverable via `git log --grep`) recorded an older direction
 for one patron/admin app with a mode switch. The Director's 2026-08-11
-account-only instruction supersedes that direction for Wenfu. The old document
-remains intact as historical decision evidence, but none of its admin mode,
+account-only instruction superseded that direction for Wenfu, but none of its
+admin mode,
 capability, temple-admin selector, or mode-persistence criteria may enter a
 future Expo packet.
 
@@ -437,10 +439,11 @@ Wenfu compatibility, not be downgraded to match the example.
 ## Required Future Work Packages
 
 Disposition note: the package list below is retained as the original readiness
-decomposition. Current sequencing and acceptance are superseded by
-`EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md` and
-`EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md`; these packages must not be dispatched
-as one combined parity build.
+decomposition. Current sequencing and acceptance were superseded by the now-
+deleted EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md and
+EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md (integrated, then deleted 2026-08-22 in
+the plans/archive cleanup; recoverable via `git log --grep`); these packages
+must not be dispatched as one combined parity build.
 
 These are sequencing and acceptance boundaries, not implementation packets.
 Planning must accept the applicable detailed contract before any Control

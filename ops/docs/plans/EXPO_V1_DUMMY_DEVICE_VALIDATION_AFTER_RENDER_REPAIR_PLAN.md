@@ -18,7 +18,8 @@ Accepted source baseline:
 `1c312829da54da8fa395e56ae14552b20296e618`
 
 Parent runtime plan:
-`ops/docs/plans/EXPO_V1_DUMMY_DEVICE_AND_CAMERA_VALIDATION_PLAN.md`
+EXPO_V1_DUMMY_DEVICE_AND_CAMERA_VALIDATION_PLAN.md (deleted 2026-08-22 in the
+plans/archive cleanup; recoverable via `git log --grep`)
 
 Observed-failure report:
 `ops/docs/handoffs/2026-08-12-expo-v1-dummy-device-camera-usb-validation-control-b.md`

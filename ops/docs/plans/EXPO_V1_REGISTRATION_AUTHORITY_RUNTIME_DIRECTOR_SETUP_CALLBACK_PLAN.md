@@ -15,7 +15,9 @@ Canonical Planning base:
 `474834b648fc879de28a05ee53a86741f528ad5f`
 
 Accepted parent method:
-`ops/docs/plans/EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_EVIDENCE_FOREGROUND_RETRY_PLAN.md`
+EXPO_V1_REGISTRATION_AUTHORITY_RUNTIME_EVIDENCE_FOREGROUND_RETRY_PLAN.md
+(deleted 2026-08-22 in the plans/archive cleanup; recoverable via
+`git log --grep`)
 
 Accepted planning-gap report:
 `ops/docs/handoffs/2026-08-12-expo-v1-registration-authority-runtime-evidence-foreground-retry-control-b.md`

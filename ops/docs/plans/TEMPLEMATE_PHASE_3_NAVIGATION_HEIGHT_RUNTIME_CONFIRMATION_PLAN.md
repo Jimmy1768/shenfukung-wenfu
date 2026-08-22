@@ -15,7 +15,8 @@ Accepted source/base: canonical `main`
 `90ebd1461fe16644c54e85b73c29719585b89f93`
 
 Source repair plan:
-`ops/docs/plans/TEMPLEMATE_PHASE_3_SINGLE_LINE_NAVIGATION_HEIGHT_REPAIR_PLAN.md`
+TEMPLEMATE_PHASE_3_SINGLE_LINE_NAVIGATION_HEIGHT_REPAIR_PLAN.md (deleted
+2026-08-22 in the plans/archive cleanup; recoverable via `git log --grep`)
 
 ## Objective
 

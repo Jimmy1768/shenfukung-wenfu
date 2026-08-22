@@ -14,7 +14,8 @@ Repository: `/Users/jimmy1768/Projects/shengfukung-wenfu`
 Canonical plan/base: `ab08b4b2b71ff63df784c3849ba7df37fece925f`
 
 Parent plan:
-`ops/docs/plans/TEMPLEMATE_PHASE_3_SINGLE_LINE_NAVIGATION_HEIGHT_REPAIR_PLAN.md`
+TEMPLEMATE_PHASE_3_SINGLE_LINE_NAVIGATION_HEIGHT_REPAIR_PLAN.md (deleted
+2026-08-22 in the plans/archive cleanup; recoverable via `git log --grep`)
 
 Preserved candidate:
 

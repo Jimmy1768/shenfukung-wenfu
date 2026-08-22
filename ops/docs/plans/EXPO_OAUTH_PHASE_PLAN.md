@@ -31,9 +31,10 @@ not create a shared package or authorize changes to another repository.
    - adds the account-only native start/exchange contract around the existing
      central-auth service;
    - uses stubbed/local evidence only and does not access providers.
-2. `EXPO_OAUTH_NATIVE_CLIENT_PLAN.md`
-   - current implementation authority through Control B;
-   - adds deterministic dummy OAuth UI/state evidence and a real adapter for
+2. EXPO_OAUTH_NATIVE_CLIENT_PLAN.md (deleted 2026-08-22 in the plans/archive
+   cleanup; recoverable via `git log --grep`)
+   - was the implementation authority through Control B;
+   - added deterministic dummy OAuth UI/state evidence and a real adapter for
      the accepted Rails contract.
 3. Provider and development-client validation
    - requires a later separate plan after source integration;

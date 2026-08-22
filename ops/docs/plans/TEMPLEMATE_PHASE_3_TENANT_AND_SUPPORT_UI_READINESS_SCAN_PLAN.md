@@ -15,16 +15,18 @@ Accepted baseline: canonical `main` at plan commit parent
 `c9482cd918ad2321cfd5dae98d4bdb998c917c08`
 
 Parent audit:
-`ops/docs/plans/TEMPLEMATE_PHASE_3_DIRECTOR_HOLISTIC_UI_AUDIT_PLAN.md`
+TEMPLEMATE_PHASE_3_DIRECTOR_HOLISTIC_UI_AUDIT_PLAN.md (deleted 2026-08-22 in
+the plans/archive cleanup; recoverable via `git log --grep`)
 
 Accepted findings:
-`ops/docs/plans/TEMPLEMATE_PHASE_3_UI_AUDIT_FINDINGS.md`
+TEMPLEMATE_PHASE_3_UI_AUDIT_FINDINGS.md (deleted 2026-08-22 in the
+plans/archive cleanup; recoverable via `git log --grep`)
 
-Parallel runtime packet: Control B owns the active dummy development-client
-audit session under
-`ops/docs/plans/TEMPLEMATE_PHASE_3_UI_AUDIT_RUNTIME_SESSION_PLAN.md`.
-This scan must not stop, alter, attach to, automate, or otherwise interfere
-with that session.
+Parallel runtime packet: Control B owned the (now-completed) dummy
+development-client audit session under TEMPLEMATE_PHASE_3_UI_AUDIT_RUNTIME_SESSION_PLAN.md
+(deleted 2026-08-22 in the plans/archive cleanup; recoverable via
+`git log --grep`). This scan was not to stop, alter, attach to, automate, or
+otherwise interfere with that session.
 
 ## Objective
 
