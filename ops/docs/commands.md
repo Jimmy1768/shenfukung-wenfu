@@ -40,7 +40,7 @@ sudo systemctl restart shengfukung-wenfu-sidekiq
 
 ## Internal operator pages
 
-- Internal temple access dashboard: `http://localhost:3001/internal/temples/access`
+- Internal temple access dashboard: `http://localhost:4001/internal/temples/access`
 - Intended use:
   - internal-only ops page
   - review whether your platform operator account already has temple membership
@@ -242,8 +242,8 @@ bundle install
 # Setup DB (creates, migrates, seeds)
 bin/rails db:setup
 
-# Run Rails server (defaults to http://localhost:3001)
-bundle exec rails server -p 3001 -b 0.0.0.0
+# Run Rails server (defaults to http://localhost:4001)
+bundle exec rails server -p 4001 -b 0.0.0.0
 
 # Run any pending migrations
 bin/rails db:migrate
@@ -257,7 +257,7 @@ bin/rails db:migrate
 - Marketing/demo console (`/marketing/admin`) still uses the `PROJECT_DEFAULT_ADMIN_*` env vars (`admin@<project-slug>.local` / `GoldenTemplate!123` by default).
 - The real temple admin console (`/admin`) now authenticates against the actual `User` records you seed (e.g., `bin/rails "admin_controls:seed_owner[shengfukung-wenfu,email@example.com,Password]"`). Use those seeded credentials when signing in.
 - Admin console → “Profile” lets you edit the copy/contact info surfaced on the Vue site. Form submissions append a `SystemAuditLog`.
-- The Vue app calls relative tenant-local `/api/v1/temple` paths. In local development, Vite proxies those paths to Rails on `http://localhost:3001`; there is no public API-base or temple-selector environment setting.
+- The Vue app calls relative tenant-local `/api/v1/temple` paths. In local development, Vite proxies those paths to Rails on `http://localhost:4001`; there is no public API-base or temple-selector environment setting.
 - Expo builds now read `EXPO_PROJECT_SLUG`, `EXPO_PROJECT_SCHEME`, `EXPO_ANDROID_PACKAGE`, and `EXPO_IOS_BUNDLE_IDENTIFIER` (falling back to the shared keys when absent), so add those to `.env.*` alongside `MOBILE_API_BASE_URL`, `MOBILE_JWT_LOGIN_PATH`, and `MOBILE_JWT_REFRESH_PATH`.
 - Offering templates (per-temple form configs) live in `rails/db/temples/offerings/<slug>.yml`. Use `rails/db/temples/offerings/working-draft.yml` as the persistent staging scratch file for each new temple, then convert that draft into the finalized `<slug>.yml`. After editing the real temple YAML, run `ruby ops/scripts/sync_offering_configs.rb` to push the metadata (`form_fields`, defaults, options) into each `TempleOffering` so the admin form reflects the changes.
 

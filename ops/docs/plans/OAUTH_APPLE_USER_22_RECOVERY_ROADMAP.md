@@ -119,7 +119,7 @@ Prerequisites:
 
 - separately authorized read-only/provider configuration verification;
 - exact Central Auth allowlisting for the local Wenfu callback, expected to be
-  `http://localhost:3001/auth/callback`, verified rather than assumed;
+  `http://localhost:4001/auth/callback`, verified rather than assumed;
 - a disposable/local Wenfu database containing the keeper test account but no
   local Apple identity for the staff Apple subject;
 - local account-resolution/linking enabled, with consolidation disabled.

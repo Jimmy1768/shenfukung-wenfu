@@ -10,7 +10,7 @@ function resolveAccountBaseUrl() {
     }
   }
   if (import.meta.env.DEV) {
-    return 'http://localhost:3001';
+    return 'http://localhost:4001';
   }
   if (typeof window !== 'undefined' && window.location?.origin) {
     return window.location.origin;

@@ -12,7 +12,7 @@ const marketingOrigin = resolveOrigin(
 
 const adminOrigin = resolveOrigin(
   import.meta.env.VITE_MARKETING_ADMIN_ORIGIN,
-  import.meta.env.DEV ? "http://localhost:3001/marketing/admin" : "/marketing/admin"
+  import.meta.env.DEV ? "http://localhost:4001/marketing/admin" : "/marketing/admin"
 );
 
 const buildUrl = (origin, path = "/", ensureTrailingSlash = false) => {

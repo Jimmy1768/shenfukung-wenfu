@@ -134,7 +134,7 @@ check_env_keys() {
   [[ "${PROJECT_SLUG:-}" == "$slug" ]] || fail "PROJECT_SLUG must equal $slug"
   [[ "${VITE_TEMPLE_SLUG:-}" == "$slug" ]] || fail "VITE_TEMPLE_SLUG must equal $slug"
   [[ "${RAILS_ENV:-}" == "production" ]] || warn "RAILS_ENV is ${RAILS_ENV:-unset} (recommended: production)"
-  [[ "${PUMA_PORT:-}" == "3000" ]] || warn "PUMA_PORT is ${PUMA_PORT:-unset} (recommended: 3000)"
+  [[ "${PUMA_PORT:-}" == "4003" ]] || warn "PUMA_PORT is ${PUMA_PORT:-unset} (recommended: 4003)"
 }
 
 check_manifest() {

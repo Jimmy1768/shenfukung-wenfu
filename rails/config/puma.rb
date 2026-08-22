@@ -13,10 +13,10 @@
 #   are expected to override via ENV:
 #     RAILS_MAX_THREADS, RAILS_MIN_THREADS, WEB_CONCURRENCY, PUMA_PORT
 #
-# - Port convention:
-#     development: 3001 (local dev UI)
-#     staging:     3002 (live staging UI)
-#     production:  3000 (live production UI)
+# - Port convention (X00 stays permanently vacant):
+#     development: 4001 (local dev UI)
+#     staging:     4002 (live staging UI)
+#     production:  4003 (live production/release UI)
 #
 
 max_threads_count = ENV.fetch("RAILS_MAX_THREADS", 5).to_i
@@ -25,12 +25,12 @@ threads min_threads_count, max_threads_count
 
 # Port:
 # - Use PUMA_PORT if set
-# - Otherwise: 3001 in development, 3002 in staging, 3000 in production
+# - Otherwise: 4001 in development, 4002 in staging, 4003 in production
 rails_env = ENV.fetch("RAILS_ENV", "development")
 default_port = case rails_env
-when "development" then 3001
-when "staging" then 3002
-else 3000
+when "development" then 4001
+when "staging" then 4002
+else 4003
 end
 
 port ENV.fetch("PORT") {

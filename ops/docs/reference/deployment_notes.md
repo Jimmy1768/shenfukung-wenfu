@@ -88,7 +88,7 @@
 - The marketing copy lives under `vue/src/locales/translations.js`. Add or adjust entries there—not in Rails—in order to keep the frontend experience localized. The new `<LocaleSelector>` component (`vue/src/components/LocaleSelector.vue`) is wired into `App.vue` to toggle between `zh-TW` and `en-US` translations and keep the hero/feature text in sync.
 - Hidden showcase pages should stay in `vue/src/showcase/*` (not mixed into client site `layouts/*`). Preserve router entries for `/marketing`, `/marketing/demo`, and `/demo` during Vue layout refactors.
 - **Cross-link origins:** Rails and Vue now share a single source of truth for where each surface lives.
-  - `AppConstants::Origins` exposes `marketing_origin`/`admin_origin` plus helper methods (`marketing_url`, `admin_url`). In development it falls back to `http://localhost:5173/marketing` (Vue) and `http://localhost:3001/marketing/admin` (Rails). In production it defaults to relative paths (`/marketing`, `/marketing/admin`) unless you override them.
+  - `AppConstants::Origins` exposes `marketing_origin`/`admin_origin` plus helper methods (`marketing_url`, `admin_url`). In development it falls back to `http://localhost:5173/marketing` (Vue) and `http://localhost:4001/marketing/admin` (Rails). In production it defaults to relative paths (`/marketing`, `/marketing/admin`) unless you override them.
   - Override the Rails side via `PROJECT_MARKETING_ORIGIN` and `PROJECT_ADMIN_ORIGIN` if a client runs the marketing site on a dedicated host (e.g., `https://marketing.client.com`).
   - The Vue app reads `VITE_MARKETING_ORIGIN` and `VITE_MARKETING_ADMIN_ORIGIN`. When unset, it mirrors the same development and production defaults so CTA links point at the correct service.
   - Document client-specific origins in their ops README so both the Rails env file and the Vue `.env.production` stay in sync.
@@ -96,14 +96,14 @@
   * install dependencies (`npm`, `yarn`, or `pnpm` depending on the lockfile or `PACKAGE_MANAGER`),
   * run the Vue `build` script, and
   * sync `vue/dist/` into `/var/www/<client-slug>` (override with `DEPLOY_DIR=/opt/www`) via `rsync --delete`.
-- Vite public-content calls are tenant-local, relative `/api/v1/temple` paths. Local Vite development proxies them to Rails on `3001`; live production uses `3000` and live staging uses `3002` behind Nginx. Do not configure a public API-base URL, `localhost`, or a raw application port into a Vue build.
+- Vite public-content calls are tenant-local, relative `/api/v1/temple` paths. Local Vite development proxies them to Rails on `4001`; live production uses `4003` and live staging uses `4002` behind Nginx. Do not configure a public API-base URL, `localhost`, or a raw application port into a Vue build.
 - Branch promotion follows the same split: `main` is the verified integration
   and optional staging candidate, while `release/current` is the isolated live
   branch. A staging-droplet check from `main` is optional after sufficient
   local Rails and production-artifact evidence; when used, it follows the
-  `3002` convention. Promote the exact accepted `main` commit to
+  `4002` convention. Promote the exact accepted `main` commit to
   `release/current` only after confirmation, then deploy the live Rails/Vue
-  release through the `3000` production path.
+  release through the `4003` production path.
 - Expo builds read their own `EXPO_PROJECT_SLUG`, `EXPO_PROJECT_SCHEME`, `EXPO_ANDROID_PACKAGE`, and `EXPO_IOS_BUNDLE_IDENTIFIER` env vars; set those per tenant so dev/prod bundle IDs stay isolated while Rails/Vue continue using the canonical `PROJECT_SLUG`. `mobile/app/lib/app_constants/project.js` falls back to the shared keys when the Expo-specific ones are missing, so older env files keep working.
 - Example: `bin/deploy_vue sourcegrid-labs` builds the SPA and installs it into `/var/www/sourcegrid-labs`; rerun for every client clone after editing Vue content.
 - When copying the template, update `{{project_slug}}` placeholders inside `ops/nginx/template/golden-template.conf`; `bin/stage_ops_configs` will render the active client config to `ops/nginx/<client>.conf` without the training `#` characters.
@@ -129,7 +129,7 @@
 - `ops/nginx/template/golden-template.conf` documents the apex-domain pattern (Vue serves `/` + `/marketing`, Puma handles `/marketing/admin`, `/admin`, `/api`). Run `bin/stage_ops_configs` to produce `ops/nginx/<client>.conf`, then deploy that file (after reviewing certbot edits) to `/etc/nginx/sites-available/`. Keep `try_files $uri /index.html;` in place so `/marketing` deep links resolve within the SPA.
 - First-deploy hardening checklist (new droplet):
   - Ensure `rails/app/lib/temples/manifest.yml` includes the real domain in `domains:` and `public_url:`. The config renderer now uses this to replace template `project.com` server names.
-  - In `/etc/default/<slug>-env`, set runtime keys explicitly: `PROJECT_SLUG`, `VITE_TEMPLE_SLUG`, `RAILS_ENV=production`, `RACK_ENV=production`, and `PUMA_PORT=3000`. `VITE_TEMPLE_SLUG` may configure local presentation metadata but must not select a public API tenant.
+  - In `/etc/default/<slug>-env`, set runtime keys explicitly: `PROJECT_SLUG`, `VITE_TEMPLE_SLUG`, `RAILS_ENV=production`, `RACK_ENV=production`, and `PUMA_PORT=4003`. `VITE_TEMPLE_SLUG` may configure local presentation metadata but must not select a public API tenant.
   - Ensure Node meets Vite requirements (`node >= 20.19` or `>= 22.12`) before running `bin/deploy_vue`.
   - Ensure Rails runtime dirs exist on the host (`rails/tmp/pids`, `rails/tmp/cache`, `rails/tmp/sockets`, `rails/log`) before starting Puma via systemd.
   - Ensure Vue deploy target exists and is writable by the deploy user (`/var/www/<slug>`), otherwise `bin/deploy_vue` fails at rsync/mkdir.
