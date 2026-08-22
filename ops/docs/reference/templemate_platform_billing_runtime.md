@@ -139,14 +139,57 @@ production access re-runs the systemd unit staging step -- this change does
 not do that itself, since installing/enabling units on the host is a
 separate, deliberate step from building the code.
 
+## Collection status: real code, currently inert
+
+`Billing::StripePlatformBillingCollection#collect!` is genuine, working
+Stripe API integration -- a real `Stripe::Invoice.create` with
+`collection_method: "charge_automatically"`, not a mock. If invoked
+successfully it would attempt a real charge. As of this writing it is
+inert for two independent reasons, not one:
+
+- No scheduler was ever active before the two-phase timers above were
+  built (see "Deterministic enqueue schedule") -- and those timers are
+  themselves still installed disabled, per the first-tenant gate below.
+- The `shengfukung-wenfu` demo temple has no `stripe_customer_id` or
+  `stripe_payment_method_id` saved in `billing_settings`. Even a manual
+  invocation would raise `"Verified Stripe customer is required"` before
+  reaching Stripe -- nothing would be charged regardless of the
+  scheduler or the live/test key question below.
+
+**Director's stated belief (2026-08-21, not independently verified
+against the Stripe dashboard): the configured `STRIPE_SECRET_KEY` is
+live mode, not test/sandbox.** If correct, the two inert-today
+conditions above are the *only* things currently preventing a real
+charge attempt -- there is no sandbox layer underneath them. Confirm
+this directly against the Stripe dashboard before any work populates a
+real `stripe_customer_id`/`stripe_payment_method_id` on any temple, or
+manually invokes the collection job/service, rather than relying on a
+recalled belief.
+
+## Grace period timing
+
+`Billing::PlatformBillingLifecycle`: `OVERDUE_WINDOW = 7.days`,
+`GRACE_WINDOW = 14.days` -- 21 days total from a failed charge to
+freezing the temple's account (shortened from 37 as of this writing).
+`Admin::PaymentMethodsForm::DEFAULT_BILLING_GRACE_DAYS` (a stale, unused
+30-day duplicate of this same number) was removed in the same change;
+the only place this value now lives is `PlatformBillingLifecycle`
+itself. `Temple#billing_grace_days` (`billing_settings["grace_days"] ||
+30`) is a separate, currently read-only code path -- no admin UI writes
+it for any temple, so there's no stored per-temple override to
+conflict with the shared default.
+
 ## First-tenant gate and preserved boundaries
 
 Before enabling either timer or initiating the first setup collection, name the
 first tenant and owner, confirm its expected statement and payment-method
-setup path, and supervise the matching Stripe event and Wenfu audit record.
-Local acceptance established entitlement-first registration/payment-intake
-enforcement and matching owner presentation for adopted temples; it did not
-authorize live collection, activation, or a live-readiness claim.
+setup path, supervise the matching Stripe event and Wenfu audit record, and
+confirm live/test key mode directly against the Stripe dashboard (see
+"Collection status" above -- this has never been independently verified,
+only recalled). Local acceptance established entitlement-first
+registration/payment-intake enforcement and matching owner presentation for
+adopted temples; it did not authorize live collection, activation, or a
+live-readiness claim.
 Preserve platform-delivery idempotency, signed-webhook behavior, the persisted
 `overdue -> grace -> frozen` lifecycle, legacy annual-record protection,
 ECPay/patron payment behavior, tenant isolation, owner/admin authority,
