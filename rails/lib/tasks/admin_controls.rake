@@ -135,4 +135,29 @@ namespace :admin_controls do
     AdminTempleMembership.where(admin_account: admin, temple:).destroy_all
     puts "QA dummy admin removed from #{slug}." # rubocop:disable Rails/Output
   end
+
+  # Unlocks registration creation for a temple regardless of its platform
+  # billing entitlement state -- for demo/sales temples that need to create
+  # fake registrations without paying the platform setup fee (e.g. one
+  # whose entitlement is stuck in "pending_setup" from an earlier setup
+  # attempt, which would otherwise freeze intake). Deliberately does not
+  # touch the entitlement itself: Temple.platform_billing_adopted already
+  # excludes any "pending_setup" entitlement from being treated as a real
+  # billing client, so this flag has no effect on the monthly billing jobs
+  # either way.
+  desc "Unlock registration creation for a demo/sales temple without requiring platform billing setup"
+  task :unlock_demo_registrations, [:slug] => :environment do |_task, args|
+    slug = args[:slug] || AppConstants::Project.slug
+    temple = Temple.find_by!(slug:)
+    temple.unlock_demo_registrations!
+    puts "Demo registrations unlocked for #{slug}. registration_intake_frozen? is now #{temple.registration_intake_frozen?}." # rubocop:disable Rails/Output
+  end
+
+  desc "Re-lock registration creation for a temple (undo unlock_demo_registrations)"
+  task :lock_demo_registrations, [:slug] => :environment do |_task, args|
+    slug = args[:slug] || AppConstants::Project.slug
+    temple = Temple.find_by!(slug:)
+    temple.lock_demo_registrations!
+    puts "Demo registrations re-locked for #{slug}. registration_intake_frozen? is now #{temple.registration_intake_frozen?}." # rubocop:disable Rails/Output
+  end
 end

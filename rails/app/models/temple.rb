@@ -56,6 +56,20 @@ class Temple < ApplicationRecord
       .where(admin_temple_memberships: { admin_account_id: admin_account.id })
       .distinct
   }
+  # A real, billable platform-billing client: entitlement present AND past
+  # "pending_setup" (i.e. active or suspended -- has actually completed the
+  # Stripe setup checkout at some point). Demo/seed/synthetic temples never
+  # adopt at all, so they're excluded by the join alone; a temple that
+  # started onboarding but never finished (pending_setup, no payment method
+  # on file, nothing for Stripe to actually charge) is excluded too --
+  # deliberately, so an incomplete or demo-purposed setup attempt can't
+  # silently make the monthly billing jobs treat it as a real client. This
+  # is the real-client signal the monthly billing jobs use to skip
+  # everything else without needing a separate "is this temple real" flag.
+  scope :platform_billing_adopted, -> {
+    joins(:platform_billing_entitlement)
+      .where.not(platform_billing_entitlements: { state: "pending_setup" })
+  }
 
   validates :slug, :name, presence: true
 
@@ -227,10 +241,33 @@ class Temple < ApplicationRecord
   end
 
   def registration_intake_frozen?(reference_time = Time.current)
+    return false if demo_registration_unlocked?
+
     entitlement = platform_billing_entitlement
     return !entitlement.active? if entitlement.present?
 
     online_payments_frozen?(reference_time)
+  end
+
+  # A narrow, explicit override for demo/sales temples that need to create
+  # registrations before (or without ever) completing platform billing
+  # setup -- e.g. a temple whose entitlement is sitting in "pending_setup"
+  # from an earlier setup attempt, which would otherwise freeze intake via
+  # registration_intake_frozen? above. Deliberately does not touch the
+  # entitlement itself: unlocking intake this way must not make the temple
+  # look like a real, onboarded billing client (see Temple.platform_billing_adopted).
+  def demo_registration_unlocked?
+    ActiveModel::Type::Boolean.new.cast(billing_settings["demo_registration_unlocked"])
+  end
+
+  def unlock_demo_registrations!
+    update_billing_settings!("demo_registration_unlocked" => true)
+    SystemAuditLogger.log!(action: "platform_billing.demo_registrations_unlocked", target: self, temple: self)
+  end
+
+  def lock_demo_registrations!
+    update_billing_settings!("demo_registration_unlocked" => false)
+    SystemAuditLogger.log!(action: "platform_billing.demo_registrations_locked", target: self, temple: self)
   end
 
   def adopt_platform_billing_entitlement!(adopted_at: Time.current)
@@ -267,5 +304,13 @@ class Temple < ApplicationRecord
     return "Online payments are paused until a payment method is added." if remaining_days.zero?
 
     "Add a payment method within #{remaining_days} days to keep online payments active."
+  end
+
+  private
+
+  def update_billing_settings!(changes)
+    base = payment_provider_settings.is_a?(Hash) ? payment_provider_settings.deep_dup : {}
+    base["billing"] = (base["billing"].is_a?(Hash) ? base["billing"] : {}).merge(changes)
+    update!(payment_provider_settings: base)
   end
 end
