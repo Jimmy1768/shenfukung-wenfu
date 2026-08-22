@@ -1,0 +1,22 @@
+# ops/systemd/shengfukung-wenfu-staging-sidekiq.service
+#
+# Systemd unit for the staging Sidekiq worker. Mirrors
+# shengfukung-wenfu-sidekiq.service exactly except for the working
+# directory and environment file -- see
+# shengfukung-wenfu-staging-puma.service for why staging runs from its
+# own separate checkout rather than sharing production's.
+
+[Unit]
+Description=竹南鎮聖福宮 Sidekiq (Staging)
+After=network.target
+
+[Service]
+Type=simple
+User=jimmy1768_user
+WorkingDirectory=/home/jimmy1768_user/Projects/shengfukung-wenfu-staging/rails
+EnvironmentFile=/etc/default/shengfukung-wenfu-staging-env
+ExecStart=/usr/bin/bash -lc "/home/jimmy1768_user/.rbenv/bin/rbenv exec bundle exec sidekiq -r . -C config/sidekiq.yml"
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

@@ -98,10 +98,17 @@
   * sync `vue/dist/` into `/var/www/<client-slug>` (override with `DEPLOY_DIR=/opt/www`) via `rsync --delete`.
 - Vite public-content calls are tenant-local, relative `/api/v1/temple` paths. Local Vite development proxies them to Rails on `4001`; live production uses `4003` and live staging uses `4002` behind Nginx. Do not configure a public API-base URL, `localhost`, or a raw application port into a Vue build.
 - Branch promotion follows the same split: `main` is the verified integration
-  and optional staging candidate, while `release/current` is the isolated live
-  branch. A staging-droplet check from `main` is optional after sufficient
-  local Rails and production-artifact evidence; when used, it follows the
-  `4002` convention. Promote the exact accepted `main` commit to
+  branch and is what staging always runs, while `release/current` is the
+  isolated live branch. Staging is standing infrastructure now, not an
+  optional ad-hoc check -- a separate systemd puma/sidekiq pair
+  (`ops/systemd/shengfukung-wenfu-staging-*.service`), a separate nginx
+  vhost (`ops/nginx/shengfukung-wenfu-staging.conf`), a separate env file
+  (`ops/env/template.temple-staging.env`, `RAILS_ENV=staging`,
+  `PUMA_PORT=4002`), and a separate database
+  (`shengfukung_wenfu_staging` -- never production's or development's),
+  all running from their own checkout
+  (`/home/jimmy1768_user/Projects/shengfukung-wenfu-staging`), independent
+  of the production checkout. Promote the exact accepted `main` commit to
   `release/current` only after confirmation, then deploy the live Rails/Vue
   release through the `4003` production path.
 - Expo builds read their own `EXPO_PROJECT_SLUG`, `EXPO_PROJECT_SCHEME`, `EXPO_ANDROID_PACKAGE`, and `EXPO_IOS_BUNDLE_IDENTIFIER` env vars; set those per tenant so dev/prod bundle IDs stay isolated while Rails/Vue continue using the canonical `PROJECT_SLUG`. `mobile/app/lib/app_constants/project.js` falls back to the shared keys when the Expo-specific ones are missing, so older env files keep working.
