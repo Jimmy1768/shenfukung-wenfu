@@ -206,6 +206,8 @@ Rails.application.routes.draw do
     get "/oauth/resolution", to: "oauth_resolutions#show", as: :oauth_resolution
     post "/oauth/resolution/existing", to: "oauth_resolutions#existing", as: :oauth_resolution_existing
     post "/oauth/resolution/new", to: "oauth_resolutions#new_account", as: :oauth_resolution_new_account
+    get "/oauth/consolidation", to: "oauth_consolidations#show", as: :oauth_consolidation
+    post "/oauth/consolidation", to: "oauth_consolidations#create"
     resources :dependents, only: %i[new create edit update destroy]
     resources :registrations, only: %i[index show edit update new create] do
       member do

@@ -40,6 +40,22 @@ module Auth
       assert_equal AppConstants::Legal.default_terms_version, user.metadata["terms_version"]
     end
 
+    test "find_consolidation! only accepts a consolidation-purpose token on the account surface" do
+      Config::EntryResolver.upsert!(key: "oauth_account_consolidation", value: true)
+      source = user("placeholder@example.test", "OAuth User")
+      identity = OAuthIdentity.create!(user: source, provider: "apple", provider_uid: "consolidation-subject", email: source.email, credentials: {}, metadata: {})
+      exchange_identity = OAuthExchangeIdentity.resolve!(response: { "provider" => "apple", "uid" => identity.provider_uid, "email" => identity.email })
+      resolution = OAuthAccountResolution.create_consolidation_proof_from_exchange!(exchange_identity:)
+
+      found = OAuthAccountResolution.find_consolidation!(token: resolution.token, provider: "apple")
+      assert_equal resolution.record.id, found.id
+
+      account_resolution = OAuthAccountResolution.create!(provider: "apple", uid: "other-subject", email: nil, name: nil, email_verified: nil, surface: "account")
+      assert_raises(OAuthAccountResolution::InvalidToken) do
+        OAuthAccountResolution.find_consolidation!(token: account_resolution.token, provider: "apple")
+      end
+    end
+
     private
 
     def user(email, name)

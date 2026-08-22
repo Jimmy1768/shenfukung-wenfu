@@ -108,7 +108,9 @@ module Auth
       )
 
       redirect_to success_redirect_path(pending, profile_required: exchange_identity.profile_required), notice: success_notice(pending, link_result, identity, profile_required: exchange_identity.profile_required)
-    rescue Auth::OAuthIdentityLinker::ConflictError, Auth::OAuthIdentityLinker::ProviderAlreadyLinkedError => e
+    rescue Auth::OAuthIdentityLinker::ConflictError => e
+      handle_link_conflict(response, e, pending, account_user)
+    rescue Auth::OAuthIdentityLinker::ProviderAlreadyLinkedError => e
       Rails.logger.warn("[CentralOAuthController#callback] #{e.class}: #{e.message}")
       log_oauth_event(
         "account.oauth.link_conflict",
@@ -130,6 +132,64 @@ module Auth
     end
 
     private
+
+    # A "link" attempt that collides with an existing identity owned by
+    # someone else is, most of the time, just a genuine conflict -- send the
+    # plain alert. The one narrow exception: the colliding identity sits on
+    # an empty, OAuth-seeded placeholder account (the "OAuth User" orphan
+    # left behind by the pre-resolver unmatched-signin bug). For that case
+    # only, offer the signed-in keeper a reviewable consolidation instead of
+    # a dead end -- see ops/docs/reference/oauth_account_resolution.md and
+    # ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_ROADMAP.md Phase 7.
+    def handle_link_conflict(response, error, pending, account_user)
+      Rails.logger.warn("[CentralOAuthController#callback] #{error.class}: #{error.message}")
+      identity = error.identity
+
+      if account_user && identity && consolidation_enabled_for?(account_user) &&
+         Auth::OAuthEmptyPlaceholderConsolidator.empty_placeholder?(identity.user, identity)
+        return offer_consolidation(response, error, pending, account_user, identity)
+      end
+
+      log_oauth_event(
+        "account.oauth.link_conflict",
+        user: account_user,
+        pending: pending,
+        provider: normalize_provider_param(params[:provider]),
+        error: error.message
+      )
+      redirect_to fallback_redirect_path(pending), alert: error.message
+    end
+
+    def offer_consolidation(response, error, pending, account_user, identity)
+      exchange_identity = Auth::OAuthExchangeIdentity.resolve!(response:, resolution_surface: "account")
+      resolution = Auth::OAuthAccountResolution.create_consolidation_proof_from_exchange!(exchange_identity:, surface: "account")
+
+      log_oauth_event(
+        "account.oauth.link_conflict",
+        user: account_user,
+        pending: pending,
+        provider: identity.provider,
+        error: error.message,
+        offered_consolidation: true
+      )
+      redirect_to(
+        account_oauth_consolidation_path(token: resolution.token, provider: exchange_identity.canonical_provider),
+        notice: I18n.t("account.oauth.flash.consolidation_offered")
+      )
+    rescue Auth::OAuthAccountResolution::Error, Auth::OAuthExchangeIdentity::Error
+      log_oauth_event(
+        "account.oauth.link_conflict",
+        user: account_user,
+        pending: pending,
+        provider: normalize_provider_param(params[:provider]),
+        error: error.message
+      )
+      redirect_to fallback_redirect_path(pending), alert: error.message
+    end
+
+    def consolidation_enabled_for?(user)
+      FeatureFlags::Evaluator.enabled?("oauth_account_consolidation", actor: user)
+    end
 
     def central_auth_client
       @central_auth_client ||= Auth::CentralOAuthClient.new

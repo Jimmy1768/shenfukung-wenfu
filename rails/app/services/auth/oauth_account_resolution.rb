@@ -46,6 +46,10 @@ module Auth
       new.find!(token:, provider:, surface:)
     end
 
+    def self.find_consolidation!(token:, provider:)
+      new.find_consolidation!(token:, provider:)
+    end
+
     def create!(provider:, uid:, email:, name:, email_verified:, surface:)
       raise FeatureDisabled unless unmatched_resolution_enabled?
 
@@ -79,6 +83,16 @@ module Auth
     def find!(token:, provider:, surface:)
       record = ::OAuthAccountResolution.find_by(token_digest: token_digest(token))
       validate_record!(record, provider:, surface:, purpose: "account_resolution")
+
+      record
+    end
+
+    # Consolidation proofs are account-surface only -- see the "narrow
+    # signed-in account recovery journey" design in
+    # ops/docs/plans/OAUTH_APPLE_USER_22_RECOVERY_ROADMAP.md Phase 7.
+    def find_consolidation!(token:, provider:)
+      record = ::OAuthAccountResolution.find_by(token_digest: token_digest(token))
+      validate_record!(record, provider:, surface: "account", purpose: "consolidation")
 
       record
     end
