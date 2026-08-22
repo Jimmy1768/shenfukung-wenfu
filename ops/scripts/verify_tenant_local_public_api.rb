@@ -138,9 +138,17 @@ Dir.mktmpdir("wenfu-tenant-local-api-") do |output_dir|
   # one just means under-scanning, not a false leak report. .svg is text
   # (XML) and could genuinely carry a leaked URL, so it stays in scope.
   text_extensions = %w[.js .mjs .cjs .css .html .json .map .txt .svg]
-  artifact = Dir.glob(File.join(output_dir, "**", "*"))
+  scanned = Dir.glob(File.join(output_dir, "**", "*"))
     .select { |path| File.file?(path) && text_extensions.include?(File.extname(path).downcase) }
-    .map { |path| File.read(path, encoding: "UTF-8", invalid: :replace, undef: :replace) }.join("\n")
+  # An allowlist that matches nothing is a silent false negative, not a
+  # clean pass: an empty artifact string trivially satisfies every
+  # !artifact.match?(pattern) check below, having verified nothing at all.
+  # A denylist couldn't fail this way (it scanned everything except a few
+  # known binary types, so it almost always had content) -- inverting to an
+  # allowlist traded a false-positive risk for a false-negative one, which
+  # needs its own guard rather than being left implicit.
+  verify!(scanned.any?, "compiled artifact scan matched no text files under #{output_dir} -- allowlist or output path is wrong")
+  artifact = scanned.map { |path| File.read(path, encoding: "UTF-8", invalid: :replace, undef: :replace) }.join("\n")
   forbidden = {
     "localhost" => /localhost/i,
     "raw internal application port" => /(?:^|[^0-9])400[123](?:[^0-9]|$)/,
