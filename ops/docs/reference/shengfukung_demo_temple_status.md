@@ -99,5 +99,7 @@ Or directly: `Temple#unlock_demo_registrations!` / `#lock_demo_registrations!`
 - `app/jobs/platform_billing_monthly_review_job.rb`,
   `platform_billing_monthly_collection_job.rb` -- the jobs that rely on
   `Temple.platform_billing_adopted` to skip non-real clients.
-- `ops/docs/plans/ADMIN_BILLING_PANEL_FINDINGS_PLAN.md` -- Phase 3, where
-  the two-phase monthly billing design this all supports was built.
+- `ops/docs/reference/templemate_platform_billing_runtime.md` -- the
+  two-phase monthly billing design this all supports (its planning
+  record, `ADMIN_BILLING_PANEL_FINDINGS_PLAN.md`, was retired after
+  merge; durable facts live here now).
