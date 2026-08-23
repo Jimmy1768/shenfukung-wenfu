@@ -1,10 +1,26 @@
 # ops/systemd/shengfukung-wenfu-staging-puma.service
 #
 # Systemd unit for the staging Puma web server. Mirrors
-# shengfukung-wenfu-puma.service exactly except for the working
-# directory (a separate checkout, not shared with production) and the
-# environment file (separate secrets/config, including a separate
-# database and PUMA_PORT=4002 -- see ops/env/template.temple-staging.env).
+# shengfukung-wenfu-puma.service except for the working directory (a
+# separate checkout, not shared with production) and three explicit
+# runtime overrides (RAILS_ENV, PUMA_PORT, PGDATABASE).
+#
+# Deliberately shares production's own env file -- no separate staging
+# env file exists (Director's call: staging protects the production
+# server, it doesn't multiply file-management surface). SECRET_KEY_BASE
+# and JWT_SECRET_KEY are reused as-is from that file, which is why the
+# override list below is exactly the three values that must differ for
+# isolation and nothing more.
+#
+# The override MUST be done as a command prefix inside ExecStart, not as
+# a separate Environment= directive: per systemd.exec(7)'s documented
+# "Environment Variables in Spawned Processes" precedence order,
+# EnvironmentFile= is resolved AFTER Environment=, so EnvironmentFile=
+# always wins regardless of which one appears later in this unit file.
+# An Environment=PGDATABASE=... line here would have been silently
+# overridden BACK to production's templemate_data by EnvironmentFile= --
+# verified directly against `man systemd.exec` on this host before
+# writing this, not assumed.
 #
 # Staging runs from its own clone on its own branch (main), independent
 # of the production checkout (release/current) at
@@ -20,8 +36,8 @@ After=network.target
 Type=simple
 User=jimmy1768_user
 WorkingDirectory=/home/jimmy1768_user/Projects/shengfukung-wenfu-staging/rails
-EnvironmentFile=/etc/default/shengfukung-wenfu-staging-env
-ExecStart=/usr/bin/bash -lc "/home/jimmy1768_user/.rbenv/bin/rbenv exec bundle exec puma -C config/puma.rb"
+EnvironmentFile=/etc/default/shengfukung-wenfu-env
+ExecStart=/usr/bin/bash -lc "RAILS_ENV=staging PUMA_PORT=4002 PGDATABASE=templemate_data_staging /home/jimmy1768_user/.rbenv/bin/rbenv exec bundle exec puma -C config/puma.rb"
 Restart=always
 
 [Install]
