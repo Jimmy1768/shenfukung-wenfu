@@ -128,6 +128,16 @@
       <p class="muted"><%= t("account.registrations.payment.online_payments_frozen_helper") %></p>
       <%= link_to t("account.registrations.payment.pay_later"), account_registration_path(@registration), class: "pill-link secondary" %>
     </article>
+  <% elsif !@registration.checkout_ready? %>
+    <article class="card payment-callout is-pending" data-payment-callout>
+      <div class="payment-amount">
+        <p class="eyebrow"><%= t("account.registrations.payment.amount_label") %></p>
+        <strong><%= amount_label %></strong>
+      </div>
+      <p class="payment-message" data-payment-message><%= t("account.registrations.payment.awaiting_admin_completion_notice") %></p>
+      <p class="muted"><%= t("account.registrations.payment.awaiting_admin_completion_helper") %></p>
+      <%= link_to t("account.registrations.payment.back_to_registration"), account_registration_path(@registration), class: "pill-link secondary" %>
+    </article>
   <% else %>
     <article class="card payment-callout is-pending" data-payment-callout>
       <div class="payment-amount">

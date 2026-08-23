@@ -69,7 +69,12 @@ module TestDataHelpers
         currency: offering.currency,
         payment_status: "pending",
         fulfillment_status: "open",
-        contact_payload: { "name" => user.english_name, "email" => user.email }
+        contact_payload: { "name" => user.english_name, "email" => user.email },
+        # Defaults to already admin-completed so existing callers testing
+        # something else aren't tripped up by the semi-automatic
+        # registration checkpoint (see TempleRegistration#checkout_ready?).
+        # Pass admin_completed_at: nil explicitly to test that gate itself.
+        admin_completed_at: Time.current
       }.merge(attrs)
     )
   end

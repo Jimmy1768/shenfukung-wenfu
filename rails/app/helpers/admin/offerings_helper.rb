@@ -339,5 +339,18 @@ module Admin
         edit_admin_event_offering_order_path(offering, registration)
       end
     end
+
+    # No TempleGathering case: gatherings are non-offering meetups with no
+    # offering-specific fields for an admin to complete (see
+    # ops/docs/plans/SEMI_AUTOMATIC_REGISTRATION_WORKFLOW_PLAN.md), so the
+    # "complete" route only exists for events/services.
+    def complete_admin_offering_order_path_for(offering, registration)
+      case offering
+      when TempleService
+        complete_admin_service_offering_order_path(offering, registration)
+      else
+        complete_admin_event_offering_order_path(offering, registration)
+      end
+    end
   end
 end

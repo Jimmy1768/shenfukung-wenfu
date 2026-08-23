@@ -106,6 +106,40 @@ class TempleRegistration < ApplicationRecord
     update!(payment_status: PAYMENT_STATUSES[:paid], expires_at: nil)
   end
 
+  # The semi-automatic registration checkpoint: a patron's own self-
+  # registration is intent, not a finished order (see
+  # ops/docs/plans/SEMI_AUTOMATIC_REGISTRATION_WORKFLOW_PLAN.md). This gates
+  # only the patron's own online-checkout path -- admin-initiated cash
+  # acceptance is unaffected by design, since in practice the same admin
+  # often completes a registration and accepts cash in one sitting.
+  #
+  # Gatherings are excluded: they're non-offering meetups with no
+  # offering-specific fields for an admin to fill in, so there's nothing to
+  # complete and no admin UI exists to set this flag for one. Without this
+  # exclusion, admin_completed_at would default to nil for every gathering
+  # registration with no way to ever set it, permanently blocking checkout.
+  def admin_completion_required?
+    registrable_type != TempleGathering.name
+  end
+
+  def admin_completed?
+    admin_completed_at.present?
+  end
+
+  def checkout_ready?
+    !admin_completion_required? || admin_completed?
+  end
+
+  # Returns true only when this call actually completed the registration,
+  # false when it was already completed -- callers use this to avoid
+  # logging a spurious "completed" event on an already-completed record.
+  def mark_admin_completed!
+    return false if admin_completed?
+
+    update!(admin_completed_at: Time.current)
+    true
+  end
+
   def self.hold_duration
     hours = ENV.fetch("REGISTRATION_HOLD_DURATION_HOURS", DEFAULT_HOLD_DURATION_HOURS).to_i
     hours = DEFAULT_HOLD_DURATION_HOURS if hours <= 0

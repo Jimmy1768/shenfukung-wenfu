@@ -105,14 +105,18 @@ Rails.application.routes.draw do
         path: "orders",
         controller: "offering_orders",
         defaults: { offering_kind: "events" },
-        only: %i[index new create show edit update]
+        only: %i[index new create show edit update] do
+        member { post :complete }
+      end
     end
     resources :services, controller: "services" do
       resources :offering_orders,
         path: "orders",
         controller: "offering_orders",
         defaults: { offering_kind: "services" },
-        only: %i[index new create show edit update]
+        only: %i[index new create show edit update] do
+        member { post :complete }
+      end
     end
     resources :gatherings, controller: "gatherings", except: :show do
       resources :offering_orders,

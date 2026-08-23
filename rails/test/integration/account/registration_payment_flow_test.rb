@@ -63,11 +63,25 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     registration = TempleEventRegistration.order(:created_at).last
     assert_redirected_to payment_account_registration_path(registration)
 
+    # Fresh patron self-registration is intent, not a finished order --
+    # checkout isn't offered until an admin completes it (see
+    # ops/docs/plans/SEMI_AUTOMATIC_REGISTRATION_WORKFLOW_PLAN.md).
     follow_redirect!
     assert_response :success
-    assert_includes response.body, "前往付款"
+    refute_includes response.body, "前往付款"
+    assert_includes response.body, "廟方正在確認您的報名資料"
     assert_includes response.body, offering.title
     assert_includes response.body, api_v1_account_payment_status_path(reference: registration.reference_code)
+
+    assert_no_difference -> { registration.temple_payments.count } do
+      post start_checkout_account_registration_path(registration)
+    end
+    assert_redirected_to payment_account_registration_path(registration)
+
+    registration.mark_admin_completed!
+    get payment_account_registration_path(registration)
+    assert_response :success
+    assert_includes response.body, "前往付款"
   end
 
   test "account self create and eligible update write safe defaults without rewriting the registration snapshot" do
@@ -287,6 +301,7 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     end
 
     registration = TempleEventRegistration.order(:created_at).last
+    registration.mark_admin_completed!
     get payment_account_registration_path(registration)
     assert_response :success
     assert_includes response.body, "前往付款"
