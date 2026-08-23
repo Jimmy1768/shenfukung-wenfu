@@ -164,6 +164,10 @@ en:
         payment_status: "Payment status"
         total: "Total"
         certificate_number: "Certificate number"
+        admin_completion: "Admin review"
+      values:
+        admin_completion_pending: "Awaiting completion"
+        admin_completion_ready: "Ready for payment"
       hints:
         summary: "Details for %{offering}."
       actions:
@@ -172,6 +176,7 @@ en:
         back_to_attendance: "Back to attendance"
         edit_attendance: "Edit attendance"
         record_cash: "Record cash payment"
+        mark_completed: "Mark ready for payment"
     offering_form:
       sections:
         basics: "Basics"
@@ -1220,6 +1225,7 @@ en:
         created: "Registration created."
         duplicate: "A matching registration already exists for this registrant."
         updated: "Registration updated."
+        completed: "Registration marked ready for payment. The patron can now check out online."
         gathering_read_only: "Gathering attendance entries are read-only after creation."
         registration_intake_frozen: "New registrations are paused until billing is updated."
       index:

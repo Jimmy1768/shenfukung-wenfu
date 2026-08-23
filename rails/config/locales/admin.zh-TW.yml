@@ -164,6 +164,10 @@ zh-TW:
         payment_status: "付款狀態"
         total: "總額"
         certificate_number: "證書號碼"
+        admin_completion: "廟方審核"
+      values:
+        admin_completion_pending: "等待確認"
+        admin_completion_ready: "可付款"
       hints:
         summary: "%{offering} 的報名詳情。"
       actions:
@@ -172,6 +176,7 @@ zh-TW:
         back_to_attendance: "返回出席名單"
         edit_attendance: "編輯出席"
         record_cash: "登記現金繳費"
+        mark_completed: "標記為可付款"
     offering_form:
       sections:
         basics: "基本資訊"
@@ -1101,6 +1106,7 @@ zh-TW:
         created: "報名已建立。"
         duplicate: "此報名對象已存在相同報名。"
         updated: "報名已更新。"
+        completed: "報名已標記為可付款，信眾現在可以進行線上付款。"
         gathering_read_only: "社群活動的出席紀錄建立後不可再編輯。"
         registration_intake_frozen: "請先完成帳務設定，才可新增報名。"
       index:

@@ -1,7 +1,10 @@
 # Semi-Automatic Registration Workflow Plan
 
-Status: findings/design captured, nothing implemented yet. No phase
-authorized for implementation.
+Status: item 1 (the registration-completion gate) implemented and shipped
+2026-08-23 -- see `ops/docs/reference/admin_portal.md` and
+`ops/docs/reference/account_portal.md` for the durable description of how
+it actually works. Items 2-4 below remain deferred, findings/design only,
+no phase authorized for their implementation.
 
 Owner: Wenfu Planning / Director
 
@@ -92,7 +95,17 @@ Verified directly, not assumed:
 Not ordered into phases yet — no implementation authorized. Listed by
 what each depends on.
 
-### 1. The registration-completion gate (most load-bearing item here)
+### 1. The registration-completion gate (most load-bearing item here) — DONE
+
+Implemented 2026-08-23: `TempleRegistration#admin_completed_at` (set via
+`#mark_admin_completed!`, idempotent), gated only the patron's own
+`start_checkout` path per the Director's explicit confirmation below, and
+exempted gatherings entirely (no offering-specific fields to complete, no
+admin UI to ever clear the gate for one). Admin action lives on the
+registration's own show page. Full current-state description now lives in
+`ops/docs/reference/admin_portal.md` and
+`ops/docs/reference/account_portal.md`; the design reasoning below is kept
+for context on items 2-4, which still depend on this.
 
 Without this, nothing else in the design is actually enforced — it's the
 one piece that turns "semi-automatic" from a description into an actual
@@ -116,8 +129,9 @@ block on admin action generally. Likely shape:
   with a clear message if the registration hasn't been marked complete
   yet.
 - Cash payment (`Admin::PaymentsController#create`) is admin-initiated by
-  definition, so it likely doesn't need the same gate — but this needs the
-  Director's confirmation, not an assumption baked in silently.
+  definition, so it doesn't need the same gate. **Director confirmed
+  2026-08-23**: gate patron online checkout only, leave admin cash
+  acceptance ungated.
 
 ### 2. Email notification to admin on new patron registration
 

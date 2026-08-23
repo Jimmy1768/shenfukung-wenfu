@@ -6,7 +6,7 @@ module Admin
     before_action :set_offering_kind
     before_action :set_offering
     before_action :ensure_registration_intake_open!, only: %i[new create]
-    before_action :set_registration, only: %i[show edit update]
+    before_action :set_registration, only: %i[show edit update complete]
     before_action :redirect_gathering_edits!, only: %i[edit update]
 
     def index
@@ -115,6 +115,30 @@ module Admin
       prepare_registration_payloads
       prepare_lifecycle_flags
       render :new, status: :unprocessable_entity
+    end
+
+    # The semi-automatic registration checkpoint: turns "an admin looked at
+    # this" into an explicit, deliberate signal distinct from ongoing
+    # metadata edits, per ops/docs/plans/SEMI_AUTOMATIC_REGISTRATION_WORKFLOW_PLAN.md.
+    # Only gates the patron's own online-checkout path -- does not affect
+    # this same controller's ability to keep editing the registration, and
+    # does not gate admin cash acceptance at all.
+    def complete
+      if @registration.mark_admin_completed!
+        SystemAuditLogger.log!(
+          action: "temple.registration.admin_completed",
+          admin: current_admin,
+          target: @registration,
+          temple: current_temple,
+          metadata: {
+            source: "admin_offering_orders",
+            offering_id: @offering.id,
+            registrable_type: @registration.registrable_type,
+            registration_id: @registration.id
+          }
+        )
+      end
+      redirect_to offering_order_path(@offering, @registration), notice: t("admin.offering_orders.flash.completed")
     end
 
     private

@@ -18,6 +18,7 @@ This document captures what exists in the admin portal today so future work can 
 - Admin filters and CSV exports accept `period_key`, enabling per-period audits without custom SQL.
 - `/admin/events/:id/orders`, `/admin/services/:id/orders`, and `/admin/gatherings/:id/orders` now support full create/show/edit/update for registrations. This includes editing patron-created records from the admin side.
 - `pending` on order/registration tables means payment is still outstanding (not an “incomplete form” state).
+- **Semi-automatic registration checkpoint** (event/service registrations only, not gatherings): a patron's own self-registration is intent, not a finished order — the patron-side form can't capture offering-specific fields (lamp type, dedication message, certificate details, etc.). A registration's own online-checkout path stays blocked until an admin explicitly marks it `TempleRegistration#mark_admin_completed!` from the registration's own show page ("Mark ready for payment", visible whenever `!registration.admin_completed?`). This does **not** gate admin cash acceptance — the same admin routinely completes a registration and accepts cash in one sitting, and gating that too would just block the admin from their own action. See `ops/docs/reference/account_portal.md`'s Registration Handoff section for the patron-facing side, and `ops/docs/plans/SEMI_AUTOMATIC_REGISTRATION_WORKFLOW_PLAN.md` for the deferred remainder (admin notification email, ECPay-for-real, light admin mobile surface).
 
 ## Registration Lifecycle Automation
 

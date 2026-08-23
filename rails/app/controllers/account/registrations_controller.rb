@@ -81,6 +81,10 @@ module Account
         return redirect_to payment_account_registration_path(@registration), alert: t("account.registrations.payment.online_payments_frozen")
       end
 
+      unless @registration.checkout_ready?
+        return redirect_to payment_account_registration_path(@registration), alert: t("account.registrations.payment.awaiting_admin_completion")
+      end
+
       Payments::ProviderResolver.require_online_checkout!(temple: current_temple)
       provider = checkout_provider
       result = Payments::CheckoutService.new.call(
