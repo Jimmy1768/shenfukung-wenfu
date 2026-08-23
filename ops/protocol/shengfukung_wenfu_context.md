@@ -12,14 +12,14 @@ temple, patron/account, offering and registration, payment (ECPay),
 deployment, or other product/runtime lifecycle semantics — those live in
 this file.
 
-**Codex Work Mode status: archived.** This repository is now
-Claude-exclusive (see `ops/protocol/claude_work_mode.md`). The Codex Work
-Mode source map, deterministic contract, and current-snapshot files below
-are historical evidence from before the takeover — not live instructions —
-and have been moved under each directory's `archive/` subfolder so a
-session reading this repo today doesn't mistake them for current
-governance. They are kept, not deleted, per the "historical records remain
-evidence" rule further down.
+**Codex Work Mode status: retired.** This repository is now Claude-exclusive
+(see `ops/protocol/claude_work_mode.md`); no other agent shares this working
+tree. The Codex Work Mode source map, deterministic contract, and
+current-snapshot files were deleted on 2026-08-23 rather than archived —
+retained governance records for a system no longer in use are read by nobody
+and returned by every search, which makes them a liability rather than
+evidence. They remain recoverable from git history; the deleting commit
+names each file.
 
 ## Domain And Tenancy Architecture
 
@@ -130,39 +130,16 @@ Do not complete a real Stripe setup checkout for it to "fix" anything, and
 do not assume unlocked-for-registrations implies real-client, or vice
 versa.
 
-## Codex Work Mode Local Source Map (archived, historical)
+## OperatorKit Copying Boundary
 
-This section describes governance from before the Claude takeover. It no
-longer applies to live work in this repository — kept as evidence only.
-
-For Codex Work Mode builder-governance work, invoke `$codex-work-mode` and
-read these Wenfu-local sources in order:
-
-1. `AGENTS.md` — pointer to this file plus the Codex Work Mode skill.
-2. `$codex-work-mode` at `.agents/skills/codex-work-mode/SKILL.md` — reusable
-   builder procedure.
-3. `ops/docs/plans/CODEX_WORK_MODE_SKILL_MIGRATION_PLAN.md` and
-   `ops/docs/plans/CODEX_WORK_MODE_ON_DEMAND_CONTROL_LIFECYCLE_MIGRATION_PLAN.md`
-   — accepted local governance and frozen criteria.
-4. `ops/docs/plans/FINAL_WEB_READINESS_AND_EXPO_GATE_PLAN.md` and
-   `ops/docs/plans/DEPLOYMENT_READINESS.md` — separate Wenfu product-roadmap
-   pointers.
-5. `ops/docs/reference/archive/codex_work_mode.md` — Wenfu-local boundary
-   reference (archived).
-6. `ops/protocol/archive/codex_work_mode.yml` — deterministic local contract
-   (archived).
-7. `ops/docs/handoffs/templates/codex_control_implementation.md` —
-   Control-owned implementation-packet template.
-8. `ops/docs/handoffs/archive/codex_work_mode_current.md` — current local
-   coordination and product-roadmap pointers as of the takeover (archived).
-
-The source map contains Wenfu repository paths only. The already manifested
-three-file portable package at `.agents/skills/codex-work-mode` is the sole
-authorized exception to the general prohibition on copying OperatorKit into
-this repository. It may consist only of
+The three-file portable package at `.agents/skills/codex-work-mode` —
 `codex_work_mode_skill_package_manifest.yml`, `SKILL.md`, and
-`agents/openai.yaml`; no other OperatorKit source, local path, product/runtime
-rule, or repository content may be copied.
+`agents/openai.yaml` — is the sole authorized exception to the general
+prohibition on copying OperatorKit into this repository. The reason is that
+OperatorKit is a separate product with its own kernel semantics: copying its
+sources here would create a second, drifting copy of definitions that only
+OperatorKit owns. No other OperatorKit source, local path, product/runtime
+rule, or repository content may be copied here.
 
 ## Wenfu Authority And Terminology
 
@@ -177,13 +154,7 @@ Planning owns accepted plans and criteria. Control owns the bounded
 implementation packet, repository integration, and acceptance decision.
 Implementers edit only packet-owned paths, run the required checks, and
 return evidence directly to Control. When durable evidence exists, chat
-points to its absolute repository path; historical records remain evidence
-and are not rewritten to change their meaning.
-
-> Note: this routing model was also encoded in the now-archived
-> `ops/protocol/archive/codex_work_mode.yml` (`routing` / `roles` keys), from
-> when Codex governed this repo. It is historical, not a live authority —
-> Claude Work Mode (`ops/protocol/claude_work_mode.md`) governs current work.
+points to its absolute repository path.
 
 ## Safety, Phase, And Product Boundaries
 

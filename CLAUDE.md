@@ -8,3 +8,6 @@ These instructions apply to the entire repository.
 - Repo context: `ops/protocol/shengfukung_wenfu_context.md` — Wenfu-local
   authority, safety, phase, and product/runtime boundaries. Read it before
   any product/runtime-affecting change.
+- Repo config: `ops/protocol/shengfukung_wenfu_config.yml` — values only
+  (ports, droplets, units, databases). Schema is identical across repos;
+  rules and reasons live in the context file, not here.
