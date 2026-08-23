@@ -99,18 +99,31 @@
 - Vite public-content calls are tenant-local, relative `/api/v1/temple` paths. Local Vite development proxies them to Rails on `4001`; live production uses `4003` and live staging uses `4002` behind Nginx. Do not configure a public API-base URL, `localhost`, or a raw application port into a Vue build.
 - Branch promotion follows the same split: `main` is the verified integration
   branch and is what staging always runs, while `release/current` is the
-  isolated live branch. Staging is standing infrastructure now, not an
-  optional ad-hoc check -- a separate systemd puma/sidekiq pair
-  (`ops/systemd/shengfukung-wenfu-staging-*.service`), a separate nginx
-  vhost (`ops/nginx/shengfukung-wenfu-staging.conf`), a separate env file
-  (`ops/env/template.temple-staging.env`, `RAILS_ENV=staging`,
-  `PUMA_PORT=4002`), and a separate database
-  (`shengfukung_wenfu_staging` -- never production's or development's),
-  all running from their own checkout
+  isolated live branch. Staging is standing infrastructure -- a separate
+  systemd puma/sidekiq pair (`ops/systemd/shengfukung-wenfu-staging-*.service`),
+  a separate nginx vhost (`ops/nginx/shengfukung-wenfu-staging.conf`), and a
+  separate database (`templemate_data_staging` -- never production's
+  `templemate_data` or the local `shengfukung_wenfu_development`), all
+  running from their own checkout
   (`/home/jimmy1768_user/Projects/shengfukung-wenfu-staging`), independent
-  of the production checkout. Promote the exact accepted `main` commit to
-  `release/current` only after confirmation, then deploy the live Rails/Vue
-  release through the `4003` production path.
+  of the production checkout.
+  Deliberately no separate staging env file -- Director's call: staging
+  exists to protect the production server, not to multiply file-management
+  surface. Staging's systemd units share production's own
+  `/etc/default/shengfukung-wenfu-env` (`EnvironmentFile=`) and override
+  exactly three values (`RAILS_ENV=staging`, `PUMA_PORT=4002`,
+  `PGDATABASE=templemate_data_staging`) as an `ExecStart` command prefix,
+  not an `Environment=` directive -- per `systemd.exec(7)`'s documented
+  source-precedence order, `EnvironmentFile=` is resolved after
+  `Environment=` and always wins, so an `Environment=` override here would
+  have been silently overwritten back to production's own values. Verified
+  directly against `man systemd.exec` on the host, not assumed.
+  `SECRET_KEY_BASE`/`JWT_SECRET_KEY` are intentionally reused as-is from
+  production's file (Director's call, given this is a non-sensitive demo
+  temple) rather than staging-specific.
+  Promote the exact accepted `main` commit to `release/current` only after
+  confirmation, then deploy the live Rails/Vue release through the `4003`
+  production path.
 - Expo builds read their own `EXPO_PROJECT_SLUG`, `EXPO_PROJECT_SCHEME`, `EXPO_ANDROID_PACKAGE`, and `EXPO_IOS_BUNDLE_IDENTIFIER` env vars; set those per tenant so dev/prod bundle IDs stay isolated while Rails/Vue continue using the canonical `PROJECT_SLUG`. `mobile/app/lib/app_constants/project.js` falls back to the shared keys when the Expo-specific ones are missing, so older env files keep working.
 - Example: `bin/deploy_vue sourcegrid-labs` builds the SPA and installs it into `/var/www/sourcegrid-labs`; rerun for every client clone after editing Vue content.
 - When copying the template, update `{{project_slug}}` placeholders inside `ops/nginx/template/golden-template.conf`; `bin/stage_ops_configs` will render the active client config to `ops/nginx/<client>.conf` without the training `#` characters.

@@ -45,12 +45,12 @@ deployment:
 databases:
   development: shengfukung_wenfu_development   # the name actually resolved, not the scaffold fallback
   test: shengfukung_wenfu_development           # same database as development -- no separate test database
-  staging: shengfukung_wenfu_staging             # null if no standing staging
+  staging: templemate_data_staging               # follows production's own db name (templemate_data), not the repo name -- null if no standing staging
   production_env_keys: [PGHOST, PGPORT, PGDATABASE, PGUSER]   # e.g. [DATABASE_URL] or [PGDATABASE_PROD, PGUSER_PROD]
 
 checkouts:
   primary: /Users/jimmy1768/Projects/shengfukung-wenfu   # absolute path of the main working tree
-  secondary: null                   # set where a repo has a second dedicated checkout
+  secondary: /home/jimmy1768_user/Projects/shengfukung-wenfu-staging   # droplet-side staging checkout; set where a repo has a second dedicated checkout
 
 co_tenancy:
   codex_present: false              # true if Codex also works in this repository
