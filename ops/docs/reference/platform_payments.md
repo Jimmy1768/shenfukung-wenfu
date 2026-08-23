@@ -100,3 +100,18 @@ cd rails && bin/rails test \
 - real ECPay stage validation with temple-specific credentials
 - production ECPay onboarding and callback verification
 - manual ops testing of hosted checkout and cash/manual fallbacks
+
+## Provider Activation Gates
+
+Two provider tracks are deliberately not active, for different reasons:
+
+- **Stripe** is deferred by Director choice, not blocked by anything
+  technical. Sandbox work can begin whenever the Director decides it should.
+- **Live ECPay** is externally blocked: it requires a real client supplying
+  a legally usable merchant account plus target-specific authority. No
+  amount of local work removes that gate, which is why local completion of
+  the payment phases does not imply readiness to transact.
+
+Local completion authorizes none of: provider inspection, credential access,
+live payment or refund, production action, deployment, or push. Those are
+separately authorized, per action.
