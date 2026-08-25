@@ -1208,9 +1208,9 @@ en:
         pick_heading: "Quick pick"
         pick_body: "Choose where you want to create a new registration."
         quick_pick_limit_hint: "Showing your %{count} most recent targets first. Use Create New Registration to see all."
-        freeze_notice: "Event and service registrations are paused for V1 while the temple offering config is being reviewed. Gatherings remain available."
-        target_disabled_hint: "This registration path will reopen after the temple offering config is reviewed."
-        target_disabled_badge: "Paused for V1"
+        freeze_notice: "New registrations are paused for this temple until billing is updated."
+        target_disabled_hint: "This registration path is paused until billing is updated for this temple."
+        target_disabled_badge: "Paused"
         recent_heading: "Recent registrations"
         recent_body: "Latest registration activity across events, services, and gatherings."
         actions:
@@ -1234,8 +1234,8 @@ en:
         body: "Track onsite registrations, reference interview notes, and keep finance synced."
         view_offering: "View details"
         new_registration: "New Registration"
-        new_registration_disabled_hint: "New registrations here will reopen after the temple offering config is reviewed."
-        freeze_notice: "New registrations for this offering are paused for V1 while the temple offering config is being reviewed."
+        new_registration_disabled_hint: "New registrations here are paused until billing is updated for this temple."
+        freeze_notice: "New registrations for this offering are paused until billing is updated for this temple."
         gathering:
           title: "Attendance for %{offering}"
           body: "Track attendee list and payment state for this gathering."
