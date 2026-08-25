@@ -185,12 +185,25 @@ module Admin
       AppConstants::Project.slug
     end
 
+    # Gates creating a brand-new offering TEMPLATE (a new TempleEvent/
+    # TempleService record from scratch) -- a one-time setup-phase action,
+    # deliberately separate from whether registrations can be created
+    # against offerings that already exist. Left as-is: still true,
+    # unconditionally. Not part of the registration-freeze fix below.
     def offerings_v1_frozen?
       true
     end
 
+    # Gates creating a new REGISTRATION against an existing offering or
+    # gathering. Driven entirely by the temple's real billing state
+    # (Temple#registration_intake_frozen?, which already correctly bypasses
+    # for demo temples via demo_registration_unlocked? and respects the
+    # billing grace window) -- not by offering type. Previously hardcoded
+    # to allow gatherings only regardless of billing state, which both
+    # permanently blocked every real offering/service registration and
+    # never actually reflected billing status at all.
     def admin_registration_entry_enabled_for?(offering)
-      offering.is_a?(TempleGathering) && !current_temple&.registration_intake_frozen?
+      !current_temple&.registration_intake_frozen?
     end
 
     def filter_params

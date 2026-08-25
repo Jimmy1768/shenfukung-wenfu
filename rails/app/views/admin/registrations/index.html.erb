@@ -13,7 +13,7 @@
           <%= link_to t("admin.registrations.index.actions.view_orders"), admin_orders_path, class: "btn btn-secondary" %>
         </div>
       </header>
-      <% if offerings_v1_frozen? %>
+      <% if current_temple&.registration_intake_frozen? %>
         <p class="muted"><%= t("admin.registrations.index.freeze_notice") %></p>
       <% end %>
     </section>
