@@ -1089,9 +1089,6 @@ zh-TW:
         pick_heading: "快速選擇"
         pick_body: "請選擇要建立報名的項目。"
         quick_pick_limit_hint: "先顯示最近使用的 %{count} 個項目；按「建立新報名」可查看全部。"
-        freeze_notice: "此宮廟帳務尚未完成，暫停新增報名。"
-        target_disabled_hint: "此宮廟帳務尚未完成，此報名流程暫停使用。"
-        target_disabled_badge: "暫停中"
         recent_heading: "最新報名"
         recent_body: "跨法會項目、祈福服務與社群活動的最新報名紀錄。"
         actions:
@@ -1108,15 +1105,12 @@ zh-TW:
         updated: "報名已更新。"
         completed: "報名已標記為可付款，信眾現在可以進行線上付款。"
         gathering_read_only: "社群活動的出席紀錄建立後不可再編輯。"
-        registration_intake_frozen: "請先完成帳務設定，才可新增報名。"
       index:
         eyebrow: "現場報到"
         title: "%{offering} 的報名紀錄"
         body: "集中管理現場報名、面談紀錄與繳費狀態。"
         view_offering: "檢視詳情"
         new_registration: "新增報名"
-        new_registration_disabled_hint: "此宮廟帳務尚未完成，暫停新增報名。"
-        freeze_notice: "此宮廟帳務尚未完成，暫停此供品的新報名。"
         gathering:
           title: "%{offering} 的出席名單"
           body: "集中查看這場聚會的出席者與付款狀態。"

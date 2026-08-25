@@ -15,16 +15,19 @@ module Api
           render json: { registration: ::Account::Api::NativeAccountSerializer.registration(@registration) }
         end
 
+        # Deliberately no billing-freeze gate on new/create, matching
+        # Account::RegistrationsController: creating a registration is
+        # data intake, not a payment step, so it must never be blocked
+        # or made to look broken to the patron. It's simply created
+        # pending. The freeze only bites at an actual payment attempt.
         def new
           offering = offering_for_request
           return render_error("offering_not_found", :not_found) unless offering
-          return render_error("registration_intake_frozen", :forbidden) if current_native_temple.registration_intake_frozen?
 
           render json: { offering: offering_payload(offering), registration: intake_defaults(offering), registrants: registrant_options }
         end
 
         def create
-          return render_error("registration_intake_frozen", :forbidden) if current_native_temple.registration_intake_frozen?
           offering = offering_for_request
           return render_error("offering_not_found", :not_found) unless offering
 

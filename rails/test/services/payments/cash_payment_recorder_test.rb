@@ -69,6 +69,23 @@ module Payments
       end
     end
 
+    test "rejects cash settlement while the temple's billing is frozen, same as online checkout" do
+      temple = create_temple
+      offering = create_offering(temple:, price_cents: 500)
+      user = User.create!(email: "cash-recorder-frozen@example.com", english_name: "Cash Frozen", encrypted_password: User.password_hash("Password123!"))
+      registration = create_registration(user:, offering:)
+      admin = create_admin_user(temple:)
+      AdminPermission.find_by!(admin_account: admin.admin_account, temple:).update!(record_cash_payments: true)
+      temple.adopt_platform_billing_entitlement!.update!(state: "suspended")
+
+      assert_no_difference ["TemplePayment.count", "FinancialLedgerEntry.count", "SystemAuditLog.count"] do
+        assert_raises(CashPaymentRecorder::SettlementError) do
+          CashPaymentRecorder.new(registration:, admin_user: admin, amount_cents: 500, currency: "TWD").record!
+        end
+      end
+      assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.reload.payment_status
+    end
+
     test "rejects malformed, fractional, and missing amount input before creating retained evidence" do
       temple = create_temple
       offering = create_offering(temple:, price_cents: 500)

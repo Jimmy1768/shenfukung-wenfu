@@ -102,6 +102,21 @@ class NativeAccountResourcesTest < ActionDispatch::IntegrationTest
     assert_equal "registration_not_editable", response.parsed_body.fetch("code")
   end
 
+  test "native registration intake stays available while the temple's billing is frozen" do
+    @temple.adopt_platform_billing_entitlement!.update!(state: "suspended")
+    event = @temple.temple_events.create!(slug: "event-#{SecureRandom.hex(3)}", title: "Native Frozen Event", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 1_200, currency: "TWD")
+
+    get "/api/v1/account/native/registrations/new", params: { temple_slug: @temple.slug, account_action: "event", offering: event.slug }, headers: bearer
+    assert_response :success
+
+    create_params = { temple_slug: @temple.slug, account_action: "event", offering: event.slug, registration: { quantity: 1, contact_name: "Native Frozen Patron", contact_email: @user.email } }
+    assert_difference -> { TempleEventRegistration.count }, 1 do
+      post "/api/v1/account/native/registrations", params: create_params, headers: bearer
+    end
+    assert_response :created
+    assert_equal TempleEventRegistration::PAYMENT_STATUSES[:pending], TempleEventRegistration.order(:created_at).last.payment_status
+  end
+
   test "native dependent create and eligible update share the safe write-back boundary" do
     event = @temple.temple_events.create!(
       slug: "native-defaults-#{SecureRandom.hex(3)}",

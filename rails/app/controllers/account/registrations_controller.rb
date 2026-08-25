@@ -2,10 +2,15 @@
 
 module Account
   class RegistrationsController < BaseController
+    # Deliberately no billing-freeze gate on new/create: creating a
+    # registration is data intake, not a money-changing-hands step, so a
+    # temple with paused billing should never stop a patron from
+    # registering or make that look broken to them. The registration is
+    # simply created pending -- start_checkout below is where the real
+    # gate lives, since that's the actual payment attempt.
     skip_before_action :verify_authenticity_token, only: :checkout_return
     before_action :set_registration, only: %i[show edit update payment start_checkout checkout_return]
     before_action :assign_offering_from_params, only: %i[new create]
-    before_action :ensure_registration_intake_open!, only: %i[new create]
     before_action :assign_eligible_registrants, only: %i[new create edit update]
     before_action :ensure_selected_registrant, only: %i[new create]
     before_action :redirect_gathering_edits!, only: %i[edit update]
@@ -73,7 +78,6 @@ module Account
       @online_checkout_available = Payments::ProviderResolver.online_checkout_available?(temple: current_temple)
       @payment_provider_label = Payments::ProviderResolver.label_for(checkout_provider) if @online_checkout_available
       @online_payments_frozen = current_temple.registration_intake_frozen?
-      @billing_grace_remaining_days = current_temple.billing_grace_remaining_days
     end
 
     def start_checkout
@@ -172,12 +176,6 @@ module Account
       else
         @account_action = params[:account_action].presence || account_action_for(@offering)
       end
-    end
-
-    def ensure_registration_intake_open!
-      return unless current_temple.registration_intake_frozen?
-
-      redirect_to account_registrations_path, alert: t("account.registrations.flash.registration_intake_frozen")
     end
 
     def set_registration

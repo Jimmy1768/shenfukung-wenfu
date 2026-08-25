@@ -278,8 +278,6 @@ en:
         registrant: "Registrant"
       empty: "No payment history yet."
     registrations:
-      flash:
-        registration_intake_frozen: "New registrations are paused for this temple right now."
       new:
         eyebrow: "Registration"
         subtitle: "Confirm contact details so the temple can reach you."
@@ -376,10 +374,9 @@ en:
         awaiting_admin_completion_helper: "This usually only takes a short while. You can also visit the temple in person to pay by cash once your registration is confirmed."
         failed_notice: "Payment failed. Please try again or contact the temple service desk."
         refunded_notice: "This payment has been refunded."
-        online_payments_frozen_notice: "Registration payments are paused for this temple right now."
-        online_payments_grace_notice: "Registration payments are paused. Billing must be updated within %{days} days."
-        online_payments_frozen_helper: "Temple staff need to update billing before registrations and ECPay checkout can resume."
-        online_payments_frozen: "Registration payments are paused for this temple right now."
+        online_payments_frozen_notice: "Your registration is on file. We'll be in touch once payment can be completed."
+        online_payments_frozen_helper: "No action needed on your end for now."
+        online_payments_frozen: "Your registration is on file. We'll be in touch once payment can be completed."
         checkout_cta: "Continue to payment"
         retry_cta: "Retry payment"
         checkout_hint: "%{provider} may open in a new window. Temple staff can also assist at the service desk."

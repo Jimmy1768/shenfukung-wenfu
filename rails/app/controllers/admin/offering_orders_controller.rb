@@ -2,10 +2,17 @@
 
 module Admin
   class OfferingOrdersController < BaseController
+    # Deliberately no billing-freeze gate on new/create: staff (owner or
+    # any other admin/staff account) can always take a walk-in or phone
+    # registration, frozen billing or not -- it's bad, unnecessary
+    # friction to turn a temple's own payment problem into a patron
+    # being told to come back later. The registration is created
+    # pending; only the actual payment attempt is gated, both online
+    # (Admin::PaymentsController#start_checkout) and cash
+    # (Payments::CashPaymentRecorder).
     before_action :require_manage_registrations!
     before_action :set_offering_kind
     before_action :set_offering
-    before_action :ensure_registration_intake_open!, only: %i[new create]
     before_action :set_registration, only: %i[show edit update complete]
     before_action :redirect_gathering_edits!, only: %i[edit update]
 
@@ -174,12 +181,6 @@ module Admin
       require_capability!(:manage_registrations)
     end
 
-    def ensure_registration_intake_open!
-      return unless current_temple.registration_intake_frozen?
-
-      redirect_to offering_orders_path(@offering), alert: t("admin.offering_orders.flash.registration_intake_frozen")
-    end
-
     def registration_params
       permitted = ActionController::Parameters.new(merged_registration_param_payload).permit(
         :user_id,
@@ -344,17 +345,6 @@ module Admin
         admin_gathering_offering_order_path(offering, registration)
       else
         admin_event_offering_order_path(offering, registration)
-      end
-    end
-
-    def offering_orders_path(offering)
-      case offering
-      when TempleService
-        admin_service_offering_orders_path(offering)
-      when TempleGathering
-        admin_gathering_offering_orders_path(offering)
-      else
-        admin_event_offering_orders_path(offering)
       end
     end
 

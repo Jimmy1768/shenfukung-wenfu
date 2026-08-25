@@ -37,12 +37,11 @@ class AdminRegistrationsAccessTest < ActionDispatch::IntegrationTest
     get admin_registrations_path
 
     assert_response :success
-    refute_includes response.body, "暫停中"
     assert_select "a.registration-target-card", text: /Lamp Offering/
     refute_select "div.registration-target-card.is-disabled"
   end
 
-  test "registration creation is blocked when the temple's billing is actually frozen, for every registrable type" do
+  test "registration creation stays fully available when the temple's billing is frozen, for every registrable type" do
     @temple.adopt_platform_billing_entitlement!.update!(state: "suspended")
     gathering = @temple.temple_gatherings.create!(
       slug: "frozen-gathering",
@@ -53,32 +52,34 @@ class AdminRegistrationsAccessTest < ActionDispatch::IntegrationTest
       starts_on: Date.current
     )
     admin = create_admin_user(temple: @temple, permission_overrides: { manage_registrations: true })
+    patron = User.create!(email: "frozen-walkin@example.com", english_name: "Walk-in Patron", encrypted_password: User.password_hash("Password123!"))
 
     sign_in_admin(admin)
     get admin_registrations_path
 
+    # Billing status is never surfaced on this page and never disables a
+    # card -- intake is data entry, not a payment step, so a temple's own
+    # billing problem must not make registration creation look broken to
+    # whoever is at the desk. See Payments::CashPaymentRecorder and
+    # Admin::PaymentsController#start_checkout for where the freeze
+    # actually bites: the payment step, not intake.
     assert_response :success
-    assert_includes response.body, "暫停中"
-    refute_select "a.registration-target-card", text: /Lamp Offering/
-    refute_select "a.registration-target-card", text: /Frozen Gathering/
-    # Cards render twice: once in the quick-pick section, again inside the
-    # "create new registration" modal listing every offering/gathering.
-    assert_select "div.registration-target-card.is-disabled", count: 4
-
-    get new_admin_event_offering_order_path(@offering)
-    assert_redirected_to admin_event_offering_orders_path(@offering)
-  end
-
-  test "the demo temple bypass unfreezes registration creation even with a suspended entitlement" do
-    @temple.adopt_platform_billing_entitlement!.update!(state: "suspended")
-    @temple.unlock_demo_registrations!
-    admin = create_admin_user(temple: @temple, permission_overrides: { manage_registrations: true })
-
-    sign_in_admin(admin)
-    get admin_registrations_path
-
-    assert_response :success
-    refute_includes response.body, "暫停中"
     assert_select "a.registration-target-card", text: /Lamp Offering/
+    assert_select "a.registration-target-card", text: /Frozen Gathering/
+    refute_select "div.registration-target-card.is-disabled"
+
+    assert_difference -> { TempleEventRegistration.count }, 1 do
+      post admin_event_offering_orders_path(@offering), params: {
+        temple_event_registration: {
+          user_id: patron.id,
+          quantity: 1,
+          registrant_scope: "self",
+          contact_details: { primary_contact: "Walk-in Patron", email: patron.email }
+        }
+      }
+    end
+    registration = TempleEventRegistration.order(:created_at).last
+    assert_redirected_to admin_event_offering_order_path(@offering, registration)
+    assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.payment_status
   end
 end

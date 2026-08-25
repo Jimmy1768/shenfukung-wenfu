@@ -47,6 +47,11 @@ module Payments
       raise SettlementError, "Cash settlement must use the registration currency" unless currency == registration.currency
       raise SettlementError, "Cash settlement is not available for this registration" unless eligible_registration?
       raise SettlementError, "Cash settlement already exists" if registration.temple_payments.completed.where(provider: "manual_cash").exists?
+      # Same gate as online checkout (Temple#registration_intake_frozen?):
+      # intake is never blocked, but neither payment path -- online or
+      # cash -- can settle while the temple's own billing is frozen.
+      # Registrations simply stay pending until it clears.
+      raise SettlementError, "Cash settlement is not available right now" if registration.temple.registration_intake_frozen?
     end
 
     def parse_amount_cents(value)

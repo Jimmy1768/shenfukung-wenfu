@@ -13,9 +13,6 @@
           <%= link_to t("admin.registrations.index.actions.view_orders"), admin_orders_path, class: "btn btn-secondary" %>
         </div>
       </header>
-      <% if current_temple&.registration_intake_frozen? %>
-        <p class="muted"><%= t("admin.registrations.index.freeze_notice") %></p>
-      <% end %>
     </section>
   </div>
 
@@ -47,29 +44,14 @@
             else
               [offering.starts_on&.strftime("%Y/%m/%d"), offering.location_name.presence].compact.first
             end %>
-          <% if admin_registration_entry_enabled_for?(offering) %>
-            <%= link_to new_admin_offering_order_path_for(offering), class: "btn template-card-button registration-target-card" do %>
-              <div class="template-card-body">
-                <div>
-                  <h3><%= offering.title %></h3>
-                  <p class="template-meta"><%= prefix %></p>
-                  <% if secondary_meta.present? %>
-                    <p class="template-meta"><%= secondary_meta %></p>
-                  <% end %>
-                </div>
-              </div>
-            <% end %>
-          <% else %>
-            <div class="btn template-card-button registration-target-card is-disabled" aria-disabled="true" title="<%= t("admin.registrations.index.target_disabled_hint") %>">
-              <div class="template-card-body">
-                <div>
-                  <h3><%= offering.title %></h3>
-                  <p class="template-meta"><%= prefix %></p>
-                  <% if secondary_meta.present? %>
-                    <p class="template-meta"><%= secondary_meta %></p>
-                  <% end %>
-                  <p class="template-meta"><%= t("admin.registrations.index.target_disabled_badge") %></p>
-                </div>
+          <%= link_to new_admin_offering_order_path_for(offering), class: "btn template-card-button registration-target-card" do %>
+            <div class="template-card-body">
+              <div>
+                <h3><%= offering.title %></h3>
+                <p class="template-meta"><%= prefix %></p>
+                <% if secondary_meta.present? %>
+                  <p class="template-meta"><%= secondary_meta %></p>
+                <% end %>
               </div>
             </div>
           <% end %>
@@ -117,29 +99,14 @@
           else
             [offering.starts_on&.strftime("%Y/%m/%d"), offering.location_name.presence].compact.first
           end %>
-        <% if admin_registration_entry_enabled_for?(offering) %>
-          <%= link_to new_admin_offering_order_path_for(offering), class: "btn template-card-button registration-target-card" do %>
-            <div class="template-card-body">
-              <div>
-                <h3><%= offering.title %></h3>
-                <p class="template-meta"><%= prefix %></p>
-                <% if secondary_meta.present? %>
-                  <p class="template-meta"><%= secondary_meta %></p>
-                <% end %>
-              </div>
-            </div>
-          <% end %>
-        <% else %>
-          <div class="btn template-card-button registration-target-card is-disabled" aria-disabled="true" title="<%= t("admin.registrations.index.target_disabled_hint") %>">
-            <div class="template-card-body">
-              <div>
-                <h3><%= offering.title %></h3>
-                <p class="template-meta"><%= prefix %></p>
-                <% if secondary_meta.present? %>
-                  <p class="template-meta"><%= secondary_meta %></p>
-                <% end %>
-                <p class="template-meta"><%= t("admin.registrations.index.target_disabled_badge") %></p>
-              </div>
+        <%= link_to new_admin_offering_order_path_for(offering), class: "btn template-card-button registration-target-card" do %>
+          <div class="template-card-body">
+            <div>
+              <h3><%= offering.title %></h3>
+              <p class="template-meta"><%= prefix %></p>
+              <% if secondary_meta.present? %>
+                <p class="template-meta"><%= secondary_meta %></p>
+              <% end %>
             </div>
           </div>
         <% end %>

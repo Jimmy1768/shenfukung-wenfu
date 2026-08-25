@@ -258,7 +258,7 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
     refute patron.key?("offerings")
   end
 
-  test "expired billing grace blocks new admin registrations" do
+  test "expired billing grace lets a new admin registration through, pending" do
     @temple.update!(
       payment_provider_settings: {
         "billing" => {
@@ -272,7 +272,10 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
 
     sign_in_admin(@admin)
 
-    assert_no_difference -> { @temple.temple_event_registrations.count } do
+    # Intake is never blocked, frozen billing or not -- staff can always
+    # take a walk-in. Only the payment step (Admin::PaymentsController,
+    # Payments::CashPaymentRecorder) is gated on billing status.
+    assert_difference -> { @temple.temple_event_registrations.count }, 1 do
       post admin_gathering_offering_orders_path(@gathering), params: {
         temple_event_registration: {
           user_id: @patron.id,
@@ -282,23 +285,37 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
       }
     end
 
-    assert_redirected_to admin_gathering_offering_orders_path(@gathering)
+    registration = @temple.temple_event_registrations.order(:created_at).last
+    assert_redirected_to admin_gathering_offering_order_path(@gathering, registration)
+    assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.payment_status
   end
 
-  test "pending setup and suspended entitlements block new admin registrations" do
+  test "pending setup and suspended entitlements let admin registrations through, pending" do
     entitlement = @temple.adopt_platform_billing_entitlement!
     sign_in_admin(@admin)
 
     ["pending_setup", "suspended"].each do |state|
       entitlement.update!(state:)
+      # A distinct gathering per state: the same patron registering twice
+      # for the same gathering is a separate duplicate-prevention rule,
+      # not something this test is about.
+      gathering = @temple.temple_gatherings.create!(
+        slug: "community-satsang-#{state}",
+        title: "Community Satsang #{state}",
+        currency: "TWD",
+        price_cents: 0,
+        status: "published"
+      )
 
-      assert_no_difference -> { @temple.temple_event_registrations.count } do
-        post admin_gathering_offering_orders_path(@gathering), params: {
+      assert_difference -> { @temple.temple_event_registrations.count }, 1 do
+        post admin_gathering_offering_orders_path(gathering), params: {
           temple_event_registration: { user_id: @patron.id, quantity: 1, registrant_scope: "self" }
         }
       end
 
-      assert_redirected_to admin_gathering_offering_orders_path(@gathering)
+      registration = @temple.temple_event_registrations.order(:created_at).last
+      assert_redirected_to admin_gathering_offering_order_path(gathering, registration)
+      assert_equal TempleRegistration::PAYMENT_STATUSES[:pending], registration.payment_status
     end
   end
 
