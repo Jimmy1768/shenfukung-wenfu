@@ -382,7 +382,7 @@ zh-TW:
         failed_notice: "付款失敗，請重試或洽廟方服務台。"
         refunded_notice: "此筆付款已退款。"
         online_payments_frozen_notice: "您的報名資料已收到，付款開放後我們會通知您。"
-        online_payments_frozen_helper: "目前無需採取任何動作。"
+        online_payments_frozen_helper: "您這邊暫時不需要做任何事，請放心等候。"
         online_payments_frozen: "您的報名資料已收到，付款開放後我們會通知您。"
         checkout_cta: "前往付款"
         retry_cta: "重新付款"
