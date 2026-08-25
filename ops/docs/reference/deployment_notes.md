@@ -307,7 +307,7 @@ knowing before repeating this from scratch:
 - `bin/setup_backend_once` runs bundle install + `db:setup` the first time you clone a client; use `bin/reset_backend` later for a clean slate.
 - `bin/project_info` prints the resolved `AppConstants::Project` values (slug, marketing root, systemd env file, etc.) after applying `PROJECT_*` overrides.
 - `bin/deploy_vue <client-slug>` (see Section 2) rebuilds + syncs the landing site + `/marketing` showcase to `/var/www/<client-slug>`.
-- `ops/scripts/deploy_vue_build.sh` lets you customize the deployment directory manually (useful for staging paths).
+- `ops/scripts/deploy_vue_build.sh` requires an explicit directory already served by active nginx configuration. For an occasional staging-only frontend check, build `vue/` ad hoc without creating a named persistent staging or preview deployment target.
 - `bin/stage_ops_configs [--slug your-client]` renders nginx/systemd configs before copying them to `/etc` and reloading services.
 - `ops/scripts/render_ops_templates.rb --slug your-client` remains available for advanced usage if you need to bypass the wrapper.
 - `systemctl restart golden-template` / `systemctl restart golden-template-sidekiq` after deploys.

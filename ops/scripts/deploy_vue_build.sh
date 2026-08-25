@@ -8,9 +8,11 @@ if [ ! -d "$VUE_APP_DIR" ]; then
   exit 1
 fi
 
-PROJECT_SLUG="$(basename "$ROOT_DIR" | tr '[:upper:]' '[:lower:]')"
-DEFAULT_TARGET_DIR="/var/www/${PROJECT_SLUG}-vue"
-TARGET_DIR="${1:-$DEFAULT_TARGET_DIR}"
+TARGET_DIR="${1:-}"
+if [ -z "$TARGET_DIR" ]; then
+  echo "Usage: $0 <nginx-served-target-dir>" >&2
+  exit 1
+fi
 
 PACKAGE_MANAGER="${PACKAGE_MANAGER:-}"
 if [ -z "$PACKAGE_MANAGER" ]; then
