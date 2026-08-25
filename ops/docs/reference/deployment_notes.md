@@ -124,6 +124,14 @@
   Promote the exact accepted `main` commit to `release/current` only after
   confirmation, then deploy the live Rails/Vue release through the `4003`
   production path.
+  Staging is backend-only by design -- there is no Vue build deployed to
+  staging and none is intended. The staging nginx vhost proxies only the
+  Rails backend routes (`/admin`, `/account`, `/api`, etc.) plus the Rails
+  admin panel's own precompiled assets; it has no `root`/SPA fallback and
+  anything outside those routes 404s. An earlier revision of the vhost
+  copied production's `root /var/www/...` + `try_files ... /index.html`
+  shape verbatim, pointing at a directory nothing was ever going to
+  populate -- that was a mistake, not a real requirement, and was removed.
 - Expo builds read their own `EXPO_PROJECT_SLUG`, `EXPO_PROJECT_SCHEME`, `EXPO_ANDROID_PACKAGE`, and `EXPO_IOS_BUNDLE_IDENTIFIER` env vars; set those per tenant so dev/prod bundle IDs stay isolated while Rails/Vue continue using the canonical `PROJECT_SLUG`. `mobile/app/lib/app_constants/project.js` falls back to the shared keys when the Expo-specific ones are missing, so older env files keep working.
 - Example: `bin/deploy_vue sourcegrid-labs` builds the SPA and installs it into `/var/www/sourcegrid-labs`; rerun for every client clone after editing Vue content.
 - When copying the template, update `{{project_slug}}` placeholders inside `ops/nginx/template/golden-template.conf`; `bin/stage_ops_configs` will render the active client config to `ops/nginx/<client>.conf` without the training `#` characters.
