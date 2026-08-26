@@ -68,10 +68,19 @@ The Director accepted the following future production Candidate B boundary:
 This is a recipe for a newly reviewed release candidate. No disposable
 rehearsal hash or current `main` tip is approved for production promotion.
 
-The most recent read-only production gate stopped because the exact release
-checkout contains 86 untracked public paths: one under `rails/` and 85 under
-`vue/`. No contents were inspected and no cleanup was authorized. That state
-must be resolved before production preflight resumes.
+RESOLVED 2026-08-26: the "86 untracked public paths" figure above was
+incorrect. A direct inspection on taiwan-01-web against the exact release
+checkout found 6 untracked paths, not 86: two systemd unit files for a
+billing job already removed from the codebase (dead references), two systemd
+unit files for `PlatformBillingLifecycleJob` (a real, currently-unwired job;
+see the Phase 4 note below), and two stray build/deploy artifacts
+(`rails/public/backend/assets/assets`, `vue/public/frontend/`) written by
+running a build/deploy script from the wrong working directory. All six were
+inspected, matched tracked golden-template output or known build mistakes
+with no unique content, and were deleted directly on the checkout by the
+Director. Independently re-verified in this session via `git status
+--porcelain` on the exact checkout: zero untracked paths. See Open Decision
+4 below.
 
 ## Recovery Invariants
 
@@ -357,8 +366,13 @@ is a forward reconciliation, not a blind database restore.
 2. Whether that keeper has a usable password for the current consolidator.
 3. Verified Central Auth localhost callback allowlist and local real-provider
    test procedure.
-4. Preserve/relocate/replace decision for the 86 untracked production public
-   paths.
+4. RESOLVED 2026-08-26: replace, not preserve. The actual 6 untracked paths
+   (not 86 -- see the correction in "Accepted Source And Release Baseline"
+   above) were stale rendered/build output, not unversioned work: two dead
+   systemd units for an already-deleted job, two systemd units already
+   tracked verbatim (modulo template substitution) under
+   `ops/systemd/template/`, and two wrong-working-directory build artifacts.
+   Nothing required preservation. All six deleted; checkout confirmed clean.
 5. Exact newly constructed Candidate B commit after Phase 2.
 6. Production deployment target/window, approver, rollback owner, and monitor.
 7. Whether Phase 5 uses an approved unmatched test identity or another
