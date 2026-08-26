@@ -120,7 +120,7 @@ be fixed before any charge fires:
 | --- | --- | --- | --- |
 | `<slug>-platform-billing-monthly-review.timer` | `PlatformBillingMonthlyReviewJob.perform_later` | daily at 00:20 Asia/Taipei | idempotently closes the prior month and creates the (still-pending, uncharged) delivery; the next daily run is the deterministic retry for recorded per-temple review failures |
 | `<slug>-platform-billing-monthly-collection.timer` | `PlatformBillingMonthlyCollectionJob.perform_later` | the 5th of the month only, at 00:20 Asia/Taipei | dispatches/charges every delivery review left pending. Deliberately **not** daily, unlike review: running it every day would eventually dispatch the following month's pending delivery before that month's own review-to-collection buffer had elapsed |
-| `<slug>-platform-billing-lifecycle.timer` | `PlatformBillingLifecycleJob.perform_later` | hourly at minute 05 Asia/Taipei | advances persisted overdue/grace deadlines independently of webhook replays |
+| `<slug>-platform-billing-lifecycle.timer` | `PlatformBillingLifecycleJob.perform_later` | daily at 00:40 Asia/Taipei | advances persisted overdue/grace deadlines independently of webhook replays |
 
 All timers are persistent and have `RandomizedDelaySec=0`. Each one-shot
 service retries an enqueue failure after five minutes, with a start limit of
@@ -128,15 +128,29 @@ three attempts in a one-hour window. The units are installed but disabled: no
 automatic close, collection, or lifecycle advancement runs until an explicit
 first-tenant onboarding decision enables them.
 
+The lifecycle timer was originally hourly; changed to daily on 2026-08-26.
+It never gates unlocking a temple after payment -- that happens
+synchronously inside the Stripe webhook handler
+(`Billing::StripePlatformBillingEventIngest#activate_entitlement!`),
+independent of this timer. The timer only advances an already-delinquent
+temple's own `overdue -> grace -> frozen` deadlines, a process on a
+multi-day timescale (7-day overdue window, 14-day grace window) where
+sub-day precision changes nothing. Daily also removes any chance of the
+job's own retry window (up to three attempts, five minutes apart)
+overlapping its own next scheduled run, which the hourly cadence did not
+rule out.
+
 The original design (a single `PlatformBillingMonthlyCloseJob` running daily,
 closing and dispatching in the same call) was replaced by the two-step split
 above. The old `<slug>-platform-billing-monthly-close.service`/`.timer` units
-installed on the host from the original `af459d9` rollout reference a job
+installed on the host from the original `af459d9` rollout referenced a job
 class that no longer exists after this change; they were already disabled
-and never fired, so this is inert, but they should be removed (and the new
-review/collection units installed in their place) the next time someone with
-production access re-runs the systemd unit staging step -- this change does
-not do that itself, since installing/enabling units on the host is a
+and never fired, so this was inert. They (and two unrelated wrong-cwd build
+artifacts found in the same checkout inspection) were removed directly from
+the `taiwan-01-web` production checkout on 2026-08-26. The new review/
+collection units still need to be installed in their place the next time
+someone with production access re-runs the systemd unit staging step -- that
+has not happened yet, since installing/enabling units on the host is a
 separate, deliberate step from building the code.
 
 ## Collection status: real code, currently inert

@@ -2,7 +2,17 @@
 Description={{project_name}} platform billing lifecycle schedule
 
 [Timer]
-OnCalendar=*-*-* *:05:00 Asia/Taipei
+# Daily, not hourly: this timer only advances an already-delinquent
+# temple's overdue (7d) -> grace (14d) -> frozen delivery clock, a
+# process on a multi-day timescale where sub-day precision buys
+# nothing. It plays no part in unlocking a temple after payment --
+# that happens synchronously inside the Stripe webhook handler
+# (Billing::StripePlatformBillingEventIngest#activate_entitlement!),
+# independent of this timer entirely. Daily also removes any chance
+# of this job's own oneshot retry window (up to 3 retries, 5min apart)
+# overlapping its own next scheduled run, which an hourly cadence did
+# not rule out.
+OnCalendar=*-*-* 00:40:00 Asia/Taipei
 Persistent=true
 RandomizedDelaySec=0
 Unit={{project_slug}}-platform-billing-lifecycle.service
