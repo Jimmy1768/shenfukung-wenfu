@@ -11,3 +11,7 @@ These instructions apply to the entire repository.
 - Repo config: `ops/protocol/shengfukung_wenfu_config.yml` — values only
   (ports, droplets, units, databases). Schema is identical across repos;
   rules and reasons live in the context file, not here.
+- Boundary: This repository is Claude-scoped. Codex does not work here, so
+  there is no co-tenancy to coordinate around — no shared branches, no
+  concurrent writes, no plan-doc visibility to manage. Claude owns
+  implementation and deployment, staging and production alike.
