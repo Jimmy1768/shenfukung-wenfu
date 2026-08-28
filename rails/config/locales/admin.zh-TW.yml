@@ -331,11 +331,19 @@ zh-TW:
           actions:
             open_billing: "開啟付款方式設定"
             save: "儲存帳務狀態"
+            view_usage: "查看本月使用量"
           notes:
             price_title: "一次性開通費：%{onboarding_amount}"
             price_body: "完成開通後，系統會用已儲存的付款方式每月自動收取 %{monthly_amount}。金額由系統控制。"
             freeze_title: "寬限期與凍結規則"
             freeze_body: "如果已儲存的付款方式無法使用，或每月自動收款未完成，ECPay 線上付款會先保留 %{days} 天，之後自動暫停，直到帳務補齊。"
+            tiers_title: "使用量階梯定價"
+            tiers_summary: "每月超過 500 筆報名後，採階梯式計價。"
+            tiers:
+              included_range: "前 %{count} 筆報名"
+              included_fee: "已包含"
+              band_range: "第 %{from}–%{to} 筆報名"
+              band_three_range: "第 %{from} 筆以上"
       fields:
         ecpay_merchant_id: "ECPay Merchant ID"
         ecpay_hash_key: "ECPay HashKey"

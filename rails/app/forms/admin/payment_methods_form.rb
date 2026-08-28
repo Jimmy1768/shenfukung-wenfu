@@ -77,7 +77,7 @@ module Admin
     end
 
     def billing_monthly_fee_cents
-      150_000
+      Billing::PlatformPricingPolicy::BASE_FEE_CENTS
     end
 
     def billing_monthly_fee_label
@@ -85,19 +85,65 @@ module Admin
     end
 
     def billing_onboarding_fee_cents
-      1_000_000
+      Billing::PlatformPricingPolicy::SETUP_FEE_CENTS
     end
 
     def billing_onboarding_fee_label
       Currency::Symbols.format_amount(billing_onboarding_fee_cents, "TWD")
     end
 
-    def billing_grace_days
-      temple.billing_grace_days
+    # Compact tier summary for the hover-detail panel. The full live
+    # breakdown (this month's actual counts/subtotals) already has its
+    # own page -- Admin::PlatformBillingController#show -- so this only
+    # needs the static rate structure, not usage data.
+    def billing_usage_tiers
+      policy = Billing::PlatformPricingPolicy
+      [
+        { range: I18n.t("admin.payment_methods.sections.payment_method.notes.tiers.included_range", count: delimited(policy::INCLUDED_REGISTRATIONS)), unit_fee: I18n.t("admin.payment_methods.sections.payment_method.notes.tiers.included_fee") },
+        { range: I18n.t("admin.payment_methods.sections.payment_method.notes.tiers.band_range", from: delimited(policy::INCLUDED_REGISTRATIONS + 1), to: delimited(policy::BAND_ONE_LIMIT)), unit_fee: unit_fee_label(policy::BAND_ONE_UNIT_FEE_CENTS) },
+        { range: I18n.t("admin.payment_methods.sections.payment_method.notes.tiers.band_range", from: delimited(policy::BAND_ONE_LIMIT + 1), to: delimited(policy::BAND_TWO_LIMIT)), unit_fee: unit_fee_label(policy::BAND_TWO_UNIT_FEE_CENTS) },
+        { range: I18n.t("admin.payment_methods.sections.payment_method.notes.tiers.band_three_range", from: delimited(policy::BAND_TWO_LIMIT + 1)), unit_fee: unit_fee_label(policy::BAND_THREE_UNIT_FEE_CENTS) }
+      ]
     end
 
-    def billing_grace_remaining_days
-      temple.billing_grace_remaining_days
+    # The Stripe entitlement flow's overdue -> grace -> frozen window
+    # (Billing::PlatformBillingLifecycle), not Temple#billing_grace_days --
+    # that's a separate, legacy grace mechanism for temples with no
+    # platform billing entitlement at all (see Temple#registration_intake_frozen?).
+    # This page is entirely about the entitlement flow, so it must describe
+    # and count down that flow's own window, not the legacy one.
+    def billing_overdue_window_days
+      Billing::PlatformBillingLifecycle::OVERDUE_WINDOW.in_days.to_i
+    end
+
+    def billing_grace_window_days
+      Billing::PlatformBillingLifecycle::GRACE_WINDOW.in_days.to_i
+    end
+
+    def billing_total_grace_days
+      billing_overdue_window_days + billing_grace_window_days
+    end
+
+    def current_monthly_delivery
+      @current_monthly_delivery ||= temple.platform_billing_deliveries.monthly.order(created_at: :desc).first
+    end
+
+    # Real days remaining until this delivery's own next deadline
+    # (PlatformBillingDelivery#due_at while overdue, #grace_deadline_at
+    # while in grace) -- nil when there's no live countdown to show
+    # (no delivery, or not currently overdue/in grace).
+    def billing_days_remaining_in_current_phase
+      delivery = current_monthly_delivery
+      return nil unless delivery
+
+      deadline =
+        case delivery.status
+        when "overdue" then delivery.due_at
+        when "grace" then delivery.grace_deadline_at
+        end
+      return nil unless deadline
+
+      [(deadline - Time.current).fdiv(1.day).ceil, 0].max
     end
 
     def online_payments_frozen?
@@ -143,7 +189,7 @@ module Admin
     def online_payments_status_i18n_options
       return {} unless online_payments_state == :grace_period
 
-      { days: billing_grace_remaining_days || billing_grace_days }
+      { days: billing_days_remaining_in_current_phase || billing_total_grace_days }
     end
 
     def online_payments_status_tone
@@ -172,6 +218,14 @@ module Admin
     end
 
     private
+
+    def delimited(number)
+      ActiveSupport::NumberHelper.number_to_delimited(number)
+    end
+
+    def unit_fee_label(cents)
+      Currency::Symbols.format_unit_rate(cents, Billing::PlatformPricingPolicy::CURRENCY)
+    end
 
     def extracted_attributes
       ecpay = temple.payment_gateway_settings_for(:ecpay)

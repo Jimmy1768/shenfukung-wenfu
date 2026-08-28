@@ -168,10 +168,30 @@
                   <span class="billing-info-card__label"><%= t("admin.payment_methods.sections.payment_method.notes.price_title", onboarding_amount: @form.billing_onboarding_fee_label) %></span>
                   <p><%= t("admin.payment_methods.sections.payment_method.notes.price_body", monthly_amount: @form.billing_monthly_fee_label) %></p>
                 </article>
-                <article class="billing-info-card">
-                  <span class="billing-info-card__label"><%= t("admin.payment_methods.sections.payment_method.notes.freeze_title") %></span>
-                  <p><%= t("admin.payment_methods.sections.payment_method.notes.freeze_body", days: @form.billing_grace_days) %></p>
-                </article>
+              </div>
+
+              <div class="billing-hover-row">
+                <div class="billing-hover-detail">
+                  <button type="button" class="billing-hover-detail__trigger" aria-label="<%= t("admin.payment_methods.sections.payment_method.notes.freeze_title") %>">i</button>
+                  <span class="billing-hover-detail__summary"><%= t("admin.payment_methods.sections.payment_method.notes.freeze_title") %></span>
+                  <div class="billing-hover-detail__panel" role="tooltip">
+                    <p><%= t("admin.payment_methods.sections.payment_method.notes.freeze_body", days: @form.billing_total_grace_days) %></p>
+                  </div>
+                </div>
+
+                <div class="billing-hover-detail">
+                  <button type="button" class="billing-hover-detail__trigger" aria-label="<%= t("admin.payment_methods.sections.payment_method.notes.tiers_title") %>">i</button>
+                  <span class="billing-hover-detail__summary"><%= t("admin.payment_methods.sections.payment_method.notes.tiers_title") %></span>
+                  <div class="billing-hover-detail__panel" role="tooltip">
+                    <p><%= t("admin.payment_methods.sections.payment_method.notes.tiers_summary") %></p>
+                    <ul class="billing-hover-detail__tier-list">
+                      <% @form.billing_usage_tiers.each do |tier| %>
+                        <li><span><%= tier[:range] %></span><strong><%= tier[:unit_fee] %></strong></li>
+                      <% end %>
+                    </ul>
+                    <%= link_to t("admin.payment_methods.sections.payment_method.actions.view_usage"), admin_platform_billing_path, class: "billing-hover-detail__link" %>
+                  </div>
+                </div>
               </div>
 
               <div class="billing-card__actions">
@@ -213,12 +233,11 @@
                 </article>
                 <article class="billing-fact-card">
                   <span class="billing-fact-card__label"><%= t("admin.payment_methods.status.grace_period_label") %></span>
-                  <strong><%= t("admin.payment_methods.status.grace_period_value", days: @form.billing_grace_days) %></strong>
+                  <strong><%= t("admin.payment_methods.status.grace_period_value", days: @form.billing_total_grace_days) %></strong>
                 </article>
                 <article class="billing-fact-card billing-fact-card--wide">
                   <span class="billing-fact-card__label"><%= t("admin.payment_methods.status.current_state") %></span>
                   <strong><%= t("admin.payment_methods.status.#{@form.online_payments_status_i18n_key}", **@form.online_payments_status_i18n_options) %></strong>
-                  <p><%= t("admin.payment_methods.sections.payment_method.notes.freeze_body", days: @form.billing_grace_days) %></p>
                 </article>
               </div>
             </section>

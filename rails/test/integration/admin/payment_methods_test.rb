@@ -20,7 +20,7 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     assert_includes response.body, "NT$10,000"
     assert_includes response.body, "一次性開通費"
     assert_includes response.body, "每月自動收取"
-    assert_includes response.body, "30 天"
+    assert_includes response.body, "21 天"
     refute_includes response.body, "年繳"
 
     assert_difference -> { SystemAuditLog.where(action: "admin.payment_methods.updated").count }, 1 do
@@ -205,6 +205,45 @@ class AdminPaymentMethodsTest < ActionDispatch::IntegrationTest
     assert_response :success
     assert_includes response.body, "帳務逾期"
     refute_includes response.body, "寬限期剩餘 30 天"
+  end
+
+  test "grace period countdown reflects the real delivery deadline, not the legacy 30-day default" do
+    temple = create_temple(payment_provider_settings: {
+      "ecpay" => { "merchant_id" => "2000132", "hash_key" => "key", "hash_iv" => "iv", "environment" => "stage" },
+      "billing" => { "stripe_payment_method_id" => "pm_1" }
+    })
+    temple.platform_billing_deliveries.create!(kind: "monthly", status: "grace", currency: "TWD", idempotency_key: "grace-display",
+      due_at: 5.days.ago, grace_deadline_at: 6.days.from_now)
+    owner = create_admin_user(temple: temple, role: "owner")
+
+    sign_in_admin(owner)
+    get admin_payment_methods_path
+
+    assert_response :success
+    # 6 days from now rounds up to 6 (ceil), not the legacy default of 30
+    # and not the static 21-day policy figure shown elsewhere on the page.
+    assert_includes response.body, "寬限期剩餘 6 天"
+    refute_includes response.body, "寬限期剩餘 30 天"
+    refute_includes response.body, "寬限期剩餘 21 天"
+  end
+
+  test "usage tier pricing is shown on the payment method tab" do
+    temple = create_temple
+    owner = create_admin_user(temple: temple, role: "owner")
+
+    sign_in_admin(owner)
+    get admin_payment_methods_path
+
+    assert_response :success
+    assert_includes response.body, "使用量階梯定價"
+    assert_includes response.body, "前 500 筆報名"
+    assert_includes response.body, "第 501–2,000 筆報名"
+    assert_includes response.body, "第 2,001–10,000 筆報名"
+    assert_includes response.body, "第 10,001 筆以上"
+    assert_includes response.body, "NT$1.00"
+    assert_includes response.body, "NT$1.25"
+    assert_includes response.body, "NT$1.50"
+    assert_includes response.body, admin_platform_billing_path
   end
 
   test "payment methods presentation follows the entitlement state before historical Stripe settings" do

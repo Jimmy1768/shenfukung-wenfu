@@ -61,21 +61,21 @@
           <tr>
             <td><%= t(".tier_chart.band_one.label") %></td>
             <td><%= t(".tier_chart.band_one.range") %></td>
-            <td><%= Currency::Symbols.format_amount(Billing::PlatformPricingPolicy::BAND_ONE_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+            <td><%= Currency::Symbols.format_unit_rate(Billing::PlatformPricingPolicy::BAND_ONE_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
             <td><%= quote.band_one_registration_count %></td>
             <td><%= Currency::Symbols.format_amount(quote.band_one_fee_cents, Billing::PlatformPricingPolicy::CURRENCY) %></td>
           </tr>
           <tr>
             <td><%= t(".tier_chart.band_two.label") %></td>
             <td><%= t(".tier_chart.band_two.range") %></td>
-            <td><%= Currency::Symbols.format_amount(Billing::PlatformPricingPolicy::BAND_TWO_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+            <td><%= Currency::Symbols.format_unit_rate(Billing::PlatformPricingPolicy::BAND_TWO_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
             <td><%= quote.band_two_registration_count %></td>
             <td><%= Currency::Symbols.format_amount(quote.band_two_fee_cents, Billing::PlatformPricingPolicy::CURRENCY) %></td>
           </tr>
           <tr>
             <td><%= t(".tier_chart.band_three.label") %></td>
             <td><%= t(".tier_chart.band_three.range") %></td>
-            <td><%= Currency::Symbols.format_amount(Billing::PlatformPricingPolicy::BAND_THREE_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
+            <td><%= Currency::Symbols.format_unit_rate(Billing::PlatformPricingPolicy::BAND_THREE_UNIT_FEE_CENTS, Billing::PlatformPricingPolicy::CURRENCY) %></td>
             <td><%= quote.band_three_registration_count %></td>
             <td><%= Currency::Symbols.format_amount(quote.band_three_fee_cents, Billing::PlatformPricingPolicy::CURRENCY) %></td>
           </tr>

@@ -331,11 +331,19 @@ en:
           actions:
             open_billing: "Open payment method setup"
             save: "Save payment status"
+            view_usage: "View this month's usage"
           notes:
             price_title: "One-time onboarding fee: %{onboarding_amount}"
             price_body: "After onboarding, the saved payment method is charged %{monthly_amount} automatically each month. The amounts are controlled by the system."
             freeze_title: "Grace period and freeze rule"
             freeze_body: "If the saved payment method is unavailable or monthly collection cannot be completed, online ECPay checkout stays available for %{days} days, then automatically pauses until billing is fixed."
+            tiers_title: "Usage-based tier pricing"
+            tiers_summary: "Tiered pricing applies once a temple passes 500 registrations in a month."
+            tiers:
+              included_range: "First %{count} registrations"
+              included_fee: "Included"
+              band_range: "Registrations %{from}–%{to}"
+              band_three_range: "Registration %{from} and up"
       fields:
         ecpay_merchant_id: "ECPay Merchant ID"
         ecpay_hash_key: "ECPay HashKey"
