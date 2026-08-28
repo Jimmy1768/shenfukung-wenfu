@@ -229,7 +229,14 @@ Director's. This is the review they were waiting on."
 
 ## Current classification and next action
 
-Classification: `sidekiq_failure_alert_accuracy_plan_reviewed`.
+Classification: `sidekiq_failure_alert_accuracy_implemented`.
 
-Reviewed and revised. Not yet implemented. Awaiting the Director's decision
-on whether to proceed to implementation.
+Implemented per the Director's go-ahead: `eba31a4` on `main`. All six
+proposals above, exactly as revised by review, are in
+`app/services/notifications/alerts/sidekiq_failure_handler.rb` and
+`config/initializers/sidekiq_notification_alerts.rb`, with new coverage in
+`test/services/notifications/alerts/sidekiq_failure_handler_test.rb`. Full
+suite green (623 runs, 0 failures). Verified end-to-end against the exact
+Aug 26 incident shape (`RedisClient::CannotConnectError`, empty context) --
+produces the worked example above, byte for byte. Not yet promoted to
+`release/current` or deployed.
