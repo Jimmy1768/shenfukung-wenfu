@@ -60,17 +60,23 @@ Use this workflow whenever you onboard a new temple slug.
   configures the accepted deployment target after the client provides or
   delegates the required DNS access; SourceGrid does not purchase a client's
   restricted domain on the client's behalf.
-- For the pilot, the completed-onboarding tenant domain is intended to be
-  `shengfukung.org.tw`, pending client purchase.
-- The separate TempleMate platform domain will be SourceGrid-owned. The current
-  candidates are `templemate.com` and, if unavailable, `templemateapp.com`.
-- `shengfukung.com.tw` is temporary development/staging infrastructure and may
-  stand in for both roles before distribution. Never copy it into onboarding
-  material as a permanent TempleMate or tenant-domain requirement.
+- For the pilot, the completed-onboarding tenant domain is
+  `shengfukung.org.tw`, pending client purchase -- this is the real
+  Shengfukung temple being onboarded as an actual client, not a demo.
+- No separate TempleMate platform domain will be purchased (decided
+  2026-08-28, see
+  `ops/docs/reference/templemate_product_positioning.md`). The platform's own
+  public identity lives at `sourcegridlabs.com/templemate` instead, a page on
+  SourceGrid's own already-owned domain.
+- `shengfukung.com.tw` is not temporary infrastructure -- it is the
+  backend's permanent identity and the standing sales-demo instrument used to
+  show prospective clients a live system, by deliberate decision. Never copy
+  it into onboarding material as *this new client's* tenant domain; it stays
+  the demo, `shengfukung.org.tw` is the real tenant domain being onboarded
+  here.
 - Update the deployment manifest `public_url`, DNS/TLS configuration, smoke
   target, and tenant-facing links when the client-owned domain is ready. A
-  tenant-domain cutover does not choose or replace the TempleMate platform
-  domain.
+  tenant-domain cutover does not affect `sourcegridlabs.com/templemate`.
 
 1. Copy values from `ops/env/template.temple.env` into the target env file and fill real values (API keys, origins, payment provider credentials):
    - local: `.env.development`

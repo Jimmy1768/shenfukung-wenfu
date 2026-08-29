@@ -19,20 +19,25 @@ catalog as configuration and retains neither catalog-write authority nor a
 broad SourceGrid secret key. One shared billing backend serves every tenant;
 each tenant may use its own public frontend domain and owner/admin console.
 
-## Domain ownership and placeholder roles
+## Domain ownership and roles
 
 TempleMate platform identity and temple tenant identity have different domain
-owners:
+owners. Decided 2026-08-28 (see
+`ops/docs/reference/templemate_product_positioning.md`) — no dedicated
+platform domain will be purchased:
 
-- SourceGrid may later own `templemate.com` or, if unavailable,
-  `templemateapp.com` for the TempleMate product site, privacy, help/support,
-  app connection trust, app links, and distribution-facing URLs.
-- Each temple client purchases and owns its tenant domain. The pilot's intended
+- The TempleMate product's own public identity (App Store/Play Store
+  listing requirements, help/support, distribution-facing URLs) lives at
+  `sourcegridlabs.com/templemate`, a page on SourceGrid's own already-owned
+  domain -- not a separate domain the backend runs on.
+- Each temple client purchases and owns its tenant domain. The pilot's
   completed-onboarding domain is `shengfukung.org.tw`; SourceGrid does not
   purchase that `.org.tw` domain.
-- `shengfukung.com.tw` is the current development/staging placeholder. It
-  temporarily serves both logical roles, but it is neither the permanent
-  TempleMate brand domain nor the pilot's final tenant domain.
+- `shengfukung.com.tw` is not a placeholder -- it is the backend's permanent
+  identity and the standing sales-demo instrument, by deliberate decision, not
+  a stand-in awaiting a future domain swap. It is still neither the
+  platform's own public-identity page (that's `sourcegridlabs.com/templemate`)
+  nor the pilot's tenant domain (that's `shengfukung.org.tw`).
 
 Runtime configuration may use the placeholder while those domains are
 deferred. Product identity, QR/app binding, public documentation, and release

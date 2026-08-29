@@ -103,3 +103,6 @@ Or directly: `Temple#unlock_demo_registrations!` / `#lock_demo_registrations!`
   two-phase monthly billing design this all supports (its planning
   record, `ADMIN_BILLING_PANEL_FINDINGS_PLAN.md`, was retired after
   merge; durable facts live here now).
+- `ops/docs/reference/templemate_product_positioning.md` -- why this demo
+  role is permanent, not a placeholder: the go-to-market decision this
+  temple's ongoing sales-demo use serves.

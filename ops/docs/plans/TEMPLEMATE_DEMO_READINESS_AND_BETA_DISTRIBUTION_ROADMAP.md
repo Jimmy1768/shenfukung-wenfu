@@ -72,14 +72,15 @@ latest store discussion or an older plan title as the whole product state.
 - Development iOS bundle ID and Android package:
   `com.jimmy1768.komainu.dev`.
 - `TempleMate (Dev)` remains visually distinguishable from `TempleMate`.
-- `shengfukung.com.tw` is the current test/demo tenant hostname and temporarily
-  stands in for the future TempleMate product origin. It is not the permanent
-  client domain. The actual temple expects to use its own client-owned
-  `shengfukung.org.tw` after onboarding.
-- The future SourceGrid-owned TempleMate product domain remains
-  `templemate.com` or `templemateapp.com`, subject to availability and purchase
-  when distribution readiness requires stable privacy, help, support, trust,
-  and store-facing URLs.
+- `shengfukung.com.tw` is the permanent demo/sales-sandbox tenant hostname
+  (decided 2026-08-28, see
+  `ops/docs/reference/templemate_product_positioning.md`), not a stand-in
+  for a future product origin. It is not the permanent client domain either.
+  The actual temple expects to use its own client-owned `shengfukung.org.tw`
+  after onboarding.
+- No SourceGrid-owned TempleMate product domain will be purchased. Stable
+  privacy, help, support, trust, and store-facing URLs live at
+  `sourcegridlabs.com/templemate` instead.
 
 ### Web and native authority
 

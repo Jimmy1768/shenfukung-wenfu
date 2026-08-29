@@ -12,12 +12,13 @@ This is the go-live checklist for TempleMate (`shengfukung-wenfu`) staging deplo
 ## Release Metadata
 
 - Slug: `shengfukung-wenfu`
-- Staging domain: `shengfukung.com.tw` (temporary placeholder)
+- Staging domain: `shengfukung.com.tw` (permanent backend identity and
+  standing sales-demo temple, not a placeholder — decided 2026-08-28, see
+  `ops/docs/reference/templemate_product_positioning.md`)
 - Future pilot tenant domain: `shengfukung.org.tw` (client-owned; pending
   client purchase)
-- Future TempleMate platform domain: `templemate.com` or, if unavailable,
-  `templemateapp.com` (SourceGrid-owned; deferred until app distribution
-  readiness)
+- TempleMate platform public identity: `sourcegridlabs.com/templemate` — no
+  dedicated platform domain will be purchased
 - Target host: `jimmy1768_user@174.138.18.211`
 - Ops owner: `jimmy1768`
 - Date window: `2026-03 staging rollout`

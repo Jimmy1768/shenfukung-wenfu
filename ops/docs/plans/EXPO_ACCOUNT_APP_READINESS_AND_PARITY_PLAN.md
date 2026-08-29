@@ -55,15 +55,18 @@ schema, dependency, native-project, provider, runtime, build, or release work.
 The TempleMate product and each temple tenant have separate permanent domain
 ownership:
 
-- SourceGrid will later select and own `templemate.com` or, if unavailable,
-  `templemateapp.com` for TempleMate product, privacy, help/support,
-  connection-trust, app-link, and distribution-facing URLs.
+- No dedicated TempleMate platform domain will be purchased (decided
+  2026-08-28, see `ops/docs/reference/templemate_product_positioning.md`).
+  TempleMate product identity, privacy, help/support, connection-trust,
+  app-link, and distribution-facing URLs live at
+  `sourcegridlabs.com/templemate` instead.
 - Each temple client purchases and owns its own tenant domain. The pilot's
   intended completed-onboarding domain is `shengfukung.org.tw`; SourceGrid does
   not purchase that `.org.tw` domain.
-- `shengfukung.com.tw` is the current development/staging placeholder for both
-  logical roles. It is not TempleMate product identity and is not the pilot's
-  final client-owned domain.
+- `shengfukung.com.tw` is not a placeholder — it is the backend's permanent
+  identity and standing sales-demo temple. It is still neither TempleMate's
+  own public product identity (that's `sourcegridlabs.com/templemate`) nor
+  the pilot's final client-owned domain (that's `shengfukung.org.tw`).
 
 The accepted native direction is one active temple at a time, connected by a
 validated QR code or equivalent tappable link. Expo does not copy the web
