@@ -1,8 +1,9 @@
 # Personal And Offering Data — Contract Gap Plan
 
-Status: Planning-owned. Reviewed by OperatorKit Strategy; **W1 and W2
-decided by the Director 2026-08-28**. No implementation, production-data,
-deployment, or account action is authorized by this document.
+Status: Planning-owned. Reviewed by OperatorKit Strategy; **W1, W2 and W4
+decided by the Director 2026-08-28**; W3 remains open pending the Shengfukung
+onboarding visit. No implementation, production-data, deployment, or account
+action is authorized by this document.
 
 Drafted 2026-08-28, recorded against `main` at `dcd5493`. Decisions folded in
 the same day.
@@ -632,14 +633,114 @@ would *not* remove the need for per-(offering, field) classification —
 different temples will legitimately treat the same canonical field as durable
 in one offering and per-registration in another.
 
-### Needs a Director decision
+### DECIDED 2026-08-28 — mechanism now, values provisional
 
-The per-(offering, field) classification across the four live offerings —
-sixteen cells at most, realistically far fewer since only multi-value
-reusable fields need one — and whether the empty state is a literal "請選擇"
-placeholder or simply no selection.
+**Build the mechanism; do not treat the classification values as settled.**
 
----
+Two Director caveats govern this:
+
+1. **All reuse policy lives in the yml, per temple.** There is no
+   one-template for 點燈作業 or any other offering — every temple's config
+   differs. Ruby must hold only the *default* applied when the yml is silent,
+   never a field-name-to-policy table.
+2. **The live `shengfukung-wenfu` config is mid-confidence and is sandbox
+   data.** The temple admin never completed the offering intake form; a sales
+   rep is hand-holding that in person. Critically, this config is **not**
+   destined for production: `shengfukung.com.tw` is the permanent sales
+   sandbox, and the real Shengfukung temple will be onboarded as a separate
+   `shengfukung.org.tw` tenant with a freshly authored config (see
+   `ops/docs/reference/templemate_product_positioning.md`).
+
+So the classification table below is a **worked example against sandbox
+data**, not an accepted configuration. It exists to prove the mechanism and
+to size the work.
+
+### The default rule — derived from config shape, not field names
+
+The default matters more than any individual classification, because a
+sparse or in-progress config is the normal case during onboarding.
+
+Failure modes are **not symmetric**:
+
+| Wrong policy | Consequence |
+| --- | --- |
+| Wrong `prefill` | stale values auto-filled; the temple prepares goods nobody ordered. Silent and costly. |
+| Wrong `offer_as_options` | past values appear in a menu, nothing preselected. Harmless. |
+| Wrong `never` | an admin retypes last year's answer. Mild friction. |
+
+Only `prefill` causes real harm, so the default must never guess it where
+risk is high. Proposed default, keyed on config *shape*:
+
+| Shape | Default | Rationale |
+| --- | --- | --- |
+| multi-value **with** temple `options` | `never` | the menu is already complete; the cache adds nothing, and these are selections rather than durable facts |
+| multi-value **without** `options` | `offer_as_options` | the cache *is* the menu |
+| single-value | `prefill` | short, visible value; low risk; preserves rule 3 |
+
+Justification, corrected: this is **not** about protecting production from a
+bad config — the sandbox config never reaches production. It is about
+(a) **onboarding economy**, so a rep elicits two answers rather than eleven,
+and (b) **demo quality**, since the sandbox is the sales instrument and is
+expected to accumulate registrations across many visits. Under the current
+broken render, a demo patron reused across six sales visits accumulates
+every past value into one field in front of a prospect.
+
+The harm-prevention argument is not discarded — it applies at
+`shengfukung.org.tw` and every later real tenant, where goods are physically
+prepared and money moves.
+
+### Worked example against the sandbox config
+
+Eleven reusable-eligible cells exist across the four sandbox offerings.
+Verified by evaluating `ReusableDefaults#eligible_fields` and
+`FormSchema#allow_multiple?`/`#field_options` per offering.
+
+| Offering · field | multi | options | Default gives | Example intent | Declaration |
+| --- | :-: | :-: | --- | --- | --- |
+| 香油捐獻 · `dedication_message` | yes | 14 | `never` | donation items — a fresh purchase decision | — |
+| 點燈作業 · `preferred_slot` | no | 2 | `prefill` | standing preference | — |
+| 點燈作業 · `ancestor_placard_name` | yes | 0 | `offer_as_options` | ancestors recur | **`reuse: prefill`** |
+| 點燈作業 · `dedication_message` | yes | 0 | `offer_as_options` | freeform blessing | — |
+| 點燈作業 · `certificate_notes` | no | 0 | `prefill` | standing instruction | — |
+| 普渡供桌 · `ceremony_location` | no | 3 | `prefill` | standing preference | — |
+| 普渡供桌 · `dedication_message` | yes | 0 | `offer_as_options` | freeform blessing | — |
+| 拔薦 · `ceremony_location` | no | 3 | `prefill` | standing preference | — |
+| 拔薦 · `ancestor_placard_name` | yes | 0 | `offer_as_options` | ancestors recur | **`reuse: prefill`** |
+| 拔薦 · `dedication_message` | yes | 0 | `offer_as_options` | freeform blessing | — |
+| 拔薦 · `certificate_notes` | yes | 0 | `offer_as_options` | per-occasion notes | — |
+
+The default rule lands **nine of eleven** with no declarations at all, and
+both misses are in the safe direction — more friction, no harm. The two
+explicit declarations are exactly what a temple would knowingly assert:
+*"the ancestors are the same every year, remember them."*
+
+`dedication_message` appearing as `never` on 香油捐獻 and `offer_as_options`
+on the other three is the case that requires per-(offering, field)
+granularity; no field-name-keyed table can express it.
+
+`certificate_notes` is `allow_multiple: true` on 拔薦 but single-value on
+點燈作業. Possibly deliberate, possibly drift — worth confirming when the
+real config is authored, since it changes which policies are available.
+
+### Input for the onboarding visit
+
+The offering intake form should ask, per multi-value field:
+
+> **"Does this stay the same every year, or change each time?"**
+
+That one question populates `reuse:`, it is answerable by a temple admin
+with no system vocabulary, and it is the only new question the mechanism
+requires.
+
+### Follow-on config idea, not code
+
+Because `shengfukung.com.tw` is a permanent sandbox rather than a draft of a
+real tenant, its config does not need to mirror Shengfukung's actual
+operations — it needs to **demonstrate capability**. It could deliberately
+carry one field of each reuse behavior so a rep can show the difference
+(ancestors persisting year to year; donation items asked fresh every time)
+rather than describe it. Cheap to revisit once the mechanism exists;
+belongs to whoever owns the sandbox config, not to this workstream.
 
 ## Cross-cutting open questions
 
@@ -650,10 +751,12 @@ placeholder or simply no selection.
    gathering carve-out survives.~~ **Decided**, five ways — see W2. No W2
    questions remain open.
 3. W3: whether repeatable person lists gate the first real onboarding.
-4. W4: per-(offering, field) reuse classification across the four live
-   offerings.
+4. ~~W4: per-(offering, field) reuse classification.~~ **Decided**: build
+   the mechanism now with a shape-derived default; classification values are
+   provisional against sandbox data and are confirmed per temple in yml at
+   onboarding.
 
-Question 4 is small and unblocks its workstream immediately. Question 3 is a
+Question 3 is a
 scope decision about the first real client; the Shengfukung onboarding visit
 is an **input** to it rather than blocked by it — the visit is where the
 offerings spec finally gets filled in, and that spec is what W3's schema
@@ -698,10 +801,13 @@ dispatchable:
   dispatched as schema-then-form packets, with the first-onboarding scope
   decision recorded.
 - **W4**: accumulated values render as options rather than as the current
-  selection; reuse classification exists in the schema at
-  **per-(offering, field)** granularity and is set across the four live
-  offerings; covered by tests including the same-field-name/opposite-
-  semantics case (`dedication_message` as item-picker vs freeform text).
+  selection; a `reuse:` key exists in the offering schema at
+  **per-(offering, field)** granularity, read from yml with no field-name
+  table in Ruby; the shape-derived default applies when yml is silent and is
+  covered by tests for all three shapes; covered by tests including the
+  same-field-name/opposite-semantics case (`dedication_message` as
+  item-picker vs freeform text). Classification *values* for any given temple
+  are config, not part of this workstream's acceptance.
 
 ## Review record
 
