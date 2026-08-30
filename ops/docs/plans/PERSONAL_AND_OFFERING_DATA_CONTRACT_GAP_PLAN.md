@@ -267,10 +267,35 @@ collapse to six, and only two are admin work queues:
 
 ### What is needed
 
-- **Derive the stage; do not add a status column.** `admin_completed_at` +
-  `payment_status` + `fulfillment_status` + temple delinquency already
-  determine all six states. A derived `stage` method plus scopes gives one
-  shared vocabulary with no migration, and each queue becomes a scope.
+- **Derive for display; persist what must be queried or timestamped.**
+  Revised after review — pure derivation was the original recommendation and
+  it is self-defeating here. Four objections, the first fatal:
+
+  1. **A derived state cannot be a database filter.** W2 exists *because*
+     pending work is unfindable at volume. Computing six states in Ruby from
+     four inputs means you cannot filter, sort, index or paginate on them
+     without replicating the derivation in SQL — including a join for temple
+     delinquency. That solves "cannot find pending work" with a mechanism
+     that cannot be queried.
+  2. **Derivation cannot record when a state was entered.**
+     `admin_completed_at` is a timestamp; `payment_status` and
+     `fulfillment_status` are not; delinquency is temple-level and
+     time-varying. "How long has this been blocked on billing?" becomes
+     unanswerable — an operational question W2 is meant to serve.
+  3. **Delinquency is an input outside the registration.** A registration
+     that derived as ready yesterday derives as blocked today, with no record
+     that it moved. Historical reporting is non-reproducible by construction.
+  4. **The six-state mapping is a function every consumer must agree on.**
+     Derivation puts it wherever it is called; drift between call sites is
+     silent.
+
+  Likely shape: one state column plus an `entered_at`, maintained by the code
+  that already owns the transitions — not a full parallel state model.
+
+  **Gate on this before acceptance criteria are written:** if pure derivation
+  is kept anyway, first verify all six states are expressible as a single SQL
+  scope *including the delinquency join*. If they are not, W2 does not
+  deliver its own goal.
 - **Add stage 9's transition** — `mark_fulfilled!`, an admin action, and an
   audit event. This is the only genuinely new persistence, because nothing
   sets `fulfilled` today.
@@ -334,10 +359,25 @@ symmetric version is correct:
    cash is a temple operating decision, not a platform concern — TempleMate
    is a productivity tool, not the temple's manager.
 
-An earlier concern — that blocking cash recording forces staff to refuse
-money at the desk or keep paper records — was raised and withdrawn. It
-assumed the system had control over the physical transaction, and it assumed
-refusal rather than deferred recording.
+An earlier concern was raised and **partly** withdrawn. It contained two
+claims, and only one was refuted:
+
+- **(a) The system causes harm by blocking cash recording.** Refuted
+  correctly. The transaction was never under system control, and attributing
+  the harm to the system was wrong. Withdrawn.
+- **(b) Blocking cash recording predictably produces an out-of-band
+  workaround, and paper is where reconciliation errors live.** *Not* addressed
+  by the counterargument. It does not depend on the system causing anything —
+  only on the workaround being predictable.
+
+(b) was dropped along with (a) on the first pass; review restored it. It is
+an operational forecast, not a harm attribution, and its useful form is a
+scoping question rather than an objection:
+
+> **Open scoping item.** Paper records will exist during a freeze. Does the
+> system later ingest them (a back-dated cash entry once billing clears), or
+> is that explicitly out of scope? Either answer is fine. Deciding now is
+> cheaper than discovering it during lamp season.
 
 ### DECIDED — patron-facing copy is deliberately vague
 
@@ -408,6 +448,48 @@ What removing the carve-out touches:
 
 The third row is a latent defect independent of this decision: a gathering
 currently generates an *event* completion URL via the `else` branch.
+
+### CRITICAL — this must not be implemented as "delete the branch"
+
+Review caught a customer-facing regression in the obvious implementation, and
+the code's own comment predicts it. `app/models/temple_registration.rb:117-120`
+already states: *"Without this exclusion, `admin_completed_at` would default
+to nil for every gathering registration with no way to ever set it,
+permanently blocking checkout."*
+
+The chain:
+
+```
+admin_completion_required?  ->  registrable_type != TempleGathering.name
+checkout_ready?             ->  !admin_completion_required? || admin_completed?
+consumers                   ->  account/registrations_controller.rb:88 gates
+                                patron checkout
+                                account/registrations/payment.html.erb renders
+                                the blocked state
+routes                      ->  exactly two `member { post :complete }` entries
+                                (events, services). No gathering route exists.
+```
+
+Delete the branch alone and every gathering registration becomes
+**permanently unpayable by the patron** — `checkout_ready?` starts demanding
+`admin_completed_at`, and nothing can set it. The table above lists the route
+and helper additions, but listing them as supporting rows invites a partial
+implementation whose failure mode is silent and customer-facing.
+
+**The Director's reasoning supports gatherings being *completable*; it does
+not by itself support deleting the exclusion.** Those are different changes.
+Either of these satisfies the reasoning safely:
+
+- add a reachable completion action for gatherings (route + helper + UI), or
+- auto-complete gatherings at creation, since there is nothing to fill in.
+
+**Write the acceptance criterion as an outcome, not a mechanism:** *a
+gathering registration reaches `checkout_ready? == true` through the same
+path every other registration does.* Not "remove the gathering branch from
+`admin_completion_required?`."
+
+Ordering constraint for whoever implements: the completion path must exist
+and be reachable **before** the exclusion is removed, never after.
 
 **Simplification that falls out.** If completion is universal,
 `admin_completion_required?` no longer earns its existence and
@@ -677,8 +759,38 @@ risk is high. Proposed default, keyed on config *shape*:
 | multi-value **without** `options` | `offer_as_options` | the cache *is* the menu |
 | single-value | `prefill` | short, visible value; low risk; preserves rule 3 |
 
-Justification, corrected: this is **not** about protecting production from a
-bad config — the sandbox config never reaches production. It is about
+### REVISED after review — the heuristic moves out of the runtime
+
+The shape rule above is right, but running it **at read time** violates
+caveat 1 in a way I initially defended incorrectly. I argued "a default is
+not policy, it is what happens absent policy." That holds for a *constant*
+default. It fails for a *shape-derived* one, and the test is concrete:
+
+> If a temple flips `allow_multiple` from true to false for an unrelated
+> reason, does reuse behavior change without anyone deciding it should?
+
+Under runtime shape-derivation, yes — policy moves as a side effect of
+editing a different field. That is exactly what caveat 1 exists to prevent.
+The problem is not that Ruby holds a default; it is that the default is
+**coupled to another field's value**.
+
+There is a third path that costs nothing:
+
+- **Runtime default: a constant.** Shape-independent, one value in Ruby.
+- **Onboarding generator: writes explicit `reuse:` keys into the new
+  temple's yml**, using the shape heuristic above.
+
+The temple's config arrives pre-filled, so onboarding cost is unchanged. The
+yml stays the single source of truth, so caveat 1 holds literally. The
+heuristic becomes a one-time authoring suggestion someone can override,
+rather than a standing inference re-performed on every read.
+
+It also fixes a property not previously raised: under runtime derivation,
+**nobody can read a temple's yml and know what the reuse behavior is.**
+Under generation, they can.
+
+Justification for the heuristic itself, corrected: this is **not** about
+protecting production from a bad config — the sandbox config never reaches production. It is about
 (a) **onboarding economy**, so a rep elicits two answers rather than eleven,
 and (b) **demo quality**, since the sandbox is the sales instrument and is
 expected to accumulate registrations across many visits. Under the current
@@ -785,16 +897,17 @@ dispatchable:
   registration-scoped contact data is unaffected; the
   `dependents_notes`/`notes` destination collision is resolved; covered by
   tests.
-- **W2**: a derived stage model expresses all six states over existing
-  columns with no migration; `mark_fulfilled!` plus an audited admin action
-  exists for stage 9; the misleading dashboard "pending" count is replaced by
+- **W2**: the six states are queryable as SQL scopes and the states that
+  need a duration carry an `entered_at` (see the derive-vs-persist objections
+  above); `mark_fulfilled!` plus an audited admin action exists for stage 9; the misleading dashboard "pending" count is replaced by
   per-stage counts; an admin can see, from a default-visible surface, both
   work queues ("needs completion", "needs fulfilment") with counts,
   distinguishable from registrations merely awaiting patron payment and from
-  those blocked on billing; the queue supports **bulk-complete**; gatherings
-  follow the same completion path as every other registrable type, with
-  `complete` routed and the path helper no longer falling through to the
-  event route; patron-facing copy collapses the three non-actionable states
+  those blocked on billing; the queue supports **bulk-complete**; **a
+  gathering registration reaches `checkout_ready? == true` through the same
+  path every other registration does** (outcome-framed deliberately — see the
+  CRITICAL note; the completion path must exist and be reachable before the
+  exclusion is removed); patron-facing copy collapses the three non-actionable states
   into one vague message while leaving actionable states specific; covered by
   tests.
 - **W3**: scoped and sequenced as an extension of the offering-spec plans,
@@ -803,8 +916,9 @@ dispatchable:
 - **W4**: accumulated values render as options rather than as the current
   selection; a `reuse:` key exists in the offering schema at
   **per-(offering, field)** granularity, read from yml with no field-name
-  table in Ruby; the shape-derived default applies when yml is silent and is
-  covered by tests for all three shapes; covered by tests including the
+  table in Ruby; the runtime default is a **constant**, not shape-derived,
+  and the shape heuristic lives in the onboarding generator that writes
+  explicit `reuse:` keys into a new temple's yml; covered by tests including the
   same-field-name/opposite-semantics case (`dedication_message` as
   item-picker vs freeform text). Classification *values* for any given temple
   are config, not part of this workstream's acceptance.
@@ -835,6 +949,28 @@ panel — but the same evidence then supported a *larger* remedy than the one
 first proposed. Shrinking a claim and shrinking its remedy are separate
 decisions, and conflating them is the failure mode to watch when correcting
 for recency bias.
+
+**Second review, 2026-08-28 (main `b755f3f`), generalizing that note.** The
+same error appeared twice more in mirrored forms:
+
+- W4's default rule: a **correct claim kept alive on wrong reasoning**
+  (justified as protecting production; the sandbox config never reaches
+  production).
+- W2's cash concern: a **possibly-correct observation discarded along with
+  its wrong framing** — (b) above was dropped because (a) was refuted.
+
+Both come from treating a claim and its justification as one object. The
+generalized rule: *refuting a justification is not refuting the claim it was
+offered for.* When a justification falls, re-ask whether anything else
+supports the claim before dropping it; when a claim survives, re-ask what
+actually supports it.
+
+Second review also caught a **customer-facing regression** in W2's gathering
+decision that the first pass missed — see "CRITICAL" under W2. The code's own
+comment predicted it, written the same day, and was not re-read when the
+decision was recorded. Lesson recorded because it is mechanical, not
+conceptual: when a decision removes a guard, re-read the guard's own comment
+before writing the change up.
 
 Verification added on this side during fold-in, both since confirmed by
 Strategy in a second pass:
