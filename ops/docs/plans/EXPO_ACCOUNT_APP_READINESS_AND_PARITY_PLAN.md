@@ -1,6 +1,14 @@
 # Expo Account App Readiness And Parity Plan
 
-Status: completed initial readiness inventory; retained as supporting evidence
+Status: SUPERSEDED IN PART (2026-08-31). The API/authority findings and the
+gap register below were written against a state that no longer exists — the
+native account API is now built (43 routes, six of six "blocking contract
+gaps" resolved). Those sections have been corrected in place; see
+`ops/docs/reference/templemate_native_account_api.md` for the authoritative
+surface. What remains live here: product direction, non-scope, acceptance
+criteria, open decisions, and the payment/shell/release work packages.
+
+Originally: completed initial readiness inventory; retained as supporting evidence
 for the now-deleted EXPO_ACCOUNT_JSON_API_TRACK_PLAN.md and
 EXPO_NATIVE_CLIENT_INFRA_TRACK_PLAN.md (both integrated, then deleted
 2026-08-22 in the plans/archive cleanup; recoverable via `git log --grep`);
@@ -222,43 +230,41 @@ found at the scanned base, not what a future endpoint must be named.
 
 ## API And Authority Findings
 
-### Native authentication is not implemented
+> **Corrected 2026-08-31.** The three "not implemented / mostly absent"
+> findings this section originally carried were true when scanned on
+> 2026-08-11 and are false now. Verify against `bin/rails routes | grep native`
+> before citing anything here.
 
-- `Api::BaseController` describes JWT/session authentication as future work.
-- `Auth::JwtService` exists, but no scanned controller uses it for mobile
-  authentication.
-- `Auth::RefreshToken` is an explicit sketch whose issue, rotate, and revoke
-  methods raise `NotImplementedError`, even though a `RefreshToken` model/table
-  exists.
-- The Expo auth helper therefore represents intended shape, not a working
-  server contract.
+### Native authentication is implemented
+
+`Api::V1::Account::NativeBaseController` authenticates bearer JWTs, requires a
+`scope == "account"` claim, resolves the tenant from `temple_slug`, and rejects
+revoked sessions and closed accounts. `Auth::RefreshToken` implements `issue!`,
+`rotate!`, `revoke!`, and `revoke_all!` — the `NotImplementedError` sketch this
+plan described is gone.
 
 ### Existing account JSON is browser-session JSON
 
-`Api::V1::Account::BaseController` inherits `Account::BaseController`, including
-the browser account session, tenant context, and authentication behavior. Its
-integration tests sign in through the browser session helper. It is not
-evidence that bearer-token Expo requests work.
+Still accurate as a statement about `Api::V1::Account::BaseController`, which
+does inherit `Account::BaseController`. This is now the documented *reason* the
+native surface is a separate hierarchy rather than an outstanding risk.
 
-### Existing account JSON is not safe to adopt blindly for account-only Expo
+### Account-only scoping is enforced, not merely required
 
-The current API base includes admin-aware scope helpers. For a user with an
-active admin account, registration scope can expand to owned admin temples,
-and a guest-list endpoint is present. Preferences also accept an admin display
-mode. Those behaviors conflict with the account-only app boundary.
+The concern below was real and has been addressed: the native base does not
+inherit the admin-aware helpers, so registration scope cannot widen to owned
+admin temples and admin display mode is not reachable. The original
+requirement — never disclose or mutate admin data, capabilities, preferences,
+guest lists, or temple-admin context for a dual-role user — remains the
+standing acceptance criterion for any new native endpoint.
 
-A future mobile account contract must always return the signed-in user's
-account data under the selected account temple context, even when that same
-user also has web-admin authority. It must not disclose or mutate admin data,
-capabilities, preferences, guest lists, or temple-admin context.
+### JSON parity is broadly present
 
-### JSON parity is mostly absent
-
-The current account API provides only registration summaries, one registration
-payment status, certificates, guest lists, and preferences. Profile,
-dependents, registration detail/mutations, payments history, privacy, account
-closure, assistance, signup, sessions, password settings, and OAuth identity
-management remain HTML-only or absent.
+Sessions, OAuth (including resolution), profile, password addition, dependents
+CRUD, registrations CRUD, events, services, galleries, certificates,
+preferences, privacy, account closure, and assistance all have native
+endpoints. Genuinely absent: **native checkout/payment handoff**, **account
+payments history**, and **linked-identity management**.
 
 ## DojoMate-Expo Reference Findings
 
@@ -298,50 +304,51 @@ Wenfu compatibility, not be downgraded to match the example.
 
 ## Gap Register
 
-### Blocking contract gaps
+### Blocking contract gaps — ALL RESOLVED (2026-08-31)
 
-| ID | Gap | Why it blocks implementation readiness | Required planning evidence before dispatch |
-| --- | --- | --- | --- |
-| B-01 | No native session contract | Expo cannot authenticate or restore the same account safely | Accepted request/response/error/expiry contract for sign in, refresh, sign out, bootstrap, and closed accounts |
-| B-02 | Refresh lifecycle is a sketch | Secure persistent login cannot be claimed | Rotation, replay, expiry, revocation, per-device, logout, close-account, and audit criteria |
-| B-03 | Browser account API base is not native auth | Existing JSON success tests rely on cookies | A dedicated authenticated account API boundary that reuses account policies without inheriting HTML redirect/session assumptions |
-| B-04 | Admin-aware API leakage conflicts with scope | Dual-role users could receive admin-owned data in an account-only app | Frozen account-only scoping tests, including a dual-role user negative case |
-| B-05 | No stable account bootstrap | App cannot resolve user, selected temple, locale/theme, and initial navigation coherently | Minimal bootstrap fields, temple-context behavior, versioning, and cacheability criteria |
-| B-06 | Most parity mutations are absent | UI work would invent payloads and error behavior | Accepted endpoint/resource contract inventory mapped to existing forms/services/policies |
+| ID | Gap | Resolved by |
+| --- | --- | --- |
+| B-01 | No native session contract | `POST native/login`, `DELETE native/logout`, `POST native/refresh`, `GET native/bootstrap`; `account_closed` handled |
+| B-02 | Refresh lifecycle is a sketch | `Auth::RefreshToken#issue!/rotate!/revoke!/revoke_all!` |
+| B-03 | Browser account API base is not native auth | `NativeBaseController < ::Api::BaseController`, deliberately not `Account::BaseController` |
+| B-04 | Admin-aware API leakage | `scope == "account"` enforced per request; admin helpers not inherited |
+| B-05 | No stable account bootstrap | `GET native/bootstrap` |
+| B-06 | Most parity mutations are absent | Profile, dependents, registrations, preferences, privacy all mutate natively |
 
-### Authentication and identity gaps
+### Authentication and identity gaps — MOSTLY RESOLVED
 
-- The exact mobile token type, lifetime, refresh rotation, reuse detection,
-  device/session list, and revocation semantics are undecided.
-- Account closure must terminate mobile credentials; current web session
-  destruction alone is insufficient for a token client.
-- Password login error and throttle responses need stable machine-readable
-  codes without exposing account existence.
-- Email signup needs JSON validation, terms/version recording, existing OAuth
-  account guidance, and post-auth temple/registration intent parity.
-- Forgot/reset password deep-link behavior is undefined.
-- Native Google/Apple initiation, callback ownership, state/nonce/PKCE rules,
-  provider availability, account-link mode, and failure return are undefined.
-- Expo public config currently treats provider client secrets as an enablement
-  input. Client secrets must never be embedded in a native bundle.
-- Linking/unlinking must preserve the server's last-login-method protection.
+Delivered: token type and refresh rotation, revocation on logout and account
+closure, password login, email signup, forgot/reset password, and native
+Google/Apple start/exchange/resolution (see
+`ops/docs/reference/templemate_native_oauth.md`).
 
-### Account data and CRUD gaps
+Still open:
 
-- No JSON profile read/update contract or field-level validation format.
-- No dependent list/create/read/edit/update/destroy contract.
-- No registration detail/create/update contract, permitted-field map, or
-  lifecycle-state mutation result.
-- No mobile contract for self versus dependent registrants, dependent metadata
-  synchronization, quantities, arrival windows, household notes, ceremony
-  notes, duplicate prevention, or concurrent edits.
-- No account payments history payload.
-- No single dashboard/bootstrap aggregation decision; using many calls versus
-  one payload remains an implementation choice after contracts are known.
-- Public temple events/services/gallery payloads have not been checked against
-  every field and ordering assumption in account views.
-- Pagination, refresh, stale-data, and retry behavior are undefined. Offline
-  mutation support is not implied by parity and should default out of scope.
+- **Linking/unlinking has no native surface.** If one is added it must
+  preserve the server's last-login-method protection.
+- Client secrets must never be embedded in a native bundle — a standing
+  constraint, not a gap to close.
+
+### Account data and CRUD gaps — MOSTLY RESOLVED
+
+Delivered: profile read/update, dependent CRUD, registration
+detail/create/update with a fixed permitted-field set (`quantity`,
+`registrant_scope`, `dependent_id`, `contact_name`, `contact_phone`,
+`contact_email`, `household_notes`, `arrival_window`, `ceremony_notes`),
+self-versus-dependent registrants, and bootstrap aggregation.
+
+Still open:
+
+- **No account payments history payload.** `GET /api/v1/account/payment_statuses/:reference`
+  is per-registration only.
+- Public temple events/services/gallery payloads have not been field-checked
+  against every account-view ordering assumption.
+- Pagination, refresh, stale-data, and retry behavior remain undefined.
+  Offline mutation support stays out of scope.
+- **The screens do not exist.** `mobile/app/account/` holds only
+  `registration_authority.js`, `screen_model.js`, and
+  `registration_demo_presentation.js`. Profile and dependents are reachable
+  from `mobile/app/real/adapter.js` but have no UI. This is EA-5 work.
 
 ### Payment and return-flow gaps
 
@@ -361,8 +368,10 @@ Wenfu compatibility, not be downgraded to match the example.
 
 - Close-account confirmation, in-flight request behavior, credential
   revocation, local-data clearing, and final signed-out UX are undefined.
-- Deletion/export request submission and existing-request visibility need a
-  mobile contract.
+- Deletion/export request submission and existing-request visibility are
+  delivered (`GET native/privacy`, `POST native/privacy/:request_type`,
+  `POST native/privacy/close`; adapter `privacy`/`requestPrivacy`/`closeAccount`).
+  The remaining work is the confirmation and signed-out UX, not the contract.
 - Completed export delivery is not currently a mobile behavior; parity must be
   decided from the web product instead of assuming native download/share.
 - Assistance and contact-temple field/error/throttle contracts are incomplete.

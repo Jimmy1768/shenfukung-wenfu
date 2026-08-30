@@ -65,9 +65,9 @@ Snapshot of what the patron-facing account portal already delivers so future wor
 
 ## Mobile Alignment
 
-- Expo clients consume the same scoped payloads (`/account/api/...`) so we avoid divergent contracts.
+- Expo clients use a dedicated native API under `/api/v1/account/native/*` (43 routes). It deliberately does *not* reuse the browser account JSON: `Api::V1::Account::NativeBaseController` skips `Account::BaseController` precisely to avoid inheriting cookie-session and admin-aware scope helpers. Contracts are kept aligned by sharing the same forms, services, and policies underneath — not by sharing the controller surface. See `ops/docs/reference/templemate_native_account_api.md`.
 - TempleMate mobile ships full dependent CRUD and full registration create/edit natively, with Rails remaining sole authority for offering identity and price/fee resolution (patrons pick from a Discover catalog of admin-defined offerings rather than typing one in; registrant is restricted to self or an owned dependent). This is no longer a "light interactions only" surface for those two flows.
-- Payments and certificates still remain web-portal-only/read-only from mobile as of this writing.
+- Certificates are readable natively (`GET /api/v1/account/native/certificates`). Payments remain web-portal-only: there is no native checkout start or browser-return endpoint, and the Expo adapter has no payment method.
 
 ## Next Steps / TODOs
 

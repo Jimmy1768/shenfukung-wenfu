@@ -53,9 +53,8 @@ function createRealAdapter({ config, store, transport, bindingStorage, device = 
     // NativeSessionsController#login (plain { user, session }, no oauth
     // wrapper -- the resolution form always collects a complete profile
     // upfront, so there's no profile_required concept here the way a bare
-    // provider exchange has). Routes don't exist on Rails yet -- this will
-    // 404 until Control A builds them -- but the client-side shape is
-    // final, not a guess.
+    // provider exchange has). Both routes now exist on Rails
+    // (Api::V1::Account::NativeOauthResolutionsController).
     consumeOAuthResolution: ({ mode, provider, resolutionToken, email, password, name, termsAccepted }) => authenticate(
       mode === 'new' ? '/oauth/resolution/new' : '/oauth/resolution/existing',
       { oauth: { token: resolutionToken, provider }, account: mode === 'new' ? { email, password, name, terms_accepted: termsAccepted } : { email, password } }

@@ -297,7 +297,8 @@ Production onboarding avoids creating real user passwords in seeds—only the te
    - Decide which staff get financial permissions and run `bin/rails "temple_financial:grant_permissions[slug,email]"`.
    - Cash/manual payments remain supported alongside ECPay.
 7. **Mobile/API consumers**
-   - Expo/mobile clients now call `/account/api/registrations`, `/account/api/payment_statuses/:reference`, `/account/api/certificates`, and `/account/api/guest_lists/:offering_id`.
+   - Expo/mobile clients call the native account API under `/api/v1/account/native/*` (sessions, OAuth, profile, dependents, registrations, resources, preferences, privacy, assistance). See `ops/docs/reference/templemate_native_account_api.md`.
+   - The browser-session account JSON (`/api/v1/account/registrations`, `/payment_statuses/:reference`, `/certificates`, `/guest_lists/:offering_id`) is a separate, older surface. `guest_lists` is admin-facing and is deliberately not part of the account-only app.
    - Owner/staff roles determine what data comes back (guest lists additionally require `view_guest_lists`). When debugging, wrap Expo commands with `bin/load_temple_env <slug> -- ...` so the API and client agree on credentials.
 
 ## Owner Privileges
