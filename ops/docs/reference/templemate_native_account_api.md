@@ -51,11 +51,27 @@ API gap.
 | --- | --- |
 | Rails native API | Essentially complete (see absences below) |
 | `mobile/app/real/adapter.js` | 37 methods; covers the API except contact + payment |
-| Expo account screens | **Thin.** `mobile/app/account/` holds only `registration_authority.js`, `screen_model.js`, `registration_demo_presentation.js` |
+| Expo account screens | Present but **minimal**. All 12 render from `App.js`; several expose a fraction of the fields their endpoint accepts |
 
-There are no profile or dependents *screens*, even though the adapter has full
-`updateProfile`, `addPassword`, and dependent CRUD, and the API answers all of
-them. That gap is UI work, not contract work.
+Screens are **not** in `mobile/app/account/` (that directory holds registration
+authority and presentation logic only). All 12 declared in `ACCOUNT_SCREENS`
+render from `App.js`, which calls 24 adapter methods. The gap is field
+coverage, not missing screens:
+
+| Surface | API accepts / returns | UI exposes |
+| --- | --- | --- |
+| Profile | `english_name`, `native_name`, `phone`, `city`, `notes` (5) | `native_name` only (1) |
+| Dependents | `english_name`, `native_name`, `relationship_label`, `birthdate`, `phone`, `email`, `notes` (7) | name, relationship (2) |
+
+`NativeProfileController` uses the same `Account::ProfileForm` as the web, so
+parity is structural rather than reimplemented — the remaining work is UI
+field coverage, not contract work.
+
+**Why this ordering mattered.** `NativeAccountSerializer.user` reads
+`metadata["phone"]` and `metadata["notes"]` — the exact keys that admin
+registration edits overwrote before the `registration_contact` namespace fix.
+Adding a phone field to the profile screen before that fix would have
+displayed temple-overwritten data to the patron as their own.
 
 ## Endpoint surface
 
