@@ -25,6 +25,31 @@ module Registrations
       scoped_data.deep_dup
     end
 
+    # Values whose field is declared `reuse: prefill` -- durable facts the
+    # admin should not be asked for again. Scalarized: a multi-value field
+    # accumulates a list, but the form control that consumes this holds one
+    # value, and passing the whole array was the defect this split fixes
+    # (past choices rendered as this year's answer).
+    def prefillable
+      scoped_data.each_with_object({}) do |(field, value), result|
+        next unless schema.prefillable?(field)
+
+        result[field] = Array(value).last.presence || value
+      end.compact
+    end
+
+    # Values whose field is declared `reuse: offer_as_options` -- remembered,
+    # offered, but never pre-selected. Returned as a list per field for the
+    # form to present as suggestions.
+    def suggestions
+      scoped_data.each_with_object({}) do |(field, value), result|
+        next unless schema.reuse_policy(field) == :offer_as_options
+
+        entries = Array(value).map(&:to_s).reject(&:blank?).uniq
+        result[field] = entries if entries.any?
+      end
+    end
+
     def write!(values)
       persist do |data|
         eligible_values(values).each do |field, value|
@@ -134,6 +159,10 @@ module Registrations
         .map(&:to_s)
         .reject { |field| field.match?(TRANSIENT_KEY_PATTERN) }
         .reject { |field| FORBIDDEN_FIELDS.include?(field) }
+        # `reuse: never` is enforced on the WRITE side too, not just at
+        # render: a field nobody declared reusable should not accumulate
+        # data we will never read back.
+        .reject { |field| !schema.reusable?(field) }
         .uniq
     end
 

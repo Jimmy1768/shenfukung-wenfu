@@ -9,6 +9,43 @@ module Registrations
       ritual_metadata: %i[ancestor_placard_name dedication_message incense_option certificate_notes]
     }.freeze
 
+    # How a field's previously-entered values may be reused on the patron's
+    # NEXT registration for this same offering.
+    #
+    #   prefill           -- a durable fact; pre-populate it (e.g. ancestors)
+    #   offer_as_options  -- remember, but make the admin choose afresh
+    #   never             -- do not remember at all (e.g. a purchase decision)
+    #
+    # Declared per (offering, field) in the offering's own yml, because the
+    # same canonical field legitimately differs across offerings and temples:
+    # dedication_message is a temple-authored donation-item picker on one
+    # Shengfukung offering and freeform blessing text on three others, under
+    # one shared label.
+    REUSE_POLICIES = %i[prefill offer_as_options never].freeze
+
+    # Deliberately a CONSTANT, not derived from allow_multiple/options.
+    # A shape-derived default couples reuse behavior to another field's
+    # value, so flipping allow_multiple for an unrelated reason would move
+    # policy with nobody deciding it should -- and nobody could read a yml
+    # and know the behavior. The shape heuristic lives in the onboarding
+    # generator (lib/tasks/offerings.rake), which writes explicit reuse:
+    # keys into a new temple's yml instead.
+    #
+    # `offer_as_options` is the safe constant, not `never`.
+    #
+    # Only ONE policy can cause harm: a wrong `prefill` silently carries a
+    # stale answer into a registration the temple then physically acts on.
+    # `offer_as_options` eliminates that mode while still remembering, so an
+    # undeclared field keeps rule 3's benefit ("don't make an admin ask the
+    # same question again") -- the past answers are visible and selectable,
+    # they are just never presented as this year's answer.
+    #
+    # `never` was tried first and rejected: it is maximally safe but silently
+    # disables a shipped, working feature for every config not yet annotated,
+    # trading a real benefit for protection against a mode `offer_as_options`
+    # already prevents.
+    DEFAULT_REUSE_POLICY = :offer_as_options
+
     DEFAULT_DEFAULTS = {
       order: {
         quantity: 1
@@ -48,6 +85,20 @@ module Registrations
     def allow_multiple?(field)
       config = field_settings[field.to_sym] || {}
       config[:allow_multiple].present?
+    end
+
+    def reuse_policy(field)
+      config = field_settings[field.to_sym] || {}
+      candidate = config[:reuse].presence&.to_sym
+      REUSE_POLICIES.include?(candidate) ? candidate : DEFAULT_REUSE_POLICY
+    end
+
+    def reusable?(field)
+      reuse_policy(field) != :never
+    end
+
+    def prefillable?(field)
+      reuse_policy(field) == :prefill
     end
 
     private

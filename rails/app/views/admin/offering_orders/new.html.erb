@@ -244,7 +244,8 @@
                         type: :text,
                         schema:,
                         value: logistics_data[:preferred_slot],
-                        html_options: { placeholder: t("admin.registration_form.placeholders.preferred_slot") }) %>
+                        html_options: { placeholder: t("admin.registration_form.placeholders.preferred_slot") },
+                        suggestions: registration_field_suggestions(:preferred_slot)) %>
                   <%= registration_multi_value_toggle(:preferred_slot, schema) %>
                 </div>
               <% end %>
@@ -259,7 +260,8 @@
                   <%= registration_field_control(logistics_fields, :arrival_window,
                         type: :text,
                         schema:,
-                        value: logistics_data[:arrival_window]) %>
+                        value: logistics_data[:arrival_window],
+                        suggestions: registration_field_suggestions(:arrival_window)) %>
                   <%= registration_multi_value_toggle(:arrival_window, schema) %>
                 </div>
               <% end %>
@@ -269,7 +271,8 @@
                   <%= registration_field_control(logistics_fields, :ceremony_location,
                         type: :text,
                         schema:,
-                        value: logistics_data[:ceremony_location]) %>
+                        value: logistics_data[:ceremony_location],
+                        suggestions: registration_field_suggestions(:ceremony_location)) %>
                   <%= registration_multi_value_toggle(:ceremony_location, schema) %>
                 </div>
               <% end %>
@@ -296,7 +299,8 @@
                   <%= registration_field_control(metadata_fields, :ancestor_placard_name,
                         type: :text,
                         schema:,
-                        value: ritual_metadata[:ancestor_placard_name]) %>
+                        value: ritual_metadata[:ancestor_placard_name],
+                        suggestions: registration_field_suggestions(:ancestor_placard_name)) %>
                   <%= registration_multi_value_toggle(:ancestor_placard_name, schema) %>
                 </div>
               <% end %>
@@ -306,7 +310,8 @@
                   <%= registration_field_control(metadata_fields, :dedication_message,
                         type: :text,
                         schema:,
-                        value: ritual_metadata[:dedication_message]) %>
+                        value: ritual_metadata[:dedication_message],
+                        suggestions: registration_field_suggestions(:dedication_message)) %>
                   <%= registration_multi_value_toggle(:dedication_message, schema) %>
                 </div>
               <% end %>
@@ -321,7 +326,8 @@
                   <%= registration_field_control(metadata_fields, :incense_option,
                         type: :text,
                         schema:,
-                        value: ritual_metadata[:incense_option]) %>
+                        value: ritual_metadata[:incense_option],
+                        suggestions: registration_field_suggestions(:incense_option)) %>
                   <%= registration_multi_value_toggle(:incense_option, schema) %>
                 </div>
               <% end %>
@@ -332,7 +338,8 @@
                         type: :textarea,
                         schema:,
                         value: ritual_metadata[:certificate_notes],
-                        html_options: { rows: 3 }) %>
+                        html_options: { rows: 3 },
+                        suggestions: registration_field_suggestions(:certificate_notes)) %>
                   <%= registration_multi_value_toggle(:certificate_notes, schema) %>
                 </div>
               <% end %>

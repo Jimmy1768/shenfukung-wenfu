@@ -253,10 +253,22 @@ module Admin
       merge_payload_defaults(@registration.contact_payload, registration_form_schema.defaults_for(:contact))
       merge_payload_defaults(@registration.logistics_payload, registration_form_schema.defaults_for(:logistics))
       merge_payload_defaults(@registration.metadata, registration_form_schema.defaults_for(:ritual_metadata))
-      reusable_defaults = Registrations::ReusableDefaults.new(user: @registration.user, temple: current_temple, offering: @offering).read
-      merge_payload_defaults(@registration.logistics_payload, reusable_defaults.slice(*registration_form_schema.fields_for(:logistics).map(&:to_s)))
-      merge_payload_defaults(@registration.metadata, reusable_defaults.slice(*registration_form_schema.fields_for(:ritual_metadata).map(&:to_s)))
+      # Only `reuse: prefill` values populate the form. Fields declared
+      # `offer_as_options` are surfaced as suggestions instead (see
+      # #registration_field_suggestions) so past choices are selectable
+      # without being presented as this year's answer; `never` fields are
+      # not stored at all.
+      reusable = Registrations::ReusableDefaults.new(user: @registration.user, temple: current_temple, offering: @offering)
+      prefillable = reusable.prefillable
+      merge_payload_defaults(@registration.logistics_payload, prefillable.slice(*registration_form_schema.fields_for(:logistics).map(&:to_s)))
+      merge_payload_defaults(@registration.metadata, prefillable.slice(*registration_form_schema.fields_for(:ritual_metadata).map(&:to_s)))
+      @registration_field_suggestions = reusable.suggestions
     end
+
+    def registration_field_suggestions(field)
+      (@registration_field_suggestions || {})[field.to_s] || []
+    end
+    helper_method :registration_field_suggestions
 
     def normalize_registrant_selection!(attrs)
       user = User.find_by(id: attrs[:user_id])
