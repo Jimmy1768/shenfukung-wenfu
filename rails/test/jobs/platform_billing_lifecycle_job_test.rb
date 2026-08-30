@@ -22,6 +22,6 @@ class PlatformBillingLifecycleJobTest < ActiveSupport::TestCase
 
     assert_equal "frozen", delivery.reload.status
     assert_equal "suspended", entitlement.reload.state
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
   end
 end

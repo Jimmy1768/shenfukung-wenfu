@@ -1,34 +1,34 @@
 require "test_helper"
 
 class TempleTest < ActiveSupport::TestCase
-  test "registration_intake_frozen? is false with no billing activity at all" do
+  test "payment_settlement_frozen? is false with no billing activity at all" do
     temple = create_temple
 
-    refute temple.registration_intake_frozen?
+    refute temple.payment_settlement_frozen?
   end
 
-  test "registration_intake_frozen? is true once entitlement is adopted but stuck in pending_setup" do
+  test "payment_settlement_frozen? is true once entitlement is adopted but stuck in pending_setup" do
     temple = create_temple
     temple.adopt_platform_billing_entitlement!
 
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
   end
 
-  test "registration_intake_frozen? is false again once entitlement is active" do
+  test "payment_settlement_frozen? is false again once entitlement is active" do
     temple = create_temple
     temple.adopt_platform_billing_entitlement!.update!(state: "active")
 
-    refute temple.registration_intake_frozen?
+    refute temple.payment_settlement_frozen?
   end
 
   test "unlock_demo_registrations! overrides a frozen pending_setup entitlement" do
     temple = create_temple
     temple.adopt_platform_billing_entitlement!
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
 
     temple.unlock_demo_registrations!
 
-    refute temple.registration_intake_frozen?
+    refute temple.payment_settlement_frozen?
     assert temple.demo_registration_unlocked?
   end
 
@@ -36,11 +36,11 @@ class TempleTest < ActiveSupport::TestCase
     temple = create_temple
     temple.adopt_platform_billing_entitlement!
     temple.unlock_demo_registrations!
-    refute temple.registration_intake_frozen?
+    refute temple.payment_settlement_frozen?
 
     temple.lock_demo_registrations!
 
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
     refute temple.demo_registration_unlocked?
   end
 

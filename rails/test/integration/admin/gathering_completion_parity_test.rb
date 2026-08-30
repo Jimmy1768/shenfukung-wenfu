@@ -83,6 +83,6 @@ class GatheringCompletionParityTest < ActionDispatch::IntegrationTest
     registration.mark_admin_completed!
 
     assert registration.checkout_ready?, "completion is independent of billing"
-    assert @temple.registration_intake_frozen?, "the delinquency gate is type-agnostic"
+    assert @temple.payment_settlement_frozen?, "the delinquency gate is type-agnostic"
   end
 end

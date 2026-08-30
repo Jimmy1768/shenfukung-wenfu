@@ -240,7 +240,22 @@ class Temple < ApplicationRecord
     deadline.present? && deadline <= reference_time
   end
 
-  def registration_intake_frozen?(reference_time = Time.current)
+  # Whether this temple may currently SETTLE a patron payment -- online via
+  # ECPay, or by an admin pressing "cash received". Both rails, deliberately:
+  # blocking only the automated one would leave the manual one as a free
+  # bypass for a delinquent temple.
+  #
+  # It does NOT gate registration intake. Creating a registration is data
+  # entry, not a money-changing-hands step, and turning a temple's own
+  # billing problem into a patron being told to come back later aims the
+  # friction at the wrong person. Registrations are always created; they
+  # simply stay pending until settlement is possible.
+  #
+  # Renamed from `registration_intake_frozen?` on 2026-08-30. That name
+  # described what it did before intake and settlement were separated, and
+  # by the time it was renamed every one of its call sites was a payment
+  # site -- the name asserted the opposite of the behaviour.
+  def payment_settlement_frozen?(reference_time = Time.current)
     return false if demo_registration_unlocked?
 
     entitlement = platform_billing_entitlement
@@ -249,13 +264,17 @@ class Temple < ApplicationRecord
     online_payments_frozen?(reference_time)
   end
 
-  # A narrow, explicit override for demo/sales temples that need to create
-  # registrations before (or without ever) completing platform billing
-  # setup -- e.g. a temple whose entitlement is sitting in "pending_setup"
-  # from an earlier setup attempt, which would otherwise freeze intake via
-  # registration_intake_frozen? above. Deliberately does not touch the
-  # entitlement itself: unlocking intake this way must not make the temple
-  # look like a real, onboarded billing client (see Temple.platform_billing_adopted).
+  # A narrow, explicit override for demo/sales temples that need to take
+  # payment before (or without ever) completing platform billing setup --
+  # e.g. a temple whose entitlement is sitting in "pending_setup" from an
+  # earlier setup attempt, which would otherwise freeze settlement via
+  # payment_settlement_frozen? above. Deliberately does not touch the
+  # entitlement itself: unlocking this way must not make the temple look
+  # like a real, onboarded billing client (see Temple.platform_billing_adopted).
+  #
+  # The setting key and rake task keep the `demo_registration_unlocked`
+  # name: it is persisted in billing_settings on live records, so renaming
+  # it is a data migration rather than a rename, and is not worth it.
   def demo_registration_unlocked?
     ActiveModel::Type::Boolean.new.cast(billing_settings["demo_registration_unlocked"])
   end

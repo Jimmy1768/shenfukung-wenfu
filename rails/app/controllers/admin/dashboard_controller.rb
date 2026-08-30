@@ -21,7 +21,7 @@ module Admin
       awaiting_fulfilment_count = registrations.awaiting_fulfilment.count
       # Same rows as "awaiting payment"; delinquency only changes the label,
       # since it is a temple-level fact rather than a per-registration one.
-      blocked_on_billing_count = current_temple.registration_intake_frozen? ? registrations.awaiting_payment.count : 0
+      blocked_on_billing_count = current_temple.payment_settlement_frozen? ? registrations.awaiting_payment.count : 0
       unpaid_registrations_count = registrations
         .where(fulfillment_status: open_status)
         .where("total_price_cents > 0")

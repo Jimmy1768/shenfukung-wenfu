@@ -76,7 +76,7 @@ class Billing::StripePlatformBillingEventIngestTest < ActiveSupport::TestCase
 
     assert_equal "overdue", delivery.reload.status
     assert_equal "active", entitlement.reload.state
-    refute temple.registration_intake_frozen?
+    refute temple.payment_settlement_frozen?
   end
 
   private

@@ -40,7 +40,7 @@ class PlatformBillingEntitlementTest < ActiveSupport::TestCase
     assert_equal entitlement, repeated
     assert_equal "pending_setup", entitlement.state
     assert_equal adopted_at, entitlement.adopted_at
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
     assert_equal 1, SystemAuditLog.where(action: "platform_billing.entitlement_adopted", target: entitlement).count
   end
 
@@ -48,11 +48,11 @@ class PlatformBillingEntitlementTest < ActiveSupport::TestCase
     temple = create_temple(payment_provider_settings: { "billing" => { "payment_method_on_file" => true } })
     entitlement = temple.adopt_platform_billing_entitlement!
 
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
     entitlement.update!(state: "active")
-    refute temple.registration_intake_frozen?
+    refute temple.payment_settlement_frozen?
     entitlement.update!(state: "suspended")
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
   end
 
   test "missing entitlement preserves the legacy registration intake decision" do
@@ -61,8 +61,8 @@ class PlatformBillingEntitlementTest < ActiveSupport::TestCase
       "billing" => { "grace_started_at" => 31.days.ago.iso8601, "grace_days" => 30 }
     })
 
-    refute legacy_open.registration_intake_frozen?
-    assert legacy_frozen.registration_intake_frozen?
+    refute legacy_open.payment_settlement_frozen?
+    assert legacy_frozen.payment_settlement_frozen?
   end
 
   test "billing presentation gives an entitlement precedence over legacy Stripe settings" do

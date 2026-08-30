@@ -11,8 +11,8 @@ that bills, charges, or reports on real platform-billing usage.
 This distinction exists because of a real, discovered situation, not a
 hypothetical: this temple's `platform_billing_entitlement` was created
 (state `pending_setup`) during earlier admin-panel testing/demoing, which by
-itself would freeze payment settlement (see `Temple#registration_intake_frozen?`
--- misnamed, see below) without ever indicating a real, paying
+itself would freeze payment settlement (see
+`Temple#payment_settlement_frozen?`) without ever indicating a real, paying
 relationship. Both problems needed solving together, not by
 completing a fake Stripe setup checkout to "fix" the freeze.
 
@@ -24,14 +24,14 @@ actually been run against production. Verified directly on the host
 immediately after:
 
 ```text
-registration_intake_frozen?: false
+payment_settlement_frozen?: false
 demo_registration_unlocked?: true
 entitlement state (untouched): pending_setup
 counted as platform_billing_adopted (real client)?: false
 ```
 
 This is the live, current state — not just a mechanism that exists and
-could be applied. If a future session finds `registration_intake_frozen?`
+could be applied. If a future session finds `payment_settlement_frozen?`
 true again for this temple, the unlock was reversed (intentionally or
 not); re-running the rake task below restores it. If it finds the
 entitlement no longer `pending_setup`, something completed a real Stripe
@@ -58,17 +58,16 @@ temple is the concrete reason it was written this way.
 
 ### 2. It is allowed to take payment anyway
 
-**Name warning:** `Temple#registration_intake_frozen?` no longer freezes
-registration *intake*. Since 2026-08-28 intake is never blocked for anyone --
-creating a registration is data entry, not a payment step, and turning a
-temple's own billing problem into a patron being told to come back later is
-friction aimed at the wrong person. Every remaining call site is a **payment
-settlement** site: patron online checkout, admin-initiated ECPay, and admin
-cash recording. The method is misnamed and is flagged for rename (something
-like `payment_settlement_frozen?`) in
-`ops/docs/plans/PERSONAL_AND_OFFERING_DATA_CONTRACT_GAP_PLAN.md` under W1.
+`Temple#payment_settlement_frozen?` (renamed 2026-08-30 from
+`registration_intake_frozen?`, which by then asserted the opposite of what
+it did) does not block registration *intake*. Since 2026-08-28 intake is
+never blocked for anyone -- creating a registration is data entry, not a
+payment step, and turning a temple's own billing problem into a patron being
+told to come back later is friction aimed at the wrong person. Every call
+site is a payment settlement site: patron online checkout, admin-initiated
+ECPay, and admin cash recording.
 
-What it still does: for any temple whose entitlement isn't `active`, it
+What it does: for any temple whose entitlement isn't `active`, it
 blocks **both** settlement rails -- ECPay and the admin's "cash received"
 press. Blocking only the automated one would leave the manual one as a free
 bypass. This temple's `demo_registration_unlocked` billing setting overrides
@@ -102,7 +101,7 @@ Or directly: `Temple#unlock_demo_registrations!` / `#lock_demo_registrations!`
 
 ## Source
 
-- `app/models/temple.rb` -- `registration_intake_frozen?`,
+- `app/models/temple.rb` -- `payment_settlement_frozen?`,
   `demo_registration_unlocked?`, `unlock_demo_registrations!`,
   `lock_demo_registrations!`, `Temple.platform_billing_adopted`.
 - `lib/tasks/admin_controls.rake` -- `unlock_demo_registrations`,

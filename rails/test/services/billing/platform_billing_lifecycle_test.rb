@@ -22,12 +22,12 @@ class Billing::PlatformBillingLifecycleTest < ActiveSupport::TestCase
     assert_equal "grace", delivery.reload.status
     assert_equal "grace", temple.platform_billing_state(failed_at + 7.days)
     assert_equal "active", entitlement.reload.state
-    refute temple.registration_intake_frozen?
+    refute temple.payment_settlement_frozen?
     Billing::PlatformBillingLifecycle.advance!(delivery:, now: failed_at + 21.days)
     assert_equal "frozen", delivery.reload.status
     assert_equal "frozen", temple.platform_billing_state(failed_at + 21.days)
     assert_equal "suspended", entitlement.reload.state
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
     assert_equal %w[overdue grace frozen], SystemAuditLog.where(action: "platform_billing.delivery_transition", target: delivery).order(:created_at).map { |log| log.metadata["to"] }
   end
 

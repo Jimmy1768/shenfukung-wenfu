@@ -77,11 +77,11 @@ module Account
       @registration_period_label = period_label_for(@registration)
       @online_checkout_available = Payments::ProviderResolver.online_checkout_available?(temple: current_temple)
       @payment_provider_label = Payments::ProviderResolver.label_for(checkout_provider) if @online_checkout_available
-      @online_payments_frozen = current_temple.registration_intake_frozen?
+      @online_payments_frozen = current_temple.payment_settlement_frozen?
     end
 
     def start_checkout
-      if current_temple.registration_intake_frozen?
+      if current_temple.payment_settlement_frozen?
         return redirect_to payment_account_registration_path(@registration), alert: t("account.registrations.payment.online_payments_frozen")
       end
 

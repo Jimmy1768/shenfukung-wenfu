@@ -109,7 +109,7 @@ module Admin
     # The Stripe entitlement flow's overdue -> grace -> frozen window
     # (Billing::PlatformBillingLifecycle), not Temple#billing_grace_days --
     # that's a separate, legacy grace mechanism for temples with no
-    # platform billing entitlement at all (see Temple#registration_intake_frozen?).
+    # platform billing entitlement at all (see Temple#payment_settlement_frozen?).
     # This page is entirely about the entitlement flow, so it must describe
     # and count down that flow's own window, not the legacy one.
     def billing_overdue_window_days

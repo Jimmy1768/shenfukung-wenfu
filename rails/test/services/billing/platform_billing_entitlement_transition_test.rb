@@ -20,7 +20,7 @@ class Billing::PlatformBillingEntitlementTransitionTest < ActiveSupport::TestCas
     assert_equal event, result.platform_billing_event
     assert_equal occurred_at, result.activated_at
     assert_equal occurred_at, result.transitioned_at
-    refute temple.registration_intake_frozen?
+    refute temple.payment_settlement_frozen?
 
     audit = SystemAuditLog.find_by!(action: "platform_billing.entitlement_transition", target: result)
     assert_equal({ "delivery_id" => delivery.id, "entitlement_id" => result.id, "event_id" => event.id,
@@ -90,7 +90,7 @@ class Billing::PlatformBillingEntitlementTransitionTest < ActiveSupport::TestCas
     result = Billing::PlatformBillingEntitlementTransition.transition!(temple:, delivery: frozen_delivery, state: "suspended")
 
     assert_equal "suspended", result.state
-    assert temple.registration_intake_frozen?
+    assert temple.payment_settlement_frozen?
   end
 
   private

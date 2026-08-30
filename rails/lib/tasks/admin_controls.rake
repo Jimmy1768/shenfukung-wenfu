@@ -150,7 +150,7 @@ namespace :admin_controls do
     slug = args[:slug] || AppConstants::Project.slug
     temple = Temple.find_by!(slug:)
     temple.unlock_demo_registrations!
-    puts "Demo registrations unlocked for #{slug}. registration_intake_frozen? is now #{temple.registration_intake_frozen?}." # rubocop:disable Rails/Output
+    puts "Demo registrations unlocked for #{slug}. payment_settlement_frozen? is now #{temple.payment_settlement_frozen?}." # rubocop:disable Rails/Output
   end
 
   desc "Re-lock registration creation for a temple (undo unlock_demo_registrations)"
@@ -158,6 +158,6 @@ namespace :admin_controls do
     slug = args[:slug] || AppConstants::Project.slug
     temple = Temple.find_by!(slug:)
     temple.lock_demo_registrations!
-    puts "Demo registrations re-locked for #{slug}. registration_intake_frozen? is now #{temple.registration_intake_frozen?}." # rubocop:disable Rails/Output
+    puts "Demo registrations re-locked for #{slug}. payment_settlement_frozen? is now #{temple.payment_settlement_frozen?}." # rubocop:disable Rails/Output
   end
 end

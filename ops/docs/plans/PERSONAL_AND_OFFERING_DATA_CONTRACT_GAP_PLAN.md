@@ -206,7 +206,7 @@ rarely fire; precedence is what makes (d) satisfy rule 3 regardless.
 **Subsumes** the `dependents_notes`/`notes` collision above — both stop
 writing to the patron's profile `notes`.
 
-### Related: the gate method is now misnamed
+### Related: the gate method was misnamed — RENAMED 2026-08-30
 
 Not part of W1's fix, but discovered alongside it and belonging to whichever
 packet touches this code. `Temple#registration_intake_frozen?` no longer
@@ -217,9 +217,11 @@ separated from payment. Every remaining call site is a **payment** site:
 - `admin/payments_controller.rb:75` — admin-initiated ECPay
 - `payments/cash_payment_recorder.rb:54` — admin recording patron cash
 
-The name actively misleads and has already caused one round of ambiguity in
-discussion. Rename to something payment-accurate (e.g.
-`platform_billing_delinquent?` or `payment_settlement_frozen?`).
+The name actively misled and caused one round of ambiguity in discussion.
+**Renamed to `payment_settlement_frozen?` on 2026-08-30** across 14 files
+(model, three controllers, the cash recorder, the payment-methods form, a
+rake task, and seven test files); no dynamic dispatch existed, so the rename
+was total.
 
 ## W2 — The registration lifecycle has no stage model or work queues
 
@@ -454,7 +456,7 @@ any persisted gathering registration, so gathering fields are **already
 read-only after creation**. Stage 5 therefore has nothing to edit and the
 admin's action is purely stage 6 — review and publish. That is consistent,
 not a conflict. The delinquency gate is likewise already uniform:
-`registration_intake_frozen?` never inspects registrable type.
+`payment_settlement_frozen?` (then `registration_intake_frozen?`) never inspects registrable type.
 
 What removing the carve-out touches:
 
