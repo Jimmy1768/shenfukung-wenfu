@@ -26,12 +26,25 @@ work it points there instead of re-specifying:
 
 ## Reading order note
 
-The four workstreams below are ordered by **blast radius if left alone**, not
-by size, and deliberately not by the order they surfaced in conversation.
-W4 was discussed longest and in most detail; that is not evidence it matters
+The four workstreams are ordered by **irreversibility first, then blast
+radius** — revised from "blast radius" alone after review (see Review Record).
+Those are different axes and the distinction matters here:
+
+- **W1 is damage already accruing.** Every completed registration overwrites a
+  patron's phone with no recoverable prior value. Waiting destroys information
+  nobody can reconstruct.
+- **W3 is a capability gap.** Nothing is being destroyed; work simply cannot
+  be onboarded. Its cost is bounded by "cannot onboard yet," which later work
+  fully recovers.
+
+W3 is very likely the larger *business* blocker, and this ordering does not
+dispute that. It says only that W1's cost is the one no later work can undo.
+
+Ordering is deliberately not by the order these surfaced in conversation. W4
+was discussed longest and in most detail; that is not evidence it matters
 most, and it is placed last on purpose. Effort is called out separately per
-workstream, because it does not track severity here — W3 is the largest body
-of work and sits third.
+workstream, because it does not track severity — W3 is the largest body of
+work and sits third.
 
 Each workstream stands on its own and can be dispatched independently.
 
@@ -126,6 +139,22 @@ profile." The registration snapshot should keep whatever the admin typed
 (that is legitimately registration data), while the patron's profile fields
 stay patron-owned.
 
+### Second defect in the same method — fold into the same fix
+
+`CONTACT_MAPPINGS` maps **two** sources to the same destination:
+`"dependents_notes" => "notes"` and `"notes" => "notes"`. `update_contact_metadata`
+iterates and calls `assign_value`, which is a plain overwrite, so when a
+registration carries both, hash insertion order decides and `notes` silently
+wins.
+
+Precisely scoped: the **registration snapshot keeps both** — they are separate
+keys in `contact_payload`. What collapses is only the write into the patron's
+profile `notes`. So this is a cache-fidelity bug, not registration data loss.
+It compounds W1 rather than standing alone: notes *about a dependent* are
+being written into the *patron's own* profile notes field in the first place.
+A fix that gives registration-scoped contact data its own home resolves the
+collision as a side effect.
+
 ### Needs a Director decision
 
 When an admin learns on the phone that a patron's number has genuinely
@@ -135,9 +164,22 @@ changed, what should happen?
 - (b) Prompt the admin explicitly ("also update this patron's profile?"),
   audited as a distinct action.
 - (c) Update silently, as today.
+- (d) Write to a separate namespace and reconcile with the patron. The
+  registration writes `metadata["registration_contact"]["phone"]` and never
+  touches `metadata["phone"]`. On the patron's next profile visit: "a recent
+  registration used a different number — keep yours, or update it?"
 
-(a) is the strictest reading of rule 6. (b) preserves the phone-call workflow
-of rule 2 without silent mutation. This plan does not assume which.
+(a) is the strictest reading of rule 6. (b) and (d) both preserve the
+phone-call workflow of rule 2 without silent mutation; they differ in **who
+decides**. (b) asks the admin; (d) asks the owner of the data.
+
+(d) is the better fit for this system's own logic: rule 5 already establishes
+that dependents are patron-owned and staff may assist but not create. The same
+reasoning says patron profile data should be changed by the patron, not by
+staff on their behalf. (d) also subsumes the notes-collision fix above.
+
+This plan does not assume which. Recommend putting (b) and (d) in front of the
+Director together.
 
 ---
 
@@ -166,26 +208,38 @@ admin completes → payment opens — is real, not aspirational.
 
 ### What is missing
 
-An admin cannot **find** the registrations waiting on them.
+An admin cannot **find** the registrations waiting on them — and the problem
+is worse than a missing filter (sharpened by review).
 
 - `admin_completed_at` surfaces only as a status pill on an individual
   registration's show page (`app/views/admin/offering_orders/show.html.erb:77`).
 - `TempleRegistration.admin_filtered` (`app/models/temple_registration.rb:58`)
   supports offering type/id, payment method, paid/unpaid status, text query,
   and a date range — **no completion filter**.
-- The orders index splits only unpaid/paid.
+- The `status` filter accepts exactly two values: `paid` and `unpaid`.
+
+That last point is the real finding. A registration awaiting admin completion
+is not merely *unfiltered* — it is **camouflaged inside the largest bucket on
+the page**, sitting in `unpaid` alongside every registration that is fully
+complete and simply not yet paid by the patron.
 
 With a handful of demo registrations this is invisible. With a real temple in
-lamp-lighting season it means pending registrations are found by clicking
-into them one at a time, or not at all — and a registration nobody completes
-is a registration the patron can never pay for.
+lamp-lighting season, a registration nobody completes is a registration the
+patron can never pay for, and it is indistinguishable from one that is
+correctly waiting on the patron.
 
 ### What is needed
 
-A queue: a completion filter in `admin_filtered`, surfaced as a default-
-visible "awaiting completion" grouping on the admin registrations or orders
-index, with a count. This is the operational half of a mechanism that is
-otherwise finished.
+Two things, not one:
+
+1. A completion filter in `admin_filtered`.
+2. A status vocabulary that can express **"waiting on us" vs "waiting on
+   them."** The current two-value paid/unpaid cannot represent that
+   distinction at all, so a filter alone would still leave the two states
+   visually merged wherever status is displayed.
+
+Surfaced as a default-visible "awaiting completion" grouping with a count.
+This is the operational half of a mechanism that is otherwise finished.
 
 ### Needs a Director decision
 
@@ -256,6 +310,19 @@ non-stored values; lunar default true where ritual logic requires it), and
 parallel design.** This plan's contribution is only to record that the gap is
 load-bearing for rules 1 and 5, and that the live schema — not just the
 config — is what blocks it.
+
+### Split the dispatch, keep the analysis merged
+
+The analytical merge above is correct, but the resulting workstream contains
+two kinds of work with very different rollback profiles: a **schema
+migration** (person records, repeatable lists, lunar/leap flags, gender,
+address) and **form capability** built on top of it. A bad schema migration
+against live registration data is not comparable to a bad form.
+
+Dispatch as two packets — schema first and independently landable, form
+second — so the irreversible half can land and settle on its own. This
+preserves the merge (one design decision, one owner) while not forcing the
+recoverable half to share the irreversible half's risk profile.
 
 ### Needs a Director decision
 
@@ -336,31 +403,61 @@ fields, and the split is exactly the Director's rule 3 vs rule 4:
 | Offering-table items (福宴 / 白米10斤 / 金牌) | Fresh choice (rule 4) | Prefill nothing; force explicit selection |
 
 The obvious proxy — "does the field have a temple-authored `options` list?" —
-is refuted by the live config: `dedication_message` carries a 14-item options
-list on one offering (`db/temples/offerings/shengfukung-wenfu.yml:47`) and is
-freeform multi-value on another (`:131`). Same field name, opposite
-semantics, identical config shape.
+is refuted by the live config, and the refutation is broader than first
+written. `dedication_message` appears in **all four** live offerings:
 
-So this requires an **explicit per-field setting** in the offering schema
-(shape to be decided — e.g. `reuse: prefill | offer_as_options | never`),
-classified per field per offering. That classification is a Director/temple
-judgment, not something a packet can infer.
+| Offering | Shape | What it actually holds |
+| --- | --- | --- |
+| `incense-donation` (`:47`) | 14-item options list, `allow_multiple` | Ritual/donation **items**: 福宴, 祝壽, 壽塔, 頂燈, 金牌壹面1份/3分/5分/1錢, 白米10斤, 貨車油資… |
+| `lamp-service` (`:131`) | `allow_multiple`, no options | Freeform blessing text |
+| `ghost-festival-table` (`:193`) | `allow_multiple`, no options | Freeform blessing text |
+| `liberation-ritual` (`:260`) | `allow_multiple`, no options | Freeform blessing text |
+
+One field name, **one global label** — `admin.zh-TW.yml:109` renders
+`dedication_message` as 祈福語 ("blessing message") everywhere — and four live
+uses, one of which is a purchase/donation item picker.
+
+So the field is not merely *formatted* differently across offerings; it is
+**semantically overloaded**. A classification keyed on field name would still
+be wrong, because the name does not determine the meaning. The classification
+must be **per-(offering, field)**.
+
+That granularity turns out to be free: `field_settings` already lives inside
+each offering's own `registration_form` block, and `FormSchema` is constructed
+per offering (`FormSchema.new(offering.metadata["registration_form"])`). So an
+added `reuse:` key (shape to be decided — e.g.
+`reuse: prefill | offer_as_options | never`) is automatically scoped to
+(offering, field) with no new mechanism. This is a one-key schema addition,
+not a new artifact.
+
+### Separate observation: the overload is itself a config smell
+
+A product picker living under a label that says 祈福語 is a naming problem
+independent of reuse classification. Whether `incense-donation` should instead
+carry its own properly-named field (e.g. donation items) belongs to
+`SHENGFUKUNG_OFFERINGS_CONFIG_PLAN.md`, not here. Noting it because renaming
+would *not* remove the need for per-(offering, field) classification —
+different temples will legitimately treat the same canonical field as durable
+in one offering and per-registration in another.
 
 ### Needs a Director decision
 
-The per-field classification for Shengfukung's four live offerings, and
-whether the empty state is a literal "請選擇" placeholder or simply no
-selection.
+The per-(offering, field) classification across the four live offerings —
+sixteen cells at most, realistically far fewer since only multi-value
+reusable fields need one — and whether the empty state is a literal "請選擇"
+placeholder or simply no selection.
 
 ---
 
 ## Cross-cutting open questions
 
-1. W1: which of (a)/(b)/(c) governs an admin learning a genuinely changed
-   phone number.
-2. W2: where the pending-completion queue lives.
+1. W1: which of (a)/(b)/(c)/(d) governs an admin learning a genuinely changed
+   phone number. (b) and (d) are the live candidates.
+2. W2: where the pending-completion queue lives, and what the expanded status
+   vocabulary should be called in patron-neutral terms.
 3. W3: whether repeatable person lists gate the first real onboarding.
-4. W4: per-field reuse classification for the four live offerings.
+4. W4: per-(offering, field) reuse classification across the four live
+   offerings.
 
 Questions 1, 2 and 4 are small and unblock their workstreams immediately.
 Question 3 is a scope decision about the first real client and may reasonably
@@ -386,12 +483,51 @@ dispatchable:
 
 - **W1**: an admin registration edit cannot mutate patron-owned profile
   fields except through an explicit, audited, Director-approved path;
-  registration-scoped contact data is unaffected; covered by tests.
+  registration-scoped contact data is unaffected; the
+  `dependents_notes`/`notes` destination collision is resolved; covered by
+  tests.
 - **W2**: an admin can see, from a default-visible surface, every
-  registration awaiting completion, with a count; covered by tests.
+  registration awaiting completion, with a count, **distinguishable from
+  registrations that are complete and merely awaiting patron payment**;
+  covered by tests.
 - **W3**: scoped and sequenced as an extension of the offering-spec plans,
-  with the first-onboarding scope decision recorded.
+  dispatched as schema-then-form packets, with the first-onboarding scope
+  decision recorded.
 - **W4**: accumulated values render as options rather than as the current
-  selection; per-field reuse classification exists in the schema and is set
-  for the four live offerings; covered by tests including the
-  same-field-name/opposite-semantics case.
+  selection; reuse classification exists in the schema at
+  **per-(offering, field)** granularity and is set across the four live
+  offerings; covered by tests including the same-field-name/opposite-
+  semantics case (`dedication_message` as item-picker vs freeform text).
+
+## Review record
+
+Reviewed by OperatorKit Strategy, 2026-08-28, against source at `d8966f6`
+rather than against the writeup. All four claims verified independently in
+code. Four changes folded in, each strengthening rather than retracting a
+finding:
+
+1. **Ordering axis** — "blast radius" conflated damage-already-accruing with
+   capability-gap. Re-cut as irreversibility first. W1 stays first, on firmer
+   reasoning.
+2. **W2 sharpened** — pending-completion is not merely unfiltered but
+   camouflaged inside `unpaid`; the fix needs a status vocabulary change, not
+   only a filter.
+3. **W1 option (d)** — separate namespace plus patron-side reconciliation,
+   which fits rule 5's own patron-ownership logic better than prompting the
+   admin. Plus the `dependents_notes`/`notes` collision.
+4. **W4 granularity** — per-field is insufficient; must be per-(offering,
+   field), because the field is semantically overloaded rather than merely
+   formatted differently.
+
+Strategy's process note, recorded because it generalizes: W4's *claim* was
+correctly shrunk after finding the opt-in checkbox and existing curation
+panel — but the same evidence then supported a *larger* remedy than the one
+first proposed. Shrinking a claim and shrinking its remedy are separate
+decisions, and conflating them is the failure mode to watch when correcting
+for recency bias.
+
+Verification added on this side during fold-in: `dedication_message` appears
+in four live offerings, not two, and carries one global label (祈福語) across
+all of them — which strengthens the overload finding. Also noted that
+`field_settings` is already per-offering, so the required granularity needs
+no new mechanism.
