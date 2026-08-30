@@ -422,13 +422,30 @@ So the field is not merely *formatted* differently across offerings; it is
 be wrong, because the name does not determine the meaning. The classification
 must be **per-(offering, field)**.
 
-That granularity turns out to be free: `field_settings` already lives inside
-each offering's own `registration_form` block, and `FormSchema` is constructed
-per offering (`FormSchema.new(offering.metadata["registration_form"])`). So an
-added `reuse:` key (shape to be decided — e.g.
-`reuse: prefill | offer_as_options | never`) is automatically scoped to
-(offering, field) with no new mechanism. This is a one-key schema addition,
-not a new artifact.
+That granularity turns out to be free, and there is **no plumbing step at
+all**. `field_settings` already lives inside each offering's own
+`registration_form` block, and `FormSchema` has exactly three callers — all
+per-offering:
+
+- `admin/offering_orders_controller.rb:331`
+- `admin/patron_metadata_values_controller.rb:84`
+- `registrations/reusable_defaults.rb:21`
+
+The third is the point: **the class that actually performs reuse already holds
+a per-offering `FormSchema` at the moment it decides.** `ReusableDefaults`
+consults it today for `eligible_fields` and `multi_value?`. A `reuse:` key
+sitting beside `options:` and `allow_multiple:` is readable right there, with
+nothing to thread through. This is a one-key schema addition
+(shape to be decided — e.g. `reuse: prefill | offer_as_options | never`), not
+a new artifact and not a wiring exercise.
+
+**Implementation caution.** `FormSchema#normalize_field_settings`
+(`form_schema.rb:96-105`) coerces a bare Array into `{ options: settings }`,
+so a field written in that shorthand cannot carry a sibling `reuse:` key until
+it is rewritten in Hash form. Checked the live config: all four offerings
+already use the Hash form for every entry under `field_settings`, so nothing
+currently needs migrating — but the hazard is live in the code path for any
+future config that uses the shorthand.
 
 ### Separate observation: the overload is itself a config smell
 
@@ -526,8 +543,19 @@ first proposed. Shrinking a claim and shrinking its remedy are separate
 decisions, and conflating them is the failure mode to watch when correcting
 for recency bias.
 
-Verification added on this side during fold-in: `dedication_message` appears
-in four live offerings, not two, and carries one global label (祈福語) across
-all of them — which strengthens the overload finding. Also noted that
-`field_settings` is already per-offering, so the required granularity needs
-no new mechanism.
+Verification added on this side during fold-in, both since confirmed by
+Strategy in a second pass:
+
+- `dedication_message` appears in four live offerings, not two, and carries
+  one global label (祈福語) across all of them — strengthening the overload
+  finding. (Strategy's original "two" came from a truncated grep whose output
+  cap was read as the result.)
+- The required per-(offering, field) granularity needs no new mechanism, and
+  on Strategy's second pass, no plumbing either: `ReusableDefaults` — the
+  class that performs reuse — already holds a per-offering `FormSchema` at
+  decision time. Plus the `normalize_field_settings` Array-shorthand caution
+  recorded in W4.
+
+Both sides independently verified the other's claims against source rather
+than against the writeup. Every exchange strengthened a finding; none
+retracted one.
