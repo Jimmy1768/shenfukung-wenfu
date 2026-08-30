@@ -175,6 +175,49 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
     refute response.body.include?("checkout")
   end
 
+  test "registration payloads expose lifecycle_stage for every patron-visible state" do
+    free_event = create_event
+    paid_event = create_priced_event
+
+    awaiting_admin = create_registration(user: @user, offering: paid_event, admin_completed_at: nil)
+    awaiting_payment = create_registration(user: @user, offering: paid_event)
+    awaiting_fulfilment = create_registration(user: @user, offering: free_event)
+    fulfilled = create_registration(user: @user, offering: free_event, fulfillment_status: "fulfilled")
+
+    get "/api/v1/account/native/registrations", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+
+    stages = response.parsed_body.fetch("registrations").to_h { |row| [row.fetch("id"), row.fetch("lifecycle_stage")] }
+
+    assert_equal "awaiting_admin_completion", stages.fetch(awaiting_admin.id)
+    assert_equal "awaiting_payment", stages.fetch(awaiting_payment.id)
+    assert_equal "awaiting_fulfilment", stages.fetch(awaiting_fulfilment.id)
+    assert_equal "fulfilled", stages.fetch(fulfilled.id)
+
+    # The coarse field the shipped build reads must survive alongside it.
+    assert response.parsed_body.fetch("registrations").all? { |row| row.key?("lifecycle") }
+  end
+
+  test "a temple whose settlement is frozen reports blocked_on_billing, not awaiting_payment" do
+    paid_event = create_priced_event
+    registration = create_registration(user: @user, offering: paid_event)
+
+    get "/api/v1/account/native/registrations/#{registration.id}", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    assert_equal "awaiting_payment", response.parsed_body.dig("registration", "lifecycle_stage")
+
+    @temple.adopt_platform_billing_entitlement!.update!(state: "suspended")
+    assert @temple.payment_settlement_frozen?, "precondition: the temple must be frozen"
+
+    get "/api/v1/account/native/registrations/#{registration.id}", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    assert_equal "blocked_on_billing", response.parsed_body.dig("registration", "lifecycle_stage")
+
+    # Intake is never blocked -- only settlement. The patron must still be
+    # able to register; the stage is what changes.
+    assert_equal "open", response.parsed_body.dig("registration", "lifecycle")
+  end
+
   test "privacy show returns only the authenticated account user's requests" do
     request_record = @user.privacy_requests.create!(request_type: "data_export", status: "pending", submitted_via: "web", requested_at: Time.current)
 
@@ -209,6 +252,13 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
     @temple.temple_events.create!(
       slug: "event-#{SecureRandom.hex(3)}", title: "Contract Event", starts_on: Date.current,
       ends_on: Date.current + 1.day, status: "published", price_cents: 0, currency: "TWD"
+    )
+  end
+
+  def create_priced_event
+    @temple.temple_events.create!(
+      slug: "paid-event-#{SecureRandom.hex(3)}", title: "Priced Contract Event", starts_on: Date.current,
+      ends_on: Date.current + 1.day, status: "published", price_cents: 50_000, currency: "TWD"
     )
   end
 

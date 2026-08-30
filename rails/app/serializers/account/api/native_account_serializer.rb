@@ -32,10 +32,23 @@ module Account
         }.compact
       end
 
-      def self.registration(registration)
+      # `delinquent:` is required rather than defaulted: forgetting it would
+      # report :awaiting_payment for a temple whose settlement is frozen,
+      # i.e. prompt the patron to pay when no payment can succeed. That is
+      # the one wrong answer here, so callers must state it.
+      #
+      # `lifecycle` (fulfillment_status) is kept alongside lifecycle_stage
+      # for the shipped build that already reads it. Additive only.
+      #
+      # Deliberately no `checkout_ready` field: lifecycle_stage already
+      # subsumes it (:awaiting_admin_completion is exactly !checkout_ready?),
+      # and native_account_contract_test asserts this payload carries no
+      # "checkout" or "provider_reference" surface at all.
+      def self.registration(registration, delinquent:)
         RegistrationSerializer.new(registration).as_json.merge(
           id: registration.id,
           lifecycle: registration.fulfillment_status,
+          lifecycle_stage: registration.lifecycle_stage(delinquent: delinquent),
           payment_state: registration.payment_status
         )
       end

@@ -40,13 +40,21 @@ function nativeError(status, body = {}) {
 
 const nameFor = user => user?.native_name || user?.english_name || user?.email || '';
 const mapDependent = item => ({ id: String(item.id), dependentId: item.dependent_id ? String(item.dependent_id) : String(item.id), name: item.native_name || item.english_name || '', relationship: item.relationship_label || '' });
+// TempleRegistration#lifecycle_stage. blocked_on_billing means the temple's
+// own platform billing is frozen -- never surfaced to the patron as such.
+const LIFECYCLE_STAGES = ['awaiting_admin_completion', 'awaiting_payment', 'awaiting_fulfilment', 'blocked_on_billing', 'fulfilled', 'cancelled'];
+const READ_ONLY_STAGES = ['fulfilled', 'cancelled'];
 const mapRegistration = item => {
   const offering = item.offering || {};
   const lifecycle = item.lifecycle || item.fulfillment_status || item.status || 'pending';
+  const stage = LIFECYCLE_STAGES.includes(item.lifecycle_stage) ? item.lifecycle_stage : null;
   return {
     id: String(item.id), offering: { id: offering.id ? String(offering.id) : '', slug: offering.slug || '', title: offering.title || '', account_action: offering.account_action || '', price_cents: offering.price_cents ?? item.unit_price_cents ?? 0, currency: offering.currency || item.currency || '' }, registrantName: item.registrant_name || '', registrantScope: item.registrant_scope || 'self', dependentId: item.dependent_id ? String(item.dependent_id) : null, quantity: item.quantity || 1, totalAmountCents: item.total_amount_cents ?? 0,
-    state: lifecycle, lifecycle, paymentState: item.payment_state || item.payment_status || null,
-    readOnly: ['completed', 'fulfilled', 'cancelled'].includes(lifecycle)
+    state: lifecycle, lifecycle, lifecycleStage: stage, paymentState: item.payment_state || item.payment_status || null,
+    // Prefer the six-state stage when the server sends it. The dummy adapter
+    // does not, so the coarse fallback stays for fixtures and for any build
+    // talking to an older server.
+    readOnly: stage ? READ_ONLY_STAGES.includes(stage) : ['completed', 'fulfilled', 'cancelled'].includes(lifecycle)
   };
 };
 function snapshotFromBootstrap(payload = {}) {
@@ -60,4 +68,4 @@ function snapshotFromBootstrap(payload = {}) {
   };
 }
 const collectionFrom = (payload, name) => payload?.[name] || [];
-module.exports = { nativeError, snapshotFromBootstrap, mapDependent, mapRegistration, nameFor, collectionFrom };
+module.exports = { LIFECYCLE_STAGES, READ_ONLY_STAGES, nativeError, snapshotFromBootstrap, mapDependent, mapRegistration, nameFor, collectionFrom };

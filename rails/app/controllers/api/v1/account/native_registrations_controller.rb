@@ -8,11 +8,11 @@ module Api
         before_action :set_registration, only: %i[show edit update]
 
         def index
-          render json: { registrations: registration_scope.includes(:registrable).order(created_at: :desc).map { |registration| ::Account::Api::NativeAccountSerializer.registration(registration) } }
+          render json: { registrations: registration_scope.includes(:registrable).order(created_at: :desc).map { |registration| ::Account::Api::NativeAccountSerializer.registration(registration, delinquent: native_temple_delinquent?) } }
         end
 
         def show
-          render json: { registration: ::Account::Api::NativeAccountSerializer.registration(@registration) }
+          render json: { registration: ::Account::Api::NativeAccountSerializer.registration(@registration, delinquent: native_temple_delinquent?) }
         end
 
         # Deliberately no billing-freeze gate on new/create, matching
@@ -34,11 +34,11 @@ module Api
           form = ::Account::RegistrationIntakeForm.new(user: current_native_user, offering:, params: intake_params)
           return render_validation_errors(form) unless form.save
           audit!("account.registrations.created", form.registration, intake_params.keys)
-          render json: { registration: ::Account::Api::NativeAccountSerializer.registration(form.registration) }, status: :created
+          render json: { registration: ::Account::Api::NativeAccountSerializer.registration(form.registration, delinquent: native_temple_delinquent?) }, status: :created
         end
 
         def edit
-          render json: { registration: ::Account::Api::NativeAccountSerializer.registration(@registration) }
+          render json: { registration: ::Account::Api::NativeAccountSerializer.registration(@registration, delinquent: native_temple_delinquent?) }
         end
 
         def update
@@ -47,7 +47,7 @@ module Api
           form = ::Account::RegistrationMetadataForm.new(registration: @registration, user: current_native_user, params: metadata_params)
           return render_validation_errors(form) unless form.save
           audit!("account.registrations.updated", @registration, metadata_params.keys)
-          render json: { registration: ::Account::Api::NativeAccountSerializer.registration(@registration) }
+          render json: { registration: ::Account::Api::NativeAccountSerializer.registration(@registration, delinquent: native_temple_delinquent?) }
         end
 
         private

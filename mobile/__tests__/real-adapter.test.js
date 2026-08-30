@@ -52,7 +52,7 @@ test('real adapter maps the complete account contract and never falls back to du
   const calls = []; const local = store(); const adapter = createRealAdapter({ config, store: local, transport: fixtureTransport(calls) });
   const signedIn = await adapter.signIn({ email: user.email, password: 'test-password' });
   assert.equal(adapter.kind, 'real'); assert.equal(adapter.network, 'local-test'); assert.equal(signedIn.profile.name, '林小安');
-  assert.deepEqual(signedIn.registrations[0], { id: '9', offering: { id: '1', title: '祈福', slug: 'prayer', account_action: 'event', price_cents: 1200, currency: 'TWD' }, registrantName: '', registrantScope: 'self', dependentId: null, quantity: 1, totalAmountCents: 1200, state: 'pending', lifecycle: 'pending', paymentState: 'unpaid', readOnly: false });
+  assert.deepEqual(signedIn.registrations[0], { id: '9', offering: { id: '1', title: '祈福', slug: 'prayer', account_action: 'event', price_cents: 1200, currency: 'TWD' }, registrantName: '', registrantScope: 'self', dependentId: null, quantity: 1, totalAmountCents: 1200, state: 'pending', lifecycle: 'pending', lifecycleStage: null, paymentState: 'unpaid', readOnly: false });
   await adapter.signUp({ email: user.email, password: 'test-password' });
   await adapter.recoverPassword({ email: user.email }); await adapter.resetPassword({ token: 'local-reset', password: 'test-password', password_confirmation: 'test-password' });
   await adapter.refresh(); assert.equal(adapter.snapshot().profile.email, user.email);
@@ -211,4 +211,37 @@ test('every resolution error code rails/app/controllers/api/v1/account/native_oa
   // The one the Director specifically asked about: must not imply whether
   // the email exists, matching the backend's own choice not to leak that.
   assert.doesNotMatch(nativeError(422, { code: 'existing_account_proof_failed' }).message, /no account|doesn't exist|not found/i);
+});
+
+test('lifecycle_stage drives the patron caption and never discloses the temple billing state', () => {
+  const { mapRegistration } = require('../app/real/response');
+  const { registrationCaption } = require('../app/account/screen_model');
+  const { copy } = require('../app/ui/copy');
+
+  const at = stage => mapRegistration({ id: 1, lifecycle: 'open', lifecycle_stage: stage });
+
+  // The stage reaches the client and read-only is derived from it, not from
+  // the coarse fulfillment_status.
+  assert.equal(at('awaiting_admin_completion').lifecycleStage, 'awaiting_admin_completion');
+  assert.equal(at('awaiting_payment').readOnly, false);
+  assert.equal(at('fulfilled').readOnly, true);
+  assert.equal(at('cancelled').readOnly, true);
+
+  // An unknown stage is rejected rather than passed through.
+  assert.equal(at('something_new').lifecycleStage, null);
+
+  for (const locale of ['zh-TW', 'en']) {
+    const t = copy[locale];
+    // The whole point: a patron cannot tell a frozen temple from a busy one.
+    assert.equal(
+      registrationCaption(t, at('blocked_on_billing')),
+      registrationCaption(t, at('awaiting_admin_completion')),
+      `${locale} must not disclose the billing freeze`
+    );
+    // A raw server state is never shown.
+    assert.equal(registrationCaption(t, mapRegistration({ id: 2, lifecycle: 'open' })), '');
+    for (const stage of ['awaiting_admin_completion', 'awaiting_payment', 'awaiting_fulfilment', 'fulfilled', 'cancelled']) {
+      assert.ok(registrationCaption(t, at(stage)).length > 0, `${locale}/${stage} needs copy`);
+    }
+  }
 });

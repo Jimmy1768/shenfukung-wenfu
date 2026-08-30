@@ -10,7 +10,7 @@ module Api
             user: ::Account::Api::NativeAccountSerializer.user(current_native_user),
             temple: ::Account::Api::NativeAccountSerializer.temple(current_native_temple),
             preferences: native_preferences(preference),
-            registrations: current_native_user.temple_event_registrations.where(temple: current_native_temple).includes(:registrable).order(created_at: :desc).limit(3).map { |r| ::Account::Api::NativeAccountSerializer.registration(r) },
+            registrations: current_native_user.temple_event_registrations.where(temple: current_native_temple).includes(:registrable).order(created_at: :desc).limit(3).map { |r| ::Account::Api::NativeAccountSerializer.registration(r, delinquent: native_temple_delinquent?) },
             certificates: current_native_user.temple_event_registrations.where(temple: current_native_temple).with_certificate_number.includes(:registrable).order(updated_at: :desc).limit(3).map { |r| ::Account::Api::CertificateSerializer.new(r).as_json }
           }
         end

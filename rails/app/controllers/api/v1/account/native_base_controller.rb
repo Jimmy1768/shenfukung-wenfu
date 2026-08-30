@@ -17,6 +17,14 @@ module Api
 
         attr_reader :current_native_user, :current_native_temple, :current_native_session
 
+        # Memoized per request: every native request is scoped to one temple,
+        # so this must not be recomputed per registration row.
+        def native_temple_delinquent?
+          return @native_temple_delinquent if defined?(@native_temple_delinquent)
+
+          @native_temple_delinquent = current_native_temple.payment_settlement_frozen?
+        end
+
         def force_json_format
           request.format = :json
         end
