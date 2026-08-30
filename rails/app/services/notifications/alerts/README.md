@@ -16,6 +16,28 @@ Top-level alerting helpers live under `services/notifications/alerts/`. These fi
 3. **Sidekiq hook**  
    Sidekiq errors are already wired through `Notifications::Alerts::SidekiqFailureHandler` via `config/initializers/sidekiq_notification_alerts.rb`. Add new event keys inside that handler if you want other job/drop-in alert flows.
 
+   Two things about that handler are easy to get wrong, both fixed 2026-08-28:
+
+   - **Sidekiq passes job details nested, or not at all.** A real job failure
+     arrives as `{context: "...", job: job_hash}` — class/args/jid/queue live
+     one level down at `context[:job]`, string-keyed because the payload is
+     JSON-derived, while the wrapping hash is symbol-keyed. An internal
+     failure with no job in flight (a Redis-unreachable fetch loop, say)
+     passes **no context at all**, defaulting to `{}` — which is truthy, so a
+     `return unless context` guard does not catch it. Reading `context[:class]`
+     at the top level, as the handler originally did, silently yielded
+     `"unknown"` for *every* failure, not just Redis ones.
+   - **Throttle keys must not collapse.** Job failures key on
+     `job_class + exception_class`; keying on job class alone means a new
+     failure mode hides behind an already-alerted one. Infra failures (no job)
+     key on exception class, so a blip and a sustained outage throttle
+     together — which is the suppression you want — without hiding an
+     unrelated infra failure behind them.
+
+   The handler is registered in Sidekiq's **3-argument** form. `Sidekiq::Config#handle_exception`
+   inspects the arity of the registered proc itself, so a 2-arg proc logs a
+   deprecation on every single invocation even if what it calls accepts three.
+
 4. **Extending throttling**  
    `AlertThrottler` stores keys in `Rails.cache` with a 5-minute TTL. Provide a custom `throttle_key` to `AlertSender` when the default (derived from `alert_key`) is too generic.
 

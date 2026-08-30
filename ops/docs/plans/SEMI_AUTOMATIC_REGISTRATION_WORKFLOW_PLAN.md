@@ -1,10 +1,17 @@
 # Semi-Automatic Registration Workflow Plan
 
 Status: item 1 (the registration-completion gate) implemented and shipped
-2026-08-23 -- see `ops/docs/reference/admin_portal.md` and
-`ops/docs/reference/account_portal.md` for the durable description of how
-it actually works. Items 2-4 below remain deferred, findings/design only,
-no phase authorized for their implementation.
+2026-08-23, and materially extended 2026-08-28 -- gatherings are no longer
+exempt, and the surrounding lifecycle now has queryable states, work queues,
+bulk completion, and a recordable fulfilment stage. See
+`ops/docs/reference/admin_portal.md` and
+`ops/docs/reference/account_portal.md` for the durable description of how it
+actually works; those are maintained, this is not.
+
+Item 2 (admin notification email) remains deferred and is now partly
+described by W2 of `PERSONAL_AND_OFFERING_DATA_CONTRACT_GAP_PLAN.md` as
+pipeline stage 7 -- `Notifications::DispatchEvent` exists with zero callers.
+Items 3-4 remain deferred, findings/design only, no phase authorized.
 
 Owner: Wenfu Planning / Director
 
@@ -100,9 +107,13 @@ what each depends on.
 Implemented 2026-08-23: `TempleRegistration#admin_completed_at` (set via
 `#mark_admin_completed!`, idempotent), gated only the patron's own
 `start_checkout` path per the Director's explicit confirmation below, and
-exempted gatherings entirely (no offering-specific fields to complete, no
-admin UI to ever clear the gate for one). Admin action lives on the
-registration's own show page. Full current-state description now lives in
+originally exempted gatherings (no offering-specific fields to complete, and
+at the time no admin UI to ever clear the gate for one). **That exemption
+was removed 2026-08-28** -- a gathering is a sub-type, not a separate flow,
+so it now follows the same pipeline; the completion path had to be built
+first, since removing the exemption alone would have made every gathering
+registration permanently unpayable. Admin action lives on the registration's
+own show page. Full current-state description now lives in
 `ops/docs/reference/admin_portal.md` and
 `ops/docs/reference/account_portal.md`; the design reasoning below is kept
 for context on items 2-4, which still depend on this.
@@ -190,6 +201,9 @@ inert, not urgent, and out of scope for this plan.
 
 ## Next Step
 
-Nothing here is authorized for implementation yet. Awaiting the
-Director's prioritization — most likely starting with (1), since (2),
-and arguably the value of (4), depend on it existing first.
+Item (1) is done and extended; see the Status note above. Items (2)-(4) are
+still unauthorized. (2) is the most likely next candidate and is tracked
+more precisely as stage 7 in
+`ops/docs/plans/PERSONAL_AND_OFFERING_DATA_CONTRACT_GAP_PLAN.md`, which
+records that the notification infrastructure already exists and needs only a
+caller.

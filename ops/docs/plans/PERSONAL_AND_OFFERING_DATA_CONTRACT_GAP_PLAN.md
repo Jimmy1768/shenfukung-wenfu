@@ -1,12 +1,24 @@
 # Personal And Offering Data — Contract Gap Plan
 
-Status: Planning-owned. Reviewed by OperatorKit Strategy; **W1, W2 and W4
-decided by the Director 2026-08-28**; W3 remains open pending the Shengfukung
-onboarding visit. No implementation, production-data, deployment, or account
-action is authorized by this document.
+Status: **W1, W2 and W4 are implemented and shipped** (2026-08-28, commits
+`f4a85f5`, `f76bffe`, `e96773c`, `4138cb1`, plus `9e9cbe3` for a FormSchema
+defect found during W4). **W3 remains open and unauthorized**, pending the
+Shengfukung onboarding visit, which is its input rather than its blocker.
 
-Drafted 2026-08-28, recorded against `main` at `dcd5493`. Decisions folded in
-the same day.
+This doc is retained ONLY for W3 and for the decision record. The durable
+description of what W1/W2/W4 actually built is maintained in
+`ops/docs/reference/admin_portal.md` and
+`ops/docs/reference/account_portal.md` — read those, not this. Per
+`ops/protocol/claude_work_mode.md`, plan docs drift and are not maintained;
+the shipped sections below are kept because their *decision reasoning* is
+still worth recovering, not because they describe current behavior.
+
+Reviewed by OperatorKit Strategy across three rounds. No implementation,
+production-data, deployment, or account action is authorized by this
+document; the implementation that happened was separately authorized by the
+Director directly.
+
+Drafted 2026-08-28, recorded against `main` at `dcd5493`.
 
 ## Purpose
 
@@ -91,6 +103,9 @@ sufficient, which is a different question from who may create one.
 ---
 
 ## W1 — Admin registration edits overwrite the patron's own profile
+
+**SHIPPED 2026-08-28 (`f4a85f5`).** Current behavior lives in
+`ops/docs/reference/account_portal.md`.
 
 **Rule 6. Severity: highest — active, silent, affects real data now. Effort:
 small.**
@@ -207,6 +222,10 @@ discussion. Rename to something payment-accurate (e.g.
 `platform_billing_delinquent?` or `payment_settlement_frozen?`).
 
 ## W2 — The registration lifecycle has no stage model or work queues
+
+**SHIPPED 2026-08-28 (`f76bffe`, `e96773c`).** Stage 7 (push notification)
+remains deliberately deferred. Current behavior lives in
+`ops/docs/reference/admin_portal.md`.
 
 **Rule 2. Severity: high — blocks the stated operating model at any real
 volume. Effort: moderate; two stages are unbuilt.**
@@ -509,6 +528,8 @@ queue, painful to retrofit.
 
 ## W3 — Person-level ritual data has no home in the live schema
 
+**OPEN — the only remaining workstream, and not authorized.**
+
 **Rules 1 and 5. Severity: high — gates onboarding the temple's most
 important offerings. Effort: largest of the four; likely multi-phase.**
 
@@ -592,6 +613,11 @@ against re-entering the data later.
 ---
 
 ## W4 — Durable facts and per-registration choices are stored identically
+
+**SHIPPED 2026-08-28 (`4138cb1`).** Current behavior lives in
+`ops/docs/reference/account_portal.md`. The `offerings:annotate_reuse`
+generator has NOT yet been run with `write` against the sandbox config, so
+every field still falls back to the `offer_as_options` constant default.
 
 **Rules 3 and 4. Severity: moderate — wrong data prepared, wrong list shown.
 Effort: small-to-moderate, but gated on per-field classification.**
