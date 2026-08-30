@@ -10,7 +10,7 @@ module Registrations
   # against one of the 4 real, currently-configured offerings specifically,
   # for the one field (phone) declared identically across all 4.
   class RealPilotTemplePhoneReuseTest < ActionDispatch::IntegrationTest
-    test "phone entered by a patron self-registering for a real pilot-temple offering is overwritten by an admin edit and reused for the next registration -- last write wins, cross surface" do
+    test "phone flows patron -> admin correction -> next registration prefill, cross surface, without ever touching the patron's own profile" do
       temple = create_temple(
         slug: "shengfukung-wenfu",
         metadata: {
@@ -51,11 +51,14 @@ module Registrations
       registration = offering.temple_event_registrations.order(:id).last
       assert registration.present?, "registration should have been created"
 
-      # phone is a reusable *account*-level default (Registrations::UserMetadataUpdater
-      # writes it to user.metadata directly) -- not offering-scoped like
-      # arrival_window/ritual_metadata, which live in Registrations::ReusableDefaults.
+      # phone is cached as account-level registration contact, NOT offering-scoped
+      # like arrival_window/ritual_metadata (those live in ReusableDefaults).
+      # Since 2026-08-28 it is namespaced away from the patron's own profile
+      # fields so staff can never silently rewrite them -- see
+      # Registrations::UserMetadataUpdater.
       patron.reload
-      assert_equal "0911111111", patron.metadata["phone"]
+      assert_equal "0911111111", patron.metadata.dig(Registrations::UserMetadataUpdater::NAMESPACE, "phone")
+      assert_nil patron.metadata["phone"], "a registration must not write the patron's own profile phone"
 
       # 2. Admin, assisting the same patron (in person / by phone), corrects
       #    that same registration's phone number.
@@ -68,11 +71,16 @@ module Registrations
       }
       assert_response :redirect
       patron.reload
-      assert_equal "0922222222", patron.metadata["phone"], "admin's correction should win -- last write wins, no conflicting-source error"
+      assert_equal "0922222222", patron.metadata.dig(Registrations::UserMetadataUpdater::NAMESPACE, "phone"),
+        "admin's correction should win within the registration-contact cache -- last write wins, no conflicting-source error"
+      assert_nil patron.metadata["phone"],
+        "the whole point of W1: an admin correction must never reach the patron's own profile"
 
       # 3. The *next* registration -- account surface this time, patron
       #    signing back in as themselves -- prefills the admin's corrected
-      #    value, not the patron's original one.
+      #    value, not the patron's original one -- read precedence is what
+      #    keeps rule 3 ("don't make an admin ask again") working now that
+      #    prefill no longer reads the profile.
       sign_in_account(patron, temple_slug: temple.slug)
       get new_account_registration_path(offering: offering.slug, account_action: "service")
       assert_response :success

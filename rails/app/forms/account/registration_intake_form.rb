@@ -61,9 +61,9 @@ module Account
       {
         registrant_scope: "self",
         contact_name: user&.native_name.presence || user&.english_name || metadata["contact_name"],
-        contact_phone: metadata["phone"],
+        contact_phone: Registrations::ReusableContact.read(user, :phone),
         contact_email: user&.email,
-        household_notes: metadata["notes"].presence || metadata["household_notes"]
+        household_notes: Registrations::ReusableContact.read(user, :notes).presence || metadata["household_notes"]
       }.compact
     end
 

@@ -147,7 +147,6 @@ module Admin
     helper_method :can_manage_admins?
 
     def patron_payload(user)
-      metadata = user.metadata || {}
       dependent_entries = user.user_dependents.includes(:dependent).map do |link|
         dependent = link.dependent
         dependent_metadata = dependent&.metadata || {}
@@ -166,8 +165,10 @@ module Admin
         email: user.email,
         dependents: dependent_entries.map { |entry| entry[:name] },
         dependent_entries: dependent_entries,
-        phone: metadata["phone"],
-        notes: metadata["notes"],
+        # Staff-facing "how do we reach them": prefers the most recently
+        # captured registration contact, falls back to the patron's profile.
+        phone: Registrations::ReusableContact.read(user, :phone),
+        notes: Registrations::ReusableContact.read(user, :notes),
         registration_defaults: reusable_defaults_for(user)
       }
     end
