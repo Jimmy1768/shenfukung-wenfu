@@ -1,9 +1,11 @@
 # Personal And Offering Data — Contract Gap Plan
 
-Status: first draft, Planning-owned. No implementation, production-data,
+Status: Planning-owned. Reviewed by OperatorKit Strategy; **W1 and W2
+decided by the Director 2026-08-28**. No implementation, production-data,
 deployment, or account action is authorized by this document.
 
-Drafted: 2026-08-28. Recorded against `main` at `dcd5493`.
+Drafted 2026-08-28, recorded against `main` at `dcd5493`. Decisions folded in
+the same day.
 
 ## Purpose
 
@@ -75,7 +77,7 @@ Each workstream stands on its own and can be dispatched independently.
 | Rule | Holds today? | Workstream |
 | --- | --- | --- |
 | 1. Personal data, optional | Partial — optionality holds; the field set does not cover real ritual needs | W3 |
-| 2. Truncated → pending → admin completes → payment | Partial — gate exists and works; no way to find pending work | W2 |
+| 2. Truncated → pending → admin completes → payment | Partial — 6 of 9 pipeline stages exist; no stage model, no queues | W2 |
 | 3. Save and prefill next time | Yes | — (W4 refines) |
 | 4. Per-registration data changes every time | No — not modeled; treated as durable | W4 |
 | 5. Patron creates dependents, admin cannot | Yes, exactly | — (W3 touches the shape) |
@@ -155,97 +157,232 @@ being written into the *patron's own* profile notes field in the first place.
 A fix that gives registration-scoped contact data its own home resolves the
 collision as a side effect.
 
-### Needs a Director decision
+### DECIDED 2026-08-28 — option (d)
 
 When an admin learns on the phone that a patron's number has genuinely
-changed, what should happen?
+changed, the registration writes to its **own namespace** and the patron
+reconciles later. The registration writes
+`metadata["registration_contact"]["phone"]` and never touches
+`metadata["phone"]`. On the patron's next profile visit: "a recent
+registration used a different number — keep yours, or update it?"
 
-- (a) Nothing — registration only; the patron updates their own profile.
-- (b) Prompt the admin explicitly ("also update this patron's profile?"),
-  audited as a distinct action.
-- (c) Update silently, as today.
-- (d) Write to a separate namespace and reconcile with the patron. The
-  registration writes `metadata["registration_contact"]["phone"]` and never
-  touches `metadata["phone"]`. On the patron's next profile visit: "a recent
-  registration used a different number — keep yours, or update it?"
+Options considered and rejected:
 
-(a) is the strictest reading of rule 6. (b) and (d) both preserve the
-phone-call workflow of rule 2 without silent mutation; they differ in **who
-decides**. (b) asks the admin; (d) asks the owner of the data.
+- **(a) registration only, never write anywhere reusable** — looks strictest
+  but breaks rule 3. Contact prefill reads `user.metadata`, so never writing
+  means the stale number returns next year and staff re-ask, which is the
+  exact friction rule 3 exists to remove.
+- **(b) prompt the admin ("also update this patron's profile?")** — honest,
+  but the admin is deciding about data they do not own, and under season
+  pressure a always-click-yes prompt degrades to (c) with an audit trail.
+- **(c) silent, as today** — the defect being fixed.
 
-(d) is the better fit for this system's own logic: rule 5 already establishes
-that dependents are patron-owned and staff may assist but not create. The same
-reasoning says patron profile data should be changed by the patron, not by
-staff on their behalf. (d) also subsumes the notes-collision fix above.
+Why (d): the clean split is that the temple **is** authoritative over "what
+number did we reach them at for this registration" and is **not**
+authoritative over "what is this person's phone number." That is the same
+ownership logic as rule 5 — staff assist, the owner decides.
 
-This plan does not assume which. Recommend putting (b) and (d) in front of the
-Director together.
+**Required with it:** a read-precedence rule (registration contact first,
+profile as fallback), because staff need a single answer when the two differ.
+Many of these patrons may never sign in, so the reconciliation prompt may
+rarely fire; precedence is what makes (d) satisfy rule 3 regardless.
 
----
+**Subsumes** the `dependents_notes`/`notes` collision above — both stop
+writing to the patron's profile `notes`.
 
-## W2 — The completion step has no work queue
+### Related: the gate method is now misnamed
+
+Not part of W1's fix, but discovered alongside it and belonging to whichever
+packet touches this code. `Temple#registration_intake_frozen?` no longer
+freezes registration intake — that was removed on 2026-08-28 when intake was
+separated from payment. Every remaining call site is a **payment** site:
+
+- `account/registrations_controller.rb:84` — patron online checkout (ECPay)
+- `admin/payments_controller.rb:75` — admin-initiated ECPay
+- `payments/cash_payment_recorder.rb:54` — admin recording patron cash
+
+The name actively misleads and has already caused one round of ambiguity in
+discussion. Rename to something payment-accurate (e.g.
+`platform_billing_delinquent?` or `payment_settlement_frozen?`).
+
+## W2 — The registration lifecycle has no stage model or work queues
 
 **Rule 2. Severity: high — blocks the stated operating model at any real
-volume. Effort: small-to-moderate.**
+volume. Effort: moderate; two stages are unbuilt.**
 
-### What already exists
+Expanded 2026-08-28: the Director restated rule 2 as a **nine-stage
+pipeline**, not a single pending-completion checkpoint. W2's scope grew
+accordingly.
 
-The Director noted uncertainty here ("I'm not sure if we have this level of
-detail"). The mechanism does exist and is live in production as of
-2026-08-28:
+### The Director's nine stages, mapped to code
 
-- `TempleRegistration#admin_completion_required?` — true for everything
-  except `TempleGathering` (`app/models/temple_registration.rb:121`)
-- `#admin_completed?`, `#checkout_ready?`, `#mark_admin_completed!`
-- `Admin::OfferingOrdersController#complete` — the explicit staff checkpoint,
-  audited as `temple.registration.admin_completed`
-- Patron-side: `Account::RegistrationsController#start_checkout` refuses
-  checkout unless `checkout_ready?`; the payment page shows a calm
-  "the temple is reviewing your registration" state.
+| Stage | Exists | Evidence |
+| --- | --- | --- |
+| 1. Patron starts a registration | yes | `Account::RegistrationsController#create` |
+| 2. Payment not allowed immediately | yes | `checkout_ready?`, built 2026-08-28 |
+| 3. Admin starts one; both paths converge | yes | both create the same `TempleRegistration` |
+| 4. Delinquency gate | yes, but sited at stages 7–8 | see resolution below |
+| 5. Admin completes the form | yes | edit/update path |
+| 6. Admin publishes; unlocks patron payment | yes | `mark_admin_completed!` |
+| 7. Patron notified (push) | **no** | `Notifications::DispatchEvent` has zero callers |
+| 8. Payment done, registration finalized | yes | `mark_paid!` |
+| 9. Admin fulfilment action | **no** | `"fulfilled"` is never assigned anywhere |
 
-So the pipeline the Director described — patron submits truncated → pending →
-admin completes → payment opens — is real, not aspirational.
+Six of nine exist. Stages 7 and 9 are unbuilt, and stage 4 sits elsewhere.
 
-### What is missing
+The Director has explicitly deferred stage 7 (push) as a later phase — the
+underlying pipeline lands first. It is recorded here as a known absence, not
+as in-scope work.
 
-An admin cannot **find** the registrations waiting on them — and the problem
-is worse than a missing filter (sharpened by review).
+### Three findings behind those gaps
 
-- `admin_completed_at` surfaces only as a status pill on an individual
-  registration's show page (`app/views/admin/offering_orders/show.html.erb:77`).
-- `TempleRegistration.admin_filtered` (`app/models/temple_registration.rb:58`)
-  supports offering type/id, payment method, paid/unpaid status, text query,
-  and a date range — **no completion filter**.
-- The `status` filter accepts exactly two values: `paid` and `unpaid`.
+1. **Stage 9 has a column and no workflow.** `FULFILLMENT_STATUSES` defines
+   `open`/`fulfilled`/`cancelled`, but nothing in `app/` ever assigns
+   `fulfilled`. A registration is `open` at creation and only ever becomes
+   `cancelled` via expiry. Lighting the lantern, arranging the ritual,
+   printing certificates — none of it is recordable today.
+2. **Stage 7's plumbing is complete and entirely unused.**
+   `Notifications::DispatchEvent` supports push, email, and in-app delivery
+   with per-channel rules and notification records; nothing calls it. When
+   this phase arrives it is a caller, not a build.
+3. **The dashboard already reports a misleading "pending" count.**
+   `admin/dashboard_controller.rb:16` computes it as
+   `fulfillment_status: open` — every non-cancelled registration, at any
+   stage. It should be **replaced**, not supplemented.
 
-That last point is the real finding. A registration awaiting admin completion
-is not merely *unfiltered* — it is **camouflaged inside the largest bucket on
-the page**, sitting in `unpaid` alongside every registration that is fully
-complete and simply not yet paid by the patron.
+### The state model the nine stages imply
 
-With a handful of demo registrations this is invisible. With a real temple in
-lamp-lighting season, a registration nobody completes is a registration the
-patron can never pay for, and it is indistinguishable from one that is
-correctly waiting on the patron.
+The stages mix actor-actions with system-gates. The underlying **states**
+collapse to six, and only two are admin work queues:
+
+| State | Blocked on | Surface |
+| --- | --- | --- |
+| Created, not completed | **us** | queue: "needs completion" |
+| Completed, temple delinquent | **the owner** | alert, not a queue |
+| Completed, awaiting patron payment | them | informational |
+| Paid, not fulfilled | **us** | queue: "needs fulfilment" |
+| Fulfilled | — | — |
+| Cancelled / expired | — | — |
 
 ### What is needed
 
-Two things, not one:
+- **Derive the stage; do not add a status column.** `admin_completed_at` +
+  `payment_status` + `fulfillment_status` + temple delinquency already
+  determine all six states. A derived `stage` method plus scopes gives one
+  shared vocabulary with no migration, and each queue becomes a scope.
+- **Add stage 9's transition** — `mark_fulfilled!`, an admin action, and an
+  audit event. This is the only genuinely new persistence, because nothing
+  sets `fulfilled` today.
+- **Replace the dashboard's "pending" count** with per-stage counts that
+  distinguish "waiting on us" from "waiting on them."
+- **Expanded status vocabulary** — the existing paid/unpaid pair cannot
+  express the distinction, so any surface built on it merges the two.
 
-1. A completion filter in `admin_filtered`.
-2. A status vocabulary that can express **"waiting on us" vs "waiting on
-   them."** The current two-value paid/unpaid cannot represent that
-   distinction at all, so a filter alone would still leave the two states
-   visually merged wherever status is displayed.
+Recommended surfaces, in order: expanded vocabulary (substrate) → dashboard
+counts (the arrive-in-the-morning view) → filter chips on the existing orders
+index (where staff work through it). **Not** a separate screen: registrations
+already live in orders, and a second location fragments the work.
 
-Surfaced as a default-visible "awaiting completion" grouping with a count.
-This is the operational half of a mechanism that is otherwise finished.
+### RESOLVED — stage 4 is a visibility state, not a block
+
+The Director's numbering places the delinquency gate before admin completion.
+In code it sits at payment, which was a deliberate decision earlier the same
+day: intake and admin work always flow; only money is blocked, so unpayable
+registrations accumulate as pressure on the owner.
+
+Keep the gate at payment. Rationale: work that *can* be done should be done.
+With the gate at payment, a temple that clears its bill drains the queue
+instantly. With the gate at completion, they clear the bill and then face a
+backlog of unstarted forms — the delinquency cost would land on staff and
+patrons instead of the owner.
+
+Stage 4 is therefore modelled as a **distinct visible state**
+("blocked on billing"), not as a barrier.
+
+### Which payment the gate blocks — the two money flows are not symmetric
+
+Recorded because this was ambiguous in discussion and the method name makes
+it worse (see W1's rename note):
+
+- **Trigger** — the *temple's* delinquency to SourceGrid (Stripe platform
+  billing; 21 days = 7 overdue + 14 grace, per
+  `Billing::PlatformBillingLifecycle`).
+- **Blocked** — the *patron's* payment to the temple, on **both** rails.
+
+One relationship's delinquency blocks a different relationship's money flow.
+That is the intended leverage.
+
+### DECIDED — both settlement rails stay blocked
+
+There are exactly two settlement actions, and both are things the system
+performs: processing an ECPay webhook, and an admin pressing "cash received."
+Both converge on the same state. Both remain blocked while delinquent.
+
+Considered and rejected: blocking only the automated rail. Three reasons the
+symmetric version is correct:
+
+1. **Blocking only ECPay leaves a free bypass.** A delinquent temple would
+   simply mark everything "cash received" and operate indefinitely. The gate
+   would not hold.
+2. **Unrecorded physical cash is not a harm the system creates.** The
+   transaction happens outside the system; a temple could always take cash
+   without recording it. The button records an external event, it does not
+   control it.
+3. **The patron-facing cost is avoidable by the temple.** Staff may accept
+   the cash and settle the record once billing clears. Whether they accept
+   cash is a temple operating decision, not a platform concern — TempleMate
+   is a productivity tool, not the temple's manager.
+
+An earlier concern — that blocking cash recording forces staff to refuse
+money at the desk or keep paper records — was raised and withdrawn. It
+assumed the system had control over the physical transaction, and it assumed
+refusal rather than deferred recording.
+
+### DECIDED — patron-facing copy is deliberately vague
+
+The patron is not owed a status report on the temple's internal state.
+Current copy narrates machinery the patron has no stake in, and in one case
+can be flatly wrong (a patron who paid cash during a freeze still reads
+"unpaid").
+
+The rule: **be vague wherever the patron has nothing to do; be specific and
+actionable wherever they do.**
+
+| Patron's situation | Can they act? | Copy |
+| --- | --- | --- |
+| Admin has not completed it | no | vague |
+| Temple delinquent, payment blocked | no | vague |
+| Paid cash, record not yet updated | no | vague |
+| Ready to pay online | yes | specific, with CTA |
+| Temple is cash-only (no ECPay configured) | yes — visit the temple | specific |
+| Paid / refunded / free | — | terminal fact, unchanged |
+
+The first three collapse into one message. Both current messages leak:
+
+- `online_payments_frozen_notice` — 「您的報名資料已收到，**付款開放後**我們會通知您。」
+  hints at a payment problem.
+- `awaiting_admin_completion_notice` — 「**廟方正在確認**您的報名資料，確認完成後即可**開放線上付款**。」
+  narrates the admin's internal step.
+
+Proposed replacement for all three states:
+**「已收到您的報名，廟方正在處理中。」** — true in every one of them, promises
+nothing, reveals nothing. The existing helper line
+「您這邊暫時不需要做任何事，請放心等候。」 fits and stays.
+
+Deliberate asymmetry, not an oversight: this vagueness is **patron-facing
+only**. The admin side needs the opposite — the whole point of the stage
+model above is that staff see exactly which state a registration is in.
+
+Do not mention payment methods in the vague message. Admin cash recording is
+blocked by delinquency but **not** by the completion gate, so "you may pay in
+person" is true while awaiting completion and false while delinquent.
 
 ### Needs a Director decision
 
-Should "awaiting completion" be its own admin screen, a filter chip on the
-existing orders index, or a dashboard card with a count? All three are cheap;
-the choice is about where staff will actually look during a busy season.
+Whether the gathering carve-out survives. `admin_completion_required?` returns
+**false** for `TempleGathering`, so 社群活動 skip stages 5–6 and become payable
+immediately. That is the existing deliberate exception for free/simple
+community events, but rule 2 as restated reads as universal.
 
 ---
 
@@ -468,17 +605,21 @@ placeholder or simply no selection.
 
 ## Cross-cutting open questions
 
-1. W1: which of (a)/(b)/(c)/(d) governs an admin learning a genuinely changed
-   phone number. (b) and (d) are the live candidates.
-2. W2: where the pending-completion queue lives, and what the expanded status
-   vocabulary should be called in patron-neutral terms.
+1. ~~W1: which option governs an admin learning a changed phone number.~~
+   **Decided: (d)**, separate namespace plus patron reconciliation.
+2. ~~W2: where the queue lives; how the delinquency gate is sited; whether
+   both settlement rails stay blocked; patron-facing disclosure.~~
+   **Decided**, four ways — see W2. One sub-question remains open: whether
+   the gathering carve-out from admin completion survives.
 3. W3: whether repeatable person lists gate the first real onboarding.
 4. W4: per-(offering, field) reuse classification across the four live
    offerings.
 
-Questions 1, 2 and 4 are small and unblock their workstreams immediately.
-Question 3 is a scope decision about the first real client and may reasonably
-wait for the Shengfukung onboarding visit.
+Question 4 is small and unblocks its workstream immediately. Question 3 is a
+scope decision about the first real client; the Shengfukung onboarding visit
+is an **input** to it rather than blocked by it — the visit is where the
+offerings spec finally gets filled in, and that spec is what W3's schema
+design needs.
 
 ## Explicit non-goals
 
@@ -503,10 +644,15 @@ dispatchable:
   registration-scoped contact data is unaffected; the
   `dependents_notes`/`notes` destination collision is resolved; covered by
   tests.
-- **W2**: an admin can see, from a default-visible surface, every
-  registration awaiting completion, with a count, **distinguishable from
-  registrations that are complete and merely awaiting patron payment**;
-  covered by tests.
+- **W2**: a derived stage model expresses all six states over existing
+  columns with no migration; `mark_fulfilled!` plus an audited admin action
+  exists for stage 9; the misleading dashboard "pending" count is replaced by
+  per-stage counts; an admin can see, from a default-visible surface, both
+  work queues ("needs completion", "needs fulfilment") with counts,
+  distinguishable from registrations merely awaiting patron payment and from
+  those blocked on billing; patron-facing copy collapses the three
+  non-actionable states into one vague message while leaving actionable
+  states specific; covered by tests.
 - **W3**: scoped and sequenced as an extension of the offering-spec plans,
   dispatched as schema-then-form packets, with the first-onboarding scope
   decision recorded.
