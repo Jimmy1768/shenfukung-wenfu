@@ -344,6 +344,17 @@ module Admin
     # offering-specific fields for an admin to complete (see
     # ops/docs/plans/SEMI_AUTOMATIC_REGISTRATION_WORKFLOW_PLAN.md), so the
     # "complete" route only exists for events/services.
+    def fulfil_admin_offering_order_path_for(offering, registration)
+      case offering
+      when TempleService
+        fulfil_admin_service_offering_order_path(offering, registration)
+      when TempleGathering
+        fulfil_admin_gathering_offering_order_path(offering, registration)
+      else
+        fulfil_admin_event_offering_order_path(offering, registration)
+      end
+    end
+
     def complete_admin_offering_order_path_for(offering, registration)
       case offering
       when TempleService

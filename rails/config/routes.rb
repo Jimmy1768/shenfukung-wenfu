@@ -106,7 +106,8 @@ Rails.application.routes.draw do
         controller: "offering_orders",
         defaults: { offering_kind: "events" },
         only: %i[index new create show edit update] do
-        member { post :complete }
+        member { post :complete; post :fulfil }
+        collection { post :complete_many }
       end
     end
     resources :services, controller: "services" do
@@ -115,7 +116,8 @@ Rails.application.routes.draw do
         controller: "offering_orders",
         defaults: { offering_kind: "services" },
         only: %i[index new create show edit update] do
-        member { post :complete }
+        member { post :complete; post :fulfil }
+        collection { post :complete_many }
       end
     end
     resources :gatherings, controller: "gatherings", except: :show do
@@ -124,7 +126,8 @@ Rails.application.routes.draw do
         controller: "offering_orders",
         defaults: { offering_kind: "gatherings" },
         only: %i[index new create show edit update] do
-        member { post :complete }
+        member { post :complete; post :fulfil }
+        collection { post :complete_many }
       end
     end
     resources :registrations, only: :index

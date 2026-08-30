@@ -24,6 +24,12 @@
               method: :post,
               class: "btn btn-secondary" %>
       <% end %>
+      <% if @registration.admin_completed? && !@registration.fulfilled? && (@registration.paid? || @registration.no_payment_required?) %>
+        <%= button_to t("admin.registration_show.actions.mark_fulfilled"),
+              fulfil_admin_offering_order_path_for(@offering, @registration),
+              method: :post,
+              class: "btn btn-secondary" %>
+      <% end %>
       <% if current_admin_permissions&.allow?(:record_cash_payments) && !@registration.paid? %>
         <%= link_to t("admin.registration_show.actions.record_cash"),
           new_admin_payment_path(registration_id: @registration.id),

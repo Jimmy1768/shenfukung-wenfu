@@ -13,7 +13,7 @@ module Admin
     before_action :require_manage_registrations!
     before_action :set_offering_kind
     before_action :set_offering
-    before_action :set_registration, only: %i[show edit update complete]
+    before_action :set_registration, only: %i[show edit update complete fulfil]
     before_action :redirect_gathering_edits!, only: %i[edit update]
 
     def index
@@ -148,7 +148,65 @@ module Admin
       redirect_to offering_order_path(@offering, @registration), notice: t("admin.offering_orders.flash.completed")
     end
 
+    # Stage 9: the temple has actually performed the offering -- lit the
+    # lantern, arranged the ritual, printed the certificate. Until now
+    # fulfillment_status carried a "fulfilled" value that nothing ever
+    # assigned, so the last stage of the pipeline was unrecordable.
+    def fulfil
+      if @registration.mark_fulfilled!
+        SystemAuditLogger.log!(
+          action: "temple.registration.fulfilled",
+          admin: current_admin,
+          target: @registration,
+          temple: current_temple,
+          metadata: {
+            source: "admin_offering_orders",
+            offering_id: @offering.id,
+            registrable_type: @registration.registrable_type,
+            registration_id: @registration.id
+          }
+        )
+      end
+      redirect_to offering_order_path(@offering, @registration), notice: t("admin.offering_orders.flash.fulfilled")
+    end
+
+    # Bulk completion exists because free gatherings unlock nothing on
+    # completion -- it is purely an attendance confirmation -- yet they still
+    # enter the queue. A 200-signup community event would otherwise be 200
+    # individual clicks.
+    def complete_many
+      scope = @offering.temple_event_registrations.awaiting_admin_completion
+      scope = scope.where(id: params[:registration_ids]) if params[:registration_ids].present?
+      completed = scope.select { |registration| registration.mark_admin_completed! }
+
+      if completed.any?
+        SystemAuditLogger.log!(
+          action: "temple.registration.admin_completed_bulk",
+          admin: current_admin,
+          target: @offering,
+          temple: current_temple,
+          metadata: {
+            source: "admin_offering_orders",
+            offering_id: @offering.id,
+            registration_ids: completed.map(&:id),
+            count: completed.size
+          }
+        )
+      end
+
+      redirect_to offering_orders_path(@offering),
+        notice: t("admin.offering_orders.flash.completed_bulk", count: completed.size)
+    end
+
     private
+
+    def offering_orders_path(offering)
+      case offering
+      when TempleService then admin_service_offering_orders_path(offering)
+      when TempleGathering then admin_gathering_offering_orders_path(offering)
+      else admin_event_offering_orders_path(offering)
+      end
+    end
 
     def set_offering_kind
       @offering_kind = params[:offering_kind]&.to_sym

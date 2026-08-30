@@ -69,7 +69,9 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     follow_redirect!
     assert_response :success
     refute_includes response.body, "前往付款"
-    assert_includes response.body, "廟方正在確認您的報名資料"
+    # Deliberately vague: the patron cannot act in this state, so the copy
+    # does not narrate the temple's internal step (or its billing).
+    assert_includes response.body, "已收到您的報名，廟方正在處理中。"
     assert_includes response.body, offering.title
     assert_includes response.body, api_v1_account_payment_status_path(reference: registration.reference_code)
 
@@ -638,7 +640,7 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
     get payment_account_registration_path(registration)
 
     assert_response :success
-    assert_includes response.body, "您的報名資料已收到，付款開放後我們會通知您。"
+    assert_includes response.body, "已收到您的報名，廟方正在處理中。"
     refute_includes response.body, "前往付款"
 
     assert_no_difference -> { registration.temple_payments.count } do
@@ -647,7 +649,7 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to payment_account_registration_path(registration)
     follow_redirect!
-    assert_includes response.body, "您的報名資料已收到，付款開放後我們會通知您。"
+    assert_includes response.body, "已收到您的報名，廟方正在處理中。"
   end
 
   test "repeat-enabled service allows multiple registrations for the same user" do

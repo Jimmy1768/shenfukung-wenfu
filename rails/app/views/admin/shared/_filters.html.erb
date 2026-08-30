@@ -86,7 +86,11 @@
     <div class="filter-status-chips">
       <span class="filter-label"><%= t("admin.filters.status.label") %></span>
       <div class="filter-chip-row">
+        <%# Lifecycle chips come first: "waiting on us" must be reachable
+            without being camouflaged inside the unpaid bucket. %>
         <% {
+          "awaiting_completion" => t("admin.filters.status.awaiting_completion"),
+          "awaiting_fulfilment" => t("admin.filters.status.awaiting_fulfilment"),
           "unpaid" => t("admin.filters.status.unpaid"),
           TempleEventRegistration::PAYMENT_STATUSES[:paid] => t("admin.filters.status.paid")
         }.each do |value, label| %>

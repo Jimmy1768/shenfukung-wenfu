@@ -19,7 +19,9 @@ module Registrations
       get payment_account_registration_path(registration)
       assert_response :success
       refute_includes response.body, "前往付款"
-      assert_includes response.body, "廟方正在確認您的報名資料"
+      # Deliberately vague: the patron cannot act in this state, so the copy
+    # does not narrate the temple's internal step (or its billing).
+    assert_includes response.body, "已收到您的報名，廟方正在處理中。"
 
       assert_no_difference -> { registration.temple_payments.count } do
         post start_checkout_account_registration_path(registration)
@@ -120,5 +122,20 @@ module Registrations
       assert_response :success
       assert_includes response.body, "前往付款"
     end
+
+    test "the three non-actionable states are indistinguishable to the patron" do
+      # W2: be vague wherever the patron has nothing to do; specific only
+      # where they can act. Narrating internal state leaks the temple's
+      # billing problem and can be flatly wrong (a patron who paid cash
+      # during a freeze still reads "unpaid").
+      vague = I18n.t("account.registrations.payment.awaiting_admin_completion_notice", locale: :"zh-TW")
+
+      assert_equal vague, I18n.t("account.registrations.payment.online_payments_frozen_notice", locale: :"zh-TW")
+      assert_equal vague, I18n.t("account.registrations.payment.online_payments_frozen", locale: :"zh-TW")
+      refute_includes vague, "帳務", "must not reveal the temple's billing state"
+      refute_includes vague, "付款開放", "must not hint at a payment problem"
+      refute_includes vague, "確認完成後", "must not narrate the admin's internal step"
+    end
+
   end
 end

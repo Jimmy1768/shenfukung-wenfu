@@ -41,6 +41,38 @@ class TempleRegistration < ApplicationRecord
   before_validation :clear_expires_at_when_not_pending
 
   scope :recent, -> { order(created_at: :desc) }
+
+  # --- Lifecycle stages -------------------------------------------------
+  #
+  # The Director's nine-stage pipeline collapses to six STATES, of which only
+  # two are admin work queues. These are plain scopes rather than a derived
+  # Ruby method on purpose: the whole reason this exists is that pending work
+  # was unfindable at volume, and a state you cannot filter, sort, index or
+  # paginate on solves that with a mechanism that reproduces it.
+  #
+  # Temple delinquency is deliberately NOT part of these scopes. It is a
+  # property of the temple, not of a registration, and every admin queue is
+  # already scoped to one temple -- so it relabels a set of rows
+  # ("awaiting payment" vs "blocked on billing") rather than selecting a
+  # different set. Keeping it out is what lets all six express as SQL without
+  # a JSON/association/time-arithmetic join.
+  scope :awaiting_admin_completion, -> { where(admin_completed_at: nil, fulfillment_status: FULFILLMENT_STATUSES[:open]) }
+  scope :admin_completed, -> { where.not(admin_completed_at: nil) }
+  scope :awaiting_payment, lambda {
+    admin_completed
+      .where(fulfillment_status: FULFILLMENT_STATUSES[:open])
+      .where("total_price_cents > 0")
+      .where.not(payment_status: PAYMENT_STATUSES[:paid])
+  }
+  # Free registrations never reach a payment step, so completion is the last
+  # thing standing between them and fulfilment.
+  scope :awaiting_fulfilment, lambda {
+    admin_completed
+      .where(fulfillment_status: FULFILLMENT_STATUSES[:open])
+      .where("total_price_cents = 0 OR payment_status = ?", PAYMENT_STATUSES[:paid])
+  }
+  scope :fulfilled, -> { where(fulfillment_status: FULFILLMENT_STATUSES[:fulfilled]) }
+  scope :cancelled, -> { where(fulfillment_status: FULFILLMENT_STATUSES[:cancelled]) }
   scope :with_status, ->(status) { where(payment_status: status) }
   scope :active_for_capacity, -> { where.not(fulfillment_status: FULFILLMENT_STATUSES[:cancelled]) }
   scope :expired_pending_payment_holds, lambda { |now = Time.current|
@@ -66,7 +98,19 @@ class TempleRegistration < ApplicationRecord
     if filters[:payment_method].present?
       scope = scope.left_outer_joins(:temple_payments).where(temple_payments: { payment_method: filters[:payment_method] })
     end
+    # The lifecycle stages come first and are deliberately distinct from
+    # paid/unpaid. Before this, a registration awaiting the temple's own
+    # review was not merely unfiltered -- it sat inside "unpaid" alongside
+    # every registration that was complete and simply waiting on the patron,
+    # which is the largest bucket on the page. "Waiting on us" and "waiting
+    # on them" were indistinguishable.
     case filters[:status]
+    when "awaiting_completion"
+      scope = scope.awaiting_admin_completion
+    when "awaiting_fulfilment"
+      scope = scope.awaiting_fulfilment
+    when "fulfilled"
+      scope = scope.fulfilled
     when PAYMENT_STATUSES[:paid]
       scope = scope.where(payment_status: PAYMENT_STATUSES[:paid])
     when "unpaid"
@@ -100,6 +144,35 @@ class TempleRegistration < ApplicationRecord
     return "no_payment_required" if no_payment_required?
 
     payment_status
+  end
+
+  def fulfilled?
+    fulfillment_status == FULFILLMENT_STATUSES[:fulfilled]
+  end
+
+  # Stage 9: the temple has actually done the thing -- lit the lantern,
+  # arranged the ritual, printed the certificate. Idempotent and boolean-
+  # returning like mark_admin_completed!, so callers can avoid logging a
+  # spurious audit event for an already-fulfilled record.
+  def mark_fulfilled!(now = Time.current)
+    return false if fulfilled?
+    return false unless fulfillment_status == FULFILLMENT_STATUSES[:open]
+
+    update!(fulfillment_status: FULFILLMENT_STATUSES[:fulfilled], fulfilled_at: now)
+    true
+  end
+
+  # Which of the six lifecycle states this registration is in. Derived for
+  # DISPLAY only -- the scopes above are the queryable authority, and this
+  # must stay consistent with them. `delinquent:` is passed in by the caller
+  # because it is a temple-level fact, not a per-row one.
+  def lifecycle_stage(delinquent: false)
+    return :cancelled if fulfillment_status == FULFILLMENT_STATUSES[:cancelled]
+    return :fulfilled if fulfilled?
+    return :awaiting_admin_completion unless admin_completed?
+    return :awaiting_fulfilment if no_payment_required? || paid?
+
+    delinquent ? :blocked_on_billing : :awaiting_payment
   end
 
   def mark_paid!

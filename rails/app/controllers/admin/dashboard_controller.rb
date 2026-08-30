@@ -13,7 +13,15 @@ module Admin
         .having("MIN(temple_registrations.created_at) >= ?", month_start)
         .count
         .size
-      pending_registrations_count = registrations.where(fulfillment_status: open_status).count
+      # Replaced, not renamed. This metric used to be
+      # `where(fulfillment_status: open_status)` -- i.e. every non-cancelled
+      # registration at any stage -- which told an admin nothing. The two
+      # numbers that matter are the ones where the temple is the blocker.
+      awaiting_completion_count = registrations.awaiting_admin_completion.count
+      awaiting_fulfilment_count = registrations.awaiting_fulfilment.count
+      # Same rows as "awaiting payment"; delinquency only changes the label,
+      # since it is a temple-level fact rather than a per-registration one.
+      blocked_on_billing_count = current_temple.registration_intake_frozen? ? registrations.awaiting_payment.count : 0
       unpaid_registrations_count = registrations
         .where(fulfillment_status: open_status)
         .where("total_price_cents > 0")
@@ -37,11 +45,14 @@ module Admin
 
       @metrics = [
         { label: I18n.t("admin.dashboard.metrics.entries.new_patrons_mtd"), value: new_patrons_month_count },
-        { label: I18n.t("admin.dashboard.metrics.entries.pending_registrations"), value: pending_registrations_count },
+        { label: I18n.t("admin.dashboard.metrics.entries.awaiting_completion"), value: awaiting_completion_count },
         { label: I18n.t("admin.dashboard.metrics.entries.unpaid_registrations"), value: unpaid_registrations_count },
         { label: I18n.t("admin.dashboard.metrics.entries.revenue_mtd"), value: Currency::Symbols.format_amount(month_revenue_cents, "TWD") }
       ]
       @queue_metrics = [
+        { label: I18n.t("admin.dashboard.metrics.entries.awaiting_completion"), value: awaiting_completion_count },
+        { label: I18n.t("admin.dashboard.metrics.entries.awaiting_fulfilment"), value: awaiting_fulfilment_count },
+        { label: I18n.t("admin.dashboard.metrics.entries.blocked_on_billing"), value: blocked_on_billing_count },
         { label: I18n.t("admin.dashboard.metrics.entries.expiring_unpaid_holds_24h"), value: expiring_unpaid_holds_count },
         { label: I18n.t("admin.dashboard.metrics.entries.open_assistance_requests"), value: open_assistance_requests_count }
       ].select { |metric| metric[:value].to_i.positive? }
