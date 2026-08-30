@@ -377,12 +377,50 @@ Do not mention payment methods in the vague message. Admin cash recording is
 blocked by delinquency but **not** by the completion gate, so "you may pay in
 person" is true while awaiting completion and false while delinquent.
 
-### Needs a Director decision
+### DECIDED — the gathering carve-out is removed
 
-Whether the gathering carve-out survives. `admin_completion_required?` returns
-**false** for `TempleGathering`, so 社群活動 skip stages 5–6 and become payable
-immediately. That is the existing deliberate exception for free/simple
-community events, but rule 2 as restated reads as universal.
+A gathering is a **sub-type, not a separate registration flow**. It follows
+the same nine-stage pipeline; the only difference is that it carries no
+offering data to fill in. Payment remains blocked while delinquent, exactly
+as for every other type.
+
+So `admin_completion_required?` becomes universal. Today it returns **false**
+for `TempleGathering`, letting 社群活動 skip stages 5–6 and become payable
+immediately.
+
+The existing code already agrees with this framing more than the carve-out
+did: `Registrations::LifecyclePolicy#gathering_editable?` returns false for
+any persisted gathering registration, so gathering fields are **already
+read-only after creation**. Stage 5 therefore has nothing to edit and the
+admin's action is purely stage 6 — review and publish. That is consistent,
+not a conflict. The delinquency gate is likewise already uniform:
+`registration_intake_frozen?` never inspects registrable type.
+
+What removing the carve-out touches:
+
+| Element | Today | Required |
+| --- | --- | --- |
+| `TempleRegistration#admin_completion_required?` | `registrable_type != TempleGathering.name` | always true |
+| Routes | `member { post :complete }` on events/services only (`config/routes.rb:109,118`) | add for gatherings |
+| `complete_admin_offering_order_path_for` | no gathering case; falls through to the **event** path | add gathering case |
+| `redirect_gathering_edits!` | `only: %i[edit update]` | unchanged — `complete` is not in it |
+
+The third row is a latent defect independent of this decision: a gathering
+currently generates an *event* completion URL via the `else` branch.
+
+**Simplification that falls out.** If completion is universal,
+`admin_completion_required?` no longer earns its existence and
+`checkout_ready?` collapses to `admin_completed?`. Prefer removing the
+concept over making it return a constant.
+
+**Operational consequence — decide with the queue, not after it.** Free
+gatherings have no payment step, so completion for them unlocks nothing; it
+is purely an attendance confirmation. They will still enter the "needs
+completion" queue, and a 200-signup free community event becomes 200 clicks.
+This does not argue for restoring the carve-out — the confirmation is real
+work, not ceremony — but it does make **bulk-complete** a first-class
+requirement of the W2 queue rather than a later addition. Cheap alongside the
+queue, painful to retrofit.
 
 ---
 
@@ -608,9 +646,9 @@ placeholder or simply no selection.
 1. ~~W1: which option governs an admin learning a changed phone number.~~
    **Decided: (d)**, separate namespace plus patron reconciliation.
 2. ~~W2: where the queue lives; how the delinquency gate is sited; whether
-   both settlement rails stay blocked; patron-facing disclosure.~~
-   **Decided**, four ways — see W2. One sub-question remains open: whether
-   the gathering carve-out from admin completion survives.
+   both settlement rails stay blocked; patron-facing disclosure; whether the
+   gathering carve-out survives.~~ **Decided**, five ways — see W2. No W2
+   questions remain open.
 3. W3: whether repeatable person lists gate the first real onboarding.
 4. W4: per-(offering, field) reuse classification across the four live
    offerings.
@@ -650,9 +688,12 @@ dispatchable:
   per-stage counts; an admin can see, from a default-visible surface, both
   work queues ("needs completion", "needs fulfilment") with counts,
   distinguishable from registrations merely awaiting patron payment and from
-  those blocked on billing; patron-facing copy collapses the three
-  non-actionable states into one vague message while leaving actionable
-  states specific; covered by tests.
+  those blocked on billing; the queue supports **bulk-complete**; gatherings
+  follow the same completion path as every other registrable type, with
+  `complete` routed and the path helper no longer falling through to the
+  event route; patron-facing copy collapses the three non-actionable states
+  into one vague message while leaving actionable states specific; covered by
+  tests.
 - **W3**: scoped and sequenced as an extension of the offering-spec plans,
   dispatched as schema-then-form packets, with the first-onboarding scope
   decision recorded.
