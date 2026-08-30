@@ -169,8 +169,15 @@ class RegistrationPaymentFlowTest < ActionDispatch::IntegrationTest
 
     follow_redirect!
     assert_response :success
-    assert_includes response.body, "前往付款"
     assert_includes response.body, gathering.title
+    # Gatherings now follow the same pipeline as every other type: created
+    # pending, payable only after the temple reviews and publishes.
+    refute_includes response.body, "前往付款"
+
+    registration.mark_admin_completed!
+    get payment_account_registration_path(registration)
+    assert_response :success
+    assert_includes response.body, "前往付款"
   end
 
   test "new gathering registration honors temple param and active account temple context" do

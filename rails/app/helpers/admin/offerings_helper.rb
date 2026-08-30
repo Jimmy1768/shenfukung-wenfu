@@ -348,6 +348,8 @@ module Admin
       case offering
       when TempleService
         complete_admin_service_offering_order_path(offering, registration)
+      when TempleGathering
+        complete_admin_gathering_offering_order_path(offering, registration)
       else
         complete_admin_event_offering_order_path(offering, registration)
       end

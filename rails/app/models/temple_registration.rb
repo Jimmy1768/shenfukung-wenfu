@@ -113,13 +113,19 @@ class TempleRegistration < ApplicationRecord
   # acceptance is unaffected by design, since in practice the same admin
   # often completes a registration and accepts cash in one sitting.
   #
-  # Gatherings are excluded: they're non-offering meetups with no
-  # offering-specific fields for an admin to fill in, so there's nothing to
-  # complete and no admin UI exists to set this flag for one. Without this
-  # exclusion, admin_completed_at would default to nil for every gathering
-  # registration with no way to ever set it, permanently blocking checkout.
+  # Universal since 2026-08-28. A gathering is a sub-type, not a separate
+  # flow: same pipeline, it simply carries no offering data to fill in, so
+  # the admin's action there is review-and-publish rather than data entry.
+  # LifecyclePolicy#gathering_editable? already makes gathering fields
+  # read-only after creation, which is consistent with that.
+  #
+  # The exclusion this replaced was load-bearing, not cosmetic: checkout_ready?
+  # demands admin_completed_at once completion is required, so removing it
+  # before a gathering completion path existed would have made every gathering
+  # registration permanently unpayable. That path (route, helper, button)
+  # landed first, deliberately.
   def admin_completion_required?
-    registrable_type != TempleGathering.name
+    true
   end
 
   def admin_completed?

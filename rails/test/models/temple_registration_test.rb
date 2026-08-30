@@ -31,7 +31,7 @@ class TempleRegistrationTest < ActiveSupport::TestCase
     assert_equal first_timestamp, registration.reload.admin_completed_at
   end
 
-  test "gathering registrations never require admin completion, even with the flag unset" do
+  test "gathering registrations require admin completion like every other type" do
     temple = create_temple
     gathering = temple.temple_gatherings.create!(
       slug: "completion-gate-gathering",
@@ -57,8 +57,15 @@ class TempleRegistrationTest < ActiveSupport::TestCase
       admin_completed_at: nil
     )
 
-    refute registration.admin_completion_required?
+    # A gathering is a sub-type, not a separate flow: same pipeline, it just
+    # carries no offering data to fill in, so the admin action there is
+    # review-and-publish. The reachable completion path landed before this
+    # became universal -- see GatheringCompletionParityTest.
+    assert registration.admin_completion_required?
     refute registration.admin_completed?
+    refute registration.checkout_ready?
+
+    assert registration.mark_admin_completed!
     assert registration.checkout_ready?
   end
 end

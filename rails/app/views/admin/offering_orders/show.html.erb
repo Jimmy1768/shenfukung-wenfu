@@ -18,7 +18,7 @@
               class: "btn btn-secondary"
             ) %>
       <% end %>
-      <% if !gathering_mode && !@registration.admin_completed? %>
+      <% unless @registration.admin_completed? %>
         <%= button_to t("admin.registration_show.actions.mark_completed"),
               complete_admin_offering_order_path_for(@offering, @registration),
               method: :post,
@@ -73,17 +73,17 @@
             <dt><%= t("admin.registration_show.labels.certificate_number") %></dt>
             <dd><%= @registration.certificate_number.presence || "—" %></dd>
           </div>
-          <div>
-            <dt><%= t("admin.registration_show.labels.admin_completion") %></dt>
-            <dd>
-              <% if @registration.admin_completed? %>
-                <span class="status-pill status-paid"><%= t("admin.registration_show.values.admin_completion_ready") %></span>
-              <% else %>
-                <span class="status-pill status-pending"><%= t("admin.registration_show.values.admin_completion_pending") %></span>
-              <% end %>
-            </dd>
-          </div>
         <% end %>
+        <div>
+          <dt><%= t("admin.registration_show.labels.admin_completion") %></dt>
+          <dd>
+            <% if @registration.admin_completed? %>
+              <span class="status-pill status-paid"><%= t("admin.registration_show.values.admin_completion_ready") %></span>
+            <% else %>
+              <span class="status-pill status-pending"><%= t("admin.registration_show.values.admin_completion_pending") %></span>
+            <% end %>
+          </dd>
+        </div>
       </dl>
     </section>
 

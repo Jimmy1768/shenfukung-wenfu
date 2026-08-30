@@ -88,7 +88,7 @@ module Registrations
       refute registration.admin_completed?
     end
 
-    test "gathering checkout is never blocked by the admin completion gate" do
+    test "gathering checkout is gated like every other type, and completion opens it" do
       temple = create_temple
       gathering = temple.temple_gatherings.create!(
         slug: "completion-gate-gathering-checkout",
@@ -108,8 +108,14 @@ module Registrations
       }
       registration = TempleEventRegistration.order(:created_at).last
       refute registration.admin_completed?
-      assert registration.checkout_ready?
+      refute registration.checkout_ready?, "gatherings follow the same pipeline now"
 
+      get payment_account_registration_path(registration)
+      assert_response :success
+      refute_includes response.body, "前往付款", "not payable until the temple reviews it"
+
+      # ...and the completion path is reachable, so this is a wait, not a wall.
+      registration.mark_admin_completed!
       get payment_account_registration_path(registration)
       assert_response :success
       assert_includes response.body, "前往付款"

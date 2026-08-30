@@ -123,7 +123,9 @@ Rails.application.routes.draw do
         path: "orders",
         controller: "offering_orders",
         defaults: { offering_kind: "gatherings" },
-        only: %i[index new create show edit update]
+        only: %i[index new create show edit update] do
+        member { post :complete }
+      end
     end
     resources :registrations, only: :index
     resources :orders, only: :index
