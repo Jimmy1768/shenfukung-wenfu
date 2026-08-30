@@ -112,6 +112,24 @@ module Registrations
       normalized
     end
 
+    # Accepted shapes for a section, in the order a config is likely to use
+    # them:
+    #
+    #   ritual_metadata: { fields: [a, b] }   -> exactly a and b
+    #   ritual_metadata: [a, b]               -> exactly a and b (shorthand)
+    #   ritual_metadata: false                -> section disabled
+    #   ritual_metadata: a                    -> exactly a
+    #   (absent) / nil / true                 -> the section's defaults
+    #
+    # The Hash form is the one every real temple yml uses, and it was NOT
+    # handled until 2026-08-28: a Hash fell through to `else` and returned
+    # the section's FULL default list, so offerings rendered fields they had
+    # never declared. Tests did not catch it because they use the bare-Array
+    # shorthand, which always worked -- the supported shape was exercised
+    # while the shipped shape was silently ignored.
+    #
+    # A Hash carrying no `fields:` key still falls back to defaults: it is
+    # declaring something else about the section, not declaring emptiness.
     def normalize_field_config(default_fields, override)
       case override
       when :__missing__, nil, true
@@ -122,6 +140,12 @@ module Registrations
         [override.to_sym]
       when Array
         override.map(&:to_sym)
+      when Hash
+        declared = override[:fields]
+        declared = override["fields"] if declared.nil?
+        return default_fields if declared.nil?
+
+        Array(declared).map(&:to_sym)
       else
         default_fields
       end
