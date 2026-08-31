@@ -533,6 +533,15 @@ zh-TW:
             reject_confirm: "確定拒絕這筆隱私請求嗎？"
             no_actions: "無可用操作"
     patrons:
+      notes:
+        heading: "服務備註（僅限工作人員）"
+        help: "記錄有助於接待這位信眾的資訊，例如常來參與的法會、慣用語言、行動需求。信眾看不到這些內容，列印時也不會出現。"
+        label: "服務備註"
+        placeholder: "例：每年固定參加中元法會，偏好國語，需協助長輩入座。"
+        save: "儲存備註"
+        saved: "服務備註已更新。"
+        too_long: "備註過長，請控制在 %{limit} 字以內。"
+        last_updated: "最後更新：%{at}"
       index:
         title: "信眾名單"
         subtitle: "可在此搜尋既有信眾，並視需要升為管理員。"

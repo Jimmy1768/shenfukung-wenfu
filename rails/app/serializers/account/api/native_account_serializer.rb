@@ -11,8 +11,7 @@ module Account
           english_name: user.english_name,
           native_name: user.native_name,
           phone: metadata["phone"],
-          city: metadata["city"],
-          notes: metadata["notes"]
+          city: metadata["city"]
         }.compact
       end
 

@@ -26,11 +26,6 @@
       <p><%= current_user.metadata&.dig("city") || t("account.profile.summary.not_provided") %></p>
     </div>
   </div>
-
-  <div class="profile-notes">
-    <span class="label"><%= t("account.profile.summary.notes") %></span>
-    <p><%= current_user.metadata&.dig("notes").presence || t("account.profile.summary.no_notes") %></p>
-  </div>
 </section>
 
 <section class="account-section">

@@ -166,6 +166,7 @@ Rails.application.routes.draw do
         post :promote
         delete :revoke
         get :records
+        patch :note
       end
 
       resources :metadata_values, only: %i[create destroy], controller: "patron_metadata_values"

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.1].define(version: 2026_08_23_000000) do
+ActiveRecord::Schema[7.1].define(version: 2026_08_31_000000) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -882,6 +882,19 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_23_000000) do
     t.index ["temple_id"], name: "index_temple_pages_on_temple_id"
   end
 
+  create_table "temple_patron_notes", force: :cascade do |t|
+    t.bigint "temple_id", null: false
+    t.bigint "user_id", null: false
+    t.bigint "updated_by_admin_account_id"
+    t.text "body", default: "", null: false
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["temple_id", "user_id"], name: "idx_temple_patron_notes_unique_per_temple", unique: true
+    t.index ["temple_id"], name: "index_temple_patron_notes_on_temple_id"
+    t.index ["updated_by_admin_account_id"], name: "index_temple_patron_notes_on_updated_by_admin_account_id"
+    t.index ["user_id"], name: "index_temple_patron_notes_on_user_id"
+  end
+
   create_table "temple_payments", force: :cascade do |t|
     t.bigint "temple_id", null: false
     t.bigint "temple_registration_id", null: false
@@ -1139,6 +1152,9 @@ ActiveRecord::Schema[7.1].define(version: 2026_08_23_000000) do
   add_foreign_key "temple_offering_setup_drafts", "admins", column: "reviewed_by_admin_id"
   add_foreign_key "temple_offering_setup_drafts", "temples"
   add_foreign_key "temple_pages", "temples"
+  add_foreign_key "temple_patron_notes", "admins", column: "updated_by_admin_account_id"
+  add_foreign_key "temple_patron_notes", "temples"
+  add_foreign_key "temple_patron_notes", "users"
   add_foreign_key "temple_payments", "admins", column: "admin_account_id"
   add_foreign_key "temple_payments", "temple_registrations"
   add_foreign_key "temple_payments", "temples"

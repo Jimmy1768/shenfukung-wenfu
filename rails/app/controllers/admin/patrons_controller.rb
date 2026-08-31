@@ -4,7 +4,7 @@ module Admin
   class PatronsController < BaseController
     before_action :require_patron_access!, only: :index
     before_action :require_manage_permissions!, only: %i[promote revoke oauth_duplicates]
-    before_action :set_patron, only: %i[promote revoke records]
+    before_action :set_patron, only: %i[promote revoke records note]
 
     def index
       patrons = filtered_scope
@@ -43,6 +43,35 @@ module Admin
     def records
       require_patron_access!
       @registrations = patron_registrations.includes(:offering, :temple_payments).order(created_at: :desc)
+      @patron_note = TemplePatronNote.find_or_initialize_by(temple: current_temple, user: @patron)
+    end
+
+    # Staff-authored service context. Temple-scoped and never patron-visible;
+    # see TemplePatronNote for why it is not one of the other two note kinds.
+    def note
+      require_patron_access!
+      return if performed?
+
+      body = params.require(:temple_patron_note).permit(:body).fetch(:body, "").to_s
+      if body.length > TemplePatronNote::MAX_LENGTH
+        return redirect_to records_admin_patron_path(@patron), alert: t("admin.patrons.notes.too_long", limit: TemplePatronNote::MAX_LENGTH)
+      end
+
+      record = TemplePatronNote.upsert_body!(
+        temple: current_temple, user: @patron, body:, admin_account: current_admin&.admin_account
+      )
+
+      SystemAuditLogger.log!(
+        action: "admin.patrons.note_updated",
+        admin: current_admin,
+        target: record,
+        temple: current_temple,
+        # The note body is deliberately not logged -- it is staff commentary
+        # about a person, and the audit trail is a wider-read surface.
+        metadata: { patron_id: @patron.id, cleared: record.blank_body? }
+      )
+
+      redirect_to records_admin_patron_path(@patron), notice: t("admin.patrons.notes.saved")
     end
 
     def oauth_duplicates

@@ -533,6 +533,15 @@ en:
             reject_confirm: "Reject this privacy request?"
             no_actions: "No actions"
     patrons:
+      notes:
+        heading: "Service notes (staff only)"
+        help: "Context that helps staff receive this patron well -- which ceremonies they attend, preferred language, mobility needs. The patron cannot see this, and it does not appear on printed records."
+        label: "Service notes"
+        placeholder: "e.g. attends the Ghost Festival every year, prefers Mandarin, needs help seating an elderly parent."
+        save: "Save note"
+        saved: "Service note updated."
+        too_long: "That note is too long. Please keep it under %{limit} characters."
+        last_updated: "Last updated %{at}"
       index:
         title: "Member directory"
         subtitle: "Search patrons and promote them to the admin roster when needed."

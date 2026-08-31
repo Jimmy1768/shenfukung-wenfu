@@ -118,9 +118,7 @@ en:
         english_name: "English name"
         phone: "Phone"
         city: "City/Region"
-        notes: "Notes"
         not_provided: "Not provided"
-        no_notes: "No notes yet."
       contact_temple:
         eyebrow: "Contact temple"
         title: "Send an email inquiry"

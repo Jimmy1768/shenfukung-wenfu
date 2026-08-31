@@ -17,6 +17,16 @@ module Registrations
   class ReusableContact
     FIELDS = %w[phone notes].freeze
 
+    # Only fields the patron still owns on their own profile can fall back to
+    # it. `notes` was removed from the profile on 2026-08-31 -- it was scaffold
+    # residue (a bare "Notes" textarea with no stated purpose) that staff code
+    # then read as contact detail. Old values may still sit in top-level
+    # metadata; they are deliberately not surfaced, because presenting
+    # arbitrary patron text as "how do we reach them" is the confusion that
+    # removal was meant to end. Registration-captured notes still work, since
+    # those are written into the namespaced scope.
+    PROFILE_FALLBACK_FIELDS = %w[phone].freeze
+
     def self.read(user, field)
       new(user).read(field)
     end
@@ -28,6 +38,7 @@ module Registrations
     def read(field)
       field = field.to_s
       return nil unless FIELDS.include?(field)
+      return scoped[field].presence unless PROFILE_FALLBACK_FIELDS.include?(field)
 
       scoped[field].presence || @metadata[field].presence
     end

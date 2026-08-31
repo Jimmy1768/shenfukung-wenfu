@@ -9,7 +9,6 @@ module Account
     attribute :native_name, :string
     attribute :phone, :string
     attribute :city, :string
-    attribute :notes, :string
 
     validate :at_least_one_name_present
 
@@ -43,16 +42,14 @@ module Account
         english_name: record.english_name,
         native_name: record.native_name,
         phone: metadata["phone"],
-        city: metadata["city"],
-        notes: metadata["notes"]
+        city: metadata["city"]
       }
     end
 
     def profile_metadata
       {
         "phone" => phone,
-        "city" => city,
-        "notes" => notes
+        "city" => city
       }.compact
     end
 

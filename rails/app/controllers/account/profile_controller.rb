@@ -29,7 +29,7 @@ module Account
     private
 
     def profile_params
-      params.require(:account_profile_form).permit(:english_name, :native_name, :phone, :city, :notes)
+      params.require(:account_profile_form).permit(:english_name, :native_name, :phone, :city)
     end
 
     def log_profile_update!

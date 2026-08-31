@@ -125,9 +125,7 @@ zh-TW:
         english_name: "英文姓名"
         phone: "電話"
         city: "居住區"
-        notes: "備註"
         not_provided: "尚未填寫"
-        no_notes: "尚無備註。"
       contact_temple:
         eyebrow: "聯絡寺廟"
         title: "寄送詢問信件"

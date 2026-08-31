@@ -19,7 +19,14 @@ module Registrations
         email: "self-prefill@example.com",
         english_name: "Self Prefill Patron",
         encrypted_password: User.password_hash("Password123!"),
-        metadata: { "phone" => "0911-234-567", "notes" => "Peanut allergy, seat near exit" }
+        # The note is seeded where a prior registration would have cached it.
+        # It is deliberately NOT a top-level profile "notes" value -- that
+        # field was removed on 2026-08-31 as scaffold residue, so the profile
+        # is no longer a prefill source for notes (phone still is).
+        metadata: {
+          "phone" => "0911-234-567",
+          Registrations::UserMetadataUpdater::NAMESPACE => { "notes" => "Peanut allergy, seat near exit" }
+        }
       )
       Registrations::ReusableDefaults.new(user:, temple:, offering:).write!("arrival_window" => "reserved morning slot")
 
@@ -69,7 +76,10 @@ module Registrations
         email: "admin-prefill-patron@example.com",
         english_name: "Admin Prefill Patron",
         encrypted_password: User.password_hash("Password123!"),
-        metadata: { "phone" => "0933-444-555", "notes" => "Prefers Mandarin" }
+        metadata: {
+          "phone" => "0933-444-555",
+          Registrations::UserMetadataUpdater::NAMESPACE => { "notes" => "Prefers Mandarin" }
+        }
       )
       dependent = Dependent.create!(
         english_name: "Admin-side Family",

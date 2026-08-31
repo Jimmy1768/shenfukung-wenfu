@@ -27,7 +27,7 @@ module Api
         private
 
         def profile_params
-          params.fetch(:profile, {}).permit(:english_name, :native_name, :phone, :city, :notes)
+          params.fetch(:profile, {}).permit(:english_name, :native_name, :phone, :city)
         end
 
         def password_params

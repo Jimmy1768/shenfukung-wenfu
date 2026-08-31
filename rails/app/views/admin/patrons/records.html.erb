@@ -17,6 +17,35 @@
         </div>
       </header>
 
+      <%# Staff-only service context. Never shown to the patron: there is no
+          patron-facing read path to TemplePatronNote, and the print guard
+          below keeps it off the printed record, which may be handed over. %>
+      <style>
+        @media print { .patron-staff-note { display: none !important; } }
+      </style>
+      <section class="patron-staff-note" style="margin: 1.5rem 0;">
+        <h2 style="margin-bottom: .25rem;"><%= t("admin.patrons.notes.heading") %></h2>
+        <p class="muted" style="margin-top: 0;"><%= t("admin.patrons.notes.help") %></p>
+
+        <%= form_with url: note_admin_patron_path(@patron), method: :patch, scope: :temple_patron_note, local: true do |f| %>
+          <div class="field">
+            <%= f.label :body, t("admin.patrons.notes.label"), class: "sr-only" %>
+            <%= f.text_area :body, rows: 4, value: @patron_note.body,
+                  maxlength: TemplePatronNote::MAX_LENGTH,
+                  placeholder: t("admin.patrons.notes.placeholder"),
+                  style: "width: 100%;" %>
+          </div>
+          <div class="form-actions">
+            <%= f.submit t("admin.patrons.notes.save"), class: "btn btn-primary" %>
+            <% if @patron_note.persisted? && @patron_note.updated_at.present? %>
+              <span class="muted" style="margin-left: .75rem;">
+                <%= t("admin.patrons.notes.last_updated", at: l(@patron_note.updated_at, format: :short)) %>
+              </span>
+            <% end %>
+          </div>
+        <% end %>
+      </section>
+
       <% if @registrations.any? %>
         <div class="table-scroll">
           <table class="admin-table">

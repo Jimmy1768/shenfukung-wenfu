@@ -245,7 +245,10 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
     assert_response :success
     user = response.parsed_body.fetch("user")
 
-    assert_equal "patron's own note", user["notes"]
+    # `notes` is no longer part of the patron profile at all (removed
+    # 2026-08-31), so it must not appear even from top-level metadata.
+    refute user.key?("notes"), "notes must not be serialized to the patron"
+    refute_includes response.body, "patron's own note"
     assert_equal "0900-000-000", user["phone"]
 
     refute_includes response.body, "admin note about this patron"
