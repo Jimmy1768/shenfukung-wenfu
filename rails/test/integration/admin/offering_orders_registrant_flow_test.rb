@@ -30,6 +30,9 @@ class AdminOfferingOrdersRegistrantFlowTest < ActionDispatch::IntegrationTest
       english_name: "Household Owner",
       encrypted_password: User.password_hash("Password123!")
     )
+    # Derived membership: the admin patron surfaces only show patrons of this
+    # temple, so the fixture must actually make them one.
+    join_temple!(@patron, @temple)
     @other_patron = User.create!(
       email: "other-household@example.com",
       english_name: "Other Household",

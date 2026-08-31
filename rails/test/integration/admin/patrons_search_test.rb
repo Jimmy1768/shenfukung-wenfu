@@ -50,8 +50,9 @@ class Admin::PatronsSearchTest < ActionDispatch::IntegrationTest
   end
 
   test "searching the default (all/patron) view still works, unaffected" do
-    User.create!(email: "katelyn-patron2@example.com", english_name: "Katelyn Everyone",
+    patron = User.create!(email: "katelyn-patron2@example.com", english_name: "Katelyn Everyone",
       encrypted_password: User.password_hash("Password123!"))
+    join_temple!(patron, @temple)
     sign_in_admin(@owner)
 
     get admin_patrons_path, params: { q: "Katelyn" }

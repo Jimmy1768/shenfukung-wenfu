@@ -81,6 +81,7 @@ module Registrations
           Registrations::UserMetadataUpdater::NAMESPACE => { "notes" => "Prefers Mandarin" }
         }
       )
+      join_temple!(patron, temple)
       dependent = Dependent.create!(
         english_name: "Admin-side Family",
         metadata: { "phone" => "0933-111-222", "email" => "admin-dep@example.com", "notes" => "Bring wheelchair" }

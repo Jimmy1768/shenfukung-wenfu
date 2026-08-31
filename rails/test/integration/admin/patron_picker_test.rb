@@ -14,6 +14,7 @@ class AdminPatronPickerTest < ActionDispatch::IntegrationTest
       english_name: "Lantern Seeker",
       encrypted_password: User.password_hash("Password123!")
     )
+    join_temple!(user, @temple)
 
     sign_in_admin(@admin)
 

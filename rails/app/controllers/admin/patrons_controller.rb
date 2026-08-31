@@ -4,7 +4,18 @@ module Admin
   class PatronsController < BaseController
     before_action :require_patron_access!, only: :index
     before_action :require_manage_permissions!, only: %i[promote revoke oauth_duplicates]
-    before_action :set_patron, only: %i[promote revoke records note]
+    # Two different lookups on purpose.
+    #
+    # records/note read and write PATRON DATA, so they are restricted to people
+    # this temple can actually see -- its own patrons and its own staff.
+    #
+    # promote/revoke manage ADMIN MEMBERSHIP, which is the staff-hiring flow: an
+    # owner must be able to promote someone who has never registered at their
+    # temple (see patron_picker_test "promote creates an admin membership for
+    # the current temple"). Those stay an unrestricted lookup, gated instead by
+    # require_manage_permissions!.
+    before_action :set_addressable_patron, only: %i[records note]
+    before_action :set_patron, only: %i[promote revoke]
 
     def index
       patrons = filtered_scope
@@ -42,7 +53,10 @@ module Admin
 
     def records
       require_patron_access!
-      @registrations = patron_registrations.includes(:offering, :temple_payments).order(created_at: :desc)
+      # `offering` is a method aliasing `registrable`, not an association --
+      # `includes(:offering)` raised for any patron who actually had
+      # registrations, which is every real patron. Preload the association.
+      @registrations = patron_registrations.includes(:registrable, :temple_payments).order(created_at: :desc)
       @patron_note = TemplePatronNote.find_or_initialize_by(temple: current_temple, user: @patron)
     end
 
@@ -96,8 +110,49 @@ module Admin
       redirect_to admin_dashboard_path, alert: t("admin.patrons.flash.forbidden")
     end
 
+    # Membership is DERIVED, not a join step: a patron belongs to a temple once
+    # they have actually done something with it -- registered, paid, or asked
+    # for help. There is deliberately no separate "join this temple" record;
+    # registering is the join, which keeps friction off the patron and still
+    # gives staff a real list to follow up with.
+    #
+    # Before 2026-08-31 this was `User.all`, so every temple's staff could see
+    # every account in the system -- including bare signups with no connection
+    # to any temple -- by name and email. Invisible with one live tenant;
+    # a cross-tenant disclosure the moment there are two.
     def patron_scope
-      User.all
+      User.where(id: temple_patron_ids)
+    end
+
+    def temple_patron_ids
+      User.sanitize_sql_array([<<~SQL.squish, { temple_id: current_temple.id }])
+        SELECT user_id FROM temple_registrations
+          WHERE temple_id = :temple_id AND user_id IS NOT NULL
+        UNION
+        SELECT user_id FROM temple_payments
+          WHERE temple_id = :temple_id AND user_id IS NOT NULL
+        UNION
+        SELECT user_id FROM temple_assistance_requests
+          WHERE temple_id = :temple_id AND user_id IS NOT NULL
+      SQL
+        .then { |sql| User.connection.select_values(sql) }
+    end
+
+    # Staff of this temple, whether or not they are also patrons of it. Kept
+    # separate from patron_scope for exactly that reason: an admin who never
+    # registered must still appear in the admins view.
+    def temple_admin_ids
+      AdminAccount
+        .joins(:admin_temple_memberships)
+        .where(admin_temple_memberships: { temple_id: current_temple.id })
+        .pluck(:user_id)
+    end
+
+    # Who this admin may address by id at all. Scopes the member actions
+    # (records, note, promote, revoke) so they cannot reach a stranger's
+    # account through a guessed URL.
+    def addressable_users
+      User.where(id: temple_patron_ids | temple_admin_ids)
     end
 
     def filtered_scope
@@ -127,6 +182,9 @@ module Admin
       end
     end
 
+    # Starts from every user rather than patron_scope: the membership join
+    # below is what scopes this view, and requiring patrons-of-this-temple too
+    # would hide staff who never registered.
     def admin_user_scope
       # No .distinct: admin_temple_memberships has a unique index on
       # (admin_account_id, temple_id) and User has_one :admin_account, so
@@ -137,7 +195,7 @@ module Admin
       # DISTINCT ... ORDER BY <expression not in select list>" outright,
       # which is exactly what broke this view's search and not the default
       # patron view's (which never had .distinct to begin with).
-      patron_scope
+      User.all
         .joins(admin_account: :admin_temple_memberships)
         .where(admin_temple_memberships: { temple_id: current_temple.id })
     end
@@ -157,6 +215,10 @@ module Admin
 
     def set_patron
       @patron = User.find(params[:id])
+    end
+
+    def set_addressable_patron
+      @patron = addressable_users.find(params[:id])
     end
 
     def patron_registrations

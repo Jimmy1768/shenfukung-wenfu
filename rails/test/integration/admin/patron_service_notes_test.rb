@@ -11,6 +11,8 @@ class Admin::PatronServiceNotesTest < ActionDispatch::IntegrationTest
       english_name: "Service Note Patron",
       encrypted_password: User.password_hash("Password123!")
     )
+    # Derived membership: they are a patron of @temple because they registered.
+    join_temple!(@patron, @temple)
   end
 
   test "staff can write, read back, and clear a service note" do
@@ -42,6 +44,7 @@ class Admin::PatronServiceNotesTest < ActionDispatch::IntegrationTest
 
     other_temple = create_temple
     other_owner = create_admin_user(temple: other_temple, role: "owner")
+    join_temple!(@patron, other_temple)
     sign_in_admin(other_owner)
 
     get records_admin_patron_path(@patron)
