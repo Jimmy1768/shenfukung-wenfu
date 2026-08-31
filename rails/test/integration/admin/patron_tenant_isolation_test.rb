@@ -52,22 +52,58 @@ class Admin::PatronTenantIsolationTest < ActionDispatch::IntegrationTest
     assert_nil TemplePatronNote.find_by(user: patron)
   end
 
-  test "activity of any kind establishes membership" do
+  test "binding is the join -- no purchase, no registration required" do
     sign_in_admin(@owner_b)
 
-    registrant = User.create!(email: "r@example.com", english_name: "By Registration",
-                              encrypted_password: User.password_hash("Password123!"))
-    join_temple!(registrant, @temple_b)
-
-    asker = User.create!(email: "a@example.com", english_name: "By Assistance",
+    # Temple staff of twenty years. They scan the temple QR once and are on
+    # the list, having bought nothing.
+    staff = User.create!(email: "long-serving@example.com", english_name: "Long Serving",
                          encrypted_password: User.password_hash("Password123!"))
-    TempleAssistanceRequest.create!(temple: @temple_b, user: asker, status: "open",
-                                    requested_at: Time.current, channel: "profile")
+    join_temple!(staff, @temple_b)
+    assert_equal 0, staff.temple_event_registrations.count
 
     get admin_patrons_path(format: :json)
     ids = response.parsed_body.fetch("patrons").map { |p| p["id"] }
-    assert_includes ids, registrant.id
-    assert_includes ids, asker.id
+    assert_includes ids, staff.id
+
+    # And so they can be promoted from the row that now exists.
+    get records_admin_patron_path(staff)
+    assert_response :success
+  end
+
+  test "a registration alone does not join a temple -- only binding does" do
+    lurker = User.create!(email: "registered-elsewhere@example.com", english_name: "No Binding",
+                          encrypted_password: User.password_hash("Password123!"))
+    create_registration(user: lurker, offering: create_offering(temple: @temple_b))
+    assert_nil TempleConnection.find_by(user: lurker, temple: @temple_b)
+
+    sign_in_admin(@owner_b)
+    get admin_patrons_path(format: :json, q: lurker.email)
+    assert_empty response.parsed_body.fetch("patrons")
+  end
+
+  test "signing in to a temple is what records the join" do
+    patron = User.create!(email: "signs-in@example.com", english_name: "Signs In",
+                          encrypted_password: User.password_hash("Password123!"))
+    assert_nil TempleConnection.find_by(user: patron, temple: @temple_b)
+
+    post "/api/v1/account/native/login", params: {
+      temple_slug: @temple_b.slug,
+      session: { email: patron.email, password: "Password123!" }
+    }
+    assert_response :success
+
+    # Recorded by the login itself, not deferred to a later request.
+    connection = TempleConnection.find_by(user: patron, temple: @temple_b)
+    assert connection.present?
+    assert connection.first_connected_at.present?
+
+    # ...and only for the temple they signed in to.
+    assert_nil TempleConnection.find_by(user: patron, temple: @temple_a)
+
+    sign_in_admin(@owner_b)
+    get admin_patrons_path(format: :json, q: patron.email)
+    assert_equal [patron.id], response.parsed_body.fetch("patrons").map { |p| p["id"] }
   end
 
   test "staff who never registered still appear in the admins view" do

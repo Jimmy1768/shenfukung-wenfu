@@ -110,11 +110,14 @@ module Admin
       redirect_to admin_dashboard_path, alert: t("admin.patrons.flash.forbidden")
     end
 
-    # Membership is DERIVED, not a join step: a patron belongs to a temple once
-    # they have actually done something with it -- registered, paid, or asked
-    # for help. There is deliberately no separate "join this temple" record;
-    # registering is the join, which keeps friction off the patron and still
-    # gives staff a real list to follow up with.
+    # Membership is the binding itself: a signed-in patron who reaches this
+    # temple -- by scanning its QR in the app, or selecting it on the web -- is
+    # on its list from that moment. See TempleConnection.
+    #
+    # Registration is deliberately NOT the join. Treating it as one forced
+    # anyone who needed to appear on a temple's list to buy an offering first,
+    # which is absurd for staff who have worked there for years and is exactly
+    # the friction this product is sold to remove.
     #
     # Before 2026-08-31 this was `User.all`, so every temple's staff could see
     # every account in the system -- including bare signups with no connection
@@ -125,17 +128,7 @@ module Admin
     end
 
     def temple_patron_ids
-      User.sanitize_sql_array([<<~SQL.squish, { temple_id: current_temple.id }])
-        SELECT user_id FROM temple_registrations
-          WHERE temple_id = :temple_id AND user_id IS NOT NULL
-        UNION
-        SELECT user_id FROM temple_payments
-          WHERE temple_id = :temple_id AND user_id IS NOT NULL
-        UNION
-        SELECT user_id FROM temple_assistance_requests
-          WHERE temple_id = :temple_id AND user_id IS NOT NULL
-      SQL
-        .then { |sql| User.connection.select_values(sql) }
+      TempleConnection.where(temple_id: current_temple.id).pluck(:user_id)
     end
 
     # Staff of this temple, whether or not they are also patrons of it. Kept

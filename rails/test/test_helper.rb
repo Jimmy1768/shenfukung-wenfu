@@ -56,11 +56,12 @@ module TestDataHelpers
     )
   end
 
-  # Patron membership is derived, not a join record: a user belongs to a temple
-  # once they have registered, paid, or asked for help there. Use this to make
-  # a fixture user visible to that temple's admin surfaces.
-  def join_temple!(user, temple, **attrs)
-    create_registration(user:, offering: create_offering(temple:), **attrs)
+  # Binding is the join: a signed-in patron who scans the temple's QR or
+  # selects it on the web is on its list from that moment, having bought
+  # nothing. Use this to make a fixture user visible to that temple's admin
+  # surfaces, the same way the app would.
+  def join_temple!(user, temple)
+    TempleConnection.record!(user:, temple:)
   end
 
   def create_registration(user:, offering:, **attrs)

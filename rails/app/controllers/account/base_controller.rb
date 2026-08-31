@@ -23,6 +23,7 @@ module Account
     before_action :assign_account_theme
     before_action :apply_account_locale
     before_action :authenticate_user!
+    before_action :record_temple_connection!
 
     private
     ACCOUNT_TEMPLE_SESSION_KEY = "account_active_temple_slug"
@@ -78,6 +79,12 @@ module Account
 
     def user_signed_in?
       current_user.present?
+    end
+
+    # Web counterpart of the native binding: selecting this temple while
+    # signed in is the same join gesture. See TempleConnection.
+    def record_temple_connection!
+      TempleConnection.record!(user: current_user, temple: current_temple)
     end
 
     def current_user

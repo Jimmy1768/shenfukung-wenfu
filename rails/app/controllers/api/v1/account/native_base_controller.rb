@@ -54,9 +54,19 @@ module Api
 
           @current_native_user = user
           @current_native_session = session
+
+          # Binding is the join. A signed-in patron reaching this temple --
+          # via QR scan or a saved binding -- is what puts them on its list.
+          TempleConnection.record!(user:, temple: @current_native_temple)
         end
 
         def issue_session_payload(user, context:)
+          # The join moment. Every session-issuing path -- login, signup,
+          # refresh, password reset, OAuth exchange and resolution -- lands
+          # here, and none of them run authenticate_native_user!, so recording
+          # only in that filter missed the binding until the *next* request.
+          TempleConnection.record!(user:, temple: current_native_temple)
+
           result = Auth::RefreshToken.new(user).issue!(
             user_agent: request.user_agent,
             ip_address: request.remote_ip,

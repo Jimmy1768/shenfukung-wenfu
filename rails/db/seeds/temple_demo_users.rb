@@ -117,6 +117,19 @@ module Seeds
     def seed
       puts "Seeding temple demo users..." # rubocop:disable Rails/Output
       USERS.each { |config| apply_profile(config) }
+      connect_demo_patrons!
+    end
+
+    # Binding is the join (see TempleConnection), so seeded patrons need a
+    # connection or every temple's admin patron list comes up empty after
+    # bin/reset_backend. This stands in for the QR scan they would do on a
+    # real device.
+    def connect_demo_patrons!
+      users = User.where(email: USERS.map { |config| config[:email] })
+      Temple.find_each do |temple|
+        users.each { |user| TempleConnection.record!(user:, temple:) }
+      end
+      puts "Connected #{users.count} demo patrons to #{Temple.count} temples." # rubocop:disable Rails/Output
     end
 
     private
