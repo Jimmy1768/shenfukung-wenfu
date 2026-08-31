@@ -1,0 +1,26 @@
+<section class="account-section">
+  <header class="section-header">
+    <div>
+      <p class="eyebrow"><%= t("account.connect.eyebrow") %></p>
+      <h2><%= t("account.connect.title") %></h2>
+      <p><%= t("account.connect.intro", temple: current_temple.name) %></p>
+    </div>
+  </header>
+
+  <article class="card">
+    <div class="connect-qr" style="display:flex; justify-content:center; padding:1.5rem 0;">
+      <div style="width:min(260px, 70vw);">
+        <%= @qr_svg %>
+      </div>
+    </div>
+
+    <ol class="connect-steps">
+      <li><%= t("account.connect.steps.open") %></li>
+      <li><%= t("account.connect.steps.scan") %></li>
+      <li><%= t("account.connect.steps.done", temple: current_temple.name) %></li>
+    </ol>
+
+    <p class="muted"><%= t("account.connect.multiple_temples") %></p>
+    <p class="muted"><%= t("account.connect.optional") %></p>
+  </article>
+</section>

@@ -25,6 +25,7 @@ en:
         privacy: "Privacy"
         events: "Events"
         gallery: "Gallery"
+        connect: "Connect app"
         services: "Services"
         registrations: "Registrations"
         payments: "Payments"
@@ -83,6 +84,16 @@ en:
         refunded: "Refunded"
         failed: "Failed"
         completed: "Completed"
+    connect:
+      eyebrow: "Connect the app"
+      title: "Load this temple in the app"
+      intro: "You are already registered with %{temple}. If you use the TempleMate app, scan the code below to load this temple into it."
+      steps:
+        open: "Open the TempleMate app and sign in."
+        scan: "Use the scanner in the app to scan the code below."
+        done: "The app will load %{temple}."
+      multiple_temples: "If you take part in more than one temple, scan each one's code from its own website."
+      optional: "The app is optional -- everything here works on the web."
     profile:
       header:
         eyebrow: "Profile"

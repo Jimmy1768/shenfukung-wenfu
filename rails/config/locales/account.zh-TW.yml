@@ -32,6 +32,7 @@ zh-TW:
         privacy: "隱私"
         events: "活動資訊"
         gallery: "活動回顧"
+        connect: "App 連結"
         services: "祈福服務"
         registrations: "報名紀錄"
         payments: "付款紀錄"
@@ -90,6 +91,16 @@ zh-TW:
         refunded: "已退款"
         failed: "失敗"
         completed: "已完成"
+    connect:
+      eyebrow: "連結 App"
+      title: "在 App 中載入本宮廟"
+      intro: "已在 %{temple} 完成註冊。若您使用 TempleMate App，掃描以下 QR Code 即可載入本宮廟。"
+      steps:
+        open: "開啟 TempleMate App 並登入。"
+        scan: "使用 App 內的掃描器掃描下方 QR Code。"
+        done: "App 即會載入 %{temple}。"
+      multiple_temples: "若您參與多間宮廟，可在各宮廟的網站頁面掃描各自的 QR Code。"
+      optional: "App 並非必要，網頁版即可完成所有操作。"
     profile:
       header:
         eyebrow: "會員資料"

@@ -204,6 +204,9 @@ Rails.application.routes.draw do
 
     get "/dashboard", to: "dashboard#index", as: :dashboard
     resource :profile, only: %i[show edit update], controller: "profile"
+    # QR the TempleMate app scans to load this temple. The patron has already
+    # joined on the web; this only tells the app which temple to bind to.
+    get "/connect", to: "connections#show", as: :connect
     resource :settings, only: %i[show update], controller: "settings"
     resource :privacy, only: :show, controller: "privacy" do
       post :close
