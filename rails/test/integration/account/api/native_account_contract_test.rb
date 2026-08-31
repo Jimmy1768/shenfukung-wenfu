@@ -218,6 +218,45 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
     assert_equal "open", response.parsed_body.dig("registration", "lifecycle")
   end
 
+  # Rule 3 of the personal/offering data model: authorship and visibility are
+  # separate axes. This pins the mechanism only -- values written into the
+  # UserMetadataUpdater::NAMESPACE scope are never serialized back to the
+  # patron, because the native profile reads top-level metadata only.
+  #
+  # It deliberately does NOT assert that top-level metadata["notes"] is a
+  # designed patron-authored field. It is not. That attribute arrived with the
+  # initial scaffold (9e06dcc) as part of a generic name/phone/city/notes user
+  # shape, is labelled a bare "備註"/"Notes" with no stated purpose, and the
+  # only recorded intent for the value -- admin/patrons_controller.rb's
+  # "how do we reach them" -- treats it as contact detail. Whether a patron
+  # should have a free-text note about themselves at all is an open product
+  # question, not something this test blesses.
+  test "admin-written registration contact notes never reach the patron profile" do
+    @user.update!(metadata: (@user.metadata || {}).merge(
+      "notes" => "patron's own note",
+      "phone" => "0900-000-000",
+      Registrations::UserMetadataUpdater::NAMESPACE => {
+        "notes" => "admin note about this patron",
+        "phone" => "0911-111-111"
+      }
+    ))
+
+    get "/api/v1/account/native/profile", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    user = response.parsed_body.fetch("user")
+
+    assert_equal "patron's own note", user["notes"]
+    assert_equal "0900-000-000", user["phone"]
+
+    refute_includes response.body, "admin note about this patron"
+    refute_includes response.body, "0911-111-111"
+    refute_includes response.body, Registrations::UserMetadataUpdater::NAMESPACE
+
+    # The admin side still resolves its own scoped value, so this is a
+    # visibility boundary and not merely an unwritten field.
+    assert_equal "admin note about this patron", Registrations::ReusableContact.read(@user.reload, :notes)
+  end
+
   test "privacy show returns only the authenticated account user's requests" do
     request_record = @user.privacy_requests.create!(request_type: "data_export", status: "pending", submitted_via: "web", requested_at: Time.current)
 
