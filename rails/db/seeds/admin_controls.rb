@@ -27,10 +27,10 @@ module Seeds
       owner_account = ensure_admin_account(owner_user, role: "owner", access_level: 10, metadata: { seed_role: "owner" })
       ensure_temple_memberships(owner_account)
 
-      staff_account = ensure_admin_account(staff_user, role: "staff", access_level: 7, metadata: { seed_role: "staff_admin", promoted_from_patron: true })
+      staff_account = ensure_admin_account(staff_user, role: "admin", access_level: 7, metadata: { seed_role: "staff_admin", promoted_from_patron: true })
       ensure_temple_memberships(staff_account)
 
-      dev_account = ensure_admin_account(dev_user, role: "support", access_level: 9, metadata: { seed_role: "dev_support", dev_support: true })
+      dev_account = ensure_admin_account(dev_user, role: "admin", access_level: 9, metadata: { seed_role: "dev_support", dev_support: true })
       ensure_temple_memberships(dev_account)
       ensure_dev_token(dev_account)
 
