@@ -260,6 +260,52 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
     assert_equal "admin note about this patron", Registrations::ReusableContact.read(@user.reload, :notes)
   end
 
+  # The app used to render an intake form for a registration the server would
+  # always reject, because `new` never said one already existed.
+  test "registrations/new reports an existing registration instead of offering a doomed form" do
+    event = create_event
+
+    get "/api/v1/account/native/registrations/new",
+      params: { temple_slug: @temple.slug, account_action: "event", offering: event.slug }, headers: bearer
+    assert_response :success
+    assert_equal true, response.parsed_body.fetch("can_register")
+    assert_nil response.parsed_body.fetch("existing_registration")
+
+    registration = create_registration(user: @user, offering: event)
+
+    get "/api/v1/account/native/registrations/new",
+      params: { temple_slug: @temple.slug, account_action: "event", offering: event.slug }, headers: bearer
+    assert_response :success
+    assert_equal false, response.parsed_body.fetch("can_register")
+    assert_equal registration.reference_code,
+      response.parsed_body.dig("existing_registration", "reference_code")
+
+    # And it agrees with what create actually does.
+    post "/api/v1/account/native/registrations",
+      params: { temple_slug: @temple.slug, offering: event.slug, account_action: "event",
+                registration: { quantity: 1, registrant_scope: "self", contact_name: "X" } },
+      headers: bearer
+    assert_response :unprocessable_entity
+  end
+
+  test "an offering that allows repeats stays registerable" do
+    event = create_event
+    event.update!(metadata: (event.metadata || {}).merge("allow_repeat_registrations" => true))
+    create_registration(user: @user, offering: event)
+
+    get "/api/v1/account/native/registrations/new",
+      params: { temple_slug: @temple.slug, account_action: "event", offering: event.slug }, headers: bearer
+    assert_response :success
+    assert_equal true, response.parsed_body.fetch("can_register")
+    assert_nil response.parsed_body.fetch("existing_registration")
+
+    post "/api/v1/account/native/registrations",
+      params: { temple_slug: @temple.slug, offering: event.slug, account_action: "event",
+                registration: { quantity: 1, registrant_scope: "self", contact_name: "X" } },
+      headers: bearer
+    assert_response :created
+  end
+
   test "privacy show returns only the authenticated account user's requests" do
     request_record = @user.privacy_requests.create!(request_type: "data_export", status: "pending", submitted_via: "web", requested_at: Time.current)
 

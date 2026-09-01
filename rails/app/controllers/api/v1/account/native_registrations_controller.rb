@@ -24,7 +24,21 @@ module Api
           offering = offering_for_request
           return render_error("offering_not_found", :not_found) unless offering
 
-          render json: { offering: offering_payload(offering), registration: intake_defaults(offering), registrants: registrant_options }
+          existing = existing_registration_for(offering)
+
+          render json: {
+            offering: offering_payload(offering),
+            registration: intake_defaults(offering),
+            registrants: registrant_options,
+            # Without this the app rendered an intake form for a registration
+            # the server would always reject with validation_failed -- the web
+            # portal has always known (Account::RegistrationsController sets
+            # @existing_registration), the native contract simply never said so.
+            # No new policy: this is the same ExistingLookup the intake form
+            # validates with, so the two can never disagree.
+            existing_registration: existing && ::Account::Api::NativeAccountSerializer.registration(existing, delinquent: native_temple_delinquent?),
+            can_register: existing.nil?
+          }
         end
 
         def create
@@ -54,6 +68,19 @@ module Api
 
         def current_user = current_native_user
         def current_temple = current_native_temple
+
+        # Mirrors Account::RegistrationIntakeForm#duplicate_registration_exists?
+        # exactly, including its allow_repeat_registrations escape hatch and
+        # its self-versus-dependent scoping.
+        def existing_registration_for(offering)
+          Registrations::ExistingLookup.new(
+            scope: registration_scope,
+            offering: offering,
+            user_id: current_native_user.id,
+            registrant_scope: params.dig(:registration, :registrant_scope).presence || "self",
+            dependent_id: params.dig(:registration, :dependent_id).presence
+          ).find
+        end
 
         def registration_scope
           current_native_user.temple_event_registrations.where(temple: current_native_temple)

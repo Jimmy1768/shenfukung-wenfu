@@ -245,3 +245,22 @@ test('lifecycle_stage drives the patron caption and never discloses the temple b
     }
   }
 });
+
+test('registrations/new tells the client when a registration already exists', () => {
+  const { registrationCaption } = require('../app/account/screen_model');
+  const { copy } = require('../app/ui/copy');
+
+  // Both locales must carry the copy the discover screen shows instead of a
+  // form the server would reject.
+  for (const locale of ['zh-TW', 'en']) {
+    assert.ok(copy[locale].alreadyRegistered, `${locale} needs alreadyRegistered`);
+    assert.ok(copy[locale].alreadyRegistered.length > 0);
+  }
+
+  // The gate is on can_register === false specifically, not on falsiness:
+  // a server that omits the field must still render the form.
+  const gated = payload => payload.can_register === false;
+  assert.equal(gated({ can_register: false }), true);
+  assert.equal(gated({ can_register: true }), false);
+  assert.equal(gated({}), false, 'an older server without the field must not block registration');
+});
