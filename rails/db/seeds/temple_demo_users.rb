@@ -117,7 +117,34 @@ module Seeds
     def seed
       puts "Seeding temple demo users..." # rubocop:disable Rails/Output
       USERS.each { |config| apply_profile(config) }
+      ensure_dev_client_account!
       connect_demo_patrons!
+    end
+
+    # The Expo dev-client prefills these credentials so the Director never has
+    # to type on a phone (mobile/App.js: 'member@example.test' /
+    # 'templemate-demo', matching app/dummy/fixtures.js). In dummy mode they
+    # resolve against local fixtures; in real mode against Rails, where the
+    # account simply did not exist -- so the prefill was dead the moment the
+    # client pointed at a real API.
+    #
+    # Development and test only: this is a known weak password and must never
+    # reach a real environment.
+    DEV_CLIENT_EMAIL = "member@example.test"
+    DEV_CLIENT_PASSWORD = "templemate-demo"
+
+    def ensure_dev_client_account!
+      return unless Rails.env.development? || Rails.env.test?
+
+      user = User.find_or_initialize_by(email: DEV_CLIENT_EMAIL)
+      user.assign_attributes(
+        english_name: "Lin Xiao An",
+        native_name: "林小安", # mirrors the dummy fixture identity
+        encrypted_password: User.password_hash(DEV_CLIENT_PASSWORD)
+      )
+      user.save! if user.changed?
+      puts "Dev-client account ready (#{DEV_CLIENT_EMAIL})." # rubocop:disable Rails/Output
+      user
     end
 
     # Binding is the join (see TempleConnection), so seeded patrons need a
@@ -125,7 +152,9 @@ module Seeds
     # bin/reset_backend. This stands in for the QR scan they would do on a
     # real device.
     def connect_demo_patrons!
-      users = User.where(email: USERS.map { |config| config[:email] })
+      emails = USERS.map { |config| config[:email] }
+      emails << DEV_CLIENT_EMAIL if Rails.env.development? || Rails.env.test?
+      users = User.where(email: emails)
       Temple.find_each do |temple|
         users.each { |user| TempleConnection.record!(user:, temple:) }
       end
