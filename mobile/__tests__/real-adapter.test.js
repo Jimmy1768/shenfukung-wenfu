@@ -264,3 +264,58 @@ test('registrations/new tells the client when a registration already exists', ()
   assert.equal(gated({ can_register: true }), false);
   assert.equal(gated({}), false, 'an older server without the field must not block registration');
 });
+
+test('updateProfile sends every field the endpoint permits, and nothing it does not', async () => {
+  const calls = []; const adapter = createRealAdapter({ config, store: store(), transport: fixtureTransport(calls) });
+  await adapter.signIn({ email: user.email, password: 'test-password' });
+  calls.length = 0;
+
+  await adapter.updateProfile({
+    english_name: 'Lin Xiao An', native_name: '林小安',
+    phone: '0911-222-333', city: '竹南鎮',
+    notes: 'REMOVED FIELD', admin_display_mode: 'dark', id: 99
+  });
+
+  const call = calls.find(c => c.method === 'PATCH' && c.url.includes('/profile'));
+  const sent = JSON.parse(call.body).profile;
+
+  assert.deepEqual(Object.keys(sent).sort(), ['city', 'english_name', 'native_name', 'phone']);
+  assert.equal(sent.native_name, '林小安');
+  assert.equal(sent.city, '竹南鎮');
+  // notes was removed from the profile; anything else is not ours to send.
+  assert.equal('notes' in sent, false);
+  assert.equal('admin_display_mode' in sent, false);
+  assert.equal('id' in sent, false);
+});
+
+test('updateProfile keeps the single-name shorthand working', async () => {
+  const calls = []; const adapter = createRealAdapter({ config, store: store(), transport: fixtureTransport(calls) });
+  await adapter.signIn({ email: user.email, password: 'test-password' });
+  calls.length = 0;
+  await adapter.updateProfile({ name: '新名字' });
+  const call = calls.find(c => c.method === 'PATCH' && c.url.includes('/profile'));
+  assert.deepEqual(JSON.parse(call.body), { profile: { native_name: '新名字' } });
+});
+
+test('a validation failure shows the server message, not a generic English one', () => {
+  const { nativeError } = require('../app/real/response');
+  // Mirrors App.js#errorMessage / firstDetail.
+  const firstDetail = reason => {
+    const details = reason?.details;
+    if (!details || typeof details !== 'object') return null;
+    const messages = details.base || Object.values(details).find(v => Array.isArray(v) && v.length);
+    return Array.isArray(messages) && typeof messages[0] === 'string' ? messages[0] : null;
+  };
+  const message = reason => firstDetail(reason) || reason?.message || 'fallback';
+
+  const validation = nativeError(422, { code: 'validation_failed', details: { base: ['姓名或英文姓名至少需填寫一項。'] } });
+  assert.equal(message(validation), '姓名或英文姓名至少需填寫一項。');
+
+  // Field-scoped errors work too.
+  const fieldScoped = nativeError(422, { code: 'validation_failed', details: { quantity: ['數量無效。'] } });
+  assert.equal(message(fieldScoped), '數量無效。');
+
+  // No details -> the code-based message still applies.
+  const noDetails = nativeError(401, { code: 'session_invalid' });
+  assert.equal(message(noDetails), 'Your session is no longer valid.');
+});

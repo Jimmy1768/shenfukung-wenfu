@@ -31,13 +31,23 @@ const adapter = clientConfig.mode === 'real' ? createRealAdapter({ config: clien
 const oauthRuntime = createExpoOAuthRuntime(clientConfig.oauthReturnUrl);
 const oauthController = createOAuthController({ adapter, expectedReturnUrl: clientConfig.oauthReturnUrl, createPkce: oauthRuntime.createPkce, openBrowser: clientConfig.mode === 'dummy' ? adapter.openOAuthBrowser : oauthRuntime.openBrowser });
 const menuKeys = accountMenu();
-const errorMessage = reason => reason?.message || 'Something went wrong. Please try again.';
+// Rails returns a specific, already-localized validation message in
+// details.base; the code-based fallback said "Please review the highlighted
+// fields" in English on a Chinese UI, with nothing highlighted. Prefer the
+// server's own text and fall back only when it has none.
+const firstDetail = reason => {
+  const details = reason?.details;
+  if (!details || typeof details !== 'object') return null;
+  const messages = details.base || Object.values(details).find(value => Array.isArray(value) && value.length);
+  return Array.isArray(messages) && typeof messages[0] === 'string' ? messages[0] : null;
+};
+const errorMessage = reason => firstDetail(reason) || reason?.message || 'Something went wrong. Please try again.';
 
 export default function App() {
   const [startup, setStartup] = useState(true); const [signedIn, setSignedIn] = useState(false); const [screen, setScreen] = useState('home');
   const [locale, setLocale] = useState('zh-TW'); const [dark, setDark] = useState(false); const [binding, setBinding] = useState(initialBinding()); const [data, setData] = useState(adapter.snapshot()); const [collections, setCollections] = useState('idle');
   const [email, setEmail] = useState(isReleaseConfig(clientConfig) ? '' : 'member@example.test'); const [password, setPassword] = useState(isReleaseConfig(clientConfig) ? '' : 'templemate-demo'); const [signup, setSignup] = useState({ name: '', email: '', password: '' }); const [recoveryEmail, setRecoveryEmail] = useState('');
-  const [profileName, setProfileName] = useState(data.profile.name); const [dependent, setDependent] = useState({ id: null, name: '', relationship: '家人' }); const [registration, setRegistration] = useState(null);
+  const [profileForm, setProfileForm] = useState({ english_name: '', native_name: '', phone: '', city: '' }); const [dependent, setDependent] = useState({ id: null, name: '', relationship: '家人' }); const [registration, setRegistration] = useState(null);
   const [supportMessage, setSupportMessage] = useState(''); const [closureConfirmation, setClosureConfirmation] = useState(''); const [pending, setPending] = useState(false); const [feedback, setFeedback] = useState(emptyFeedback());
   const [oauthState, setOauthState] = useState(oauthController.snapshot()); const [cameraOpen, setCameraOpen] = useState(false);
   // The server is authoritative for the temple's display name. Bootstrap
@@ -92,13 +102,21 @@ export default function App() {
   const clearReleaseBinding = () => isReleaseConfig(clientConfig) ? trustedBindingStorage.clear().catch(() => null) : Promise.resolve();
   const run = async (action, { noticeOwner = screen, noticeKey = 'saved' } = {}) => { if (pending) return false; setPending(true); setFeedback(emptyFeedback()); try { const next = await action(); if (next && !next.outcome) setData(next); setFeedback(noticeFeedback(typeof noticeKey === 'function' ? noticeKey(next) : noticeKey, noticeOwner)); return true; } catch (reason) { if (isReleaseConfig(clientConfig) && ['session_invalid', 'session_replayed', 'session_revoked', 'account_closed'].includes(reason?.code)) { clearReleaseBinding(); setBinding(initialBinding()); } showError(errorMessage(reason)); return false; } finally { setPending(false); } };
   const signIn = async () => { const ok = await run(async () => { const next = await adapter.signIn({ email, password }); if (adapter.kind === 'real') await adapter.loadCollections(); return adapter.snapshot(); }); if (ok) { setSignedIn(true); setCollections('ready'); setBinding(clientConfig.mode === 'real' && !isReleaseConfig(clientConfig) ? boundTenant(adapter.snapshot()) : initialBinding()); } };
-  // profileName is seeded at mount, before sign-in, when the snapshot is
-  // empty -- so the field rendered blank for a user who has a name. Re-sync
-  // whenever the loaded profile changes (bootstrap, sign-in, OAuth, save).
-  useEffect(() => { setProfileName(data.profile.name || ''); }, [data.profile.name]);
+  // Seeded at mount, before sign-in, when the snapshot is still empty -- so
+  // the fields rendered blank for a user who has values. Re-sync whenever the
+  // loaded profile changes (bootstrap, sign-in, OAuth, save). Depends on the
+  // individual values rather than the user object, whose identity changes on
+  // every snapshot and would re-run this constantly.
+  const loadedUser = data.profile.user || {};
+  useEffect(() => {
+    setProfileForm({
+      english_name: loadedUser.english_name || '', native_name: loadedUser.native_name || '',
+      phone: loadedUser.phone || '', city: loadedUser.city || ''
+    });
+  }, [loadedUser.english_name, loadedUser.native_name, loadedUser.phone, loadedUser.city]);
 
   const signOut = () => { oauthController.clear('idle').then(setOauthState).catch(() => null); clearReleaseBinding(); Promise.resolve(adapter.logout?.()).catch(() => null); setBinding(initialBinding()); setSignedIn(false); setScreen('home'); setFeedback(emptyFeedback()); };
-  const reset = () => { if (adapter.kind !== 'dummy') { showError('Real mode does not reset account data.'); return; } oauthController.clear('idle').then(setOauthState).catch(() => null); const next = adapter.reset(); setData(next); setProfileName(next.profile.name); setDependent({ id: null, name: '', relationship: '家人' }); setRegistration(null); setBinding(initialBinding()); setFeedback(emptyFeedback()); };
+  const reset = () => { if (adapter.kind !== 'dummy') { showError('Real mode does not reset account data.'); return; } oauthController.clear('idle').then(setOauthState).catch(() => null); const next = adapter.reset(); setData(next); setProfileForm({ english_name: next.profile.user?.english_name || '', native_name: next.profile.user?.native_name || '', phone: '', city: '' }); setDependent({ id: null, name: '', relationship: '家人' }); setRegistration(null); setBinding(initialBinding()); setFeedback(emptyFeedback()); };
   const beginOAuth = async provider => {
     if (pending) return; setPending(true); setFeedback(emptyFeedback());
     try {
@@ -117,7 +135,7 @@ export default function App() {
     finally { setPending(false); }
   };
   const updatePreference = async next => { const previous = { locale, dark }; const payload = { ...(next.locale ? { locale: next.locale } : {}), ...(next.theme ? { mobile_theme_id: next.theme } : {}) }; const ok = await run(async () => adapter.updatePreferences(payload)); if (ok) { if (next.locale) { setFeedback(emptyFeedback()); setLocale(next.locale); } if (next.theme) setDark(next.theme === 'dark'); } else { setLocale(previous.locale); setDark(previous.dark); } };
-  const shared = { t, palette, locale, setLocale, dark, setDark, screen, setScreen: navigate, data, setData, binding, setBinding, profileName, setProfileName, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, error, setError: message => message ? showError(message) : dismissError(), notice, run, reset, signOut, collections, updatePreference, oauthState, cameraOpen, setCameraOpen };
+  const shared = { t, palette, locale, setLocale, dark, setDark, screen, setScreen: navigate, data, setData, binding, setBinding, profileForm, setProfileForm, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, error, setError: message => message ? showError(message) : dismissError(), notice, run, reset, signOut, collections, updatePreference, oauthState, cameraOpen, setCameraOpen };
   if (startup) return <Shell palette={palette}><View style={styles.center}><Text style={[styles.brand, { color: palette.text }]}>{t.appName}</Text><Text style={[styles.muted, { color: palette.textMuted }]}>{loadingText}</Text></View></Shell>;
   if (!signedIn) return oauthState.phase === 'account_resolution' ? <OAuthResolution {...shared} onSubmit={submitResolution} /> : <SignedOut {...shared} {...{ email, setEmail, password, setPassword, signup, setSignup, recoveryEmail, setRecoveryEmail, signIn, setSignedIn, beginOAuth }} />;
   if (!activePresentationTenant(binding)) return <TenantSetupGate {...shared} />;
@@ -158,9 +176,22 @@ function OAuthResolution({ t, palette, oauthState, pending, error, setError, onS
 }
 
 function AccountSurface(props) {
-  const { screen, t, palette, data, binding, setBinding, profileName, setProfileName, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, setScreen, run, reset, collections } = props;
+  const { screen, t, palette, data, binding, setBinding, profileForm, setProfileForm, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, setScreen, run, reset, collections } = props;
   if (screen === 'home') return <><Section title={t.account} palette={palette}><Text style={[styles.body, { color: palette.text }]}>{t.welcome}{data.profile.name}</Text><Text style={[styles.muted, { color: palette.textMuted }]}>{data.registrations.length} {t.registrations} · {data.dependents.length} {t.dependents}</Text></Section><Section title={t.templeConnection} palette={palette}><Text style={[styles.body, { color: palette.text }]}>{activePresentationTenant(binding)?.name || t.notConnected}</Text></Section><Section title={t.certificates} palette={palette}>{collections === 'loading' && <Text style={[styles.muted, { color: palette.textMuted }]}>{loadingText}</Text>}{collections === 'failed' && <Notice palette={palette} tone="error">{t.collectionFailed}</Notice>}{data.certificates.length ? data.certificates.map(item => <Text key={item.id} style={[styles.body, { color: palette.text }]}>{item.certificateNumber || item.certificate_number || item.offering?.title || t.certificateFixture}</Text>) : <Text style={[styles.muted, { color: palette.textMuted }]}>{t.emptyCertificates}</Text>}</Section></>;
-  if (screen === 'profile') return <Section title={t.profile} palette={palette}><FormInput label={t.name} value={profileName} onChangeText={setProfileName} palette={palette} /><Button label={t.save} palette={palette} disabled={pending} onPress={() => run(() => adapter.updateProfile({ name: profileName }))} /></Section>;
+  if (screen === 'profile') {
+    // The four fields NativeProfileController permits, matching the web form
+    // exactly. `notes` is deliberately absent: it was scaffold residue that
+    // staff code read as contact detail, and was removed from both surfaces.
+    const field = key => ({ value: profileForm[key], onChangeText: text => setProfileForm({ ...profileForm, [key]: text }), palette });
+    return <Section title={t.profile} palette={palette}>
+      <Text style={[styles.muted, { color: palette.textMuted }]}>{t.email}: {data.profile.email}</Text>
+      <FormInput label={t.nativeName} {...field('native_name')} />
+      <FormInput label={t.englishName} {...field('english_name')} />
+      <FormInput label={t.phone} {...field('phone')} />
+      <FormInput label={t.city} {...field('city')} />
+      <Button label={t.save} palette={palette} disabled={pending} onPress={() => run(() => adapter.updateProfile(profileForm))} />
+    </Section>;
+  }
   if (screen === 'dependents') return <Section title={t.dependents} palette={palette}>{collections === 'loading' && <Text style={[styles.muted, { color: palette.textMuted }]}>{loadingText}</Text>}{data.dependents.length === 0 && <Text style={[styles.muted, { color: palette.textMuted }]}>{t.emptyDependents}</Text>}{data.dependents.map(item => <ListCard key={item.id} palette={palette} title={`${item.name} · ${item.relationship}`} onPress={() => setDependent({ id: item.id, name: item.name, relationship: item.relationship })} />)}<FormInput label={t.name} value={dependent.name} onChangeText={name => setDependent({ ...dependent, name })} palette={palette} /><FormInput label={t.relationship} value={dependent.relationship} onChangeText={relationship => setDependent({ ...dependent, relationship })} palette={palette} /><Button label={dependent.id ? t.update : t.add} palette={palette} disabled={pending} onPress={async () => { const ok = await run(() => dependent.id ? adapter.updateDependent(dependent.id, dependent) : adapter.createDependent(dependent)); if (ok) setDependent({ id: null, name: '', relationship: '家人' }); }} /><Button label={t.delete} palette={palette} tone="danger" disabled={!dependent.id || pending} onPress={async () => { const ok = await run(() => adapter.deleteDependent(dependent.id)); if (ok) setDependent({ id: null, name: '', relationship: '家人' }); }} /></Section>;
   if (screen === 'registrations') return <Section title={t.registrations} palette={palette}>{collections === 'loading' && <Text style={[styles.muted, { color: palette.textMuted }]}>{loadingText}</Text>}{data.registrations.length === 0 && <Text style={[styles.muted, { color: palette.textMuted }]}>{t.emptyRegistrations}</Text>}{data.registrations.map(item => { const presentation = adapter.kind === 'dummy' ? registrationDemoPresentation(item) : null; return <ListCard key={item.id} palette={palette} title={`${item.offering.title} · ${item.registrantName}`} caption={presentation ? t[presentation.copyKey] : registrationCaption(t, item)} disabled={presentation ? presentation.readOnly : item.readOnly} onPress={async () => { if (presentation ? presentation.readOnly : item.readOnly) return; let edit; const ok = await run(async () => { edit = await adapter.editRegistration(item.id); return null; }); if (ok) { const record = edit.registration || item; setRegistration({ ...preparedRegistration({ offering: record.offering || item.offering, registration: record, registrants: edit.registrants || [], snapshot: data }), id: item.id }); } }} />; })}{!registration && <><Text style={[styles.muted, { color: palette.textMuted }]}>{t.registrationDiscoverHint}</Text><Button label={t.discoverOfferings} palette={palette} onPress={() => setScreen('discover')} /></>}{registration && <RegistrationForm {...{ t, palette, registration, setRegistration, data, pending, run, setScreen, demoMode: adapter.kind === 'dummy' }} onSave={async () => { const ok = await run(() => registration.id ? adapter.updateRegistration(registration.id, updateInput(registration)) : adapter.createRegistration(createInput(registration))); if (ok) { setRegistration(null); setScreen('registrations'); } }} />}</Section>;
   if (screen === 'discover') { const offerings = offeringCatalog(data); const start = async offering => { let prepared; const ok = await run(async () => { prepared = await adapter.newRegistration({ offering: offering.slug, accountAction: offering.account_action }); return null; }); if (ok) { if (prepared.can_register === false) { setRegistration(null); setScreen('registrations'); setFeedback(noticeFeedback('alreadyRegistered', 'registrations')); return; } setRegistration(preparedRegistration({ offering: prepared.offering, registration: prepared.registration, registrants: prepared.registrants, snapshot: data })); setScreen('registrations'); } }; return <><Section title={t.activity} palette={palette}><OfferingList items={offerings.filter(item => item.account_action === 'event' || item.account_action === 'gathering')} palette={palette} t={t} onSelect={start} /></Section><Section title={t.services} palette={palette}><OfferingList items={offerings.filter(item => item.account_action === 'service')} palette={palette} t={t} onSelect={start} /></Section><DataSection title={t.gallery} items={data.gallery} palette={palette} empty={t.emptyCollection} /></>; }

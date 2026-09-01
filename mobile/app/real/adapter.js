@@ -5,6 +5,9 @@ const { nativeError, snapshotFromBootstrap, mapDependent, mapRegistration, nameF
 const nativePath = '/api/v1/account/native';
 const query = (path, tenantSlug) => `${path}${path.includes('?') ? '&' : '?'}temple_slug=${encodeURIComponent(tenantSlug)}`;
 const jsonHeaders = token => ({ Accept: 'application/json', 'Content-Type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) });
+// Exactly what NativeProfileController#profile_params permits. `notes` is
+// deliberately not here -- removed from the profile on both surfaces.
+const PROFILE_FIELDS = ['english_name', 'native_name', 'phone', 'city'];
 const registrationFields = input => Object.fromEntries(Object.entries(input || {}).filter(([key, value]) => ['quantity', 'registrant_scope', 'dependent_id', 'contact_name', 'contact_phone', 'contact_email', 'household_notes', 'arrival_window', 'ceremony_notes'].includes(key) && value !== undefined && value !== null && value !== ''));
 
 function createRealAdapter({ config, store, transport, bindingStorage, device = { device_id: 'local-test-client', platform: 'expo' } }) {
@@ -67,7 +70,7 @@ function createRealAdapter({ config, store, transport, bindingStorage, device = 
     async refresh() { if (!session?.refresh_token) return null; const payload = await request('POST', '/refresh', { refresh_token: session.refresh_token }, false); await applySession(payload.session); return session; },
     async logout() { try { if (session) await request('DELETE', '/logout', { refresh_token: session.refresh_token }); } finally { session = null; await clearRetainedState(); } },
     async clearTenantState() { session = null; state = snapshotFromBootstrap(); await clearRetainedState(); },
-    async updateProfile(input) { const profile = input.name ? { native_name: input.name } : input; const payload = await request('PATCH', '/profile', { profile }); state.profile = { id: String(payload.user.id), email: payload.user.email, name: nameFor(payload.user), user: payload.user }; return state; },
+    async updateProfile(input) { const profile = input.name ? { native_name: input.name } : Object.fromEntries(Object.entries(input || {}).filter(([key]) => PROFILE_FIELDS.includes(key))); const payload = await request('PATCH', '/profile', { profile }); state.profile = { id: String(payload.user.id), email: payload.user.email, name: nameFor(payload.user), user: payload.user }; return state; },
     addPassword: input => request('POST', '/profile/password', { password: input }),
     async listDependents() { const payload = await request('GET', '/dependents'); return updateState('dependents', payload.dependents.map(mapDependent)); },
     showDependent: id => request('GET', `/dependents/${id}`),
