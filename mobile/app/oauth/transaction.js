@@ -18,7 +18,11 @@ function createOAuthController({ adapter, createPkce, openBrowser, expectedRetur
   if (typeof createPkce !== 'function' || typeof openBrowser !== 'function' || !safeUrl(expectedReturnUrl)) throw new Error('OAuth runtime is incomplete.');
   let state = { phase: 'idle', provider: null, detail: null };
   let returnInFlight = null;
-  const setState = (phase, provider = null, detail = null) => { if (!phases.has(phase)) throw new Error('Unknown OAuth state.'); state = { phase, provider, detail }; onStateChange({ ...state }); return state; };
+  // `detail` stays the bare resolution token -- submitResolution reads it as
+// one. `hints` carries what the provider already told us about this
+// person, so the resolution form can prefill rather than make them retype
+// it. In memory only, same discipline as the token.
+  const setState = (phase, provider = null, detail = null, hints = null) => { if (!phases.has(phase)) throw new Error('Unknown OAuth state.'); state = { phase, provider, detail, hints }; onStateChange({ ...state }); return state; };
   const clear = async (phase = 'idle', provider = null, detail = null) => { await adapter.oauthStorage.clearPending(); return setState(phase, provider, detail); };
   const recordFor = (provider, started, pkce) => ({ provider, redirectUri: expectedReturnUrl, transactionToken: started.transaction_token, verifier: pkce.verifier, createdAt: now(), expiresAt: now() + Number(started.expires_in) * 1000 });
   const validExchangeResult = (result, provider) => Boolean(result?.snapshot && typeof result.snapshot === 'object' && result.snapshot.profile && typeof result.snapshot.profile === 'object' && result?.oauth?.provider === provider && providers.has(result.oauth.provider) && typeof result.oauth.profile_required === 'boolean');
@@ -58,7 +62,7 @@ function createOAuthController({ adapter, createPkce, openBrowser, expectedRetur
       // failing; the resolution_token is kept in memory only (state.detail),
       // never written to storage or logs, same discipline as the pending
       // PKCE record above.
-      if (error?.code === 'account_resolution_required' && error?.oauth?.resolution_token) return setState('account_resolution', record.provider, error.oauth.resolution_token);
+      if (error?.code === 'account_resolution_required' && error?.oauth?.resolution_token) return setState('account_resolution', record.provider, error.oauth.resolution_token, { name: error.oauth.name || '', email: error.oauth.email || '' });
       if (typeof adapter.clearOAuthSession === 'function') await adapter.clearOAuthSession();
       else if (typeof adapter.clearTenantState === 'function') await adapter.clearTenantState();
       return clear(error?.code === 'account_closed' ? 'closed' : 'failed', record.provider, error?.code || 'exchange_failed');

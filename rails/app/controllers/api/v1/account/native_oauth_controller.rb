@@ -26,7 +26,18 @@ module Api
           if result.account_resolution.present?
             return render json: {
               code: "account_resolution_required",
-              oauth: { provider: result.provider, resolution_token: result.account_resolution.token }
+              # The name and email Google/Apple already gave us, so the
+              # resolution form can prefill instead of making the patron
+              # retype what we were handed. Hints only -- consume_new! reads
+              # whatever is actually submitted, and the patron can edit both.
+              # Discloses nothing new: it is the identity they just signed in
+              # with, returned to the client that completed the exchange.
+              oauth: {
+                provider: result.provider,
+                resolution_token: result.account_resolution.token,
+                name: result.account_resolution.record&.display_name,
+                email: result.account_resolution.record&.email
+              }
             }, status: :conflict
           end
 

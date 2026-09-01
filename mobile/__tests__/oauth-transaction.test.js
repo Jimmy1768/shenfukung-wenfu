@@ -178,3 +178,18 @@ test("App.js's oauthErrorPhases allowlist stays a strict subset of the real phas
     for (const phase of oauthErrorPhases) assert.ok(copy[locale].oauthOutcome[phase], `copy.${locale}.oauthOutcome.${phase} must have text for every error phase`);
   }
 });
+
+test('the resolution phase carries the provider name and email for prefill', async () => {
+  const conflict = Object.assign(new Error('resolution required'), {
+    code: 'account_resolution_required',
+    oauth: { resolution_token: 'resolve-me', name: 'Lin Xiao An', email: 'lin@example.test' }
+  });
+  // The hint shape the OAuthResolution form reads.
+  const hintsFor = error => ({ name: error.oauth.name || '', email: error.oauth.email || '' });
+  assert.deepEqual(hintsFor(conflict), { name: 'Lin Xiao An', email: 'lin@example.test' });
+
+  // A provider that supplies no name must yield an empty field, never
+  // "undefined" or a placeholder rendered into the input.
+  const noName = { oauth: { resolution_token: 't', email: 'x@example.test' } };
+  assert.deepEqual(hintsFor(noName), { name: '', email: 'x@example.test' });
+});

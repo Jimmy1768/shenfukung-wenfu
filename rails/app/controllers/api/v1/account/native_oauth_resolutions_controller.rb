@@ -12,7 +12,19 @@ module Api
 
         def show
           resolution = Auth::OAuthAccountResolution.find!(token: params[:token].to_s, provider: params[:provider].to_s, surface: "native")
-          render json: { resolution: { provider: resolution.provider, expires_at: resolution.expires_at } }
+          # display_name and email are what the provider already told us about
+          # this person (Google/Apple claims, captured in create_record!). The
+          # app prefills them so a patron never retypes what we were handed.
+          # They are hints for a form the patron still confirms, not identity:
+          # consume_new! re-reads whatever is submitted.
+          render json: {
+            resolution: {
+              provider: resolution.provider,
+              expires_at: resolution.expires_at,
+              name: resolution.display_name,
+              email: resolution.email
+            }
+          }
         rescue Auth::OAuthAccountResolution::InvalidToken
           render_error("resolution_invalid", :unauthorized)
         rescue Auth::OAuthAccountResolution::Expired

@@ -108,6 +108,44 @@ class NativeOauthContractTest < ActionDispatch::IntegrationTest
     assert_nil session[AppConstants::Sessions.key(:account)]
   end
 
+  # The provider already told us who this is; making the patron retype it is
+  # the friction the resolution screen exists to avoid.
+  test "the resolution conflict carries the provider's name and email for prefill" do
+    central = FakeCentralOAuthClient.new(
+      { "redirect_url" => "https://central.example.test/google" },
+      identity_response(provider: "google", uid: "prefill-subject",
+                        email: "prefill-native@example.test", name: "Lin Xiao An")
+    )
+    token = start_transaction(central)
+
+    with_return_url { Auth::CentralOAuthClient.stub(:new, central) { post native_exchange_path, params: exchange_params(token) } }
+
+    assert_response :conflict
+    assert_equal "account_resolution_required", response.parsed_body.fetch("code")
+    oauth = response.parsed_body.fetch("oauth")
+    assert oauth.fetch("resolution_token").present?
+    assert_equal "Lin Xiao An", oauth.fetch("name")
+    assert_equal "prefill-native@example.test", oauth.fetch("email")
+
+    # Still only hints: no session is issued and nothing is authenticated yet.
+    assert_nil response.parsed_body["session"]
+    assert_nil session[AppConstants::Sessions.key(:account)]
+  end
+
+  test "a provider that supplies no name yields a nil hint rather than a placeholder" do
+    central = FakeCentralOAuthClient.new(
+      { "redirect_url" => "https://central.example.test/apple" },
+      identity_response(provider: "apple", uid: "no-name-subject",
+                        email: "no-name@example.test", name: nil)
+    )
+    token = start_transaction(central, provider: "apple")
+
+    with_return_url { Auth::CentralOAuthClient.stub(:new, central) { post native_exchange_path, params: exchange_params(token) } }
+
+    assert_response :conflict
+    assert_nil response.parsed_body.dig("oauth", "name")
+  end
+
   test "native exchange uses shared nested Google claims and Apple id-token fallbacks" do
     google = FakeCentralOAuthClient.new(
       { "redirect_url" => "https://central.example.test/google" },

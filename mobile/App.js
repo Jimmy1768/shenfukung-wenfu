@@ -166,7 +166,11 @@ function SignedOut({ t, palette, locale, setLocale, dark, setDark, screen, setSc
 // "not yet available" error at the last step rather than guessing a URL.
 function OAuthResolution({ t, palette, oauthState, pending, error, setError, onSubmit }) {
   const [mode, setMode] = useState(null);
-  const [email, setEmail] = useState(''); const [password, setPassword] = useState(''); const [name, setName] = useState(''); const [termsAccepted, setTermsAccepted] = useState(false);
+  // Prefill from what Google/Apple already told us (oauthState.hints), so a
+  // patron confirms rather than retypes. Both stay editable -- the server
+  // reads whatever is submitted, not the hint.
+  const hints = oauthState.hints || {};
+  const [email, setEmail] = useState(hints.email || ''); const [password, setPassword] = useState(''); const [name, setName] = useState(hints.name || ''); const [termsAccepted, setTermsAccepted] = useState(false);
   return <Shell palette={palette}><ScrollView contentContainerStyle={styles.auth} keyboardShouldPersistTaps="handled"><Text style={[styles.brand, { color: palette.text }]}>{t.appName}</Text><Text style={[styles.lead, { color: palette.text }]}>{oauthState.provider === 'apple' ? t.appleSignIn : t.googleSignIn}</Text><Notice palette={palette} tone="info">{t.oauthResolutionIntro}</Notice>
     {!mode && <><Button label={t.oauthResolutionExisting} palette={palette} onPress={() => setMode('existing')} /><Text style={[styles.muted, { color: palette.textMuted }]}>{t.oauthResolutionExistingDescription}</Text><Button label={t.oauthResolutionNew} palette={palette} onPress={() => setMode('new')} /><Text style={[styles.muted, { color: palette.textMuted }]}>{t.oauthResolutionNewDescription}</Text></>}
     {mode === 'existing' && <><FormInput label={t.email} value={email} onChangeText={setEmail} autoCapitalize="none" palette={palette} /><FormInput label={t.password} value={password} onChangeText={setPassword} secureTextEntry autoCapitalize="none" palette={palette} /><Button label={pending ? '…' : t.oauthResolutionLink} palette={palette} disabled={pending} onPress={() => onSubmit('existing', { email, password })} /><Button label={t.back} palette={palette} tone="secondary" onPress={() => setMode(null)} /></>}
