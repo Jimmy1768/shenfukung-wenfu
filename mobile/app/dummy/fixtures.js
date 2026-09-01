@@ -1,6 +1,6 @@
 const tenant = Object.freeze({
   id: 'fixture-temple-001',
-  name: '竹南鎮聖福宮',
+  name: '示範宮廟',
   origin: 'https://temple.example.test',
   connectionPath: '/connect/templemate'
 });

@@ -42,7 +42,7 @@ export default function App() {
   const [oauthState, setOauthState] = useState(oauthController.snapshot()); const [cameraOpen, setCameraOpen] = useState(false);
   // The server is authoritative for the temple's display name. Bootstrap
   // returns { slug, name }; localTenantBinding only knows the configured slug
-  // and would otherwise show "shengfukung-wenfu" instead of 竹南鎮聖福宮.
+  // and would otherwise show "shengfukung-wenfu" instead of the temple's real name.
   const boundTenant = snapshot => {
     const temple = snapshot?.temple;
     if (!temple?.slug) return localTenantBinding(clientConfig);

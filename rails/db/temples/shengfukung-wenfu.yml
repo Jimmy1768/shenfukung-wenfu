@@ -1,6 +1,8 @@
 slug: shengfukung-wenfu
 patron_checkout_provider: cash_only
-name: 竹南鎮聖福宮
+# Demo tenant: never display the real temple's name to prospects.
+# The real temple onboards separately as shengfukung.org.tw.
+name: 示範宮廟
 tagline: 清淨・莊嚴・在地信仰
 hero_copy: 用簡潔的段落說明本廟的宗旨、服務與交通資訊。
 primary_image_url:
