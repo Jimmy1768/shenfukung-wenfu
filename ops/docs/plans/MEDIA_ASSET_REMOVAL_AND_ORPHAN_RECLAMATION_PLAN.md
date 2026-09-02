@@ -129,6 +129,65 @@ original scope.
 - Covered for both storage paths, since clearing only one was the bug ✓
 - Replace-in-one-save keeps the new image ✓
 
+## Phase 0 — Give production its own S3 prefix
+
+Prerequisite for Phase 2. Small now, and it only gets more expensive.
+
+**Why.** The Director first settled on dev/staging/none, then asked whether
+prefixing production was better. It is, for one reason: with no prefix,
+production's namespace *is* the bucket root, so its sweep would see `dev/` and
+`staging/` objects as orphans. The mitigation would be an explicit
+sibling-prefix exclusion list that must be updated every time an environment is
+added — forgetting means deleting that environment's files. Prefixing
+production deletes that hazard outright instead of managing it forever.
+
+It cannot be avoided by scoping to one key root: `HeroImageUploader` writes
+`uploads/hero-images/…` while `ManagedUploader` writes `gatherings/hero/…`,
+`gallery/images/…` and `gallery/videos/…`. Narrowing to `uploads/` would skip
+exactly the gallery albums this work targets.
+
+**Measured 2026-09-02, production:**
+
+```text
+bucket templemate-media-assets:  9 objects, 2.1 MB, all under uploads/
+media_assets rows:               16  (8 real uploads, 8 placehold.co seed rows)
+dev/ objects:                    none
+```
+
+**Correcting an earlier claim in this document:** "every gallery photo ever
+deleted is still in the bucket and still billed" implied a real cost. At 2.1 MB
+it is noise, and there are effectively no orphans to reclaim today. Phase 2's
+value is preventing a future mess, not recovering storage — which lowers its
+urgency considerably.
+
+**Final scheme:** development → `dev`, staging → `staging`, production → `prod`.
+
+### Steps
+
+1. **Dry run.** Report every object that would be copied, every
+   `MediaAsset.file_uid` that would be rewritten, and every stored URL that
+   embeds the old path. Writes nothing. This runs first and the Director reads
+   it.
+2. Server-side copy `uploads/…` → `prod/uploads/…`.
+3. Rewrite the 8 `MediaAsset.file_uid` values.
+4. Rewrite stored URLs: `temple.hero_images` entries, and any
+   `hero_image_url` / `poster_image_url` columns on events, services and
+   gatherings that embed the old path.
+5. Set `S3_OBJECT_PREFIX=prod` in `/etc/default/shengfukung-wenfu-env`, and
+   `staging` in both staging units (already prepared in `ops/systemd/`).
+   Restart. Requires sudo.
+6. Verify the site renders every hero and gallery image, then delete the old
+   root-level copies.
+
+Steps 2–4 write to the production database and bucket. Step 5 needs sudo.
+Nothing runs without the Director reading step 1's output first.
+
+### Ordering hazard
+
+Step 5 must come **after** 2–4, and step 6 after 5. Setting the prefix before
+the objects and URLs move would break every existing image, because the app
+would start resolving `prod/uploads/…` for files still at `uploads/…`.
+
 ## Phase 2 — Orphan reclamation sweep
 
 Can permanently destroy customer files. Not to be authorized in the same breath
