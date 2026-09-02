@@ -706,6 +706,8 @@ en:
           selected_pending: "Selected. Save hero images to upload."
           paste_url: "Or paste a hosted image URL"
           url_hint: "Use this only when the image is already hosted elsewhere."
+          remove: "Remove this image"
+          remove_hint: "Tick and save; this page will use the Home image instead. The uploaded file is kept, not deleted."
       fields:
         name: "Temple name"
         tagline: "Tagline"

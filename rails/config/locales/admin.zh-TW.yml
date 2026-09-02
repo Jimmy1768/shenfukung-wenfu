@@ -706,6 +706,8 @@ zh-TW:
           selected_pending: "已選擇，請按儲存主視覺圖片完成上傳。"
           paste_url: "或貼上圖片網址"
           url_hint: "僅在圖片已放在其他地方時使用。"
+          remove: "移除此圖片"
+          remove_hint: "勾選後儲存，此頁面將改用「首頁」圖片。已上傳的檔案會保留，不會刪除。"
       fields:
         name: "宮廟名稱"
         tagline: "標語"

@@ -1,7 +1,8 @@
 # Media Asset Removal And Orphan Reclamation Plan
 
-Status: findings confirmed, no phase authorized. Two separable pieces of work
-with different risk profiles; Phase 1 is additive and reversible, Phase 2 can
+Status: **Phase 1 implemented 2026-09-02** (Director authorized, chose to keep
+the MediaAsset row). Phase 2 not authorized. Two separable pieces of work with
+different risk profiles; Phase 1 is additive and reversible, Phase 2 can
 permanently destroy customer files and is deliberately gated behind a dry run.
 
 Owner: Wenfu Planning / Director
@@ -97,6 +98,23 @@ reclaim.
 its `hero_tab` association. Keeping the row preserves the audit trail of what
 was uploaded and when; destroying it makes the orphan set simpler to reason
 about. Recommend keeping the row.
+
+**Delivered.** `MediaAssets::HeroImageRemover` clears both paths;
+`Admin::TemplesController#remove_hero_images` runs it during the profile save,
+before uploads, so a same-save replace ends with the new image. Control lives on
+the shared slot partial, so it covers all seven page tabs plus 活動預設圖片.
+
+Two things found while building it:
+
+- **`home` cannot be removed.** It is the root of the fallback chain and there
+  is nothing beneath it -- `DEFAULT_HERO_IMAGE` lives in the seed, not the
+  model, so removing home returned nil and would have left the whole site with
+  no hero. The service refuses it and the UI hides the control there.
+  Replacing home is an upload, not a removal.
+- **The profile form replaces the whole `hero_images` map.** Submitting a
+  partial hash silently wipes the omitted tabs. Not triggered today because the
+  rendered form posts a field for every tab, but it is a live trap for any
+  future caller that posts a subset. Not fixed here; noted.
 
 **Acceptance:**
 
