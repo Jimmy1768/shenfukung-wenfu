@@ -43,11 +43,19 @@ namespace :media do
     puts "  ... and #{objects.size - 20} more" if objects.size > 20
     puts ""
 
-    # 2. MediaAsset rows whose file_uid points at the old namespace
+    # 2. MediaAsset rows whose file_uid points at the old namespace.
+    #
+    # Skips rows whose file_uid is a URL rather than a storage key. The seeded
+    # placehold.co assets carry a full URL there and were never uploaded to S3,
+    # so prefixing them would produce "prod/https://placehold.co/..." -- caught
+    # by the first dry run against production, which is what it is for.
     rows = MediaAsset.where.not(file_uid: nil).reject do |a|
-      siblings.any? { |s| a.file_uid.to_s.start_with?(s) }
+      uid = a.file_uid.to_s
+      uid.start_with?("http://", "https://") || siblings.any? { |s| uid.start_with?(s) }
     end
+    skipped = MediaAsset.where.not(file_uid: nil).count { |a| a.file_uid.to_s.start_with?("http://", "https://") }
     puts "media_asset file_uids to rewrite: #{rows.size}"
+    puts "  (skipping #{skipped} rows whose file_uid is a URL, not a storage key -- seeded placeholders)" if skipped.positive?
     rows.first(20).each { |a| puts "  ##{a.id}  #{a.file_uid}  ->  #{target}/#{a.file_uid}" }
     puts ""
 
