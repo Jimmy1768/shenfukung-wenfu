@@ -743,8 +743,8 @@ zh-TW:
       hero_tabs:
         home: "首頁"
         about: "關於本廟"
-        events: "法會項目"
-        event: "活動詳情"
+        events: "活動資訊"
+        event: "活動資訊詳情"
         archive: "活動回顧"
         news: "最新消息"
         services: "祈福服務"

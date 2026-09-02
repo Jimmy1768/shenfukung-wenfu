@@ -73,7 +73,11 @@ class Temple < ApplicationRecord
 
   validates :slug, :name, presence: true
 
-  HERO_TABS = %w[home about events event archive news services contact].freeze
+  # Ordered to match the public site's nav (vue SiteHeader.vue navItems), so
+  # the admin's hero-image tabs read in the same sequence a visitor sees.
+  # `event` is the /events/:slug detail page -- it has its own hero but is
+  # not a nav item, so it sits directly after the `events` list it belongs to.
+  HERO_TABS = %w[home about news services events event archive contact].freeze
 
   def contact_details
     contact_info.presence || {}
@@ -143,7 +147,11 @@ class Temple < ApplicationRecord
     image_from_map = sanitized_hero_source(hero_images[tab_key], allow_placeholder: tab_key == "home")
     return image_from_map if image_from_map.present?
 
-    hero_media_asset_for(tab_key)&.metadata&.dig("url").presence ||
+    # Sanitized like the map above: a seeded placehold.co media asset must not
+    # outrank the temple's real home image. Without this the admin's promise
+    # that "unfilled pages use the home image" was false for every tab that
+    # had a placeholder asset sitting in front of the fallback.
+    sanitized_hero_source(hero_media_asset_for(tab_key)&.metadata&.dig("url")).presence ||
       sanitized_hero_source(hero_images["home"], allow_placeholder: true)
   end
 
