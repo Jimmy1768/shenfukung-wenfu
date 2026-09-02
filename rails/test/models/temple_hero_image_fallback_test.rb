@@ -31,10 +31,17 @@ class TempleHeroImageFallbackTest < ActiveSupport::TestCase
     assert_equal "https://cdn.example/home.jpg", @temple.hero_image_for("news")
   end
 
-  test "the tab order matches the public site navigation" do
-    # vue/src/components/site/SiteHeader.vue navItems, with `event` -- the
-    # /events/:slug detail page, which has a hero but is not a nav item --
-    # placed directly after the list it belongs to.
-    assert_equal %w[home about news services events event archive contact], Temple::HERO_TABS
+  test "the seven page heroes match the public site navigation, in order" do
+    # vue/src/components/site/SiteHeader.vue navItems.
+    assert_equal %w[home about news services events archive contact], Temple::PAGE_HERO_TABS
+  end
+
+  test "the event fallback is a valid storage key but not a page hero" do
+    # It must stay in HERO_TABS -- param slicing, upload validation and the
+    # seed normalizer all gate on that list -- while being presented on its
+    # own in the admin rather than as an eighth page tile.
+    refute_includes Temple::PAGE_HERO_TABS, Temple::EVENT_FALLBACK_TAB
+    assert_includes Temple::HERO_TABS, Temple::EVENT_FALLBACK_TAB
+    assert_equal Temple::PAGE_HERO_TABS.size + 1, Temple::HERO_TABS.size
   end
 end

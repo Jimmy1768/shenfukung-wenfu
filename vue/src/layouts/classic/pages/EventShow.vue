@@ -18,7 +18,7 @@ import {
 } from '@/utils/events.js';
 
 const route = useRoute();
-const heroImage = useHeroImage('event');
+const templeEventFallbackImage = useHeroImage('event');
 const siteContent = useTempleContent();
 
 const slug = computed(() => route.params.slug?.toString() || '');
@@ -28,6 +28,13 @@ const loadError = ref(null);
 
 const defaultLocation = computed(
   () => siteContent.data?.contact?.addressZh || '本廟'
+);
+
+// This event's own picture wins. The temple-level 'event' image is only the
+// fallback for events that have none -- which is what the admin calls it
+// (活動預設圖片), and why it is not one of the seven page heroes.
+const heroImage = computed(
+  () => eventData.value?.hero_image_url || templeEventFallbackImage.value
 );
 
 const title = computed(

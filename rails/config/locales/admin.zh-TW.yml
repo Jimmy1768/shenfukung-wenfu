@@ -693,6 +693,9 @@ zh-TW:
         logistics:
           title: "開放時段 / 交通 / 停車"
           subtitle: ""
+        event_fallback_image:
+          title: "活動預設圖片"
+          subtitle: "當某個活動沒有自己的圖片時，活動頁面會顯示這張。這不是某一個頁面的主視覺。"
         hero_images:
           title: "各頁籤主視覺"
           subtitle: "可為每個分頁提供圖片網址；若留白則自動沿用首頁主視覺。"

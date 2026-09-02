@@ -693,6 +693,9 @@ en:
         logistics:
           title: "Hours, transit, and parking"
           subtitle: "Open hours plus visit notes shown on the contact sections."
+        event_fallback_image:
+          title: "Default event image"
+          subtitle: "Shown on an event's page when that event has no image of its own. This is not a page hero."
         hero_images:
           title: "Hero images per page"
           subtitle: "Provide an image URL for each tab. Leave blank to fall back to the home hero."

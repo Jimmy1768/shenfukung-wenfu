@@ -1,0 +1,40 @@
+<%# One hero image slot: rendered per page tab, and once for the event fallback. %>
+            <div class="hero-image-item"
+              data-hero-image-slot
+              data-hero-tab="<%= tab %>">
+              <div class="hero-image-preview-wrapper">
+                <% preview_url = hero_image_preview_for(form.object, tab) %>
+                <%= image_tag(preview_url,
+                  alt: t("admin.temple_profile.hero_tabs.#{tab}"),
+                  class: "hero-image-preview",
+                  data: { hero_preview: true }) %>
+              </div>
+              <div class="hero-image-field">
+                <p class="form-label hero-image-label"><%= t("admin.temple_profile.hero_tabs.#{tab}") %></p>
+                <div class="hero-image-upload-controls">
+                  <label class="btn btn-secondary hero-image-file-label">
+                    <span><%= t("admin.temple_profile.sections.hero_images.choose_file") %></span>
+                    <%= file_field_tag "hero_image_upload[#{tab}]",
+                      accept: "image/*",
+                      class: "hero-image-file-input" %>
+                  </label>
+                  <span class="hero-image-file-name" data-hero-file-name></span>
+                </div>
+
+                <div class="hero-image-status" data-hero-status></div>
+
+                <details class="hero-image-url-field">
+                  <summary><%= t("admin.temple_profile.sections.hero_images.paste_url") %></summary>
+                  <p class="muted"><%= t("admin.temple_profile.sections.hero_images.url_hint") %></p>
+                  <%= url_field_tag "temple[hero_images][#{tab}]",
+                    form.object.hero_images[tab],
+                    placeholder: t("admin.temple_profile.placeholders.hero_image_url"),
+                    class: "hero-image-url-input",
+                    data: { hero_url_input: true } %>
+                </details>
+
+                <% if tab != "home" %>
+                  <p class="muted hero-image-row-hint"><%= t("admin.temple_profile.sections.hero_images.row_hint") %></p>
+                <% end %>
+              </div>
+            </div>

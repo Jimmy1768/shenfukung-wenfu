@@ -73,11 +73,21 @@ class Temple < ApplicationRecord
 
   validates :slug, :name, presence: true
 
-  # Ordered to match the public site's nav (vue SiteHeader.vue navItems), so
-  # the admin's hero-image tabs read in the same sequence a visitor sees.
-  # `event` is the /events/:slug detail page -- it has its own hero but is
-  # not a nav item, so it sits directly after the `events` list it belongs to.
-  HERO_TABS = %w[home about news services events event archive contact].freeze
+  # One hero per page of the public site, ordered to match its nav
+  # (vue/src/components/site/SiteHeader.vue navItems) so the admin reads in the
+  # same sequence a visitor sees.
+  PAGE_HERO_TABS = %w[home about news services events archive contact].freeze
+
+  # NOT a page. This is the picture an event detail page falls back to when
+  # that event has no hero_image_url of its own, so it is presented in its own
+  # section of the admin rather than as an eighth page tab -- calling it a page
+  # is what made the count look wrong (seven nav buttons, eight tabs).
+  EVENT_FALLBACK_TAB = "event"
+
+  # Every valid storage key. Kept whole because param slicing, upload
+  # validation and the seed normalizer all gate on it; only the admin's
+  # PRESENTATION is split.
+  HERO_TABS = (PAGE_HERO_TABS + [EVENT_FALLBACK_TAB]).freeze
 
   def contact_details
     contact_info.presence || {}
