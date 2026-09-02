@@ -101,24 +101,29 @@ reclaim.
 before uploads, so a same-save replace ends with the new image. Control lives on
 the shared slot partial, so it covers all seven page tabs plus 活動預設圖片.
 
-Two things found while building it:
+Two bugs surfaced while building it. Both are fixed; neither was in the
+original scope.
 
-- **`home` cannot be removed.** It is the root of the fallback chain and there
-  is nothing beneath it -- `DEFAULT_HERO_IMAGE` lives in the seed, not the
-  model, so removing home returned nil and would have left the whole site with
-  no hero. The service refuses it and the UI hides the control there.
-  Replacing home is an upload, not a removal.
-- **The profile form replaces the whole `hero_images` map.** Submitting a
-  partial hash silently wipes the omitted tabs. Not triggered today because the
-  rendered form posts a field for every tab, but it is a live trap for any
-  future caller that posts a subset. Not fixed here; noted.
+- **The fallback chain had no floor.** `hero_image_for` ended at
+  `hero_images["home"]`, so a temple with no home image resolved to nil. The
+  placeholder existed only as a seed constant. `Temple::DEFAULT_HERO_IMAGE` now
+  owns it and terminates the chain, the seed resolves it lazily (it is required
+  by rake before autoloading), and 首頁 is removable like any other tab --
+  which is what the Director pointed out, having already seen a re-seed purge
+  home and everything fall to the placeholder correctly.
+- **The profile form replaced the whole `hero_images` map.** Submitting a
+  partial hash silently wiped the omitted tabs. Never bit only because the
+  rendered form posts a field for every tab. `normalized_hero_images` now
+  merges into the temple's current map; a submitted blank still clears its own
+  key, so the paste-URL box keeps working, and omission means "leave alone".
 
 **Acceptance:**
 
 - Removing a tab's image makes `hero_image_for(tab)` return the home image ✓
-- ~~Removing 首頁 falls through to `DEFAULT_HERO_IMAGE`~~ — **wrong as written.**
-  That constant lives in the seed, not the model, so this would have returned
-  nil. Home is refused instead; see above.
+- Removing 首頁 falls through to `Temple::DEFAULT_HERO_IMAGE`, not to nil ✓
+  (the constant was moved to the model to make this true)
+- No tab ever resolves to nil, even with nothing set at all ✓
+- A partial form submission leaves omitted tabs alone ✓
 - A tab with no image is unaffected by Remove (idempotent) ✓
 - The S3 object still exists afterwards ✓
 - Covered for both storage paths, since clearing only one was the bug ✓

@@ -226,7 +226,12 @@ module Admin
     end
 
     def normalized_hero_images
-      hero_images.slice(*Temple::HERO_TABS)
+      current = temple.hero_images.to_h.stringify_keys.slice(*Temple::HERO_TABS)
+      submitted = hero_images.slice(*Temple::HERO_TABS)
+
+      submitted.each_with_object(current) do |(tab, value), result|
+        value.to_s.strip.present? ? result[tab] = value.to_s.strip : result.delete(tab)
+      end
     end
 
     def merged_metadata(visit_data:, about_data:)

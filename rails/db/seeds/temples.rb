@@ -9,7 +9,9 @@ module Seeds
     PROFILE_DIR = Rails.root.join("db", "temples")
     DEFAULT_PAGES = %w[home about events services contact].freeze
     DEFAULT_HERO_COPY = "用簡潔的段落說明本廟的宗旨、服務與交通資訊。"
-    DEFAULT_HERO_IMAGE = "https://placehold.co/1600x900/111827/FFFFFF?text=Temple+Hero"
+    # The model owns the floor of the hero fallback chain. Resolved lazily
+    # rather than as a constant here, because lib/tasks/temples.rake requires
+    # this file before Rails autoloading is available.
 
     def seed(slug: AppConstants::Project.slug)
       config = profile_config(slug)
@@ -73,7 +75,7 @@ module Seeds
           primary_image_url: keep.call(config["primary_image_url"], record.primary_image_url),
           about_html: keep.call(config["about_html"], record.about_html),
           # normalized_hero_images({}) is NOT blank -- it returns all eight
-          # HERO_TABS filled with DEFAULT_HERO_IMAGE -- so a `keep` on its
+          # HERO_TABS filled with Temple::DEFAULT_HERO_IMAGE -- so a `keep` on its
           # result would still overwrite. Decide on what the yml supplies.
           hero_images: hero_images_for(record, config),
           contact_info: keep.call(config["contact"], record.contact_info) || {},
@@ -203,7 +205,7 @@ module Seeds
     def normalized_hero_images(images)
       data = images.to_h.stringify_keys rescue {}
       Temple::HERO_TABS.index_with do |tab|
-        data[tab].presence || data["home"].presence || DEFAULT_HERO_IMAGE
+        data[tab].presence || data["home"].presence || ::Temple::DEFAULT_HERO_IMAGE
       end
     end
 

@@ -39,7 +39,7 @@
 
                 <%# Clears BOTH storage paths for this tab. Clearing the URL box
                     alone never worked -- the uploaded MediaAsset still won. %>
-                <% if tab != MediaAssets::HeroImageRemover::ROOT_TAB && hero_image_set_for?(form.object, tab) %>
+                <% if hero_image_set_for?(form.object, tab) %>
                   <label class="hero-image-remove">
                     <%= check_box_tag "hero_image_remove[#{tab}]", "1", false, class: "hero-image-remove-input" %>
                     <span><%= t("admin.temple_profile.sections.hero_images.remove") %></span>

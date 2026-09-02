@@ -84,6 +84,10 @@ class Temple < ApplicationRecord
   # is what made the count look wrong (seven nav buttons, eight tabs).
   EVENT_FALLBACK_TAB = "event"
 
+  # The floor of the hero fallback chain. Nothing renders below this, so
+  # every tab -- home included -- always resolves to something.
+  DEFAULT_HERO_IMAGE = "https://placehold.co/1600x900/111827/FFFFFF?text=Temple+Hero"
+
   # Every valid storage key. Kept whole because param slicing, upload
   # validation and the seed normalizer all gate on it; only the admin's
   # PRESENTATION is split.
@@ -162,7 +166,8 @@ class Temple < ApplicationRecord
     # that "unfilled pages use the home image" was false for every tab that
     # had a placeholder asset sitting in front of the fallback.
     sanitized_hero_source(hero_media_asset_for(tab_key)&.metadata&.dig("url")).presence ||
-      sanitized_hero_source(hero_images["home"], allow_placeholder: true)
+      sanitized_hero_source(hero_images["home"], allow_placeholder: true).presence ||
+      DEFAULT_HERO_IMAGE
   end
 
   def hero_images_with_fallback

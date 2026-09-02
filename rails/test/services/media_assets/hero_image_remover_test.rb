@@ -63,15 +63,25 @@ class MediaAssets::HeroImageRemoverTest < ActiveSupport::TestCase
     assert asset.metadata["unlinked_at"].present?
   end
 
-  test "the home image cannot be removed -- it is the root of the fallback chain" do
-    error = assert_raises(MediaAssets::HeroImageRemover::RemovalError) do
-      MediaAssets::HeroImageRemover.call(temple: @temple, hero_tab: "home")
-    end
-    assert_match(/cannot be removed/, error.message)
+  test "home can be removed and falls through to the placeholder" do
+    MediaAssets::HeroImageRemover.call(temple: @temple, hero_tab: "home")
+    @temple.reload
 
-    # Untouched: every other tab still has something to inherit.
-    assert_equal "https://cdn.example/home.jpg", @temple.reload.hero_image_for("home")
-    assert_equal "https://cdn.example/home.jpg", @temple.hero_image_for("archive")
+    # The placeholder is the floor of the chain, so nothing ever resolves to
+    # nil -- which is exactly what a re-seed already demonstrated in practice.
+    assert_equal Temple::DEFAULT_HERO_IMAGE, @temple.hero_image_for("home")
+    assert_equal Temple::DEFAULT_HERO_IMAGE, @temple.hero_image_for("archive")
+
+    # A tab with its own image is unaffected by home going away.
+    assert_equal "https://cdn.example/events.jpg", @temple.hero_image_for("events")
+  end
+
+  test "no tab ever resolves to nil, even with nothing set at all" do
+    @temple.update!(hero_images: {})
+
+    Temple::HERO_TABS.each do |tab|
+      assert @temple.hero_image_for(tab).present?, "#{tab} resolved to nil"
+    end
   end
 
   test "removing a tab that has no image is a no-op" do

@@ -25,14 +25,8 @@ module MediaAssets
       @admin = admin
     end
 
-    # `home` is the root of the fallback chain -- every other tab inherits it,
-    # and there is nothing beneath it, so removing it would leave the whole
-    # site with no hero at all. Replacing it is an upload, not a removal.
-    ROOT_TAB = "home"
-
     def call
       raise RemovalError, "Unsupported hero tab" unless Temple::HERO_TABS.include?(hero_tab)
-      raise RemovalError, "The home image cannot be removed; upload a replacement instead" if hero_tab == ROOT_TAB
 
       asset = temple.hero_media_asset_for(hero_tab)
       had_image = temple.hero_images[hero_tab].present? || asset.present?
