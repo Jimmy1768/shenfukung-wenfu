@@ -93,11 +93,8 @@ shared `_hero_image_slot.html.erb`, so it covers all seven page tabs plus
 recoverable. The S3 object survives and becomes an orphan for Phase 2 to
 reclaim.
 
-**Open question for the Director.** Unlink can mean either destroying the
-`MediaAsset` row (leaving a true orphan) or keeping the row and clearing only
-its `hero_tab` association. Keeping the row preserves the audit trail of what
-was uploaded and when; destroying it makes the orphan set simpler to reason
-about. Recommend keeping the row.
+**Answered by the Director:** keep the `MediaAsset` row and clear only its
+`hero_tab` association, so the record of what was uploaded and when survives.
 
 **Delivered.** `MediaAssets::HeroImageRemover` clears both paths;
 `Admin::TemplesController#remove_hero_images` runs it during the profile save,
@@ -118,11 +115,14 @@ Two things found while building it:
 
 **Acceptance:**
 
-- Removing a tab's image makes `hero_image_for(tab)` return the home image
-- Removing 首頁 itself falls through to `DEFAULT_HERO_IMAGE`, not to nil
-- A tab with no image is unaffected by Remove (idempotent)
-- The S3 object still exists afterwards
-- Covered for both storage paths, since clearing only one is the current bug
+- Removing a tab's image makes `hero_image_for(tab)` return the home image ✓
+- ~~Removing 首頁 falls through to `DEFAULT_HERO_IMAGE`~~ — **wrong as written.**
+  That constant lives in the seed, not the model, so this would have returned
+  nil. Home is refused instead; see above.
+- A tab with no image is unaffected by Remove (idempotent) ✓
+- The S3 object still exists afterwards ✓
+- Covered for both storage paths, since clearing only one was the bug ✓
+- Replace-in-one-save keeps the new image ✓
 
 ## Phase 2 — Orphan reclamation sweep
 
@@ -166,7 +166,8 @@ than an orphan. Destroy the row, let the sweep reclaim.
 
 ## Next Step
 
-Director to authorize Phase 1, and to answer the unlink question above
-(destroy the `MediaAsset` row, or keep it and clear the association).
+Phase 1 is done and deployed pending the usual staging/production walk.
 
-Phase 2 is not authorized by authorizing Phase 1.
+Phase 2 remains unauthorized. When it is taken up, start at **2a (report
+only)** and do not enable deletion until the Director has read a real
+production report. The prefix hazard above is the thing to verify first.
