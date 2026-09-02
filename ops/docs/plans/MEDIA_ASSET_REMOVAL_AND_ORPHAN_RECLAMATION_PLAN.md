@@ -145,11 +145,32 @@ production and agrees the set looks right.
 
 **Safety constraints, all mandatory:**
 
-- **Refuse to run against a blank `S3_OBJECT_PREFIX`.** The prefix is
-  environment-derived; a blank one scopes the sweep to the entire bucket. Before
-  2b runs anywhere, confirm production, staging and local prefixes actually
-  differ — if any two share one, a sweep in one environment deletes another's
-  files. This is the single most dangerous property of this work.
+- **Environment isolation in the bucket.** Settled by the Director
+  2026-09-02: development → `dev`, staging → `staging`, production → none.
+
+  All three share one bucket, `templemate-media-assets`. Staging previously had
+  **no** prefix, because it inherits production's env file and the unit
+  overrode only `RAILS_ENV`, `PUMA_PORT` and `PGDATABASE` — so staging uploads
+  landed beside production's while the databases stayed separate, and a sweep
+  in either would have seen the other's files as orphans.
+  `S3_OBJECT_PREFIX=staging` is now in both staging units.
+
+- **Production's namespace IS the bucket root, and that cannot be scoped away.**
+  Because production has no prefix, its sweep lists everything, including
+  `dev/…` and `staging/…` — which have no rows in production's database and
+  would therefore be classified as orphans.
+
+  It cannot be narrowed to a single key root either: `HeroImageUploader` writes
+  `uploads/hero-images/…`, but `ManagedUploader` writes `gatherings/hero/…`,
+  `gallery/images/…` and `gallery/videos/…`. Scoping to `uploads/` would miss
+  exactly the gallery albums this work exists to reclaim.
+
+  **So the production sweep must carry an explicit exclusion list of sibling
+  prefixes (`dev/`, `staging/`), and refuse to run if that list is empty.** This
+  is a standing maintenance hazard: adding a fourth environment means updating
+  the list, and forgetting to means deleting its files. Giving production its
+  own prefix would remove the hazard entirely, at the cost of migrating existing
+  objects — the Director chose none, so the exclusion list is the mitigation.
 - **Age threshold.** Never consider an object newer than some window (24h+), so
   an upload that is mid-flight or whose row is not yet committed cannot be
   collected.

@@ -12,6 +12,12 @@
 # override list below is exactly the three values that must differ for
 # isolation and nothing more.
 #
+# S3_OBJECT_PREFIX=staging keeps staging's uploads out of production's
+# namespace. Both share this bucket and this env file, so without it every
+# staging upload lands beside production's and a reclamation sweep in
+# either would see the other's files as orphans -- their databases are
+# separate. Scheme: dev -> "dev", staging -> "staging", production -> none.
+#
 # The override MUST be done as a command prefix inside ExecStart, not as
 # a separate Environment= directive: per systemd.exec(7)'s documented
 # "Environment Variables in Spawned Processes" precedence order,
@@ -37,7 +43,7 @@ Type=simple
 User=jimmy1768_user
 WorkingDirectory=/home/jimmy1768_user/Projects/shengfukung-wenfu-staging/rails
 EnvironmentFile=/etc/default/shengfukung-wenfu-env
-ExecStart=/usr/bin/bash -lc "RAILS_ENV=staging PUMA_PORT=4002 PGDATABASE=templemate_data_staging /home/jimmy1768_user/.rbenv/bin/rbenv exec bundle exec puma -C config/puma.rb"
+ExecStart=/usr/bin/bash -lc "RAILS_ENV=staging PUMA_PORT=4002 PGDATABASE=templemate_data_staging S3_OBJECT_PREFIX=staging /home/jimmy1768_user/.rbenv/bin/rbenv exec bundle exec puma -C config/puma.rb"
 Restart=always
 
 [Install]
