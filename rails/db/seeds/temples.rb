@@ -54,15 +54,30 @@ module Seeds
         if config["registration_periods"].present?
           metadata_payload["registration_periods"] = config["registration_periods"]
         end
+        # The yml is BOOTSTRAP data, not a source of truth for a temple that
+        # already exists. Every field below is also editable in the admin
+        # console (see Admin::TempleProfileForm), and assigning unconditionally
+        # meant a routine `rails db:seed` silently wiped uploaded hero images,
+        # about copy, contact details and service times back to the yml's
+        # blanks. That happened to the production demo temple on 2026-09-01.
+        #
+        # On create the yml applies in full. On an existing record only values
+        # the yml actually supplies are applied, so a seed can add or correct
+        # something but can never blank out an admin's work.
+        keep = ->(value, current) { record.new_record? ? value : (value.presence || current) }
+
         record.assign_attributes(
           name: config.fetch("name"),
-          tagline: config["tagline"],
-          hero_copy: config["hero_copy"] || DEFAULT_HERO_COPY,
-          primary_image_url: config["primary_image_url"],
-          about_html: config["about_html"],
-          hero_images: normalized_hero_images(config["hero_images"]),
-          contact_info: config.fetch("contact", {}),
-          service_times: config.fetch("service_times", {}),
+          tagline: keep.call(config["tagline"], record.tagline),
+          hero_copy: keep.call(config["hero_copy"], record.hero_copy) || DEFAULT_HERO_COPY,
+          primary_image_url: keep.call(config["primary_image_url"], record.primary_image_url),
+          about_html: keep.call(config["about_html"], record.about_html),
+          # normalized_hero_images({}) is NOT blank -- it returns all eight
+          # HERO_TABS filled with DEFAULT_HERO_IMAGE -- so a `keep` on its
+          # result would still overwrite. Decide on what the yml supplies.
+          hero_images: hero_images_for(record, config),
+          contact_info: keep.call(config["contact"], record.contact_info) || {},
+          service_times: keep.call(config["service_times"], record.service_times) || {},
           published: config.fetch("published", true),
           metadata: metadata_payload.merge(seed_metadata),
           payment_provider_settings: payment_provider_settings_for(record, config)
@@ -174,6 +189,15 @@ module Seeds
           entry.save!
         end
       end
+    end
+
+    # yml images win when present; otherwise an existing temple keeps whatever
+    # the admin uploaded, and only a brand-new one gets the defaults.
+    def hero_images_for(record, config)
+      return normalized_hero_images(config["hero_images"]) if config["hero_images"].present?
+      return normalized_hero_images({}) if record.new_record? || record.hero_images.blank?
+
+      record.hero_images
     end
 
     def normalized_hero_images(images)

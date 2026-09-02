@@ -14,8 +14,24 @@ module Templemate
     MODULE_SIZE = 6
     QUIET_ZONE = 2
 
+    # Built from the CANONICAL origin, not simply request.base_url.
+    #
+    # nginx serves www.<domain> directly rather than redirecting it, so a page
+    # opened on www produced a QR encoding https://www.<domain>/... . The app
+    # compares the origin to its configured apiBaseUrl exactly
+    # (mobile/app/real/config.js PUBLIC_ORIGIN, the apex), so that code was
+    # rejected as invalid_connection_link with no visible reason -- which is
+    # exactly how it failed for the Director's staff on 2026-09-02.
     def self.for(request:)
-      "#{request.base_url}#{PATH}"
+      "#{canonical_origin(request)}#{PATH}"
+    end
+
+    def self.canonical_origin(request)
+      uri = URI.parse(request.base_url)
+      uri.host = uri.host.sub(/\Awww\./i, "") if uri.host.present?
+      uri.to_s
+    rescue URI::InvalidURIError
+      request.base_url
     end
 
     # standalone: true keeps the <svg> element (standalone: false omits it and
