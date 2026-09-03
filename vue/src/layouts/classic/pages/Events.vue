@@ -20,16 +20,48 @@ const defaultLocation = computed(
   () => siteContent.data?.contact?.addressZh || '本廟'
 );
 
-const sortByStart = (list = []) =>
+// What a visitor can still act on comes first: ongoing, then upcoming
+// soonest-first, then finished most-recent-first. Plain chronological order
+// buried a newly created event below events that had already ended.
+//
+// Ranked on timeline_status, which TempleEvent#timeline_status and
+// TempleGathering#timeline_status compute server-side and the serializers
+// already send. Re-deriving "ended" from dates here would let the ordering
+// and the 已結束 badge disagree.
+const TIMELINE_RANK = { ongoing: 0, upcoming: 1, past: 2 };
+const rankOf = (item) => TIMELINE_RANK[item?.timeline_status] ?? 1;
+
+const startTime = (item) => {
+  const time = item?.starts_on ? new Date(item.starts_on).getTime() : null;
+  return Number.isFinite(time) ? time : null;
+};
+
+const compareByStart = (a, b, newestFirst) => {
+  const aTime = startTime(a);
+  const bTime = startTime(b);
+  if (aTime === null && bTime === null) return 0;
+  if (aTime === null) return 1;
+  if (bTime === null) return -1;
+  return newestFirst ? bTime - aTime : aTime - bTime;
+};
+
+const sortByTimeline = (list = []) =>
   [...list].sort((a, b) => {
-    const aTime = a.starts_on ? new Date(a.starts_on).getTime() : Infinity;
-    const bTime = b.starts_on ? new Date(b.starts_on).getTime() : Infinity;
-    return aTime - bTime;
+    const aRank = rankOf(a);
+    const bRank = rankOf(b);
+    if (aRank !== bRank) return aRank - bRank;
+    return compareByStart(a, b, aRank === TIMELINE_RANK.past);
   });
+
+// The hints say "進行中或即將開始" / "開放報名或即將舉辦", so they must not count
+// events that have finished. formatEventCard drops timeline_status, so this
+// counts the source records rather than the rendered cards.
+const activeCount = (list = []) =>
+  list.filter((item) => item?.timeline_status !== 'past').length;
 
 const offerings = computed(() => {
   if (!offeringsSource.value?.length) return [];
-  return sortByStart(offeringsSource.value).map((event) =>
+  return sortByTimeline(offeringsSource.value).map((event) =>
     formatEventCard(event, {
       defaultLocation: defaultLocation.value,
       registrationAction: 'event'
@@ -39,7 +71,7 @@ const offerings = computed(() => {
 
 const gatherings = computed(() => {
   if (!gatheringsSource.value?.length) return [];
-  return sortByStart(gatheringsSource.value).map((event) =>
+  return sortByTimeline(gatheringsSource.value).map((event) =>
     formatEventCard(event, {
       defaultLocation: defaultLocation.value,
       registrationAction: 'gathering'
@@ -52,17 +84,19 @@ const hasGatherings = computed(() => gatherings.value.length > 0);
 const pageEmpty = computed(() => !hasOfferings.value && !hasGatherings.value);
 
 const offeringsHint = computed(() => {
-  if (!hasOfferings.value) {
+  const count = activeCount(offeringsSource.value);
+  if (!count) {
     return statusLabel('upcoming');
   }
-  return `共有 ${offerings.value.length} 檔法會供品進行中或即將開始。`;
+  return `共有 ${count} 檔法會供品進行中或即將開始。`;
 });
 
 const gatheringsHint = computed(() => {
-  if (!hasGatherings.value) {
+  const count = activeCount(gatheringsSource.value);
+  if (!count) {
     return '社群活動未開放報名，可直接洽詢服務台。';
   }
-  return `共有 ${gatherings.value.length} 場社群活動開放報名或即將舉辦。`;
+  return `共有 ${count} 場社群活動開放報名或即將舉辦。`;
 });
 </script>
 
