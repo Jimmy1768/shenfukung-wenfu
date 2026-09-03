@@ -67,8 +67,7 @@ const upcoming = computed(() => {
 
   return events.value.slice(0, 2).map((event) =>
     formatEventCard(event, {
-      defaultLocation: defaultLocation.value,
-      registrationAction: 'event'
+      defaultLocation: defaultLocation.value
     })
   );
 });

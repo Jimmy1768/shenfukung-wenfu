@@ -63,8 +63,7 @@ const offerings = computed(() => {
   if (!offeringsSource.value?.length) return [];
   return sortByTimeline(offeringsSource.value).map((event) =>
     formatEventCard(event, {
-      defaultLocation: defaultLocation.value,
-      registrationAction: 'event'
+      defaultLocation: defaultLocation.value
     })
   );
 });
@@ -73,8 +72,7 @@ const gatherings = computed(() => {
   if (!gatheringsSource.value?.length) return [];
   return sortByTimeline(gatheringsSource.value).map((event) =>
     formatEventCard(event, {
-      defaultLocation: defaultLocation.value,
-      registrationAction: 'gathering'
+      defaultLocation: defaultLocation.value
     })
   );
 });

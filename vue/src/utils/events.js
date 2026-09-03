@@ -1,5 +1,3 @@
-import { buildRegistrationLink } from '@/utils/accountLinks.js';
-
 const monthFormatter = new Intl.DateTimeFormat('en-US', {
   month: 'short'
 });
@@ -56,8 +54,6 @@ export function formatEventCard(event, options = {}) {
     options.statusLabels?.[event.timeline_status] ||
     statusLabel(event.timeline_status);
 
-  const action = options.registrationAction || event.kind || 'event';
-
   return {
     slug: event.slug,
     month: formatMonth(start),
@@ -67,9 +63,13 @@ export function formatEventCard(event, options = {}) {
     where: location,
     summary,
     badge,
-    imageUrl: event.hero_image_url || '',
-    ctaHref: buildRegistrationLink(action, event.slug)
+    imageUrl: event.hero_image_url || ''
   };
+  // No ctaHref: EventCard falls through to router-link /events/:slug, so a card
+  // opens the event's own page -- image, admin copy, details -- and the
+  // registration button lives there. Cards used to jump straight into the
+  // account registration flow, so the detail page was unreachable and a signed
+  // -out visitor met a login wall before ever seeing the event.
 }
 
 export function statusLabel(status) {

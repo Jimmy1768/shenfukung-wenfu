@@ -16,6 +16,7 @@ import {
   formatDateRange,
   statusLabel
 } from '@/utils/events.js';
+import { buildRegistrationLink } from '@/utils/accountLinks.js';
 
 const route = useRoute();
 const templeEventFallbackImage = useHeroImage('event');
@@ -80,6 +81,28 @@ const periodLabel = computed(
   () => eventData.value?.period || '檔期待公告'
 );
 
+// The registration button lives here, on the event's own page -- a visitor
+// reads the event first and registers second. timeline_status is the only
+// reliable signal today: gatherings currently carry no capacity numbers, so
+// capacity_remaining is only trusted when it is explicitly zero.
+const registrationHref = computed(() =>
+  eventData.value
+    ? buildRegistrationLink(eventData.value.kind || 'event', eventData.value.slug)
+    : ''
+);
+
+const registrationState = computed(() => {
+  const event = eventData.value;
+  if (!event) return { open: false, message: '' };
+  if (event.timeline_status === 'past') {
+    return { open: false, message: '此活動已結束，感謝參與。' };
+  }
+  if (event.capacity_remaining === 0) {
+    return { open: false, message: '名額已滿，如需候補請洽廟方。' };
+  }
+  return { open: true, message: '' };
+});
+
 const detailsList = computed(() => [
   { label: '檔期', value: periodLabel.value },
   { label: '時間', value: schedule.value },
@@ -123,7 +146,7 @@ watch(
       :title="title"
       :subtitle="summary"
       :image-url="heroImage"
-      ctaText="稍後可線上報名"
+      ctaText="返回活動列表"
       ctaTo="/events"
     />
 
@@ -148,7 +171,12 @@ watch(
             </SimpleCard>
             <SimpleCard title="報名 / 參與指引">
               <div class="info">
-                <p>此頁面展示完整活動資訊，線上報名與付款將在下一階段開放。</p>
+                <a
+                  v-if="registrationState.open"
+                  class="register"
+                  :href="registrationHref"
+                >立即報名</a>
+                <p v-else class="register-closed">{{ registrationState.message }}</p>
                 <p v-if="metadataNotes">{{ metadataNotes }}</p>
                 <router-link class="link" to="/contact">聯絡廟方 / 交通資訊 →</router-link>
               </div>
@@ -169,6 +197,26 @@ watch(
 </template>
 
 <style scoped>
+.register {
+  display: inline-block;
+  padding: 10px 20px;
+  border-radius: 999px;
+  background: var(--color-primary, #8b2e2e);
+  color: #fff;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.register:hover {
+  opacity: 0.9;
+}
+
+.register-closed {
+  margin: 0;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
 .kv {
   display: grid;
   grid-template-columns: 80px 1fr;
