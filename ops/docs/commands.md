@@ -147,26 +147,37 @@ bin/expo_build <preset> [-- extra eas args]
 # Set SMOKE_BASE_URL for one selected local, staging, or production deployment.
 bin/run_smoke_tests
 
-# Running a rake task on the droplet
+# Production deploy (the Director's own sequence, recorded 2026-08-19)
 #
-# rbenv is initialized ONLY in ~/.bashrc, and ~/.profile, ~/.bash_profile and
-# ~/.bash_login do not exist. Bash sources ~/.bashrc for a non-interactive
-# `ssh host '<cmd>'`, but a LOGIN shell (plain `ssh host`, or `bash -l`) looks
-# only at the three missing files -- so it never sources ~/.bashrc, rbenv is
-# absent, and ruby falls back to the system one with none of the app's gems:
-#
-#   Could not find rails-7.1.6, puma-7.1.0, pg-1.5.9, ... in locally installed
-#   gems. Run `bundle install --gemfile .../rails/Gemfile` to install ...
-#
-# That error means the shell lacks rbenv, NOT that gems need installing.
-# Source ~/.bashrc first. The env file sets no PATH/GEM_HOME/BUNDLE_PATH, so
-# sourcing it is harmless -- it is the login shell that is the problem.
-#
-# Durable fix (not applied): create ~/.profile containing `. ~/.bashrc`.
-cd ~/Projects/shengfukung-wenfu/rails \
-  && . ~/.bashrc \
-  && set -a && . /etc/default/shengfukung-wenfu-env && set +a \
-  && RAILS_ENV=production bin/rails <task>
+# There is no automated pipeline and there should not be one: on 2026-08-19
+# `sudo bin/apply_systemd_units` re-rendered the units from a template instead
+# of using the committed files, and took production down for five minutes.
+# Deploy is run by hand, in this order.
+cd ~/Projects/shengfukung-wenfu
+git fetch origin && git reset --hard origin/release/current
+
+# Only when the gem error below appears -- the plain SSH shell does not always
+# have the gems systemd's `rbenv exec` path finds for Puma:
+#   Could not find rails-7.1.6, puma-... in locally installed gems
+bundle install
+
+# Sourcing the env file is what an interactive shell needs and systemd gets for
+# free from EnvironmentFile=. Without it: "Missing JWT_SECRET_KEY in production".
+cd rails
+set -a && source /etc/default/shengfukung-wenfu-env && set +a
+RAILS_ENV=production bin/rails db:migrate          # when there are migrations
+RAILS_ENV=production bin/rails <task>              # any other rake task
+
+# Frontend, when vue/ changed. No sudo -- /var/www is owned by the deploy user,
+# and building as root leaves files Puma's user cannot replace.
+cd ~/Projects/shengfukung-wenfu && bin/deploy_vue shengfukung-wenfu
+
+sudo systemctl restart shengfukung-wenfu-puma
+sudo systemctl restart shengfukung-wenfu-sidekiq
+
+# Verify from the journal, not `systemctl status` -- during the 2026-08-19
+# outage status showed "active (running)" while Puma was crash-looping.
+sudo journalctl -u shengfukung-wenfu-puma -n 40 --no-pager
 
 # Phase 0 media prefix migration (dry run by default; apply=1 writes)
 # See ops/docs/plans/MEDIA_ASSET_REMOVAL_AND_ORPHAN_RECLAMATION_PLAN.md
