@@ -12,6 +12,20 @@ This file documents how we bring a new temple onto the Shengfukung Wenfu stack. 
 - **TempleRegistration** – unified polymorphic registration model (table: `temple_registrations`). Every onsite order/payment flows through this table regardless of whether the source is an event, service, or gathering.
 - **Gatherings** – `TempleGathering` records for non-offering community events (e.g., workshops). They share the registration/payment stack but are managed separately from offerings.
 
+## Offering Setup Is a Controlled Field Catalog
+
+Distilled 2026-09-03 from `docs/operator/workflows/` before that tree was
+deleted; decided 2026-06-13 and recorded nowhere else.
+
+Offering onboarding runs through the admin console as a
+draft → submission → review → apply flow. **Temple staff do not edit YAML.**
+
+The offering setup form exposes a *controlled supported field catalog*, not an
+arbitrary schema builder. That is a deliberate product boundary: it keeps
+onboarding repeatable across temples and keeps the data shape something the
+admin, accounting and export surfaces can rely on. Requests for a field
+outside the catalog are a product decision, not a configuration change.
+
 ## First-Tenant Future Gate
 
 First-tenant activation remains deferred: no real client is currently named,
@@ -155,7 +169,7 @@ Slug convention:
    - Each offering entry stores its form definition in metadata. Use `form_fields` + `registration_form` to describe which inputs render and how registration payloads are structured.
    - Keep `rails/db/temples/offerings/working-draft.yml` as the reusable onboarding scratch file. Paste each new temple's raw offerings config there first, then convert it into the finalized per-temple file at `rails/db/temples/offerings/<slug>.yml`.
    - Do not delete `working-draft.yml`. Overwrite it during each new temple onboarding cycle as the current staging draft.
-   - For the accepted WR-4 synthetic onboarding proof, use `docs/operator/workflows/2026-07-13-readiness-synthetic-intake.md` as the human-facing one-offering intake example and map it into `rails/db/temples/readiness-synthetic.yml` plus `rails/db/temples/offerings/readiness-synthetic.yml`. This records the operator translation path without asking temple staff to edit YAML.
+   - For the accepted WR-4 synthetic onboarding proof, use `ops/docs/reference/onboarding_synthetic_intake_example.md` as the human-facing one-offering intake example and map it into `rails/db/temples/readiness-synthetic.yml` plus `rails/db/temples/offerings/readiness-synthetic.yml`. This records the operator translation path without asking temple staff to edit YAML.
    - During onboarding, create `rails/db/temples/offerings/<slug>.yml` with a strict split shape:
      ```yaml
      schema_version: 2

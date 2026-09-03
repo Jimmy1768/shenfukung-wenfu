@@ -101,6 +101,25 @@ cd rails && bin/rails test \
 - production ECPay onboarding and callback verification
 - manual ops testing of hosted checkout and cash/manual fallbacks
 
+## Temple-Facing Payment Semantics
+
+Distilled 2026-09-03 from `docs/operator/workflows/` before that tree was
+deleted. These were decided 2026-06-13 and recorded nowhere else.
+
+- **ECPay is the default online payment method for Taiwan temples.** Provider
+  changes in production stay gated by the authorization boundary in
+  `ops/protocol/shengfukung_wenfu_context.md`.
+- **Cash is an admin-attested receipt event, not an externally controlled
+  one.** The system trusts the admin pressing *Received* and audits it:
+  admin identity and timestamp are preserved. Nothing outside the product
+  confirms a cash payment, so the audit trail is the control.
+- **Monthly accounting export runs on the 1st of each month**, covering the
+  previous calendar month in the temple's local timezone, handed to external
+  accounting as CSV.
+- **There is no in-app accounting close or lock state.** The monthly close is
+  external and manual, supported by filters plus CSV export. Deliberate, not
+  an omission — see the non-requirements the V1 threshold set out.
+
 ## Provider Activation Gates
 
 Two provider tracks are deliberately not active, for different reasons:

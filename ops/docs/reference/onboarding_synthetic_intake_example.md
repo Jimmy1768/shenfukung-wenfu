@@ -1,4 +1,8 @@
-# Workflow Record: Readiness Synthetic Intake
+# Onboarding Reference: Synthetic Intake Example
+
+Originally `docs/operator/workflows/2026-07-13-readiness-synthetic-intake.md`,
+moved here 2026-09-03 when the operator record tree was removed. It is kept
+because `onboarding.md` cites it as the worked operator-intake example.
 
 Record id: `shengfukung-2026-07-13-readiness-synthetic-intake`
 
