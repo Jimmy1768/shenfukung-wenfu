@@ -6,8 +6,12 @@
 # namespace. Without it production's namespace is the bucket root, and a
 # reclamation sweep there would treat dev/ and staging/ objects as orphans.
 #
+# This is not an ActiveRecord migration: no schema change, no up/down. It is a
+# one-off rake task, and `apply=1` is an env var on the command line, not code.
+#
 # DRY RUN IS THE DEFAULT. `apply=1` is required to write anything, and even
-# then this never deletes: the originals stay until step 6 is done by hand.
+# then this never deletes: objects are copied, so the originals stay until
+# step 6 is done by hand.
 namespace :media do
   desc "Report (or with apply=1, perform) the production S3 prefix migration"
   task :migrate_prefix, [:target_prefix] => :environment do |_t, args|
@@ -21,6 +25,7 @@ namespace :media do
 
     client = Storage::S3Service.send(:client)
     bucket = Storage::S3Service.send(:bucket)
+    region = Storage::S3Service.send(:region)
     siblings = %w[dev staging].map { |p| "#{p}/" } + ["#{target}/"]
 
     puts "mode:   #{apply ? 'APPLY (writes)' : 'DRY RUN (writes nothing)'}"
@@ -59,13 +64,41 @@ namespace :media do
     rows.first(20).each { |a| puts "  ##{a.id}  #{a.file_uid}  ->  #{target}/#{a.file_uid}" }
     puts ""
 
-    # 3. stored URLs that embed the old path
+    # 3. stored URLs that embed the old path.
+    #
+    # A stored URL is "#{base}/#{storage_key}" (Storage::S3Service.public_url),
+    # so splitting at the base and namespacing the key is exact for every key
+    # root. Substituting on "/uploads/" was not: ManagedUploader writes
+    # gallery/images/, gallery/videos/ and gatherings/hero/, which would have
+    # been reported and then silently left alone.
+    #
+    # Matching the base is also what makes the predicate right -- a hand-pasted
+    # external URL is not ours, so it is neither reported nor touched.
+    bases = [
+      ENV["S3_PUBLIC_BASE_URL"].presence,
+      "https://#{bucket}.s3.#{region}.amazonaws.com"
+    ].compact.map { |b| b.to_s.chomp("/") }
+
+    split = lambda do |url|
+      base = bases.find { |b| url.to_s.start_with?("#{b}/") }
+      base ? [base, url.to_s.delete_prefix("#{base}/")] : nil
+    end
+    stale = ->(url) { (parts = split.call(url)) && !parts[1].start_with?("#{target}/") }
+    rewrite = lambda do |url|
+      base, key = split.call(url)
+      "#{base}/#{target}/#{key}"
+    end
+
+    # Each edit carries its own applier, so the list that gets printed is
+    # exactly the list that gets written. They cannot drift apart.
     url_edits = []
     Temple.find_each do |temple|
       temple.hero_images.to_h.each do |tab, url|
-        next if url.blank? || url.include?("/#{target}/") || url.include?("placehold.co")
+        next unless stale.call(url)
 
-        url_edits << ["Temple##{temple.id} hero_images[#{tab}]", url]
+        url_edits << ["Temple##{temple.id} hero_images[#{tab}]", url, lambda {
+          temple.update!(hero_images: temple.hero_images.to_h.merge(tab => rewrite.call(url)))
+        }]
       end
     end
     { TempleEvent => %i[hero_image_url poster_image_url],
@@ -76,14 +109,17 @@ namespace :media do
 
         model.where.not(column => [nil, ""]).find_each do |record|
           value = record.public_send(column)
-          next if value.include?("/#{target}/") || value.include?("placehold.co")
+          next unless stale.call(value)
 
-          url_edits << ["#{model.name}##{record.id}.#{column}", value]
+          url_edits << ["#{model.name}##{record.id}.#{column}", value, lambda {
+            record.update!(column => rewrite.call(value))
+          }]
         end
       end
     end
     puts "stored URLs to rewrite: #{url_edits.size}"
-    url_edits.first(20).each { |label, url| puts "  #{label}\n    #{url}" }
+    url_edits.first(20).each { |label, url, _applier| puts "  #{label}\n    #{url}" }
+    puts "  ... and #{url_edits.size - 20} more" if url_edits.size > 20
     puts ""
 
     unless apply
@@ -101,18 +137,8 @@ namespace :media do
     rows.each { |a| a.update!(file_uid: "#{target}/#{a.file_uid}") }
     puts "  rewrote #{rows.size} file_uids"
 
-    rewritten = 0
-    Temple.find_each do |temple|
-      images = temple.hero_images.to_h
-      changed = images.transform_values do |url|
-        next url if url.blank? || url.include?("/#{target}/") || url.include?("placehold.co")
-
-        rewritten += 1
-        url.sub(%r{/uploads/}, "/#{target}/uploads/")
-      end
-      temple.update!(hero_images: changed) if changed != images
-    end
-    puts "  rewrote #{rewritten} temple hero URLs"
+    url_edits.each { |_label, _url, applier| applier.call }
+    puts "  rewrote #{url_edits.size} stored URLs"
     puts ""
     puts "Next: verify the site renders, THEN set S3_OBJECT_PREFIX=#{target} and restart, THEN delete the originals."
   end
