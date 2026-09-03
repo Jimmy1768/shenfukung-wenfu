@@ -120,6 +120,57 @@ carried forward and resolved by a later plan in the same chain, which is
 also archived. Archived does not mean "succeeded on the first try," only
 that the individually-scoped plan concluded.
 
+## 2026-09-03 Record Tree Removal
+
+`ops/docs/handoffs/` (148 files) and `docs/operator/` (175 files) were deleted
+on 2026-09-03. Director's reason: handoff-based coordination was abandoned
+because neither Codex nor Claude has true governance or enforcement, so the
+ceremony bought nothing, and attention moved to building the native app.
+
+**Any `ops/docs/handoffs/...` path still cited in a plan, protocol, or
+reference doc points at a deleted record.** The citation is left in place as
+provenance rather than rewritten across ~30 files. Recover any of them with:
+
+```bash
+git show <this-commit>^:ops/docs/handoffs/<file>.md
+```
+
+Distilled before deleting, per the procedure set in `2f40594`:
+
+| Content | Destination |
+| --- | --- |
+| ECPay default, cash as admin-attested receipt, monthly export on the 1st, no in-app close/lock | [platform payments](platform_payments.md) |
+| Offering setup as a controlled field catalog | [onboarding runbook](onboarding.md) |
+| Synthetic operator-intake worked example | [synthetic intake example](onboarding_synthetic_intake_example.md) |
+
+The production boundary, the help-guide requirement, and Shengfukung's
+declined onboarding were checked and found already recorded in the context
+file, `templemate_product_positioning.md`, and
+`shengfukung_demo_temple_status.md` respectively.
+
+26 plan docs went in the same pass, each classified from its own closing
+section rather than from the Retained list above (which dates from
+2026-08-19 and no longer reflects what is live). Deleted: the six that
+declare themselves terminal or are already tombstone stubs; the completed
+Expo/EAS project, signing, OAuth-native-contract and V1 stabilization plans,
+whose `..._authorized` classification was simply never updated after the work
+shipped; the Phase 3 tenant-gate and navigation chains, complete per the
+demo-readiness roadmap; the TestFlight/OTA plans, shipped; the superseded
+account-admin data contract, replaced by
+`PERSONAL_AND_OFFERING_DATA_CONTRACT_GAP_PLAN.md`; and the two Codex
+branch/worktree cleanup plans.
+
+Eight of the unlisted plans were kept as live or on-hold: the media asset
+plan, the data-contract gap plan, semi-automatic registration, the
+demo-readiness roadmap, the Apple user-22 recovery roadmap, TempleMate
+refine, and the two awaiting a Director decision (central auth tenant
+registration, platform env file reorganization).
+
+**Pre-existing, not caused by this pass:** the `ops/docs/plans/archive/`
+paths in the two sections below already dangle. That directory was removed in
+the 2026-08-22 plans/archive cleanup, which left tombstone stubs in
+`ops/docs/plans/` instead. The same `git show` recovery applies.
+
 ## Archived Completed Records
 
 | Archived record | Durable destination |
