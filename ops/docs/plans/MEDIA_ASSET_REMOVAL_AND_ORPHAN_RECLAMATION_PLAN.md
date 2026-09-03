@@ -173,6 +173,9 @@ urgency considerably.
 4. Rewrite stored URLs: `temple.hero_images` entries, and any
    `hero_image_url` / `poster_image_url` columns on events, services and
    gatherings that embed the old path.
+4b. **Grant public read on the new prefix in the bucket policy.** Not
+   optional and not in code — `copy_object` does not carry access with it.
+   Verify with an anonymous `curl` before declaring step 4 done.
 5. Set `S3_OBJECT_PREFIX=prod` in `/etc/default/shengfukung-wenfu-env`, and
    `staging` in both staging units (already prepared in `ops/systemd/`).
    Restart. Requires sudo.
@@ -187,6 +190,40 @@ Nothing runs without the Director reading step 1's output first.
 Step 5 must come **after** 2–4, and step 6 after 5. Setting the prefix before
 the objects and URLs move would break every existing image, because the app
 would start resolving `prod/uploads/…` for files still at `uploads/…`.
+
+### Applied 2026-09-03 — steps 1–4 done and verified
+
+```text
+copied 9 objects (originals left in place)
+rewrote 8 file_uids
+rewrote 8 stored URLs
+```
+
+A re-run of the dry run afterwards reported `0` and `0`, confirming both
+rewrites landed and that the task is idempotent. `objects to copy` still
+reports 9 because the originals are deliberately still in place for step 6.
+
+**The plan missed a required step, and the site broke until it was found.**
+Every hero returned `403 AccessDenied` at the new prefix. `copy_object` copies
+bytes, not access: public read comes from a **bucket policy**, which lives in
+AWS and is recorded nowhere in this repo, and it was scoped to the old prefix.
+The dry run could not have caught this — it lists objects and rows, and never
+fetches anything.
+
+**Also found, pre-existing and unrelated to this migration:** both policy
+statements were scoped to `<prefix>/uploads/*`, but only `HeroImageUploader`
+writes there. `ManagedUploader` writes `gatherings/hero/…`, `gallery/images/…`
+and `gallery/videos/…`, so **the first gallery or gathering upload would have
+returned 403**. It had never fired because the bucket held only hero images.
+Scoping by environment prefix instead of by key root fixes both at once.
+
+The policy now grants `s3:GetObject` on `dev/*`, `staging/*`, `prod/*` and
+`uploads/*`. The last statement is legacy: it keeps staging working, since
+staging still writes unprefixed until its units are applied, and it is deleted
+at step 6.
+
+**Add to step 6, and to any future environment's setup:** verify the bucket
+policy covers the new prefix *before* moving anything into it.
 
 ## Phase 2 — Orphan reclamation sweep
 
