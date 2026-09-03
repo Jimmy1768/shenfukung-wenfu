@@ -147,6 +147,32 @@ bin/expo_build <preset> [-- extra eas args]
 # Set SMOKE_BASE_URL for one selected local, staging, or production deployment.
 bin/run_smoke_tests
 
+# Running a rake task on the droplet
+#
+# rbenv is initialized ONLY in ~/.bashrc, and ~/.profile, ~/.bash_profile and
+# ~/.bash_login do not exist. Bash sources ~/.bashrc for a non-interactive
+# `ssh host '<cmd>'`, but a LOGIN shell (plain `ssh host`, or `bash -l`) looks
+# only at the three missing files -- so it never sources ~/.bashrc, rbenv is
+# absent, and ruby falls back to the system one with none of the app's gems:
+#
+#   Could not find rails-7.1.6, puma-7.1.0, pg-1.5.9, ... in locally installed
+#   gems. Run `bundle install --gemfile .../rails/Gemfile` to install ...
+#
+# That error means the shell lacks rbenv, NOT that gems need installing.
+# Source ~/.bashrc first. The env file sets no PATH/GEM_HOME/BUNDLE_PATH, so
+# sourcing it is harmless -- it is the login shell that is the problem.
+#
+# Durable fix (not applied): create ~/.profile containing `. ~/.bashrc`.
+cd ~/Projects/shengfukung-wenfu/rails \
+  && . ~/.bashrc \
+  && set -a && . /etc/default/shengfukung-wenfu-env && set +a \
+  && RAILS_ENV=production bin/rails <task>
+
+# Phase 0 media prefix migration (dry run by default; apply=1 writes)
+# See ops/docs/plans/MEDIA_ASSET_REMOVAL_AND_ORPHAN_RECLAMATION_PLAN.md
+RAILS_ENV=production bin/rails media:migrate_prefix
+RAILS_ENV=production bin/rails media:migrate_prefix apply=1
+
 # Registration period key governance (Phase B)
 # Audit invalid service/registration period keys and write a remediation report
 cd rails && bin/rails registration_period_keys:audit OUTPUT=tmp/registration_period_key_audit.json
