@@ -40,12 +40,28 @@ module Auth
       request.format.json?
     end
 
+    ACCOUNT_ENTRY_INTENT_SESSION_KEY = AppConstants::Sessions.key(:account_entry_intent)
+    ACCOUNT_LOCALE_SESSION_KEY = AppConstants::Sessions.key(:account_locale)
+
+    # Same rule as Auth::CentralOAuthController: the account resolver is the
+    # only thing that knows how to turn an entry intent into a destination, and
+    # it lives on the account side. Bounce through the login page, which
+    # redirects an already-signed-in visitor via that resolver.
     def oauth_redirect_path
+      return account_login_path if session[ACCOUNT_ENTRY_INTENT_SESSION_KEY].present?
+
       request.env["omniauth.origin"].presence || account_dashboard_path
     end
 
+    # reset_session guards against session fixation and wipes everything the
+    # visitor arrived with, so what must outlive sign-in is carried across.
     def establish_account_session!(user)
+      preserved_intent = session[ACCOUNT_ENTRY_INTENT_SESSION_KEY]
+      preserved_locale = session[ACCOUNT_LOCALE_SESSION_KEY]
+
       reset_session
+      session[ACCOUNT_ENTRY_INTENT_SESSION_KEY] = preserved_intent if preserved_intent.present?
+      session[ACCOUNT_LOCALE_SESSION_KEY] = preserved_locale if preserved_locale.present?
       session[AppConstants::Sessions.key(:account)] = user.id
     end
 

@@ -2,7 +2,7 @@
 
 class TempleContextResolver
   ADMIN_TEMPLE_SESSION_KEY = AppConstants::Sessions.key(:admin_temple)
-  ACCOUNT_TEMPLE_SESSION_KEY = "account_active_temple_slug"
+  ACCOUNT_TEMPLE_SESSION_KEY = AppConstants::Sessions.key(:account_temple)
 
   Result = Struct.new(:temple, :slug, :source, keyword_init: true) do
     def valid?

@@ -61,47 +61,11 @@ module Account
       ActiveSupport::SecurityUtils.secure_compare(value, other)
     end
 
-    def resolve_post_login_path
-      intent = (account_entry_intent || {}).deep_symbolize_keys
-      clear_account_entry_intent!
-
-      return account_dashboard_path if intent.blank?
-      return account_settings_path if intent[:after_sign_in].to_s == "settings"
-
-      if intent[:registration_reference].present?
-        if (registration = find_registration_by_reference(intent[:registration_reference]))
-          return account_registration_path(registration)
-        end
-      end
-
-      offering = find_offering_for_intent(intent[:offering_slug], intent[:account_action])
-
-      if offering.present?
-        if (registration = find_registration_for_offering(offering))
-          return account_registration_path(registration)
-        end
-
-        if (new_flow_path = new_registration_flow_path(intent, offering))
-          return new_flow_path
-        end
-      end
-
-      account_dashboard_path
-    end
-
     def redirect_authenticated_user_with_intent!
       return unless user_signed_in?
       return if account_entry_intent.blank?
 
       redirect_to resolve_post_login_path
-    end
-
-    def new_registration_flow_path(intent, offering)
-      new_account_registration_path(
-        temple_slug: intent[:temple_slug].presence || current_temple&.slug,
-        account_action: account_action_for(offering),
-        offering: offering.slug
-      )
     end
   end
 end

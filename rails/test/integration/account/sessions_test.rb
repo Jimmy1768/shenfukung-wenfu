@@ -16,6 +16,54 @@ module Account
       assert_redirected_to account_dashboard_path
     end
 
+    # LOAD-BEARING FOR OAUTH. Auth::CentralOAuthController no longer carries its
+    # own copy of the post-login resolution -- it preserves the entry intent
+    # across reset_session and redirects here, letting this single resolver turn
+    # the intent into a destination. Break this and signing in with Google
+    # silently goes back to dumping patrons on the dashboard.
+    test "a signed-in visitor carrying an entry intent lands on the offering they clicked" do
+      temple = create_temple(slug: "shengfukung-wenfu")
+      gathering = temple.temple_gatherings.create!(
+        slug: "fire-safety-drill",
+        title: "消防救生活動",
+        currency: "TWD",
+        price_cents: 0,
+        starts_on: Date.current + 20
+      )
+      user = User.create!(
+        email: "intent-carrier@example.com",
+        english_name: "Intent Carrier",
+        encrypted_password: User.password_hash("Password123!")
+      )
+      sign_in_account(user, temple_slug: temple.slug)
+
+      get account_login_path(
+        account_action: "gathering",
+        offering: gathering.slug,
+        temple_slug: temple.slug
+      )
+
+      assert_redirected_to new_account_registration_path(
+        temple_slug: temple.slug,
+        account_action: "gathering",
+        offering: gathering.slug
+      )
+    end
+
+    test "a signed-in visitor with no entry intent still goes to the dashboard" do
+      temple = create_temple(slug: "shengfukung-wenfu")
+      user = User.create!(
+        email: "no-intent@example.com",
+        english_name: "No Intent",
+        encrypted_password: User.password_hash("Password123!")
+      )
+      sign_in_account(user, temple_slug: temple.slug)
+
+      get account_login_path(temple_slug: temple.slug)
+
+      assert_redirected_to account_dashboard_path
+    end
+
     test "signup route creates account with temple slug param even when no active temple is in session" do
       create_temple(slug: "shengfukung-wenfu")
 

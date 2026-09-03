@@ -8,7 +8,9 @@ module Auth
     skip_before_action :verify_authenticity_token
 
     PENDING_CONTEXT_SESSION_KEY = "central_oauth_pending"
-    ACCOUNT_TEMPLE_SESSION_KEY = "account_active_temple_slug"
+    ACCOUNT_TEMPLE_SESSION_KEY = AppConstants::Sessions.key(:account_temple)
+    ACCOUNT_ENTRY_INTENT_SESSION_KEY = AppConstants::Sessions.key(:account_entry_intent)
+    ACCOUNT_LOCALE_SESSION_KEY = AppConstants::Sessions.key(:account_locale)
     ACCOUNT_SESSION_KEY = AppConstants::Sessions.key(:account)
     ADMIN_TEMPLE_SESSION_KEY = AppConstants::Sessions.key(:admin_temple)
 
@@ -215,6 +217,14 @@ module Auth
 
       return account_settings_path if pending["after_sign_in"].to_s == "settings"
 
+      # There is ONE account resolver, and it lives on the account side where
+      # current_user and current_temple exist. Account::SessionsController#new
+      # runs redirect_authenticated_user_with_intent!, which resolves the
+      # preserved intent to the offering the patron actually clicked. A second
+      # copy of that lookup here is what left this path able to reach nothing
+      # but the dashboard.
+      return account_login_path if session[ACCOUNT_ENTRY_INTENT_SESSION_KEY].present?
+
       account_dashboard_path
     end
 
@@ -233,8 +243,20 @@ module Auth
       end
 
       temple_slug = pending["temple_slug"].presence
+
+      # reset_session prevents session fixation, and it also wipes everything
+      # the visitor arrived with. Anything that must outlive sign-in is read
+      # before and written back after. Preserving only the temple slug is why
+      # signing in with Google dropped the entry intent -- the offering the
+      # patron had clicked -- and their chosen locale, landing them on the
+      # dashboard instead of the registration they asked for.
+      preserved_intent = session[ACCOUNT_ENTRY_INTENT_SESSION_KEY]
+      preserved_locale = session[ACCOUNT_LOCALE_SESSION_KEY]
+
       reset_session
       session[ACCOUNT_TEMPLE_SESSION_KEY] = temple_slug if temple_slug.present?
+      session[ACCOUNT_ENTRY_INTENT_SESSION_KEY] = preserved_intent if preserved_intent.present?
+      session[ACCOUNT_LOCALE_SESSION_KEY] = preserved_locale if preserved_locale.present?
       session[AppConstants::Sessions.key(:account)] = user.id
     end
 

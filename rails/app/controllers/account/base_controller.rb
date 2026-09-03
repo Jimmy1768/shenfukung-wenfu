@@ -26,8 +26,8 @@ module Account
     before_action :record_temple_connection!
 
     private
-    ACCOUNT_TEMPLE_SESSION_KEY = "account_active_temple_slug"
-    ACCOUNT_ENTRY_INTENT_SESSION_KEY = "account_entry_intent"
+    ACCOUNT_TEMPLE_SESSION_KEY = AppConstants::Sessions.key(:account_temple)
+    ACCOUNT_ENTRY_INTENT_SESSION_KEY = AppConstants::Sessions.key(:account_entry_intent)
     ACCOUNT_LOCALE_SESSION_KEY = AppConstants::Sessions.key(:account_locale)
     ACCOUNT_LOCALE_COOKIE_KEY = "account_locale"
 
