@@ -72,6 +72,33 @@ would nest a form inside a form. Any [x] control here requires moving the hero
 list out of the profile form first. That is a layout change, not a styling one,
 and it is the real prerequisite.
 
+## Director's ruling 2026-09-03: archive is the gate
+
+**Adding archive is what makes S3 delete safe. Delete is reachable only from
+the archived state, never directly from a live image.**
+
+This settles the phase order — Phase 2 is not merely *before* Phase 3, it is
+the precondition for it. Reclaiming a file is irreversible, so the reversible
+step has to exist first and the operator has to have passed through it.
+
+**This is stricter than the reference.** On an active gallery card combatives
+puts both controls side by side
+(`app/views/afl/settings/show.html.erb:187-199`):
+
+```text
+left pill   "Archive"        patch, reversible
+right [x]   delete_symbol ×  delete, permanent, turbo_confirm
+```
+
+So its `[x]` is *delete*, not archive, and a live image can be destroyed in one
+click plus a confirm. Wenfu will not do that. On a live hero image the only
+destructive control is archive; delete appears solely in the archived list,
+beside Restore.
+
+Consequence for Phase 5: the corner control on a live hero slot is the archive
+action, and it should not borrow the `×` glyph, which means delete on the page
+it was copied from.
+
 ## The decision this plan cannot make for itself
 
 **Does `temple.hero_images` survive?**
@@ -119,6 +146,9 @@ design that had no archived state to offer.
 
 ### Phase 3 — reclaim the object on destroy
 
+**Blocked on Phase 2 by ruling, not just by sequence.** No S3 delete ships
+until archive exists and delete is reachable only from the archived list.
+
 Port `delete_uploaded_file_from_storage`, including the sibling-reference guard
 and the `storage_kind == "upload"` gate. Supersedes most of Phase 2 of
 `MEDIA_ASSET_REMOVAL_AND_ORPHAN_RECLAMATION_PLAN.md`; that plan should be
@@ -151,5 +181,5 @@ reusing the existing markup shape.
 1. The `hero_images` map: keep as derived cache, or drop (see above).
 2. Does archive/restore apply to hero images, or is archived state only
    meaningful for galleries where you can see the archived shelf?
-3. Phase 3 deletes real files. Does hero-image delete stay behind an archive
-   step, as gallery does, or is one click enough for a tab image?
+3. ~~Does hero-image delete stay behind an archive step?~~ **Answered
+   2026-09-03: yes. Archive is the gate.** See the ruling above.
