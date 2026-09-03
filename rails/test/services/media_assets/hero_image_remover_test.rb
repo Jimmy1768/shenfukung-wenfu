@@ -36,13 +36,15 @@ class MediaAssets::HeroImageRemoverTest < ActiveSupport::TestCase
     assert_nil @temple.hero_media_asset_for("events")
   end
 
-  test "clearing only the url would not have been enough -- the asset is unlinked too" do
+  test "a MediaAsset never outranks the hero_images map on the render path" do
     asset = upload_asset_for("events", "https://cdn.example/events-upload.jpg")
 
-    # Simulate the old workaround: blank the paste-url box only.
+    # Blanking the paste-url box is now sufficient on its own: hero_images is
+    # the only thing hero_image_for reads. This is the bug that made an
+    # uploaded hero unremovable, removed structurally rather than patched.
     @temple.update!(hero_images: @temple.hero_images.merge("events" => ""))
-    assert_equal "https://cdn.example/events-upload.jpg", @temple.reload.hero_image_for("events"),
-      "precondition: the asset still wins, which is the bug"
+    assert_equal "https://cdn.example/home.jpg", @temple.reload.hero_image_for("events"),
+      "the asset is provenance, not a render path"
 
     MediaAssets::HeroImageRemover.call(temple: @temple, hero_tab: "events")
     assert_equal "https://cdn.example/home.jpg", @temple.reload.hero_image_for("events")

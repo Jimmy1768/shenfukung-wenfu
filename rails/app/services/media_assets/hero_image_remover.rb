@@ -4,11 +4,10 @@ module MediaAssets
   # Clears a temple's hero image for one tab so it falls back to the 首頁
   # image, which is what the admin has always promised for unset tabs.
   #
-  # A hero tab has TWO storage paths and the admin only ever exposed one:
-  # temple.hero_images[tab] (the "paste URL" box) and a MediaAsset carrying
-  # metadata["hero_tab"]. HeroImageUploader writes both, so clearing the URL
-  # box alone left the asset still winning in Temple#hero_image_for -- an
-  # uploaded image could be replaced but never removed. Both are cleared here.
+  # temple.hero_images[tab] is the only thing the render path reads, so
+  # clearing it is what removes the image. The MediaAsset is unlinked in the
+  # same transaction to keep provenance honest: the row records an upload that
+  # is no longer shown anywhere.
   #
   # Unlink, not delete: the MediaAsset row and its S3 object survive. The row
   # keeps the record of what was uploaded and when (Director's call), and the
@@ -61,7 +60,6 @@ module MediaAssets
       metadata["unlinked_at"] = Time.current.iso8601
       metadata["unlinked_from_tab"] = hero_tab
       asset.update!(metadata: metadata)
-      temple.reset_hero_media_assets!
     end
 
     def log!(asset)

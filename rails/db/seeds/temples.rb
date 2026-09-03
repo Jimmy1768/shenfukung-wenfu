@@ -17,7 +17,7 @@ module Seeds
       config = profile_config(slug)
       puts "Seeding temple profile for #{config.fetch('slug')}..." # rubocop:disable Rails/Output
       temple = ensure_temple(config)
-      ensure_hero_media_assets(temple)
+      purge_seeded_hero_assets(temple)
       ensure_pages(temple)
       ensure_sections(temple)
        ensure_news_posts(temple, config["news_posts"])
@@ -74,9 +74,6 @@ module Seeds
           hero_copy: keep.call(config["hero_copy"], record.hero_copy) || DEFAULT_HERO_COPY,
           primary_image_url: keep.call(config["primary_image_url"], record.primary_image_url),
           about_html: keep.call(config["about_html"], record.about_html),
-          # normalized_hero_images({}) is NOT blank -- it returns all eight
-          # HERO_TABS filled with Temple::DEFAULT_HERO_IMAGE -- so a `keep` on its
-          # result would still overwrite. Decide on what the yml supplies.
           hero_images: hero_images_for(record, config),
           contact_info: keep.call(config["contact"], record.contact_info) || {},
           service_times: keep.call(config["service_times"], record.service_times) || {},
@@ -148,17 +145,13 @@ module Seeds
       end
     end
 
-    def ensure_hero_media_assets(temple)
-      temple.hero_images.each do |tab, url|
-        next if url.blank?
-
-        asset = temple.media_assets.hero.where("metadata ->> 'hero_tab' = ?", tab).first_or_initialize
-        asset.role = :hero_image
-        asset.file_uid = asset.file_uid.presence || url
-        meta = (asset.metadata || {}).merge("hero_tab" => tab, "url" => url)
-        asset.metadata = meta.merge(seed_metadata)
-        asset.save!
-      end
+    # A MediaAsset records an upload. The seed uploads nothing, so it creates
+    # none -- it used to, with file_uid set to the yml's URL, which is not a
+    # storage key and is what broke the Phase 0 prefix migration. Rows left
+    # behind by that behaviour are removed here; they reference no S3 object,
+    # so nothing is orphaned by dropping them.
+    def purge_seeded_hero_assets(temple)
+      temple.media_assets.hero.select { |a| a.file_uid.to_s.start_with?("http://", "https://") }.each(&:destroy!)
     end
 
     def ensure_news_posts(temple, entries)
@@ -193,20 +186,19 @@ module Seeds
       end
     end
 
-    # yml images win when present; otherwise an existing temple keeps whatever
-    # the admin uploaded, and only a brand-new one gets the defaults.
+    # Store only what the yml actually supplies. It used to inflate {} into all
+    # eight HERO_TABS filled with the placeholder, which persisted state the
+    # model derives anyway -- and everything downstream was cleanup for it: a
+    # sanitizer in hero_image_for to stop those placeholders outranking a real
+    # home image, eight MediaAsset rows whose file_uid was a URL rather than a
+    # storage key, a skip branch in the prefix migration for exactly those
+    # rows, and a placehold.co regex in three languages. Absent now means
+    # absent, and Temple#hero_image_for applies the floor at render time.
     def hero_images_for(record, config)
-      return normalized_hero_images(config["hero_images"]) if config["hero_images"].present?
-      return normalized_hero_images({}) if record.new_record? || record.hero_images.blank?
-
+      supplied = config["hero_images"].to_h.stringify_keys.slice(*Temple::HERO_TABS).compact_blank
+      supplied.presence || record.hero_images
+    rescue StandardError
       record.hero_images
-    end
-
-    def normalized_hero_images(images)
-      data = images.to_h.stringify_keys rescue {}
-      Temple::HERO_TABS.index_with do |tab|
-        data[tab].presence || data["home"].presence || ::Temple::DEFAULT_HERO_IMAGE
-      end
     end
 
     def payment_provider_settings_for(record, config)

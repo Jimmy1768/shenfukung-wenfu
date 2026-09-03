@@ -32,5 +32,8 @@
         "body": "例如：入廟動線、禁忌提醒、拍照注意事項。"
       }
     ]
+  },
+  "hero_images": {
+    "default": "https://placehold.co/1600x900/111827/FFFFFF?text=Temple+Hero"
   }
 }

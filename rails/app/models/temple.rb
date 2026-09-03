@@ -86,7 +86,7 @@ class Temple < ApplicationRecord
 
   # The floor of the hero fallback chain. Nothing renders below this, so
   # every tab -- home included -- always resolves to something.
-  DEFAULT_HERO_IMAGE = "https://placehold.co/1600x900/111827/FFFFFF?text=Temple+Hero"
+  DEFAULT_HERO_IMAGE = AppConstants::TempleProfilePlaceholders.default_hero_image
 
   # Every valid storage key. Kept whole because param slicing, upload
   # validation and the seed normalizer all gate on it; only the admin's
@@ -156,27 +156,25 @@ class Temple < ApplicationRecord
     value.present? ? value.stringify_keys : {}
   end
 
-  # One four-step ladder: this tab's own URL, this tab's uploaded asset, the
-  # home image, then the floor. The asset is sanitized like the map above --
-  # a seeded placehold.co asset must not outrank the temple's real home image,
-  # or the admin's promise that "unfilled pages use the home image" is false
-  # for every tab with a placeholder sitting in front of the fallback.
+  # ONE render path. hero_images[tab] is the only thing consulted when
+  # rendering; a MediaAsset is the upload record (what file, when, by whom,
+  # which storage key) and is never a lookup. Two representations both feeding
+  # the read path is what made an uploaded hero impossible to remove -- the
+  # admin cleared one and the other kept winning -- and it forced every new
+  # consumer to remember both. Same shape TempleGathering already uses.
+  #
+  # The floor is applied here and never persisted, so "no image" is stored as
+  # absent rather than as a placeholder URL. That is what removes the need to
+  # recognise a placeholder by pattern.
   def hero_image_for(tab)
     tab_key = tab.to_s
-    sanitized_hero_source(hero_images[tab_key], allow_placeholder: tab_key == "home") ||
-      sanitized_hero_source(hero_media_asset_for(tab_key)&.url) ||
-      sanitized_hero_source(hero_images["home"], allow_placeholder: true) ||
-      DEFAULT_HERO_IMAGE
+    hero_images[tab_key].presence || hero_images["home"].presence || DEFAULT_HERO_IMAGE
   end
 
-  # True when this tab has an image OF ITS OWN, rather than showing the home
-  # image by inheritance -- so only then is there anything to remove. Lives
-  # here because the admin's show/hide rule for the Remove control and the
-  # remover's audit-or-not rule are the same question, and answering it twice
-  # lets them drift while looking identical.
+  # True when this tab has an image OF ITS OWN rather than inheriting the home
+  # image -- so only then is there anything to remove.
   def hero_image_set?(tab)
-    tab_key = tab.to_s
-    hero_images[tab_key].present? || hero_media_asset_for(tab_key).present?
+    hero_images[tab.to_s].present?
   end
 
   def hero_images_with_fallback
@@ -190,33 +188,10 @@ class Temple < ApplicationRecord
     [name, tagline, hero_copy, details["phone"], details["mapUrl"]].all?(&:present?)
   end
 
+  # Provenance lookup, used when unlinking or replacing an upload. Not on the
+  # render path -- see hero_image_for.
   def hero_media_asset_for(tab)
-    hero_media_assets_by_tab[tab.to_s]
-  end
-
-  # Loaded once and indexed. Resolving eight tabs used to issue eight separate
-  # single-row queries -- on the admin edit page twice each, and on every
-  # uncached GET /api/v1/temple. Reset on unlink, since a plain ivar survives
-  # reload.
-  def hero_media_assets_by_tab
-    @hero_media_assets_by_tab ||= media_assets.hero.each_with_object({}) do |asset, buffer|
-      tab = asset.metadata.is_a?(Hash) ? asset.metadata["hero_tab"].to_s : nil
-      buffer[tab] ||= asset if tab.present?
-    end
-  end
-
-  def reset_hero_media_assets!
-    @hero_media_assets_by_tab = nil
-  end
-
-  def sanitized_hero_source(value, allow_placeholder: false)
-    return nil if value.blank?
-    return value if allow_placeholder
-    placeholder_hero?(value) ? nil : value
-  end
-
-  def placeholder_hero?(value)
-    value.to_s.match?(/placehold\.co/i)
+    media_assets.hero.where("metadata ->> 'hero_tab' = ?", tab.to_s).first
   end
 
   def payment_gateway_settings_for(provider)

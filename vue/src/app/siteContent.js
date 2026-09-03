@@ -10,7 +10,6 @@ import {
   fetchTempleServices
 } from '@/app/templeApi.js';
 
-const PLACEHOLDER_IMG_PATTERN = /placehold\.co/i;
 
 const state = reactive({
   status: 'idle',
@@ -129,28 +128,17 @@ export function useTempleEvent(slugRef) {
   });
 }
 
+// The server resolves the chain -- TempleSerializer#hero_images_payload sends
+// Temple#hero_images_with_fallback, i.e. an already-complete map with the floor
+// applied. This used to re-run tab -> home -> placeholder-filter on top of that
+// resolved payload, so the rule lived in two languages and could only agree by
+// coincidence. Read what the server sent.
 export function useHeroImage(tab) {
   return computed(() => {
     const heroImages = state.data?.hero_images || {};
     const tabKey = tab?.toString() || 'home';
-    const tabImage = resolveHeroImage(heroImages[tabKey], { allowPlaceholder: tabKey === 'home' });
-    if (tabImage) return tabImage;
-
-    return resolveHeroImage(heroImages.home, { allowPlaceholder: true });
+    return heroImages[tabKey] || heroImages.home || '';
   });
-}
-
-function resolveHeroImage(value, options = {}) {
-  if (typeof value !== 'string' || !value.trim()) {
-    return null;
-  }
-
-  const { allowPlaceholder = false } = options;
-  if (!allowPlaceholder && PLACEHOLDER_IMG_PATTERN.test(value)) {
-    return null;
-  }
-
-  return value;
 }
 
 export async function loadTempleEvent(slug) {

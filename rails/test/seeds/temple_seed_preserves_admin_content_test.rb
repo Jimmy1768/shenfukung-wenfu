@@ -32,12 +32,25 @@ class TempleSeedPreservesAdminContentTest < ActiveSupport::TestCase
     assert_equal "<p>admin wrote this</p>", temple.about_html
   end
 
-  test "a brand new temple still receives the default hero images" do
+  test "a brand new temple stores no hero images and resolves them to the floor" do
     fresh = Temple.new(slug: "seed-fresh-temple", name: "Fresh")
 
     images = Seeds::Temples.send(:hero_images_for, fresh, {})
 
-    assert_equal Temple::HERO_TABS.size, images.size
-    assert images.values.all?(&:present?), "a new temple must not start with blank heroes"
+    assert_empty images,
+      "the seed must persist only what the yml supplies -- the floor is applied at render time"
+    Temple::HERO_TABS.each do |tab|
+      assert_equal Temple::DEFAULT_HERO_IMAGE, fresh.hero_image_for(tab),
+        "#{tab} must still resolve to the placeholder without it being stored"
+    end
+  end
+
+  test "the seed keeps what the yml supplies and drops the rest" do
+    fresh = Temple.new(slug: "seed-fresh-temple", name: "Fresh")
+
+    images = Seeds::Temples.send(:hero_images_for, fresh,
+                                 { "hero_images" => { "home" => "https://cdn.example/from-yml.jpg", "about" => "" } })
+
+    assert_equal({ "home" => "https://cdn.example/from-yml.jpg" }, images)
   end
 end

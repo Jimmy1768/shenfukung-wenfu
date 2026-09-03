@@ -225,6 +225,66 @@ at step 6.
 **Add to step 6, and to any future environment's setup:** verify the bucket
 policy covers the new prefix *before* moving anything into it.
 
+## Hardening — one render path, one meaning for file_uid
+
+Applied 2026-09-03, after a four-angle review of the Phase 0/1 changes found
+that most of what it flagged traced to two structural faults rather than to
+the individual patches.
+
+### The two faults
+
+**A hero image had two persisted representations and both fed the read path.**
+`temple.hero_images[tab]` and a `MediaAsset` keyed by `metadata["hero_tab"]`.
+Nothing kept them consistent except code that remembered to touch both, so
+every consumer had to remember, and the ones that forgot were the bugs. It is
+why an uploaded hero could be replaced but never removed: the admin cleared
+one and the other kept winning.
+
+**`file_uid` did not mean one thing.** A storage key for real uploads, a full
+URL for seeded rows. That ambiguity is what broke the Phase 0 migration, which
+would have rewritten those rows to `prod/https://placehold.co/...`.
+
+### What changed
+
+- **One render path.** `Temple#hero_image_for` is now
+  `hero_images[tab] || hero_images["home"] || DEFAULT_HERO_IMAGE`. A
+  `MediaAsset` is the upload record and is never consulted when rendering —
+  the shape `TempleGathering` already used, where `hero_image_url` is the only
+  thing read and `metadata["hero_asset_id"]` is provenance. This deleted
+  `sanitized_hero_source` and `placeholder_hero?`, collapsed
+  `hero_image_set?` to one check, and took the admin edit page from up to 16
+  single-row `media_assets` queries to none. `GET /api/v1/temple` likewise.
+- **`file_uid` is validated as a storage key.** A URL is rejected. The class
+  of bug that broke Phase 0 can no longer be created.
+- **Absent means absent.** The seed persists only what the yml supplies. It
+  used to inflate `{}` into all eight tabs filled with the placeholder, then
+  manufacture eight `MediaAsset` rows whose `file_uid` was that URL. Those
+  rows are now purged on seed; they reference no S3 object, so nothing is
+  orphaned by dropping them. The floor is applied at render time and never
+  stored.
+- **The placeholder is no longer recognised by pattern.** The `placehold.co`
+  regex existed in Ruby and in JS and would have been silently defeated by any
+  future default image on another domain. With "no image" stored as absent
+  there is nothing to detect. `DEFAULT_HERO_IMAGE` now comes from
+  `shared/app_constants/temple_profile_placeholders.json`, which both stacks
+  already read.
+- **The chain is resolved once, on the server.** `siteContent.js` re-ran
+  tab → home → filter on top of an already-resolved payload; it now reads what
+  the serializer sent.
+
+### Still open
+
+- **A single registry of stored-media references.** The model→column list the
+  prefix migration hardcoded is the same list Phase 2's sweep needs. Until it
+  exists in one place, a new column holding an image escapes both — and for
+  the sweep that means being classified as an orphan and deleted.
+- **One detached-asset policy.** Temple heroes unlink and keep (Director's
+  call); `Admin::GatheringsController#cleanup_detached_assets` destroys. Two
+  answers to the same question, decided per feature.
+- **Removal runs outside the form transaction.** `HeroImageRemover` commits
+  and audits before `@form.save` can fail, so a validation error elsewhere
+  leaves the image gone, audited, and the re-rendered page showing the old URL.
+
 ## Phase 2 — Orphan reclamation sweep
 
 Can permanently destroy customer files. Not to be authorized in the same breath
