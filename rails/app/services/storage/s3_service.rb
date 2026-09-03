@@ -20,14 +20,16 @@ module Storage
       end
 
       def public_url(key)
-        storage_key = namespaced_key(key)
-        base = ENV["S3_PUBLIC_BASE_URL"].presence
-        return "#{base}/#{storage_key}" if base
-
-        "https://#{bucket}.s3.#{region}.amazonaws.com/#{storage_key}"
+        "#{public_url_base}/#{namespaced_key(key)}"
       end
 
-      private
+      # The origin every stored media URL is built from. Public because callers
+      # that need to recognise one of our own URLs -- rather than build one --
+      # must not re-derive this, or they silently stop matching the moment
+      # S3_PUBLIC_BASE_URL points somewhere else.
+      def public_url_base
+        ENV["S3_PUBLIC_BASE_URL"].presence || "https://#{bucket}.s3.#{region}.amazonaws.com"
+      end
 
       def client
         @client ||= Aws::S3::Client.new(
@@ -44,6 +46,8 @@ module Storage
       def bucket
         ENV.fetch("S3_BUCKET") { raise "S3_BUCKET is not configured" }
       end
+
+      private
 
       def object_prefix
         ENV["S3_OBJECT_PREFIX"].to_s

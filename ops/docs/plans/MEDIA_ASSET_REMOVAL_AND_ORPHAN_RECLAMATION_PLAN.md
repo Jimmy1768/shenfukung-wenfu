@@ -33,7 +33,7 @@ Each hero tab has **two** storage paths, and the admin exposes only one:
 
 - `temple.hero_images[tab]` — the "paste URL" box, inside a collapsed
   `<details>`
-- a `MediaAsset` row with `role: temple_hero` and `metadata["hero_tab"]`
+- a `MediaAsset` row with `role: hero_image` and `metadata["hero_tab"]`
 
 `MediaAssets::HeroImageUploader#call` writes **both** (`update_temple_hero_map`
 plus `upsert_media_asset`). `Temple#hero_image_for` reads the map first, then
@@ -241,7 +241,15 @@ production and agrees the set looks right.
 
 **Safety constraints, all mandatory:**
 
-- **Environment isolation in the bucket.** Settled by the Director
+- **Environment isolation in the bucket.** OBSOLETE AS WRITTEN. This section
+  still describes the first scheme (production → no prefix) and the sibling-
+  exclusion list that scheme required. Phase 0, applied 2026-09-03, gave
+  production its own `prod/` prefix precisely to delete that hazard, so the
+  exclusion-list mandate below no longer applies. The current scheme is
+  development → `dev`, staging → `staging`, production → `prod`; read the
+  Phase 0 section above, not the paragraphs that follow here.
+
+- **Superseded text, kept only to show what changed.** Settled by the Director
   2026-09-02: development → `dev`, staging → `staging`, production → none.
 
   All three share one bucket, `templemate-media-assets`. Staging previously had

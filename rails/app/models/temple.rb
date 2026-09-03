@@ -156,18 +156,27 @@ class Temple < ApplicationRecord
     value.present? ? value.stringify_keys : {}
   end
 
+  # One four-step ladder: this tab's own URL, this tab's uploaded asset, the
+  # home image, then the floor. The asset is sanitized like the map above --
+  # a seeded placehold.co asset must not outrank the temple's real home image,
+  # or the admin's promise that "unfilled pages use the home image" is false
+  # for every tab with a placeholder sitting in front of the fallback.
   def hero_image_for(tab)
     tab_key = tab.to_s
-    image_from_map = sanitized_hero_source(hero_images[tab_key], allow_placeholder: tab_key == "home")
-    return image_from_map if image_from_map.present?
-
-    # Sanitized like the map above: a seeded placehold.co media asset must not
-    # outrank the temple's real home image. Without this the admin's promise
-    # that "unfilled pages use the home image" was false for every tab that
-    # had a placeholder asset sitting in front of the fallback.
-    sanitized_hero_source(hero_media_asset_for(tab_key)&.metadata&.dig("url")).presence ||
-      sanitized_hero_source(hero_images["home"], allow_placeholder: true).presence ||
+    sanitized_hero_source(hero_images[tab_key], allow_placeholder: tab_key == "home") ||
+      sanitized_hero_source(hero_media_asset_for(tab_key)&.url) ||
+      sanitized_hero_source(hero_images["home"], allow_placeholder: true) ||
       DEFAULT_HERO_IMAGE
+  end
+
+  # True when this tab has an image OF ITS OWN, rather than showing the home
+  # image by inheritance -- so only then is there anything to remove. Lives
+  # here because the admin's show/hide rule for the Remove control and the
+  # remover's audit-or-not rule are the same question, and answering it twice
+  # lets them drift while looking identical.
+  def hero_image_set?(tab)
+    tab_key = tab.to_s
+    hero_images[tab_key].present? || hero_media_asset_for(tab_key).present?
   end
 
   def hero_images_with_fallback
@@ -182,7 +191,22 @@ class Temple < ApplicationRecord
   end
 
   def hero_media_asset_for(tab)
-    media_assets.hero.where("metadata ->> 'hero_tab' = ?", tab.to_s).first
+    hero_media_assets_by_tab[tab.to_s]
+  end
+
+  # Loaded once and indexed. Resolving eight tabs used to issue eight separate
+  # single-row queries -- on the admin edit page twice each, and on every
+  # uncached GET /api/v1/temple. Reset on unlink, since a plain ivar survives
+  # reload.
+  def hero_media_assets_by_tab
+    @hero_media_assets_by_tab ||= media_assets.hero.each_with_object({}) do |asset, buffer|
+      tab = asset.metadata.is_a?(Hash) ? asset.metadata["hero_tab"].to_s : nil
+      buffer[tab] ||= asset if tab.present?
+    end
+  end
+
+  def reset_hero_media_assets!
+    @hero_media_assets_by_tab = nil
   end
 
   def sanitized_hero_source(value, allow_placeholder: false)

@@ -23,10 +23,19 @@ namespace :media do
       abort "S3_OBJECT_PREFIX is already #{current_prefix.inspect}; this task is only for the unprefixed production namespace."
     end
 
-    client = Storage::S3Service.send(:client)
-    bucket = Storage::S3Service.send(:bucket)
-    region = Storage::S3Service.send(:region)
+    client = Storage::S3Service.client
+    bucket = Storage::S3Service.bucket
     siblings = %w[dev staging].map { |p| "#{p}/" } + ["#{target}/"]
+
+    # Every section prints the same shape. It was pasted three times and had
+    # already drifted -- the middle one silently dropped its "and N more", so a
+    # bucket with 40 URL-valued rows would have shown 20 and no hint of the rest.
+    report = lambda do |header, items, &line|
+      puts header
+      items.first(20).each { |item| puts "  #{line.call(item)}" }
+      puts "  ... and #{items.size - 20} more" if items.size > 20
+      puts ""
+    end
 
     puts "mode:   #{apply ? 'APPLY (writes)' : 'DRY RUN (writes nothing)'}"
     puts "bucket: #{bucket}"
@@ -43,84 +52,85 @@ namespace :media do
       break unless token
     end
 
-    puts "objects to copy: #{objects.size} (#{(objects.sum(&:size) / 1048576.0).round(2)} MB)"
-    objects.first(20).each { |o| puts "  #{o.key}  ->  #{target}/#{o.key}" }
-    puts "  ... and #{objects.size - 20} more" if objects.size > 20
-    puts ""
+    report.call("objects to copy: #{objects.size} (#{(objects.sum(&:size) / 1048576.0).round(2)} MB)", objects) do |o|
+      "#{o.key}  ->  #{target}/#{o.key}"
+    end
 
     # 2. MediaAsset rows whose file_uid points at the old namespace.
     #
-    # Skips rows whose file_uid is a URL rather than a storage key. The seeded
-    # placehold.co assets carry a full URL there and were never uploaded to S3,
-    # so prefixing them would produce "prod/https://placehold.co/..." -- caught
-    # by the first dry run against production, which is what it is for.
-    rows = MediaAsset.where.not(file_uid: nil).reject do |a|
-      uid = a.file_uid.to_s
-      uid.start_with?("http://", "https://") || siblings.any? { |s| uid.start_with?(s) }
+    # Rows whose file_uid is a URL rather than a storage key are skipped: the
+    # seeded placehold.co assets carry a full URL there and were never uploaded
+    # to S3, so prefixing them would produce "prod/https://placehold.co/...".
+    # Caught by the first dry run against production, which is what it is for.
+    #
+    # One load, split once -- the count used to re-query and re-instantiate the
+    # whole table just to print the second number.
+    url_valued, key_valued = MediaAsset.where.not(file_uid: nil).to_a.partition do |asset|
+      asset.file_uid.to_s.start_with?("http://", "https://")
     end
-    skipped = MediaAsset.where.not(file_uid: nil).count { |a| a.file_uid.to_s.start_with?("http://", "https://") }
-    puts "media_asset file_uids to rewrite: #{rows.size}"
-    puts "  (skipping #{skipped} rows whose file_uid is a URL, not a storage key -- seeded placeholders)" if skipped.positive?
-    rows.first(20).each { |a| puts "  ##{a.id}  #{a.file_uid}  ->  #{target}/#{a.file_uid}" }
-    puts ""
+    rows = key_valued.reject { |a| siblings.any? { |s| a.file_uid.to_s.start_with?(s) } }
+
+    header = "media_asset file_uids to rewrite: #{rows.size}"
+    header += "\n  (skipping #{url_valued.size} rows whose file_uid is a URL, not a storage key -- seeded placeholders)" if url_valued.any?
+    report.call(header, rows) { |a| "##{a.id}  #{a.file_uid}  ->  #{target}/#{a.file_uid}" }
 
     # 3. stored URLs that embed the old path.
     #
-    # A stored URL is "#{base}/#{storage_key}" (Storage::S3Service.public_url),
-    # so splitting at the base and namespacing the key is exact for every key
-    # root. Substituting on "/uploads/" was not: ManagedUploader writes
-    # gallery/images/, gallery/videos/ and gatherings/hero/, which would have
-    # been reported and then silently left alone.
+    # A stored URL is "#{base}/#{storage_key}", so splitting at the base and
+    # namespacing the key is exact for every key root. Substituting on
+    # "/uploads/" was not: ManagedUploader writes gallery/images/,
+    # gallery/videos/ and gatherings/hero/, which would have been reported and
+    # then silently left alone.
     #
-    # Matching the base is also what makes the predicate right -- a hand-pasted
-    # external URL is not ours, so it is neither reported nor touched.
-    bases = [
-      ENV["S3_PUBLIC_BASE_URL"].presence,
-      "https://#{bucket}.s3.#{region}.amazonaws.com"
-    ].compact.map { |b| b.to_s.chomp("/") }
+    # The base comes from Storage::S3Service rather than being rebuilt here.
+    # Rebuilt, it stops matching the moment S3_PUBLIC_BASE_URL becomes a CDN
+    # host -- and the failure is silent: "0 URLs to rewrite" on a full bucket.
+    base = Storage::S3Service.public_url_base.chomp("/")
 
-    split = lambda do |url|
-      base = bases.find { |b| url.to_s.start_with?("#{b}/") }
-      base ? [base, url.to_s.delete_prefix("#{base}/")] : nil
-    end
-    stale = ->(url) { (parts = split.call(url)) && !parts[1].start_with?("#{target}/") }
-    rewrite = lambda do |url|
-      base, key = split.call(url)
+    # Returns the namespaced URL, or nil if this is not one of ours or is
+    # already namespaced. One predicate instead of three lambdas that re-split
+    # the same string, and it hands back the new value so the dry run can print
+    # old -> new like the other two sections do.
+    prefixed = lambda do |url|
+      value = url.to_s
+      next nil unless value.start_with?("#{base}/")
+
+      key = value.delete_prefix("#{base}/")
+      next nil if key.start_with?("#{target}/")
+
       "#{base}/#{target}/#{key}"
     end
 
-    # Each edit carries its own applier, so the list that gets printed is
-    # exactly the list that gets written. They cannot drift apart.
+    # Each edit carries what to write and where, so the list that gets printed
+    # is exactly the list that gets written -- they cannot drift apart.
     url_edits = []
     Temple.find_each do |temple|
       temple.hero_images.to_h.each do |tab, url|
-        next unless stale.call(url)
+        new_url = prefixed.call(url)
+        next unless new_url
 
-        url_edits << ["Temple##{temple.id} hero_images[#{tab}]", url, lambda {
-          temple.update!(hero_images: temple.hero_images.to_h.merge(tab => rewrite.call(url)))
-        }]
+        url_edits << { label: "Temple##{temple.id} hero_images[#{tab}]", old: url, new: new_url,
+                       temple: temple, tab: tab }
       end
     end
     { TempleEvent => %i[hero_image_url poster_image_url],
       TempleService => %i[hero_image_url],
       TempleGathering => %i[hero_image_url] }.each do |model, columns|
       columns.each do |column|
-        next unless model.column_names.include?(column.to_s)
-
         model.where.not(column => [nil, ""]).find_each do |record|
           value = record.public_send(column)
-          next unless stale.call(value)
+          new_url = prefixed.call(value)
+          next unless new_url
 
-          url_edits << ["#{model.name}##{record.id}.#{column}", value, lambda {
-            record.update!(column => rewrite.call(value))
-          }]
+          url_edits << { label: "#{model.name}##{record.id}.#{column}", old: value, new: new_url,
+                         record: record, column: column }
         end
       end
     end
-    puts "stored URLs to rewrite: #{url_edits.size}"
-    url_edits.first(20).each { |label, url, _applier| puts "  #{label}\n    #{url}" }
-    puts "  ... and #{url_edits.size - 20} more" if url_edits.size > 20
-    puts ""
+
+    report.call("stored URLs to rewrite: #{url_edits.size}", url_edits) do |e|
+      "#{e[:label]}\n    #{e[:old]}\n    ->  #{e[:new]}"
+    end
 
     unless apply
       puts "DRY RUN -- nothing was changed. Re-run with apply=1 to perform steps 2-4."
@@ -137,7 +147,15 @@ namespace :media do
     rows.each { |a| a.update!(file_uid: "#{target}/#{a.file_uid}") }
     puts "  rewrote #{rows.size} file_uids"
 
-    url_edits.each { |_label, _url, applier| applier.call }
+    # Grouped by temple: every tab used to issue its own full update! of the
+    # same row, so one temple with eight stale tabs meant eight transactions
+    # and eight writes to produce one row's worth of change.
+    temple_edits, record_edits = url_edits.partition { |e| e[:temple] }
+    temple_edits.group_by { |e| e[:temple] }.each do |temple, edits|
+      merged = edits.each_with_object(temple.hero_images.to_h) { |e, h| h[e[:tab]] = e[:new] }
+      temple.update!(hero_images: merged)
+    end
+    record_edits.each { |e| e[:record].update!(e[:column] => e[:new]) }
     puts "  rewrote #{url_edits.size} stored URLs"
     puts ""
     puts "Next: verify the site renders, THEN set S3_OBJECT_PREFIX=#{target} and restart, THEN delete the originals."

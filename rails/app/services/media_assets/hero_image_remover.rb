@@ -29,7 +29,7 @@ module MediaAssets
       raise RemovalError, "Unsupported hero tab" unless Temple::HERO_TABS.include?(hero_tab)
 
       asset = temple.hero_media_asset_for(hero_tab)
-      had_image = temple.hero_images[hero_tab].present? || asset.present?
+      had_image = temple.hero_image_set?(hero_tab)
 
       Temple.transaction do
         clear_hero_map!
@@ -44,12 +44,11 @@ module MediaAssets
 
     attr_reader :temple, :hero_tab, :admin
 
+    # Temple#hero_images already returns a fresh stringified hash, and
+    # ActiveRecord skips the UPDATE when the value is unchanged, so neither a
+    # dup nor a key? guard buys anything.
     def clear_hero_map!
-      images = temple.hero_images.dup
-      return unless images.key?(hero_tab)
-
-      images.delete(hero_tab)
-      temple.update!(hero_images: images)
+      temple.update!(hero_images: temple.hero_images.except(hero_tab))
     end
 
     # Keeps the row and its file_uid/url; only the tab binding goes, so the
@@ -62,6 +61,7 @@ module MediaAssets
       metadata["unlinked_at"] = Time.current.iso8601
       metadata["unlinked_from_tab"] = hero_tab
       asset.update!(metadata: metadata)
+      temple.reset_hero_media_assets!
     end
 
     def log!(asset)

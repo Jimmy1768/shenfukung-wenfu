@@ -38,8 +38,7 @@ module Admin
       # nothing. It also has to strip the submitted hero_images value for that
       # tab, or the form would write the old URL straight back from the
       # still-populated "paste URL" box.
-      permitted["hero_images"] = (permitted["hero_images"] || {}).except(*removed) if removed.any?
-      permitted["hero_images"] = (permitted["hero_images"] || {}).merge(uploaded_urls) if uploaded_urls.present?
+      permitted["hero_images"] = (permitted["hero_images"] || {}).except(*removed).merge(uploaded_urls)
       permitted
     end
 
@@ -47,7 +46,7 @@ module Admin
     # MediaAsset binding) so it falls back to the home image. Unlink only --
     # see MediaAssets::HeroImageRemover.
     def remove_hero_images
-      removal_params.filter_map do |tab, flag|
+      hero_tab_params(:hero_image_remove).filter_map do |tab, flag|
         next unless ActiveModel::Type::Boolean.new.cast(flag)
 
         MediaAssets::HeroImageRemover.call(
@@ -59,13 +58,9 @@ module Admin
       end
     end
 
-    def removal_params
-      raw = params.fetch(:hero_image_remove, {})
-      raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h.slice(*Temple::HERO_TABS) : {}
-    end
 
     def upload_hero_images
-      upload_params.each_with_object({}) do |(tab, file), urls|
+      hero_tab_params(:hero_image_upload).each_with_object({}) do |(tab, file), urls|
         next if file.blank?
 
         result = MediaAssets::HeroImageUploader.call(
@@ -78,8 +73,10 @@ module Admin
       end
     end
 
-    def upload_params
-      raw = params.fetch(:hero_image_upload, {})
+    # The slice to HERO_TABS is the access control on both the remove and the
+    # upload path, so it is written once rather than twice.
+    def hero_tab_params(key)
+      raw = params.fetch(key, {})
       raw.respond_to?(:to_unsafe_h) ? raw.to_unsafe_h.slice(*Temple::HERO_TABS) : {}
     end
 
