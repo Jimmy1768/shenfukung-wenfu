@@ -37,13 +37,19 @@
                   <p class="muted hero-image-row-hint"><%= t("admin.temple_profile.sections.hero_images.row_hint") %></p>
                 <% end %>
 
-                <%# Clears BOTH storage paths for this tab. Clearing the URL box
-                    alone never worked -- the uploaded MediaAsset still won. %>
+                <%# A submit button carrying the same name/value the checkbox
+                    used to post, so one click both removes and saves. The
+                    controller path is unchanged. A button_to would be tidier
+                    but cannot be used here: this slot renders inside the
+                    profile form, and forms do not nest. %>
                 <% if hero_image_set_for?(form.object, tab) %>
-                  <label class="hero-image-remove">
-                    <%= check_box_tag "hero_image_remove[#{tab}]", "1", false, class: "hero-image-remove-input" %>
-                    <span><%= t("admin.temple_profile.sections.hero_images.remove") %></span>
-                  </label>
+                  <button type="submit"
+                    name="hero_image_remove[<%= tab %>]"
+                    value="1"
+                    class="btn btn-secondary hero-image-remove"
+                    formnovalidate>
+                    <%= t("admin.temple_profile.sections.hero_images.remove") %>
+                  </button>
                   <p class="muted hero-image-remove-hint"><%= t("admin.temple_profile.sections.hero_images.remove_hint") %></p>
                 <% end %>
               </div>
