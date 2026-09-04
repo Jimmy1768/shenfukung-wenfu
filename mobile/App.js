@@ -25,11 +25,39 @@ import { createInput, offeringCatalog, preparedRegistration, quantityInputValue,
 import { registrationDemoPresentation } from './app/account/registration_demo_presentation';
 import { accountMenu, registrationCaption } from './app/account/screen_model';
 
-const clientConfig = resolveClientConfig(Constants.expoConfig?.extra || {});
-const trustedBindingStorage = createTrustedBindingStorage({ store: scopedStorage, config: clientConfig });
-const adapter = clientConfig.mode === 'real' ? createRealAdapter({ config: clientConfig, store: scopedStorage, transport: productionTransport }) : createDummyAdapter();
-const oauthRuntime = createExpoOAuthRuntime(clientConfig.oauthReturnUrl);
-const oauthController = createOAuthController({ adapter, expectedReturnUrl: clientConfig.oauthReturnUrl, createPkce: oauthRuntime.createPkce, openBrowser: clientConfig.mode === 'dummy' ? adapter.openOAuthBrowser : oauthRuntime.openBrowser });
+// Everything below runs before React exists. Anything that throws here kills
+// the app instantly, with no screen and nothing to read -- which is exactly
+// what happened on 2026-09-03, on an iPhone that cannot be attached to a Mac
+// and cannot install the dev client. There was no way to find out why.
+//
+// So a failure is captured and rendered instead. This is not about one bug:
+// iOS here is reachable only through TestFlight OTA, so a startup error that
+// leaves no trace is permanently undiagnosable without this.
+let bootFailure = null;
+let clientConfig = null;
+let trustedBindingStorage = null;
+let adapter = null;
+let oauthController = null;
+try {
+  clientConfig = resolveClientConfig(Constants.expoConfig?.extra || {});
+  trustedBindingStorage = createTrustedBindingStorage({ store: scopedStorage, config: clientConfig });
+  adapter = clientConfig.mode === 'real' ? createRealAdapter({ config: clientConfig, store: scopedStorage, transport: productionTransport }) : createDummyAdapter();
+  const oauthRuntime = createExpoOAuthRuntime(clientConfig.oauthReturnUrl);
+  oauthController = createOAuthController({ adapter, expectedReturnUrl: clientConfig.oauthReturnUrl, createPkce: oauthRuntime.createPkce, openBrowser: clientConfig.mode === 'dummy' ? adapter.openOAuthBrowser : oauthRuntime.openBrowser });
+} catch (reason) {
+  bootFailure = reason;
+}
+
+// Deliberately dependency-free: it must render even when the failure above was
+// the thing that builds the palette, the copy, or the adapter.
+function BootFailure({ failure }) {
+  const detail = [
+    failure?.code ? `code: ${failure.code}` : null,
+    failure?.message || String(failure),
+    failure?.stack ? String(failure.stack).split('\n').slice(0, 6).join('\n') : null
+  ].filter(Boolean).join('\n\n');
+  return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: '#1b1b1b' }}><ScrollView contentContainerStyle={{ padding: 24, gap: 12 }}><Text selectable style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>TempleMate could not start</Text><Text selectable style={{ color: '#ffb4b4', fontSize: 14, lineHeight: 20 }}>{detail}</Text><Text selectable style={{ color: '#9a9a9a', fontSize: 12, lineHeight: 18 }}>Screenshot this and send it to the developer. Press and hold to copy.</Text></ScrollView></SafeAreaView></SafeAreaProvider>;
+}
 const menuKeys = accountMenu();
 // Rails returns a specific, already-localized validation message in
 // details.base; the code-based fallback said "Please review the highlighted
@@ -44,6 +72,10 @@ const firstDetail = reason => {
 const errorMessage = reason => firstDetail(reason) || reason?.message || 'Something went wrong. Please try again.';
 
 export default function App() {
+  // Before any hook, so a boot failure cannot be masked by a second error from
+  // hooks reading state that never got built.
+  if (bootFailure) return <BootFailure failure={bootFailure} />;
+
   const [startup, setStartup] = useState(true); const [signedIn, setSignedIn] = useState(false); const [screen, setScreen] = useState('home');
   const [locale, setLocale] = useState('zh-TW'); const [dark, setDark] = useState(false); const [binding, setBinding] = useState(initialBinding()); const [data, setData] = useState(adapter.snapshot()); const [collections, setCollections] = useState('idle');
   const [email, setEmail] = useState(isReleaseConfig(clientConfig) ? '' : 'member@example.test'); const [password, setPassword] = useState(isReleaseConfig(clientConfig) ? '' : 'templemate-demo'); const [signup, setSignup] = useState({ name: '', email: '', password: '' }); const [recoveryEmail, setRecoveryEmail] = useState('');
