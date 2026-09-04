@@ -1,17 +1,9 @@
-const { scanFixture, parseProductionConnectionLink } = require('./binding');
+const { parseProductionConnectionLink } = require('./binding');
 
-const createQrScanner = ({ readPayload }) => ({
-  kind: 'native_qr_interface',
-  async scanConnection() {
-    const payload = await readPayload();
-    return scanFixture(payload);
-  }
-});
-
-const createFixtureQrScanner = payload => createQrScanner({ readPayload: () => payload });
-
-const scanCameraPayload = async ({ mode, payload, config, transport }) => {
-  if (mode !== 'real') return createFixtureQrScanner(payload).scanConnection();
+// One path. The link must come from the configured origin, and the temple it
+// names must be the configured tenant -- checked against the server, not taken
+// from the QR code's own claim.
+const scanCameraPayload = async ({ payload, config, transport }) => {
   const parsed = parseProductionConnectionLink(payload, config?.apiBaseUrl);
   if (!parsed.ok) return { state: 'binding_failed', tenant: null, error: parsed.reason, source: 'qr' };
   try {
@@ -22,4 +14,4 @@ const scanCameraPayload = async ({ mode, payload, config, transport }) => {
   } catch (_) { return { state: 'binding_failed', tenant: null, error: 'temple_validation_failed', source: 'qr' }; }
 };
 
-module.exports = { createQrScanner, createFixtureQrScanner, scanCameraPayload };
+module.exports = { scanCameraPayload };

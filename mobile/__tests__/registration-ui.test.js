@@ -8,7 +8,8 @@ test('registration UI starts from Discover and never renders editable offering o
   assert.match(source, /offeringCatalog\(data\)/);
   assert.match(source, /adapter\.newRegistration\(\{ offering: offering\.slug, accountAction: offering\.account_action \}\)/);
   assert.match(source, /formatMoney\(offering\.price_cents, offering\.currency\)/);
-  assert.match(source, /registrationDemoPresentation/);
+  // registrationDemoPresentation went with the dummy client; the assertions
+  // below are the ones that matter -- the offering and its money are read-only.
   assert.doesNotMatch(source, /FormInput label=\{t\.offering/);
   assert.doesNotMatch(source, /FormInput label=\{t\.offeringSlug/);
   assert.doesNotMatch(source, /onChangeText=\{[^}]*price_cents/);

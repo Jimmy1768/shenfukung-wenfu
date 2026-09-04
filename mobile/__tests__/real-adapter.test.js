@@ -38,15 +38,19 @@ function fixtureTransport(calls, failures = {}, overrides = {}) {
   };
 }
 
-test('real mode is deliberate and cannot be configured without local tenant and API inputs', () => {
-  assert.deepEqual(resolveClientConfig({}), { mode: 'dummy', apiBaseUrl: '', tenantSlug: '', environment: 'development', oauthReturnUrl: 'templemate://oauth/complete', updateChannel: 'development' });
+test('there is one mode, and it cannot be configured without tenant and API inputs', () => {
+  // No dummy fallback to land in: a build with nothing configured fails loudly
+  // rather than quietly serving fixtures.
+  assert.throws(() => resolveClientConfig({}), { code: 'REAL_CONFIG_REQUIRED' });
   assert.throws(() => resolveClientConfig({ clientMode: 'real' }), { code: 'REAL_CONFIG_REQUIRED' });
   assert.equal(resolveClientConfig({ clientMode: 'real', localApiBaseUrl: 'http://local.test/', localTenantSlug: 'fixture', clientEnvironment: 'test' }).tenantSlug, 'fixture');
   assert.throws(() => resolveClientConfig({ clientMode: 'real', localApiBaseUrl: 'https://example.com', localTenantSlug: 'fixture' }), { code: 'TRUSTED_API_REQUIRED' });
   const release = resolveClientConfig({ clientEnvironment: 'testflight', apiBaseUrl: 'https://shengfukung.com.tw', tenantSlug: 'shengfukung-wenfu', easUpdateChannel: 'testflight' });
   assert.equal(release.mode, 'real'); assert.equal(release.updateChannel, 'testflight');
   assert.throws(() => resolveClientConfig({ clientEnvironment: 'production', apiBaseUrl: 'http://shengfukung.com.tw', tenantSlug: 'shengfukung-wenfu' }), { code: 'TRUSTED_API_REQUIRED' });
-  assert.throws(() => resolveClientConfig({ nativeOAuthReturnUrl: 'templemate://wrong' }), { code: 'NATIVE_OAUTH_RETURN_REQUIRED' });
+  // Needs a config that clears the origin/tenant checks first, since without a
+  // dummy fallback those now fire before the OAuth return URL is looked at.
+  assert.throws(() => resolveClientConfig({ localApiBaseUrl: 'http://local.test/', localTenantSlug: 'fixture', clientEnvironment: 'test', nativeOAuthReturnUrl: 'templemate://wrong' }), { code: 'NATIVE_OAUTH_RETURN_REQUIRED' });
   assert.deepEqual(localTenantBinding(config), { state: 'bound', tenant: { id: 'fixture-temple', name: 'fixture-temple' }, error: null, source: 'local-test' });
 });
 

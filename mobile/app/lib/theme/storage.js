@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
 const memoryStore = {};
-const keyFor = (environment = 'dummy', tenantId = 'unbound') => `templemate.${environment}.${tenantId}.theme`;
+const keyFor = (environment = 'development', tenantId = 'unbound') => `templemate.${environment}.${tenantId}.theme`;
 const get = async key => {
   try { return (await SecureStore.getItemAsync(key)) ?? memoryStore[key] ?? null; } catch (_) { return memoryStore[key] ?? null; }
 };

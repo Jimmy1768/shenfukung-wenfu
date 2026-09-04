@@ -15,7 +15,7 @@ test('feedback state owns errors and destination notices across navigation, rese
   assert.deepEqual(emptyFeedback(), { error: null, notice: null }, 'reset and locale changes clear all transient feedback');
 });
 
-test('refined presentation keeps both complete locales and explicit dummy disclosure', () => {
+test('refined presentation keeps both complete locales', () => {
   const source = read('app/ui/copy.js');
   for (const phrase of ['示範模式', 'Demo mode:', 'TempleMate', '連結失敗', 'Connection failed', '僅供展示', 'display only']) assert.match(source, new RegExp(phrase));
   assert.equal(source.includes('OAuth'), false);
@@ -60,9 +60,21 @@ test('tenant connection presentation uses the shared retained-tenant selector', 
   assert.match(app, /import \{ activePresentationTenant,/);
   assert.ok((app.match(/activePresentationTenant\(binding\)/g) || []).length >= 3);
   assert.equal(app.includes("binding.state === 'bound' ? binding.tenant.name"), false);
-  assert.match(app, /binding\.state === 'switching'.*t\.confirmSwitch/);
-  const confirmationOnlyCleanup = app.match(/onPress=\{async \(\) => \{ const ok = await run\(async \(\) => \{ await oauthController\.clear\('idle'\); return adapter\.clearTenantState\(\); \}\); if \(ok\) setBinding\(confirmSwitch\(binding, clearPriorTenant\(binding\.tenant\)\)\); \}\}/g) || [];
-  assert.equal(confirmationOnlyCleanup.length, 1);
+});
+
+// The temple is forgotten in exactly one place, reached from one control. Every
+// other path that used to clear it -- sign-out, session expiry, account
+// closure, OAuth, the fixture switch-temple flow -- was a bug, each found
+// separately over 2026-09-04.
+test('only the explicit Unbind control forgets the temple', () => {
+  const app = read('App.js');
+  assert.match(app, /const onUnbindTemple = async \(\) => \{/);
+  assert.equal((app.match(/trustedBindingStorage\.clear\(\)/g) || []).length, 1,
+    'exactly one caller may clear the stored binding');
+  assert.match(app, /label=\{t\.unbindTemple\} palette=\{palette\} tone="secondary" onPress=\{onUnbindTemple\}/);
+  for (const gone of ['clearReleaseBinding', 'confirmSwitch', 'requestSwitch', 'clearPriorTenant', 'fixtureConnectionLink']) {
+    assert.equal(app.includes(gone), false, `${gone} belonged to the removed fixture switch flow`);
+  }
 });
 
 test('Doctor stays project-local and reports unavailable metadata checks in offline mode', () => {

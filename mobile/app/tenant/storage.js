@@ -31,6 +31,9 @@ function createTrustedBindingStorage({ store, config }) {
       await store.setItem(key, JSON.stringify(trusted));
       return trusted;
     },
+    // The ONLY thing that forgets a temple. Sign-out, session expiry, account
+    // closure and the sign-in paths all used to clear it as a side effect;
+    // each of those was a bug, and each was found separately.
     clear() { return store.deleteItem(key); }
   };
 }

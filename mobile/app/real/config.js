@@ -7,7 +7,9 @@ const safeUrl = value => { try { return new URL(String(value)); } catch (_) { re
 function resolveClientConfig(extra = {}) {
   const environment = String(extra.clientEnvironment || 'development').toLowerCase();
   const release = RELEASE_ENVIRONMENTS.has(environment);
-  const mode = release ? 'real' : extra.clientMode === 'real' ? 'real' : 'dummy';
+  // One mode. The dummy client is gone; every build talks to a real server,
+  // a local one in development and the public origin in a release lane.
+  const mode = 'real';
   const apiBaseUrl = String(extra.apiBaseUrl || extra.localApiBaseUrl || '').replace(/\/$/, '');
   const tenantSlug = String(extra.tenantSlug || extra.localTenantSlug || '').trim();
   if (mode === 'real' && (!apiBaseUrl || !tenantSlug)) {

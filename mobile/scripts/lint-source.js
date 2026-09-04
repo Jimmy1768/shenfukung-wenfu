@@ -10,7 +10,7 @@ const walk = dir => fs.readdirSync(dir, { withFileTypes: true }).forEach(entry =
   else if (entry.name.endsWith('.js')) files.push(target);
 });
 const allowedTransport = path.join(root, 'real', 'transport.js');
-const oauthPaths = [path.join(root, 'oauth'), path.join(root, 'dummy', 'adapter.js'), path.join(root, 'dummy', 'fixtures.js'), path.join(root, 'real', 'adapter.js'), path.join(root, 'real', 'storage.js'), path.join(root, 'real', 'config.js'), path.join(root, 'real', 'response.js'), path.join(root, 'ui', 'copy.js')];
+const oauthPaths = [path.join(root, 'oauth'), path.join(root, 'real', 'adapter.js'), path.join(root, 'real', 'storage.js'), path.join(root, 'real', 'config.js'), path.join(root, 'real', 'response.js'), path.join(root, 'ui', 'copy.js')];
 const sourceFailures = entries => entries.filter(({ file, source }) => {
   // The real adapter's local/test transport is the only permitted fetch seam.
   const checked = file === allowedTransport ? source.replace('globalThis.fetch', '') : source;
@@ -19,7 +19,7 @@ const sourceFailures = entries => entries.filter(({ file, source }) => {
 });
 const liveOriginFailures = entries => entries.filter(({ file, source }) => {
   const relative = path.relative(root, file);
-  if (relative === path.join('dummy', 'fixtures.js') || relative === path.join('tenant', 'binding.js') || relative === path.join('real', 'config.js')) return false;
+  if (relative === path.join('real', 'config.js')) return false;
   return /https?:\/\//i.test(source);
 });
 if (require.main === module) {
@@ -27,7 +27,7 @@ if (require.main === module) {
   const entries = files.map(file => ({ file, source: fs.readFileSync(file, 'utf8') }));
   const failures = sourceFailures(entries).concat(liveOriginFailures(entries));
   if (failures.length) {
-    console.error(`forbidden dummy-client residue in: ${failures.map(({ file }) => path.relative(root, file)).join(', ')}`);
+    console.error(`forbidden client residue in: ${failures.map(({ file }) => path.relative(root, file)).join(', ')}`);
     process.exit(1);
   }
   console.log(`source lint passed for ${files.length} mobile app modules.`);

@@ -3,10 +3,16 @@ const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const path = require('node:path');
 const { createCameraPermissionController, createCameraSession, permissionState } = require('../app/tenant/camera_session');
-const { fixtureConnectionLink } = require('../app/tenant/binding');
-const { tenant } = require('../app/dummy/fixtures');
 const { scanCameraPayload } = require('../app/tenant/scanner');
 const { resolveHardwareBack } = require('../app/tenant/back');
+
+// A scan is only a binding when the link comes from the configured origin AND
+// the server confirms the temple. The fixture link/origin path went with the
+// dummy client.
+const config = { apiBaseUrl: 'https://temple.example.test', tenantSlug: 'demo-temple' };
+const trustedLink = `${config.apiBaseUrl}/connect/templemate/v1`;
+const templeTransport = async () => ({ ok: true, body: { temple: { slug: config.tenantSlug, name: '示範宮廟' } } });
+const realScan = payload => scanCameraPayload({ payload, config, transport: templeTransport });
 
 test('active camera Back is consumed and closes only the scanner to home', () => {
   assert.deepEqual(resolveHardwareBack({ screen: 'home', cameraOpen: true }), { handled: true, screen: 'home', cameraOpen: false });
@@ -55,12 +61,12 @@ test('camera session accepts only the first QR callback and can be cancelled or 
   let calls = 0;
   const session = createCameraSession({ scanPayload: async payload => {
     calls += 1;
-    return scanCameraPayload({ mode: 'dummy', payload });
+    return realScan(payload);
   } });
   assert.equal(session.snapshot().state, 'closed');
   assert.equal(session.open({ granted: true }).state, 'ready');
-  const first = session.receive(fixtureConnectionLink(tenant));
-  const duplicate = session.receive('https://untrusted.example.test/connect/templemate');
+  const first = session.receive(trustedLink);
+  const duplicate = session.receive('https://untrusted.example.test/connect/templemate/v1');
   assert.equal((await duplicate).state, 'validating');
   assert.equal((await first).state, 'success');
   assert.equal(calls, 1);
@@ -69,12 +75,13 @@ test('camera session accepts only the first QR callback and can be cancelled or 
 });
 
 test('invalid or untrusted camera payload never becomes a binding', async () => {
-  const session = createCameraSession({ scanPayload: payload => scanCameraPayload({ mode: 'dummy', payload }) });
+  const session = createCameraSession({ scanPayload: realScan });
   session.open({ granted: true });
-  const result = await session.receive('https://untrusted.example.test/connect/templemate');
+  const result = await session.receive('https://untrusted.example.test/connect/templemate/v1');
   assert.equal(result.state, 'invalid');
   assert.equal(result.result.state, 'binding_failed');
-  assert.equal(result.result.error, 'untrusted_origin');
+  assert.equal(result.result.error, 'invalid_connection_link',
+    'a link from another origin is rejected before the server is asked');
 });
 
 test('camera surface is a rear-only QR preview with no audio or real binding path', () => {

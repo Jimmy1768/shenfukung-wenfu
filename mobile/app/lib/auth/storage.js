@@ -1,7 +1,7 @@
 import * as SecureStore from 'expo-secure-store';
 
 const memoryStore = {};
-const scopedKey = (environment = 'dummy', tenantId = 'unbound', name) =>
+const scopedKey = (environment = 'development', tenantId = 'unbound', name) =>
   `templemate.${environment}.${tenantId}.${name}`;
 
 const setItem = async (key, value) => {
@@ -24,14 +24,4 @@ const deleteItem = async key => {
 };
 export const scopedStorage = { setItem, getItem, deleteItem };
 
-export async function persistDummySession({ environment, tenantId, session }) {
-  return setItem(scopedKey(environment, tenantId, 'dummy-session'), JSON.stringify(session));
-}
-export async function loadDummySession({ environment, tenantId }) {
-  const raw = await getItem(scopedKey(environment, tenantId, 'dummy-session'));
-  return raw ? JSON.parse(raw) : null;
-}
-export async function clearDummySession({ environment, tenantId }) {
-  return deleteItem(scopedKey(environment, tenantId, 'dummy-session'));
-}
 export { scopedKey };

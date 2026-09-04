@@ -6,7 +6,6 @@ const ACCOUNT_SCREENS = Object.freeze([
 const accountMenu = () => ['home', 'profile', 'dependents', 'registrations', 'discover'];
 const isAccountScreen = screen => ACCOUNT_SCREENS.includes(screen);
 const isPaidFixtureReadOnly = registration => Boolean(registration?.readOnly);
-const dummyMode = adapter => adapter?.kind === 'dummy' && adapter?.network === 'disabled';
 const visibleTheme = dark => dark ? 'dark' : 'light';
 const visibleLocale = locale => ['zh-TW', 'en'].includes(locale) ? locale : 'zh-TW';
 const safeAccountScreen = screen => isAccountScreen(screen) ? screen : 'home';
@@ -42,4 +41,4 @@ const mutationOutcome = async ({ action, onSuccess }) => {
   catch (error) { return { ok: false, error }; }
 };
 
-module.exports = { ACCOUNT_SCREENS, STAGE_COPY_KEYS, registrationCaption, accountMenu, isAccountScreen, isPaidFixtureReadOnly, dummyMode, visibleTheme, visibleLocale, safeAccountScreen, safeBoundScreen, isBoundPresentation, mutationOutcome };
+module.exports = { ACCOUNT_SCREENS, STAGE_COPY_KEYS, registrationCaption, accountMenu, isAccountScreen, isPaidFixtureReadOnly, visibleTheme, visibleLocale, safeAccountScreen, safeBoundScreen, isBoundPresentation, mutationOutcome };
