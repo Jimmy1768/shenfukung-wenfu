@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class TempleGathering < ApplicationRecord
+  include PatronOrdered
   include TempleScopedSlug
   belongs_to :temple
   has_many :temple_event_registrations,

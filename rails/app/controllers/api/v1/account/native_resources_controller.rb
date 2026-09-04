@@ -6,8 +6,8 @@ module Api
       class NativeResourcesController < NativeBaseController
         def events
           render json: {
-            events: current_native_temple.temple_events.upcoming_or_active.order_for_marketing.map { |event| offering_payload(event) },
-            gatherings: current_native_temple.temple_gatherings.where(status: "published").order(Arel.sql("COALESCE(temple_gatherings.starts_on, DATE(temple_gatherings.created_at)) ASC")).map { |gathering| offering_payload(gathering) }
+            events: current_native_temple.temple_events.upcoming_or_active.order_for_patrons.map { |event| offering_payload(event) },
+            gatherings: current_native_temple.temple_gatherings.where(status: "published").order_for_patrons.map { |gathering| offering_payload(gathering) }
           }
         end
 

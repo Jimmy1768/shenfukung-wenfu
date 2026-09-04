@@ -13,17 +13,13 @@ module Account
     def offerings_scope
       current_temple.temple_events
         .upcoming_or_active
-        .order_for_marketing
+        .order_for_patrons
     end
 
     def gatherings_scope
       current_temple.temple_gatherings
         .where(status: "published")
-        .order(
-          Arel.sql(
-            "COALESCE(temple_gatherings.starts_on, DATE(temple_gatherings.created_at)) ASC"
-          )
-        )
+        .order_for_patrons
     end
 
     def build_event_card(record)

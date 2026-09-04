@@ -1,6 +1,7 @@
 # frozen_string_literal: true
 
 class TempleEvent < ApplicationRecord
+  include PatronOrdered
   include TempleScopedSlug
 
   self.table_name = "temple_events"
