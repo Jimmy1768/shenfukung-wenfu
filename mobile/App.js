@@ -74,8 +74,14 @@ export default function App() {
     if (clientConfig.mode !== 'real') { setStartup(false); return () => { mounted = false; }; }
     (async () => {
       try {
+        // The remembered temple is a fact about this device, not about the
+        // session, so it is read before any sign-in is attempted. It used to be
+        // loaded only when a session restored, which meant a signed-out launch
+        // asked for the QR code again even though the binding was still stored.
+        const remembered = isReleaseConfig(clientConfig) ? await trustedBindingStorage.load() : null;
+        if (remembered && mounted) setBinding(remembered);
         const next = await adapter.restoreSession();
-        if (next && mounted) { setData(next); setBinding(isReleaseConfig(clientConfig) ? await trustedBindingStorage.load() || initialBinding() : boundTenant(next)); setSignedIn(true); setCollections('loading'); const loaded = await adapter.loadCollections(); if (mounted) { setData(loaded); setCollections('ready'); } }
+        if (next && mounted) { setData(next); setBinding(isReleaseConfig(clientConfig) ? remembered || initialBinding() : boundTenant(next)); setSignedIn(true); setCollections('loading'); const loaded = await adapter.loadCollections(); if (mounted) { setData(loaded); setCollections('ready'); } }
       } catch (reason) { if (mounted) { showError(errorMessage(reason)); setSignedIn(false); setCollections('failed'); } }
       finally { if (mounted) setStartup(false); }
     })();
@@ -99,8 +105,7 @@ export default function App() {
     if (preferences.theme === 'dark' || preferences.mobile_theme_id === 'dark') setDark(true);
     if (preferences.theme === 'light' || preferences.mobile_theme_id === 'light') setDark(false);
   }, [data.preferences?.locale, data.preferences?.theme, data.preferences?.mobile_theme_id]);
-  const clearReleaseBinding = () => isReleaseConfig(clientConfig) ? trustedBindingStorage.clear().catch(() => null) : Promise.resolve();
-  const run = async (action, { noticeOwner = screen, noticeKey = 'saved' } = {}) => { if (pending) return false; setPending(true); setFeedback(emptyFeedback()); try { const next = await action(); if (next && !next.outcome) setData(next); setFeedback(noticeFeedback(typeof noticeKey === 'function' ? noticeKey(next) : noticeKey, noticeOwner)); return true; } catch (reason) { if (isReleaseConfig(clientConfig) && ['session_invalid', 'session_replayed', 'session_revoked', 'account_closed'].includes(reason?.code)) { clearReleaseBinding(); setBinding(initialBinding()); } showError(errorMessage(reason)); return false; } finally { setPending(false); } };
+  const run = async (action, { noticeOwner = screen, noticeKey = 'saved' } = {}) => { if (pending) return false; setPending(true); setFeedback(emptyFeedback()); try { const next = await action(); if (next && !next.outcome) setData(next); setFeedback(noticeFeedback(typeof noticeKey === 'function' ? noticeKey(next) : noticeKey, noticeOwner)); return true; } catch (reason) { showError(errorMessage(reason)); return false; } finally { setPending(false); } };
   const signIn = async () => { const ok = await run(async () => { const next = await adapter.signIn({ email, password }); if (adapter.kind === 'real') await adapter.loadCollections(); return adapter.snapshot(); }); if (ok) { setSignedIn(true); setCollections('ready'); setBinding(clientConfig.mode === 'real' && !isReleaseConfig(clientConfig) ? boundTenant(adapter.snapshot()) : initialBinding()); } };
   // Seeded at mount, before sign-in, when the snapshot is still empty -- so
   // the fields rendered blank for a user who has values. Re-sync whenever the
@@ -115,7 +120,12 @@ export default function App() {
     });
   }, [loadedUser.english_name, loadedUser.native_name, loadedUser.phone, loadedUser.city]);
 
-  const signOut = () => { oauthController.clear('idle').then(setOauthState).catch(() => null); clearReleaseBinding(); Promise.resolve(adapter.logout?.()).catch(() => null); setBinding(initialBinding()); setSignedIn(false); setScreen('home'); setFeedback(emptyFeedback()); };
+  // Sign-out keeps the remembered temple. It is where the device is, not who is
+  // holding it, and the release config pins the tenant anyway -- normalizedBinding
+  // refuses any binding whose id is not config.tenantSlug, so a retained one
+  // cannot point elsewhere. Making a patron find the QR code again just to sign
+  // back in bought nothing.
+  const signOut = () => { oauthController.clear('idle').then(setOauthState).catch(() => null); Promise.resolve(adapter.logout?.()).catch(() => null); setSignedIn(false); setScreen('home'); setFeedback(emptyFeedback()); };
   const reset = () => { if (adapter.kind !== 'dummy') { showError('Real mode does not reset account data.'); return; } oauthController.clear('idle').then(setOauthState).catch(() => null); const next = adapter.reset(); setData(next); setProfileForm({ english_name: next.profile.user?.english_name || '', native_name: next.profile.user?.native_name || '', phone: '', city: '' }); setDependent({ id: null, name: '', relationship: '家人' }); setRegistration(null); setBinding(initialBinding()); setFeedback(emptyFeedback()); };
   const beginOAuth = async provider => {
     if (pending) return; setPending(true); setFeedback(emptyFeedback());
