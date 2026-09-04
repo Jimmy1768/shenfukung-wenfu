@@ -77,6 +77,26 @@ test('only the explicit Unbind control forgets the temple', () => {
   }
 });
 
+// AccountSurface is a top-level function, so anything defined inside AppBody is
+// out of scope for it. loadingText was referenced there and never passed --
+// a ReferenceError that only fired on a render where collections === 'loading',
+// and only reached at all once a release build could restore its temple and
+// skip TenantSetupGate. It crashed production while every test, the linter and
+// the bundler stayed green.
+test('AccountSurface receives every value it renders', () => {
+  const app = read('App.js');
+  const destructure = app.match(/const \{([^}]*)\} = props;/);
+  assert.ok(destructure, 'AccountSurface must destructure its props');
+  const received = destructure[1].split(',').map(name => name.trim());
+  const body = app.slice(app.indexOf('function AccountSurface(props) {'));
+
+  for (const name of ['loadingText', 'collections', 'binding', 'onUnbindTemple']) {
+    if (!body.includes(name)) continue;
+    assert.ok(received.includes(name),
+      `AccountSurface renders ${name} but never receives it -- it cannot close over AppBody`);
+  }
+});
+
 test('Doctor stays project-local and reports unavailable metadata checks in offline mode', () => {
   const pkg = JSON.parse(read('package.json'));
   assert.equal(pkg.devDependencies['expo-doctor'], '1.20.1');

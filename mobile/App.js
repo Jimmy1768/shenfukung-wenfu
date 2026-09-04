@@ -47,11 +47,12 @@ try {
 
 // Deliberately dependency-free: it must render even when the failure above was
 // the thing that builds the palette, the copy, or the adapter.
-function BootFailure({ failure, title }) {
+function BootFailure({ failure, title, componentStack }) {
   const detail = [
     failure?.code ? `code: ${failure.code}` : null,
     failure?.message || String(failure),
-    failure?.stack ? String(failure.stack).split('\n').slice(0, 6).join('\n') : null
+    componentStack ? `in:${String(componentStack).split('\n').slice(0, 5).join('\n')}` : null,
+    failure?.stack ? String(failure.stack).split('\n').slice(0, 5).join('\n') : null
   ].filter(Boolean).join('\n\n');
   // No SafeAreaProvider, no Shell, no palette, no copy. SafeAreaProvider renders
   // null until it has measured its insets, and at the root inside an error
@@ -191,7 +192,7 @@ function AppBody() {
     finally { setPending(false); }
   };
   const updatePreference = async next => { const previous = { locale, dark }; const payload = { ...(next.locale ? { locale: next.locale } : {}), ...(next.theme ? { mobile_theme_id: next.theme } : {}) }; const ok = await run(async () => adapter.updatePreferences(payload)); if (ok) { if (next.locale) { setFeedback(emptyFeedback()); setLocale(next.locale); } if (next.theme) setDark(next.theme === 'dark'); } else { setLocale(previous.locale); setDark(previous.dark); } };
-  const shared = { t, palette, locale, setLocale, dark, setDark, screen, setScreen: navigate, data, setData, binding, setBinding, profileForm, setProfileForm, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, error, setError: message => message ? showError(message) : dismissError(), notice, run, signOut, onUnbindTemple, collections, updatePreference, oauthState, cameraOpen, setCameraOpen };
+  const shared = { t, palette, locale, setLocale, dark, setDark, screen, setScreen: navigate, data, setData, binding, setBinding, profileForm, setProfileForm, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, error, setError: message => message ? showError(message) : dismissError(), notice, run, signOut, onUnbindTemple, collections, loadingText, updatePreference, oauthState, cameraOpen, setCameraOpen };
   if (startup) return <Shell palette={palette}><View style={styles.center}><Text style={[styles.brand, { color: palette.text }]}>{t.appName}</Text><Text style={[styles.muted, { color: palette.textMuted }]}>{loadingText}</Text></View></Shell>;
   if (!signedIn) return oauthState.phase === 'account_resolution' ? <OAuthResolution {...shared} onSubmit={submitResolution} /> : <SignedOut {...shared} {...{ email, setEmail, password, setPassword, signup, setSignup, recoveryEmail, setRecoveryEmail, signIn, setSignedIn, beginOAuth }} />;
   if (!activePresentationTenant(binding)) return <TenantSetupGate {...shared} />;
@@ -236,7 +237,12 @@ function OAuthResolution({ t, palette, oauthState, pending, error, setError, onS
 }
 
 function AccountSurface(props) {
-  const { screen, t, palette, data, binding, setBinding, profileForm, setProfileForm, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, setScreen, run, collections, onUnbindTemple } = props;
+  // loadingText is defined in AppBody and AccountSurface is a top-level
+  // function, so it was never in scope here -- a ReferenceError waiting for any
+  // render where collections === 'loading'. It never fired because an unbound
+  // release build stopped at TenantSetupGate instead of reaching this surface;
+  // making the temple survive a restart removed the thing that was hiding it.
+  const { screen, t, palette, data, binding, setBinding, profileForm, setProfileForm, dependent, setDependent, registration, setRegistration, supportMessage, setSupportMessage, closureConfirmation, setClosureConfirmation, pending, setScreen, run, collections, loadingText, onUnbindTemple } = props;
   if (screen === 'home') return <><Section title={t.account} palette={palette}><Text style={[styles.body, { color: palette.text }]}>{t.welcome}{data.profile.name}</Text><Text style={[styles.muted, { color: palette.textMuted }]}>{data.registrations.length} {t.registrations} · {data.dependents.length} {t.dependents}</Text></Section><Section title={t.templeConnection} palette={palette}><Text style={[styles.body, { color: palette.text }]}>{activePresentationTenant(binding)?.name || t.notConnected}</Text></Section><Section title={t.certificates} palette={palette}>{collections === 'loading' && <Text style={[styles.muted, { color: palette.textMuted }]}>{loadingText}</Text>}{collections === 'failed' && <Notice palette={palette} tone="error">{t.collectionFailed}</Notice>}{data.certificates.length ? data.certificates.map(item => <Text key={item.id} style={[styles.body, { color: palette.text }]}>{item.certificateNumber || item.certificate_number || item.offering?.title || t.certificateFixture}</Text>) : <Text style={[styles.muted, { color: palette.textMuted }]}>{t.emptyCertificates}</Text>}</Section></>;
   if (screen === 'profile') {
     // The four fields NativeProfileController permits, matching the web form
@@ -283,15 +289,21 @@ const styles = StyleSheet.create({ safe: { flex: 1 }, fill: { flex: 1 }, center:
 class AppErrorBoundary extends Component {
   constructor(props) {
     super(props);
-    this.state = { failure: null };
+    this.state = { failure: null, componentStack: null };
   }
 
   static getDerivedStateFromError(failure) {
     return { failure };
   }
 
+  // The component stack is the part worth having: it names which component
+  // threw, which the error message alone often does not.
+  componentDidCatch(failure, info) {
+    this.setState({ componentStack: info?.componentStack || null });
+  }
+
   render() {
-    if (this.state.failure) return <BootFailure failure={this.state.failure} title="TempleMate hit an error" />;
+    if (this.state.failure) return <BootFailure failure={this.state.failure} componentStack={this.state.componentStack} title="TempleMate hit an error" />;
     return this.props.children;
   }
 }
