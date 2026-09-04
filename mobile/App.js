@@ -126,10 +126,10 @@ function AppBody() {
     let mounted = true;
     oauthController.restore().then(next => { if (mounted) setOauthState(next); }).catch(reason => { if (mounted) showError(errorMessage(reason)); });
     const callback = Linking.addEventListener('url', event => {
-      oauthController.handleInterruptedReturn(event.url).then(next => {
+      oauthController.handleInterruptedReturn(event.url).then(async next => {
         if (!mounted) return;
         setOauthState(next);
-        if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); if (next.phase === 'profile_required') navigate('profile'); }
+        if (next.phase === 'authenticated' || next.phase === 'profile_required') { await completeSignIn({ profileRequired: next.phase === 'profile_required' }); }
       }).catch(reason => { if (mounted) showError(errorMessage(reason)); });
     });
     return () => { mounted = false; callback.remove(); };
@@ -149,7 +149,28 @@ function AppBody() {
     if (isReleaseConfig(clientConfig)) return (await trustedBindingStorage.load()) || initialBinding();
     return clientConfig.mode === 'real' ? boundTenant(adapter.snapshot()) : initialBinding();
   };
-  const signIn = async () => { const ok = await run(async () => { const next = await adapter.signIn({ email, password }); if (adapter.kind === 'real') await adapter.loadCollections(); return adapter.snapshot(); }); if (ok) { setSignedIn(true); setCollections('ready'); setBinding(await bindingAfterSignIn()); } };
+  // Everything a successful sign-in must do, in one place. There were four
+  // paths doing four different subsets: the password path loaded the
+  // collections, none of the three OAuth paths did, and one of them did not
+  // even restore the binding. Signing in with Google therefore showed the
+  // registrations that bootstrap returns and no offerings at all, while the
+  // account website was fine -- it does not depend on this client-side load.
+  const completeSignIn = async ({ profileRequired = false } = {}) => {
+    setData(adapter.snapshot());
+    setSignedIn(true);
+    setBinding(await bindingAfterSignIn());
+    setCollections('loading');
+    try {
+      setData(await adapter.loadCollections());
+      setCollections('ready');
+    } catch (reason) {
+      setCollections('failed');
+      showError(errorMessage(reason));
+    }
+    if (profileRequired) navigate('profile');
+  };
+
+  const signIn = async () => { const ok = await run(async () => { await adapter.signIn({ email, password }); return adapter.snapshot(); }); if (ok) await completeSignIn(); };
   // Seeded at mount, before sign-in, when the snapshot is still empty -- so
   // the fields rendered blank for a user who has values. Re-sync whenever the
   // loaded profile changes (bootstrap, sign-in, OAuth, save). Depends on the
@@ -178,7 +199,7 @@ function AppBody() {
     if (pending) return; setPending(true); setFeedback(emptyFeedback());
     try {
       const next = await oauthController.begin(provider); setOauthState(next);
-      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(await bindingAfterSignIn()); if (next.phase === 'profile_required') navigate('profile'); return; }
+      if (next.phase === 'authenticated' || next.phase === 'profile_required') { await completeSignIn({ profileRequired: next.phase === 'profile_required' }); return; }
       if (oauthErrorPhases.has(next.phase)) showError(t.oauthOutcome[next.phase]);
     } catch (reason) { showError(errorMessage(reason)); }
     finally { setPending(false); }
@@ -187,7 +208,7 @@ function AppBody() {
     if (pending) return; setPending(true); setFeedback(emptyFeedback());
     try {
       const next = await oauthController.consumeResolution({ mode, ...fields }); setOauthState(next);
-      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(await bindingAfterSignIn()); if (next.phase === 'profile_required') navigate('profile'); }
+      if (next.phase === 'authenticated' || next.phase === 'profile_required') { await completeSignIn({ profileRequired: next.phase === 'profile_required' }); }
     } catch (reason) { showError(errorMessage(reason)); }
     finally { setPending(false); }
   };
@@ -196,7 +217,7 @@ function AppBody() {
   if (startup) return <Shell palette={palette}><View style={styles.center}><Text style={[styles.brand, { color: palette.text }]}>{t.appName}</Text><Text style={[styles.muted, { color: palette.textMuted }]}>{loadingText}</Text></View></Shell>;
   if (!signedIn) return oauthState.phase === 'account_resolution' ? <OAuthResolution {...shared} onSubmit={submitResolution} /> : <SignedOut {...shared} {...{ email, setEmail, password, setPassword, signup, setSignup, recoveryEmail, setRecoveryEmail, signIn, setSignedIn, beginOAuth }} />;
   if (!activePresentationTenant(binding)) return <TenantSetupGate {...shared} />;
-  return <Shell palette={palette}><Header t={t} palette={palette} binding={binding} onSettings={() => navigate('settings')} onSignOut={signOut} /><Navigation {...shared} /><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled"><Notice palette={palette} tone="info">{t.demo}</Notice>{error && <Notice palette={palette} tone="error">{error}<Button label={t.retry} palette={palette} tone="secondary" onPress={dismissError} /></Notice>}{notice && <Notice palette={palette}>{notice}</Notice>}<AccountSurface {...shared} /></ScrollView></Shell>;
+  return <Shell palette={palette}><Header t={t} palette={palette} binding={binding} onSettings={() => navigate('settings')} onSignOut={signOut} /><Navigation {...shared} /><ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">{error && <Notice palette={palette} tone="error">{error}<Button label={t.retry} palette={palette} tone="secondary" onPress={dismissError} /></Notice>}{notice && <Notice palette={palette}>{notice}</Notice>}<AccountSurface {...shared} /></ScrollView></Shell>;
 }
 
 function Shell({ palette, children }) { return <SafeAreaProvider><SafeAreaView style={[styles.safe, { backgroundColor: palette.background }]}><StatusBar style={palette.statusBar} /><KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={styles.fill}>{children}</KeyboardAvoidingView></SafeAreaView></SafeAreaProvider>; }
