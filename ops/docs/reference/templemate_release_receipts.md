@@ -22,6 +22,7 @@ Store Connect, never from inference off `versioning.js`.
 | `ad7dd713…` republished as rollback | 2026-09-03 | `testflight` | 1.0.0 | android, ios | `92cd19a` |
 | `a81381b8-bbec-4bcd-baa3-564685a92fe1` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `a2c7450` |
 | `b15df493-30a7-4535-a573-e9844f3ca4f3` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `cd6a257` |
+| `1f1dd0ec-31a2-4f58-82ed-294b99ddf04c` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `c7a8d0a` |
 
 Message: "profile parity, OAuth prefill, remembered temple, demo tenant name".
 Published by the Director from `release-1.0.0`, the first publish under the
@@ -64,6 +65,13 @@ is defined inside `AppBody` and never passed to it. Pre-existing, and only
 reachable once a release build could restore its temple and stop landing on
 TenantSetupGate -- the earlier binding bug had been hiding it. `cd6a257` fixes
 it and adds a test that fails if the prop is dropped again.
+
+`c7a8d0a` follows and was found the recorded way -- on the Pixel against local
+Rails, before publishing. Two faults the Director hit on production: OAuth
+sign-in never called loadCollections, so Google users saw the registrations
+bootstrap returns and no offerings at all; and every bound screen carried the
+removed dummy client's disclosure, telling patrons the app never contacts a
+service while it was talking to the server.
 
 **Lesson recorded because it cost three publishes:** debug on the dev client
 against a local server. An OTA round trip tells you almost nothing, and the
