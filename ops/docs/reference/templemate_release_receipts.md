@@ -2,7 +2,7 @@
 
 | App version | iOS build | Android code | iOS build state | Published OTA update |
 | --- | --- | --- | --- | --- |
-| 1.0.0 | 1 | 1 | uploaded, distributed, installed by staff | `ad7dd713`, `74f188d5` (2026-09-03) |
+| 1.0.0 | 1 | 1 | uploaded, distributed, installed by staff | see the update table below |
 | 1.0.0 | 2 | 1 | prepared in `versioning.js`, not confirmed uploaded | none recorded |
 
 Build 1 was uploaded to TestFlight, installed by Director's staff, and reported
@@ -19,6 +19,9 @@ Store Connect, never from inference off `versioning.js`.
 | --- | --- | --- | --- | --- | --- |
 | `ad7dd713-f47a-425c-89ce-0b3e04dfbefe` | 2026-09-03 | `testflight` | 1.0.0 | android, ios | `92cd19a` |
 | `74f188d5-6b61-48c0-b82b-8df94005ede5` | 2026-09-03 | `testflight` | 1.0.0 | android, ios | `6095967` |
+| `ad7dd713…` republished as rollback | 2026-09-03 | `testflight` | 1.0.0 | android, ios | `92cd19a` |
+| `a81381b8-bbec-4bcd-baa3-564685a92fe1` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `a2c7450` |
+| `b15df493-30a7-4535-a573-e9844f3ca4f3` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `cd6a257` |
 
 Message: "profile parity, OAuth prefill, remembered temple, demo tenant name".
 Published by the Director from `release-1.0.0`, the first publish under the
@@ -46,6 +49,27 @@ test that fails if it comes back.
 Both updates carry a trailing `*` on the commit, meaning an unclean tree. In
 both cases nothing under `mobile/` differed, so each bundle matches its commit
 exactly; the untracked `.claude/` directory accounts for it.
+
+### 2026-09-04: three updates crashed before one worked
+
+`ae82ad6` (dummy client removed) crashed on launch. `a2c7450` added a boot
+guard and did not fire, which narrowed it to render rather than module scope.
+`868bbee` added an error boundary that caught the crash but rendered a white
+screen -- its failure screen used SafeAreaProvider, which renders null until it
+measures. `75cd73c` made that screen dependency-free.
+
+The cause was found on the Pixel dev client against local Rails in minutes,
+not through those OTA cycles: `AccountSurface` referenced `loadingText`, which
+is defined inside `AppBody` and never passed to it. Pre-existing, and only
+reachable once a release build could restore its temple and stop landing on
+TenantSetupGate -- the earlier binding bug had been hiding it. `cd6a257` fixes
+it and adds a test that fails if the prop is dropped again.
+
+**Lesson recorded because it cost three publishes:** debug on the dev client
+against a local server. An OTA round trip tells you almost nothing, and the
+device is only reachable through TestFlight for iOS -- which is exactly why the
+error boundary is worth keeping, and why it was verified by throwing on purpose
+and reading the result off the device rather than assumed to work.
 
 ## Working lanes (Director, 2026-08-31)
 
