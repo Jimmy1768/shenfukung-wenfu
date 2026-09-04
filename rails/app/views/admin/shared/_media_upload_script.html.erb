@@ -66,6 +66,9 @@
       const assetsPayloadInput = optionalSelector(container.dataset.mediaUploadAssets);
       const kindSelect = container.querySelector("[data-media-upload-kind]");
       const defaultLabel = uploadButton.textContent;
+      // The whole row goes, not just the button, so nothing empty is left in
+      // the flex column where the control used to be.
+      const uploadRow = uploadButton.closest(".media-upload__row") || uploadButton;
       const uploadingLabel = uploadButton.dataset.uploadingLabel || "<%= j t("admin.media_uploads.actions.uploading") %>";
 
       // Uploading starts as soon as a file is chosen. It used to require a
@@ -84,7 +87,7 @@
         }
 
         container.dataset.mediaUploadBusy = "true";
-        uploadButton.hidden = true;
+        uploadRow.hidden = true;
         uploadButton.disabled = true;
         setStatus(statusEl, uploadingLabel);
 
@@ -120,7 +123,7 @@
         } catch (error) {
           // The file stays in the input, so the submit guard still blocks and
           // the retry button reappears.
-          uploadButton.hidden = false;
+          uploadRow.hidden = false;
           uploadButton.disabled = false;
           uploadButton.textContent = defaultLabel;
           setStatus(statusEl, error.message || I18N.error, "error");
@@ -137,7 +140,7 @@
         if (hasFile) runUpload();
       });
 
-      uploadButton.hidden = true;
+      uploadRow.hidden = true;
       uploadButton.disabled = false;
       uploadButton.addEventListener("click", runUpload);
 

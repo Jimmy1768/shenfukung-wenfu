@@ -288,6 +288,12 @@
   gap: 0.7rem;
 }
 
+// The browser's own [hidden] rule loses to any author rule that sets display
+// -- .btn does. Without this, el.hidden = true leaves the element on screen.
+[hidden] {
+  display: none !important;
+}
+
 .media-upload__row {
   display: flex;
   align-items: center;
