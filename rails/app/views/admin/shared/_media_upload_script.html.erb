@@ -66,16 +66,16 @@
       const assetsPayloadInput = optionalSelector(container.dataset.mediaUploadAssets);
       const kindSelect = container.querySelector("[data-media-upload-kind]");
       const defaultLabel = uploadButton.textContent;
-      // The whole row goes, not just the button, so nothing empty is left in
-      // the flex column where the control used to be.
-      const uploadRow = uploadButton.closest(".media-upload__row") || uploadButton;
       const uploadingLabel = uploadButton.dataset.uploadingLabel || "<%= j t("admin.media_uploads.actions.uploading") %>";
 
-      // Uploading starts as soon as a file is chosen. It used to require a
-      // separate Upload button, and nothing stopped the form being saved with
-      // a file selected but never uploaded -- the URL field went up empty and
-      // the picture was silently lost. The button survives only as a retry,
-      // hidden unless an upload actually fails.
+      // Choose a file, then press Upload. Deliberately NOT automatic on
+      // selection: on an edit form the upload replaces an image that is already
+      // live, and an admin who picks the wrong file should get the chance to
+      // notice before it is published. Silent background upload suits bulk
+      // galleries, not replacing one picture at a time.
+      //
+      // What IS fixed is the silent loss underneath: the form can no longer be
+      // saved with a file chosen but never uploaded -- see the submit guard.
       const runUpload = async () => {
         const file = fileInput.files ? fileInput.files[0] : null;
         if (!file) return;
@@ -87,8 +87,8 @@
         }
 
         container.dataset.mediaUploadBusy = "true";
-        uploadRow.hidden = true;
         uploadButton.disabled = true;
+        uploadButton.textContent = uploadingLabel;
         setStatus(statusEl, uploadingLabel);
 
         const formData = new FormData();
@@ -119,11 +119,12 @@
           // the submit guard below reads exactly that.
           fileInput.value = "";
           if (fileNameEl) fileNameEl.textContent = "<%= j t("admin.media_uploads.status.no_file") %>";
+          uploadButton.textContent = defaultLabel;
+          uploadButton.disabled = true;
           setStatus(statusEl, I18N.success, "success");
         } catch (error) {
           // The file stays in the input, so the submit guard still blocks and
           // the retry button reappears.
-          uploadRow.hidden = false;
           uploadButton.disabled = false;
           uploadButton.textContent = defaultLabel;
           setStatus(statusEl, error.message || I18N.error, "error");
@@ -134,14 +135,14 @@
 
       fileInput.addEventListener("change", () => {
         const hasFile = fileInput.files && fileInput.files.length > 0;
+        uploadButton.disabled = !hasFile;
         if (fileNameEl) {
           fileNameEl.textContent = hasFile ? fileInput.files[0].name : "<%= j t("admin.media_uploads.status.no_file") %>";
         }
-        if (hasFile) runUpload();
+        if (hasFile) setStatus(statusEl, "");
       });
 
-      uploadRow.hidden = true;
-      uploadButton.disabled = false;
+      uploadButton.disabled = !(fileInput.files && fileInput.files.length > 0);
       uploadButton.addEventListener("click", runUpload);
 
       // Last line of defence. A file left in the input means it was never

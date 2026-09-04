@@ -25,18 +25,20 @@ class AdminGatheringsLayoutTest < ActionDispatch::IntegrationTest
     assert_select "textarea[name='temple_gathering[location_notes]']"
   end
 
-  # The image upload used to need a separate Upload press, and nothing stopped
-  # the form saving with a file chosen but never uploaded -- the URL field went
-  # up empty and the picture was silently lost. Selecting a file now uploads it,
-  # and a submit guard blocks a save while a file is still sitting unsent.
-  test "the upload widget uploads on selection and guards the save" do
+  # Uploading is a deliberate press, not automatic on selection: on an edit form
+  # it replaces an image that is already live. What the guard fixes is the
+  # silent loss -- the form used to save happily with a file chosen but never
+  # uploaded, sending an empty URL up over the picture.
+  test "uploading stays an explicit press, and the save is guarded" do
     get new_admin_gathering_path
 
     assert_response :success
     assert_includes response.body, "data-media-upload-context=\"gathering_hero\"",
       "the gathering form must still mount the shared upload widget"
-    assert_includes response.body, "if (hasFile) runUpload();",
-      "choosing a file must start the upload without a second button press"
+    assert_select "[data-media-upload-button]", true,
+      "choosing a file must not upload on its own -- the admin presses Upload"
+    refute_includes response.body, "if (hasFile) runUpload();",
+      "selection must not trigger the upload"
     assert_includes response.body, "mediaUploadGuarded",
       "the form must refuse to save while a chosen file has not been uploaded"
     assert_includes response.body, I18n.t("admin.media_uploads.status.not_uploaded"),
