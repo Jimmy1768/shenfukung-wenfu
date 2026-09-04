@@ -138,7 +138,15 @@ export default function App() {
     if (preferences.theme === 'light' || preferences.mobile_theme_id === 'light') setDark(false);
   }, [data.preferences?.locale, data.preferences?.theme, data.preferences?.mobile_theme_id]);
   const run = async (action, { noticeOwner = screen, noticeKey = 'saved' } = {}) => { if (pending) return false; setPending(true); setFeedback(emptyFeedback()); try { const next = await action(); if (next && !next.outcome) setData(next); setFeedback(noticeFeedback(typeof noticeKey === 'function' ? noticeKey(next) : noticeKey, noticeOwner)); return true; } catch (reason) { showError(errorMessage(reason)); return false; } finally { setPending(false); } };
-  const signIn = async () => { const ok = await run(async () => { const next = await adapter.signIn({ email, password }); if (adapter.kind === 'real') await adapter.loadCollections(); return adapter.snapshot(); }); if (ok) { setSignedIn(true); setCollections('ready'); setBinding(clientConfig.mode === 'real' && !isReleaseConfig(clientConfig) ? boundTenant(adapter.snapshot()) : initialBinding()); } };
+  // Every sign-in path used to reset the binding to initialBinding() on a
+  // release build, throwing away a temple that was still in storage. Startup
+  // and sign-out were fixed first; this was the third place, found only because
+  // the Director signed out and back in rather than restarting.
+  const bindingAfterSignIn = async () => {
+    if (isReleaseConfig(clientConfig)) return (await trustedBindingStorage.load()) || initialBinding();
+    return clientConfig.mode === 'real' ? boundTenant(adapter.snapshot()) : initialBinding();
+  };
+  const signIn = async () => { const ok = await run(async () => { const next = await adapter.signIn({ email, password }); if (adapter.kind === 'real') await adapter.loadCollections(); return adapter.snapshot(); }); if (ok) { setSignedIn(true); setCollections('ready'); setBinding(await bindingAfterSignIn()); } };
   // Seeded at mount, before sign-in, when the snapshot is still empty -- so
   // the fields rendered blank for a user who has values. Re-sync whenever the
   // loaded profile changes (bootstrap, sign-in, OAuth, save). Depends on the
@@ -163,7 +171,7 @@ export default function App() {
     if (pending) return; setPending(true); setFeedback(emptyFeedback());
     try {
       const next = await oauthController.begin(provider); setOauthState(next);
-      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(clientConfig.mode === 'real' && !isReleaseConfig(clientConfig) ? boundTenant(adapter.snapshot()) : initialBinding()); if (next.phase === 'profile_required') navigate('profile'); return; }
+      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(await bindingAfterSignIn()); if (next.phase === 'profile_required') navigate('profile'); return; }
       if (oauthErrorPhases.has(next.phase)) showError(t.oauthOutcome[next.phase]);
     } catch (reason) { showError(errorMessage(reason)); }
     finally { setPending(false); }
@@ -172,7 +180,7 @@ export default function App() {
     if (pending) return; setPending(true); setFeedback(emptyFeedback());
     try {
       const next = await oauthController.consumeResolution({ mode, ...fields }); setOauthState(next);
-      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(clientConfig.mode === 'real' && !isReleaseConfig(clientConfig) ? boundTenant(adapter.snapshot()) : initialBinding()); if (next.phase === 'profile_required') navigate('profile'); }
+      if (next.phase === 'authenticated' || next.phase === 'profile_required') { setData(adapter.snapshot()); setSignedIn(true); setBinding(await bindingAfterSignIn()); if (next.phase === 'profile_required') navigate('profile'); }
     } catch (reason) { showError(errorMessage(reason)); }
     finally { setPending(false); }
   };
