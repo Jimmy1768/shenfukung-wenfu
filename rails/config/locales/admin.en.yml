@@ -1508,6 +1508,7 @@ en:
         success: "Uploaded successfully."
         error: "Upload failed."
         generic: "Unable to complete upload."
+        not_uploaded: "A selected file has not been uploaded yet. Wait for it to finish, or retry."
     shared:
       binary:
         free: "Free"

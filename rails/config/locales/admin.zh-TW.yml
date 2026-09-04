@@ -1506,6 +1506,7 @@ zh-TW:
         success: "上傳完成。"
         error: "上傳失敗。"
         generic: "目前無法上傳，請稍後再試。"
+        not_uploaded: "所選檔案尚未上傳完成，請稍候或重新上傳。"
     shared:
       binary:
         free: "免費"

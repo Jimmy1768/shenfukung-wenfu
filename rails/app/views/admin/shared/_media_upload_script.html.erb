@@ -3,7 +3,8 @@
     const I18N = {
       success: "<%= j t("admin.media_uploads.status.success") %>",
       error: "<%= j t("admin.media_uploads.status.error") %>",
-      generic: "<%= j t("admin.media_uploads.status.generic") %>"
+      generic: "<%= j t("admin.media_uploads.status.generic") %>",
+      notUploaded: "<%= j t("admin.media_uploads.status.not_uploaded") %>"
     };
 
     const ready = (fn) => {
@@ -67,28 +68,25 @@
       const defaultLabel = uploadButton.textContent;
       const uploadingLabel = uploadButton.dataset.uploadingLabel || "<%= j t("admin.media_uploads.actions.uploading") %>";
 
-      fileInput.addEventListener("change", () => {
-        const hasFile = fileInput.files && fileInput.files.length > 0;
-        uploadButton.disabled = !hasFile;
-        if (fileNameEl) {
-          fileNameEl.textContent = hasFile ? fileInput.files[0].name : "<%= j t("admin.media_uploads.status.no_file") %>";
-        }
-        if (hasFile) setStatus(statusEl, "");
-      });
-
-      uploadButton.disabled = !(fileInput.files && fileInput.files.length > 0);
-
-      uploadButton.addEventListener("click", async () => {
+      // Uploading starts as soon as a file is chosen. It used to require a
+      // separate Upload button, and nothing stopped the form being saved with
+      // a file selected but never uploaded -- the URL field went up empty and
+      // the picture was silently lost. The button survives only as a retry,
+      // hidden unless an upload actually fails.
+      const runUpload = async () => {
         const file = fileInput.files ? fileInput.files[0] : null;
         if (!file) return;
+
         const context = resolveContext(container, kindSelect);
         if (!context) {
-          setStatus(statusEl, I18N.error);
+          setStatus(statusEl, I18N.error, "error");
           return;
         }
+
+        container.dataset.mediaUploadBusy = "true";
+        uploadButton.hidden = true;
         uploadButton.disabled = true;
-        uploadButton.textContent = uploadingLabel;
-        setStatus(statusEl, "");
+        setStatus(statusEl, uploadingLabel);
 
         const formData = new FormData();
         formData.append("file", file);
@@ -114,17 +112,54 @@
             updateAssetsPayload(assetsPayloadInput, payload.asset_id, url);
           }
 
+          // Clearing the input is what marks this file as safely stored, and
+          // the submit guard below reads exactly that.
           fileInput.value = "";
           if (fileNameEl) fileNameEl.textContent = "<%= j t("admin.media_uploads.status.no_file") %>";
-          uploadButton.textContent = defaultLabel;
-          uploadButton.disabled = true;
           setStatus(statusEl, I18N.success, "success");
         } catch (error) {
+          // The file stays in the input, so the submit guard still blocks and
+          // the retry button reappears.
+          uploadButton.hidden = false;
           uploadButton.disabled = false;
           uploadButton.textContent = defaultLabel;
           setStatus(statusEl, error.message || I18N.error, "error");
+        } finally {
+          container.dataset.mediaUploadBusy = "false";
         }
+      };
+
+      fileInput.addEventListener("change", () => {
+        const hasFile = fileInput.files && fileInput.files.length > 0;
+        if (fileNameEl) {
+          fileNameEl.textContent = hasFile ? fileInput.files[0].name : "<%= j t("admin.media_uploads.status.no_file") %>";
+        }
+        if (hasFile) runUpload();
       });
+
+      uploadButton.hidden = true;
+      uploadButton.disabled = false;
+      uploadButton.addEventListener("click", runUpload);
+
+      // Last line of defence. A file left in the input means it was never
+      // stored -- either mid-upload or failed -- so saving now would persist
+      // an empty URL over the picture the admin thinks they just added.
+      const form = container.closest("form");
+      if (form && form.dataset.mediaUploadGuarded !== "true") {
+        form.dataset.mediaUploadGuarded = "true";
+        form.addEventListener("submit", (event) => {
+          const pending = Array.from(form.querySelectorAll("[data-media-upload]")).find((box) => {
+            const input = box.querySelector("[data-media-upload-file]");
+            return input && input.files && input.files.length > 0;
+          });
+          if (!pending) return;
+
+          event.preventDefault();
+          const pendingStatus = pending.querySelector("[data-media-upload-status]");
+          setStatus(pendingStatus, I18N.notUploaded, "error");
+          pending.scrollIntoView({ behavior: "smooth", block: "center" });
+        });
+      }
     };
 
     const resolveContext = (container, kindSelect) => {
