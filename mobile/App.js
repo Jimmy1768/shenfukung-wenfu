@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useEffect, useState } from 'react';
+import { Component, useEffect, useState } from 'react';
 import { AppState, BackHandler, KeyboardAvoidingView, Linking, Platform, Pressable, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import Constants from 'expo-constants';
@@ -47,13 +47,13 @@ try {
 
 // Deliberately dependency-free: it must render even when the failure above was
 // the thing that builds the palette, the copy, or the adapter.
-function BootFailure({ failure }) {
+function BootFailure({ failure, title }) {
   const detail = [
     failure?.code ? `code: ${failure.code}` : null,
     failure?.message || String(failure),
     failure?.stack ? String(failure.stack).split('\n').slice(0, 6).join('\n') : null
   ].filter(Boolean).join('\n\n');
-  return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: '#1b1b1b' }}><ScrollView contentContainerStyle={{ padding: 24, gap: 12 }}><Text selectable style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>TempleMate could not start</Text><Text selectable style={{ color: '#ffb4b4', fontSize: 14, lineHeight: 20 }}>{detail}</Text><Text selectable style={{ color: '#9a9a9a', fontSize: 12, lineHeight: 18 }}>Screenshot this and send it to the developer. Press and hold to copy.</Text></ScrollView></SafeAreaView></SafeAreaProvider>;
+  return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: '#1b1b1b' }}><ScrollView contentContainerStyle={{ padding: 24, gap: 12 }}><Text selectable style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>{title}</Text><Text selectable style={{ color: '#ffb4b4', fontSize: 14, lineHeight: 20 }}>{detail}</Text><Text selectable style={{ color: '#9a9a9a', fontSize: 12, lineHeight: 18 }}>Screenshot this and send it to the developer. Press and hold to copy.</Text></ScrollView></SafeAreaView></SafeAreaProvider>;
 }
 const menuKeys = accountMenu();
 // Rails returns a specific, already-localized validation message in
@@ -68,10 +68,10 @@ const firstDetail = reason => {
 };
 const errorMessage = reason => firstDetail(reason) || reason?.message || 'Something went wrong. Please try again.';
 
-export default function App() {
+function AppBody() {
   // Before any hook, so a boot failure cannot be masked by a second error from
   // hooks reading state that never got built.
-  if (bootFailure) return <BootFailure failure={bootFailure} />;
+  if (bootFailure) return <BootFailure failure={bootFailure} title="TempleMate could not start" />;
 
   const [startup, setStartup] = useState(true); const [signedIn, setSignedIn] = useState(false); const [screen, setScreen] = useState('home');
   const [locale, setLocale] = useState('zh-TW'); const [dark, setDark] = useState(false); const [binding, setBinding] = useState(initialBinding()); const [data, setData] = useState(adapter.snapshot()); const [collections, setCollections] = useState('idle');
@@ -266,3 +266,31 @@ function ListCard({ palette, title, caption, onPress, disabled }) { return <Pres
 function DataSection({ title, items, palette, empty }) { return <Section title={title} palette={palette}>{items.length ? items.map(item => <Text key={item.id} style={[styles.body, { color: palette.text }]}>{item.title}{item.date ? ` · ${item.date}` : ''}</Text>) : <Text style={[styles.muted, { color: palette.textMuted }]}>{empty}</Text>}</Section>; }
 
 const styles = StyleSheet.create({ safe: { flex: 1 }, fill: { flex: 1 }, center: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 10, padding: 24 }, auth: { padding: 24, gap: 14, flexGrow: 1, justifyContent: 'center' }, header: { minHeight: 78, paddingHorizontal: 18, paddingVertical: 12, borderBottomWidth: 1, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 }, headerCopy: { flex: 1 }, headerUtilities: { flexDirection: 'row', gap: 8 }, brand: { fontSize: 34, fontWeight: '900', letterSpacing: -0.6 }, brandSmall: { fontSize: 22, fontWeight: '900' }, lead: { fontSize: 17, fontWeight: '700' }, muted: { fontSize: 14, lineHeight: 20 }, body: { fontSize: 16, lineHeight: 23 }, label: { fontSize: 14, fontWeight: '800' }, subhead: { fontSize: 16, fontWeight: '800', marginTop: 4 }, navigationShell: { flexGrow: 0, borderBottomWidth: 1 }, navigation: { flexDirection: 'row', flexWrap: 'nowrap', alignItems: 'center', gap: 8, paddingHorizontal: 14, paddingVertical: 12 }, navItem: { minHeight: 40, paddingHorizontal: 12, justifyContent: 'center', borderRadius: 20, borderWidth: 1 }, content: { padding: 16, gap: 14, paddingBottom: 32 }, listCard: { padding: 13, gap: 4, borderWidth: 1, borderRadius: 12 }, choiceRow: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' }, preferences: { gap: 9 }, disabled: { opacity: 0.52 } });
+
+// The boot guard covers module scope only. This covers everything after it --
+// a throw during render, or in a lifecycle -- which is where the 2026-09-04
+// crash actually lived: the bundle loaded, the sign-in screen flashed, and then
+// it died with nothing to read.
+//
+// Same reason as the boot guard: iOS here is reachable only through TestFlight
+// OTA, with no Console.app and no dev client, so an error that leaves no trace
+// on screen leaves no trace at all.
+class AppErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { failure: null };
+  }
+
+  static getDerivedStateFromError(failure) {
+    return { failure };
+  }
+
+  render() {
+    if (this.state.failure) return <BootFailure failure={this.state.failure} title="TempleMate hit an error" />;
+    return this.props.children;
+  }
+}
+
+export default function App() {
+  return <AppErrorBoundary><AppBody /></AppErrorBoundary>;
+}
