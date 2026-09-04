@@ -2,7 +2,7 @@
 
 | App version | iOS build | Android code | iOS build state | Published OTA update |
 | --- | --- | --- | --- | --- |
-| 1.0.0 | 1 | 1 | uploaded, distributed, installed by staff | `ad7dd713` (2026-09-03) |
+| 1.0.0 | 1 | 1 | uploaded, distributed, installed by staff | `ad7dd713`, `74f188d5` (2026-09-03) |
 | 1.0.0 | 2 | 1 | prepared in `versioning.js`, not confirmed uploaded | none recorded |
 
 Build 1 was uploaded to TestFlight, installed by Director's staff, and reported
@@ -18,6 +18,7 @@ Store Connect, never from inference off `versioning.js`.
 | Update group | Date | Channel | Runtime | Platforms | Source commit |
 | --- | --- | --- | --- | --- | --- |
 | `ad7dd713-f47a-425c-89ce-0b3e04dfbefe` | 2026-09-03 | `testflight` | 1.0.0 | android, ios | `92cd19a` |
+| `74f188d5-6b61-48c0-b82b-8df94005ede5` | 2026-09-03 | `testflight` | 1.0.0 | android, ios | `6095967` |
 
 Message: "profile parity, OAuth prefill, remembered temple, demo tenant name".
 Published by the Director from `release-1.0.0`, the first publish under the
@@ -36,8 +37,15 @@ Carried, being every mobile change since build 1 was reported green:
 - `b54a58f` OAuth resolution prefilled from the provider's name and email
 - `751ea19` remembered temple survives sign-out
 
-The last of those has no automated coverage — it lives in `App.js`, and the
-mobile suite is `node --test` over plain modules with no component harness.
+`74f188d5` follows because that last one did not work. `751ea19` stopped
+`App.js` clearing the binding but not `adapter.logout()`, which clears it
+through `clearRetainedState` — so signing out still returned the patron to the
+QR scanner. `6095967` removes the clear from the adapter and is covered by a
+test that fails if it comes back.
+
+Both updates carry a trailing `*` on the commit, meaning an unclean tree. In
+both cases nothing under `mobile/` differed, so each bundle matches its commit
+exactly; the untracked `.claude/` directory accounts for it.
 
 ## Working lanes (Director, 2026-08-31)
 
