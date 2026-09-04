@@ -53,7 +53,12 @@ function BootFailure({ failure, title }) {
     failure?.message || String(failure),
     failure?.stack ? String(failure.stack).split('\n').slice(0, 6).join('\n') : null
   ].filter(Boolean).join('\n\n');
-  return <SafeAreaProvider><SafeAreaView style={{ flex: 1, backgroundColor: '#1b1b1b' }}><ScrollView contentContainerStyle={{ padding: 24, gap: 12 }}><Text selectable style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>{title}</Text><Text selectable style={{ color: '#ffb4b4', fontSize: 14, lineHeight: 20 }}>{detail}</Text><Text selectable style={{ color: '#9a9a9a', fontSize: 12, lineHeight: 18 }}>Screenshot this and send it to the developer. Press and hold to copy.</Text></ScrollView></SafeAreaView></SafeAreaProvider>;
+  // No SafeAreaProvider, no Shell, no palette, no copy. SafeAreaProvider renders
+  // null until it has measured its insets, and at the root inside an error
+  // boundary it can stay null -- which showed as a permanent white screen on
+  // 2026-09-04 and hid the very error this exists to display. A plain View with
+  // a hardcoded top inset cannot do that.
+  return <View style={{ flex: 1, backgroundColor: '#1b1b1b', paddingTop: 64 }}><ScrollView contentContainerStyle={{ padding: 24, gap: 12 }}><Text selectable style={{ color: '#fff', fontSize: 20, fontWeight: '800' }}>{title}</Text><Text selectable style={{ color: '#ffb4b4', fontSize: 14, lineHeight: 20 }}>{detail}</Text><Text selectable style={{ color: '#9a9a9a', fontSize: 12, lineHeight: 18 }}>Screenshot this and send it to the developer. Press and hold to copy.</Text></ScrollView></View>;
 }
 const menuKeys = accountMenu();
 // Rails returns a specific, already-localized validation message in
