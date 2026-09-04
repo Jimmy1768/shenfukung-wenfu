@@ -121,6 +121,11 @@ Rails.application.routes.draw do
       end
     end
     resources :gatherings, controller: "gatherings", except: :show do
+      # Pressing 上傳 on an existing gathering saves the image then and there.
+      # It used to only fill a form field, so the picture was not stored until
+      # the admin scrolled down and pressed the page's Save -- and if they did
+      # not, it was lost without a word.
+      member { patch :hero_image, action: :update_hero_image }
       resources :offering_orders,
         path: "orders",
         controller: "offering_orders",

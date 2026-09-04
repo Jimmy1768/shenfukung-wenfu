@@ -3,7 +3,7 @@
 module Admin
   class GatheringsController < BaseController
     before_action -> { require_capability!(:manage_offerings) }, except: :index
-    before_action :set_gathering, only: %i[edit update destroy]
+    before_action :set_gathering, only: %i[edit update destroy update_hero_image]
 
     def index
       @show_archived = ActiveModel::Type::Boolean.new.cast(params[:archived])
@@ -50,6 +50,29 @@ module Admin
         redirect_to admin_gatherings_path, notice: t("admin.gatherings.notices.updated")
       else
         render :edit, status: :unprocessable_entity
+      end
+    end
+
+    # Pressing 上傳 on an existing gathering saves the image immediately. The
+    # page's own Save is for the rest of the form; an admin has no way to know
+    # it is also what commits the picture, and before this it silently was.
+    #
+    # New gatherings have no record to attach to, so there the upload fills the
+    # form and Save persists it with everything else.
+    def update_hero_image
+      reset_detached_assets
+      apply_hero_asset(@gathering, params[:asset_id])
+
+      if @gathering.errors.empty? && @gathering.save
+        cleanup_detached_assets
+        render json: {
+          ok: true,
+          url: @gathering.hero_image_url,
+          asset_id: @gathering.hero_asset_id
+        }
+      else
+        render json: { error: @gathering.errors.full_messages.to_sentence.presence || t("admin.media_uploads.status.error") },
+               status: :unprocessable_content
       end
     end
 

@@ -4,7 +4,8 @@
       success: "<%= j t("admin.media_uploads.status.success") %>",
       error: "<%= j t("admin.media_uploads.status.error") %>",
       generic: "<%= j t("admin.media_uploads.status.generic") %>",
-      notUploaded: "<%= j t("admin.media_uploads.status.not_uploaded") %>"
+      notUploaded: "<%= j t("admin.media_uploads.status.not_uploaded") %>",
+      saved: "<%= j t("admin.media_uploads.status.saved") %>"
     };
 
     const ready = (fn) => {
@@ -115,13 +116,36 @@
             updateAssetsPayload(assetsPayloadInput, payload.asset_id, url);
           }
 
+          // On a form editing an existing record, 上傳 is the whole action:
+          // attach it now rather than waiting for the page's Save, which an
+          // admin has no reason to know is what commits the picture. Done
+          // BEFORE the input is cleared, so a failure here still leaves the
+          // submit guard armed.
+          const attachUrl = container.dataset.mediaUploadAttachUrl;
+          let savedToRecord = false;
+          if (attachUrl && payload.asset_id) {
+            const attachResponse = await fetch(attachUrl, {
+              method: "PATCH",
+              headers: Object.assign(
+                { "Content-Type": "application/json" },
+                csrfToken() ? { "X-CSRF-Token": csrfToken() } : {}
+              ),
+              body: JSON.stringify({ asset_id: payload.asset_id })
+            });
+            const attachPayload = await attachResponse.json().catch(() => ({}));
+            if (!attachResponse.ok) {
+              throw new Error(attachPayload.error || I18N.generic);
+            }
+            savedToRecord = true;
+          }
+
           // Clearing the input is what marks this file as safely stored, and
           // the submit guard below reads exactly that.
           fileInput.value = "";
           if (fileNameEl) fileNameEl.textContent = "<%= j t("admin.media_uploads.status.no_file") %>";
           uploadButton.textContent = defaultLabel;
           uploadButton.disabled = true;
-          setStatus(statusEl, I18N.success, "success");
+          setStatus(statusEl, savedToRecord ? I18N.saved : I18N.success, "success");
         } catch (error) {
           // The file stays in the input, so the submit guard still blocks and
           // the retry button reappears.

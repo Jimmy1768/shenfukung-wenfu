@@ -29,6 +29,45 @@ class AdminGatheringsLayoutTest < ActionDispatch::IntegrationTest
   # it replaces an image that is already live. What the guard fixes is the
   # silent loss -- the form used to save happily with a file chosen but never
   # uploaded, sending an empty URL up over the picture.
+  # Pressing 上傳 on an existing gathering must store the image then and there.
+  # It used to only fill a form field, so the picture was not saved until the
+  # admin scrolled down and pressed the page's Save -- and if they did not, it
+  # was lost silently, which is exactly what happened on 消防救生活動.
+  test "uploading saves the image straight to an existing gathering" do
+    gathering = @temple.temple_gatherings.create!(
+      slug: "hero-attach", title: "Hero Attach", currency: "TWD", price_cents: 0
+    )
+    asset = @temple.media_assets.create!(
+      role: "gathering_hero",
+      file_uid: "prod/gatherings/hero/#{@temple.slug}/abc.jpg",
+      metadata: { "url" => "https://cdn.example/gathering-hero.jpg" }
+    )
+
+    patch hero_image_admin_gathering_path(gathering), params: { asset_id: asset.id }
+
+    assert_response :success
+    gathering.reload
+    assert_equal "https://cdn.example/gathering-hero.jpg", gathering.hero_image_url,
+      "the image must be stored without the admin pressing the page's Save"
+    assert_equal asset.id, gathering.hero_asset_id
+  end
+
+  test "an edit form offers the immediate save, a new one cannot" do
+    gathering = @temple.temple_gatherings.create!(
+      slug: "hero-attach-form", title: "Hero Attach Form", currency: "TWD", price_cents: 0
+    )
+
+    get edit_admin_gathering_path(gathering)
+    assert_response :success
+    assert_includes response.body, hero_image_admin_gathering_path(gathering),
+      "editing an existing gathering must wire the immediate save"
+
+    get new_admin_gathering_path
+    assert_response :success
+    refute_includes response.body, "data-media-upload-attach-url",
+      "a new gathering has no record to attach to yet"
+  end
+
   test "uploading stays an explicit press, and the save is guarded" do
     get new_admin_gathering_path
 

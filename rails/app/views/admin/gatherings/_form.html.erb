@@ -112,6 +112,10 @@
           <div class="media-upload"
             data-media-upload
             data-media-upload-context="gathering_hero"
+            <%# Only when the gathering exists: pressing 上傳 then saves the
+                image to it straight away. A new gathering has nothing to attach
+                to yet, so there the page's Save persists it with the rest. %>
+            <% if gathering.persisted? %>data-media-upload-attach-url="<%= hero_image_admin_gathering_path(gathering) %>"<% end %>
             data-media-upload-target-url="#gathering-image-link"
             data-media-upload-target-asset="#gathering-hero-asset"
             data-media-upload-preview="#gathering-hero-preview">

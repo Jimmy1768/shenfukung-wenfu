@@ -1509,6 +1509,7 @@ en:
         error: "Upload failed."
         generic: "Unable to complete upload."
         not_uploaded: "A selected file has not been uploaded yet. Wait for it to finish, or retry."
+        saved: "Uploaded and saved."
     shared:
       binary:
         free: "Free"
