@@ -10,12 +10,17 @@ const jsonHeaders = token => ({ Accept: 'application/json', 'Content-Type': 'app
 const PROFILE_FIELDS = ['english_name', 'native_name', 'phone', 'city'];
 const registrationFields = input => Object.fromEntries(Object.entries(input || {}).filter(([key, value]) => ['quantity', 'registrant_scope', 'dependent_id', 'contact_name', 'contact_phone', 'contact_email', 'household_notes', 'arrival_window', 'ceremony_notes'].includes(key) && value !== undefined && value !== null && value !== ''));
 
-function createRealAdapter({ config, store, transport, bindingStorage, device = { device_id: 'local-test-client', platform: 'expo' } }) {
+function createRealAdapter({ config, store, transport, device = { device_id: 'local-test-client', platform: 'expo' } }) {
   if (!config?.apiBaseUrl || !config?.tenantSlug) throw Object.assign(new Error('Real mode requires explicit trusted configuration.'), { code: 'REAL_CONFIG_REQUIRED' });
   if (typeof transport !== 'function') throw new Error('A trusted transport is required for real mode.');
   const scoped = createScopedStorage(store, storageScope({ environment: config.environment, tenantId: config.tenantSlug }));
   let session = null; let state = snapshotFromBootstrap();
-  const clearRetainedState = async () => { await scoped.clearAll(); if (typeof bindingStorage?.clear === 'function') await bindingStorage.clear(); };
+  // Session, cache and pending work only. The trusted temple binding is NOT
+  // cleared here: it is a fact about the device, not the session, and this runs
+  // on logout, on session expiry and on a failed restore. Wiping it there sent
+  // the patron back to the QR scanner every time. Re-scanning overwrites the
+  // binding, so nothing needs an explicit clear.
+  const clearRetainedState = async () => { await scoped.clearAll(); };
   const request = async (method, path, body, authenticated = true) => {
     const result = await transport({ method, url: `${config.apiBaseUrl}${query(`${nativePath}${path}`, config.tenantSlug)}`, headers: jsonHeaders(authenticated ? session?.access_token : null), body: body === undefined ? undefined : JSON.stringify(body) });
     const payload = result?.body || {};

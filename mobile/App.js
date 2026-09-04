@@ -27,7 +27,7 @@ import { accountMenu, registrationCaption } from './app/account/screen_model';
 
 const clientConfig = resolveClientConfig(Constants.expoConfig?.extra || {});
 const trustedBindingStorage = createTrustedBindingStorage({ store: scopedStorage, config: clientConfig });
-const adapter = clientConfig.mode === 'real' ? createRealAdapter({ config: clientConfig, store: scopedStorage, transport: productionTransport, bindingStorage: trustedBindingStorage }) : createDummyAdapter();
+const adapter = clientConfig.mode === 'real' ? createRealAdapter({ config: clientConfig, store: scopedStorage, transport: productionTransport }) : createDummyAdapter();
 const oauthRuntime = createExpoOAuthRuntime(clientConfig.oauthReturnUrl);
 const oauthController = createOAuthController({ adapter, expectedReturnUrl: clientConfig.oauthReturnUrl, createPkce: oauthRuntime.createPkce, openBrowser: clientConfig.mode === 'dummy' ? adapter.openOAuthBrowser : oauthRuntime.openBrowser });
 const menuKeys = accountMenu();

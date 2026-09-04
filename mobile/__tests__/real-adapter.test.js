@@ -3,6 +3,8 @@ const assert = require('node:assert/strict');
 const { createRealAdapter } = require('../app/real/adapter');
 const { resolveClientConfig, localTenantBinding } = require('../app/real/config');
 const { sessionKey } = require('../app/real/storage');
+const { createTrustedBindingStorage } = require('../app/tenant/storage');
+const { storageScope } = require('../app/core/storage_scope');
 const { createOAuthController } = require('../app/oauth/transaction');
 const { nativeError } = require('../app/real/response');
 
@@ -101,13 +103,26 @@ test('real session expiry, replay, revocation, closure and tenant cleanup clear 
   await adapter.signIn({ email: user.email, password: 'test-password' }); await adapter.closeAccount(); assert.equal(local.values.size, 0);
 });
 
-test('real retained-state cleanup clears a trusted release binding alongside the tenant session', async () => {
-  let clears = 0;
-  const bindingStorage = { clear: async () => { clears += 1; } };
-  const adapter = createRealAdapter({ config, store: store(), transport: fixtureTransport([]), bindingStorage });
+test('logging out clears the session but keeps the remembered temple', async () => {
+  // The binding is a fact about the device, not the session. clearRetainedState
+  // runs on logout, on session expiry and on a failed restore, and it used to
+  // wipe the binding at every one of them -- so signing out sent the patron
+  // back to the QR scanner. Re-scanning overwrites it, so nothing needs a clear.
+  // Bindings are only retained under a release environment, so this uses one.
+  const releaseConfig = { ...config, environment: 'testflight' };
+  const local = store();
+  const adapter = createRealAdapter({ config: releaseConfig, store: local, transport: fixtureTransport([]) });
+  const bindings = createTrustedBindingStorage({ store: local, config: releaseConfig });
+  await bindings.save({ state: 'bound', tenant: { id: releaseConfig.tenantSlug, name: 'Demo Temple' }, error: null, source: 'qr' });
+
   await adapter.signIn({ email: user.email, password: 'test-password' });
   await adapter.logout();
-  assert.equal(clears, 1);
+
+  const remembered = await bindings.load();
+  assert.equal(remembered?.tenant?.id, releaseConfig.tenantSlug,
+    'the temple must survive sign-out');
+  assert.equal(await local.getItem(sessionKey(storageScope({ environment: releaseConfig.environment, tenantId: releaseConfig.tenantSlug }))), null,
+    'the session itself must still be cleared');
 });
 
 test('real transport errors are surfaced and never return fixture data', async () => {
