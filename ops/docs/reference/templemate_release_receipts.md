@@ -2,7 +2,7 @@
 
 | App version | iOS build | Android code | iOS build state | Published OTA update |
 | --- | --- | --- | --- | --- |
-| 1.0.0 | 1 | 1 | uploaded, distributed, installed by staff | none recorded |
+| 1.0.0 | 1 | 1 | uploaded, distributed, installed by staff | `ad7dd713` (2026-09-03) |
 | 1.0.0 | 2 | 1 | prepared in `versioning.js`, not confirmed uploaded | none recorded |
 
 Build 1 was uploaded to TestFlight, installed by Director's staff, and reported
@@ -12,6 +12,32 @@ iOS build 2 (`5e1e3cd`); whether that build was uploaded is not confirmed here.
 Apple-side state is not visible from this repository. Any claim about
 submission, review, or acceptance status must come from the Director or App
 Store Connect, never from inference off `versioning.js`.
+
+## Published OTA updates
+
+| Update group | Date | Channel | Runtime | Platforms | Source commit |
+| --- | --- | --- | --- | --- | --- |
+| `ad7dd713-f47a-425c-89ce-0b3e04dfbefe` | 2026-09-03 | `testflight` | 1.0.0 | android, ios | `92cd19a` |
+
+Message: "profile parity, OAuth prefill, remembered temple, demo tenant name".
+Published by the Director from `release-1.0.0`, the first publish under the
+release-branch rule.
+
+EAS recorded the commit with a trailing `*`, meaning the working tree was not
+clean. Nothing under `mobile/` was dirty — the untracked `.claude/` directory
+and an in-progress edit to `ops/protocol/claude_work_mode.md` were — so the
+published bundle matches `92cd19a` exactly.
+
+Carried, being every mobile change since build 1 was reported green:
+
+- `984018d` existing registrations surfaced, profile name prefilled, real temple name
+- `6224452` demo tenant shows 示範宮廟 rather than the real temple's name
+- `b2faeab` profile screen to four fields, real error messages
+- `b54a58f` OAuth resolution prefilled from the provider's name and email
+- `751ea19` remembered temple survives sign-out
+
+The last of those has no automated coverage — it lives in `App.js`, and the
+mobile suite is `node --test` over plain modules with no component harness.
 
 ## Working lanes (Director, 2026-08-31)
 

@@ -114,6 +114,23 @@ merged ahead of its implementation shows that agent an intent the code does
 not reflect. It may act on a plan that does not exist yet, or duplicate
 work already underway.
 
+### Release branches
+
+Where a shipped artefact can be updated in place but only for the build it
+shipped as, cut a release branch and publish from it. Never publish from
+`main` — `main` drifts, and the drift can reach devices the change was never
+built for, silently.
+
+`main` keeps taking patches. Fixes safe for a shipped build are cherry-picked
+into its release branch; the rest wait for the next build. Keep a release
+branch until users have migrated off it, not until the next one ships.
+
+A release branch is identical to `main` when cut. It stops being redundant at
+the first drift, which is also the first time it matters.
+
+Branch name, channel, version and publish command are repo-local and belong in
+that repo's own release reference.
+
 ## Document lifecycle
 
 - **Plan docs** (`ops/docs/plans/`) record intent at planning time. They
