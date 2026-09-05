@@ -23,6 +23,7 @@ Store Connect, never from inference off `versioning.js`.
 | `a81381b8-bbec-4bcd-baa3-564685a92fe1` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `a2c7450` |
 | `b15df493-30a7-4535-a573-e9844f3ca4f3` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `cd6a257` |
 | `1f1dd0ec-31a2-4f58-82ed-294b99ddf04c` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `c7a8d0a` |
+| `4c774de9-1cb6-499b-81ef-8b2b5968b192` | 2026-09-05 | `testflight` | 1.0.0 | android, ios | `de6bc98` |
 
 Message: "profile parity, OAuth prefill, remembered temple, demo tenant name".
 Published by the Director from `release-1.0.0`, the first publish under the
@@ -78,6 +79,35 @@ against a local server. An OTA round trip tells you almost nothing, and the
 device is only reachable through TestFlight for iOS -- which is exactly why the
 error boundary is worth keeping, and why it was verified by throwing on purpose
 and reading the result off the device rather than assumed to work.
+
+### 2026-09-05: an event's own image, and a fixture that lied
+
+`de6bc98` sends `hero_image_url` in `offering_payload` and renders it in
+`OfferingList`. The offering's OWN picture only -- `EventShow.vue:37` falls
+back to the temple's `event` image because one large hero about one event is
+worth showing even when it is the default, but in a list every image-less row
+would carry that same picture. The Director's ruling: "own image only, no
+fallback."
+
+**This update is inert until the Rails side ships.** The app reads a key the
+droplet does not send yet, so it renders no image -- exactly today's behavior,
+no regression, but no feature either. `de6bc98` must reach `release/current`
+and the droplet be restarted before a patron sees anything change.
+
+Verified on the Pixel dev client against local Rails before publishing, as the
+2026-09-04 lesson requires. The first attempt looked like a bug and was not:
+the test fixture pointed at `placehold.co`, which serves `image/svg+xml` by
+default, and React Native's `Image` cannot render SVG -- it laid out the 132dp
+box and drew nothing, with no error in logcat, on device, or in the bundle.
+Adding `.png` to the URL rendered it immediately. **A fixture can fail in a way
+that is indistinguishable from the code failing.**
+
+Consequence still open: nothing validates that a pasted `hero_image_url` is a
+raster format, so a temple admin pasting an SVG gets a silently blank box in
+the app while the website renders it fine.
+
+The new test is mutation-checked -- reintroducing the fallback fails it with
+its own message, so it is not passing for the wrong reason.
 
 ## Working lanes (Director, 2026-08-31)
 
