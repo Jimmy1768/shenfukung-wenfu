@@ -24,6 +24,7 @@ Store Connect, never from inference off `versioning.js`.
 | `b15df493-30a7-4535-a573-e9844f3ca4f3` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `cd6a257` |
 | `1f1dd0ec-31a2-4f58-82ed-294b99ddf04c` | 2026-09-04 | `testflight` | 1.0.0 | android, ios | `c7a8d0a` |
 | `4c774de9-1cb6-499b-81ef-8b2b5968b192` | 2026-09-05 | `testflight` | 1.0.0 | android, ios | `de6bc98` |
+| `b8f71bc2-e129-499d-b7cc-af3cb0907e19` | 2026-09-05 | `testflight` | 1.0.0 | android, ios | `b4af067` |
 
 Message: "profile parity, OAuth prefill, remembered temple, demo tenant name".
 Published by the Director from `release-1.0.0`, the first publish under the
@@ -110,6 +111,37 @@ the app while the website renders it fine.
 
 The new test is mutation-checked -- reintroducing the fallback fails it with
 its own message, so it is not passing for the wrong reason.
+
+### 2026-09-05: three partial copies, one of them mine
+
+`b4af067`. All three faults were the same shape -- a concept with a complete
+owner and a partial copy standing in front of it.
+
+- **Registrant name rendered as `<title> · ` on every card.** I had called this
+  cosmetic. It was not. `TempleRegistration#registrant_name` resolves through
+  six sources and ends at 訪客, so it never returns blank;
+  `RegistrationSerializer` re-implemented it with two and returned nil when
+  both were empty. `registrant_scope` sat beside it with the same fault: the
+  model infers "dependent" from a present `dependent_id`, the copy always fell
+  back to `"self"`, so a dependent registration whose metadata had lost the key
+  was reported to the app as the account holder.
+- **`offering_payload` existed twice** with different field sets. That is how
+  `hero_image_url` reached the list on 2026-09-05 and silently missed the
+  registration screen the same day. `NativeBaseController` owns the single
+  builder now, and a test asserts both surfaces return the same key set.
+- **An unrenderable image left a blank 132dp band.** Fixed in the app, not by
+  validating formats server-side: an extension check passes extensionless SVGs,
+  and a partial guard is the fault being fixed here. `OfferingImage` collapses
+  on error, so SVG, 404 and dead host all degrade to "no image".
+
+**The lesson is about the fix immediately before this one.** `de6bc98` added
+`hero_image_url` to one `offering_payload` without checking whether there was a
+second. There was. Grepping every definition of the thing being changed is
+cheap; the earlier receipt for `751ea19` / `6095967` records the same failure
+against the temple binding.
+
+Trailing `*` on the commit is the untracked `.claude/` directory again; nothing
+under `mobile/` differed, so the bundle matches `b4af067` exactly.
 
 ## Working lanes (Director, 2026-08-31)
 
