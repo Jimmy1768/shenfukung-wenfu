@@ -96,10 +96,13 @@
   * install dependencies (`npm`, `yarn`, or `pnpm` depending on the lockfile or `PACKAGE_MANAGER`),
   * run the Vue `build` script, and
   * sync `vue/dist/` into `/var/www/<client-slug>` (override with `DEPLOY_DIR=/opt/www`) via `rsync --delete`.
-- Vite public-content calls are tenant-local, relative `/api/v1/temple` paths. Local Vite development proxies them to Rails on `4001`; live production uses `4003` and live staging uses `4002` behind Nginx. Do not configure a public API-base URL, `localhost`, or a raw application port into a Vue build.
+- Vite public-content calls are tenant-local, relative `/api/v1/temple` paths. Local Vite development proxies them to Rails on `4001`; live production uses `4003` behind Nginx; `4002` was live staging until staging was disabled 2026-09-05. Do not configure a public API-base URL, `localhost`, or a raw application port into a Vue build.
 - Branch promotion follows the same split: `main` is the verified integration
-  branch and is what staging always runs, while `release/current` is the
-  isolated live branch. Staging is standing infrastructure -- a separate
+  branch and is what staging ran, while `release/current` is the
+  isolated live branch. **Staging was disabled 2026-09-05**
+  (`systemctl disable --now` on both units); the infrastructure below is still
+  installed and the description still accurate, but nothing is listening on
+  `4002`. Staging was standing infrastructure -- a separate
   systemd puma/sidekiq pair (`ops/systemd/shengfukung-wenfu-staging-*.service`),
   a separate nginx vhost (`ops/nginx/shengfukung-wenfu-staging.conf`), and a
   separate database (`templemate_data_staging` -- never production's
@@ -111,8 +114,9 @@
   exists to protect the production server, not to multiply file-management
   surface. Staging's systemd units share production's own
   `/etc/default/shengfukung-wenfu-env` (`EnvironmentFile=`) and override
-  exactly three values (`RAILS_ENV=staging`, `PUMA_PORT=4002`,
-  `PGDATABASE=templemate_data_staging`) as an `ExecStart` command prefix,
+  exactly four values (`RAILS_ENV=staging`, `PUMA_PORT=4002`,
+  `PGDATABASE=templemate_data_staging`, `S3_OBJECT_PREFIX=staging` -- the last
+  added by the Phase 0 prefix work) as an `ExecStart` command prefix,
   not an `Environment=` directive -- per `systemd.exec(7)`'s documented
   source-precedence order, `EnvironmentFile=` is resolved after
   `Environment=` and always wins, so an `Environment=` override here would

@@ -4,6 +4,8 @@ module Api
   module V1
     module Account
       class NativeResourcesController < NativeBaseController
+        include ::Account::RegistrationIntent
+
         def events
           render json: {
             events: current_native_temple.temple_events.upcoming_or_active.order_for_patrons.map { |event| offering_payload(event) },
@@ -69,14 +71,6 @@ module Api
             hero_image_url: record.try(:hero_image_url).presence,
             status: record.try(:timeline_status) || (record.try(:available?) ? "open" : nil)
           }.compact
-        end
-
-        def account_action_for(record)
-          case record
-          when TempleService then "service"
-          when TempleGathering then "gathering"
-          else "event"
-          end
         end
 
         def assistance_params

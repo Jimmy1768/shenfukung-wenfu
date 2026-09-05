@@ -89,10 +89,12 @@ worth showing even when it is the default, but in a list every image-less row
 would carry that same picture. The Director's ruling: "own image only, no
 fallback."
 
-**This update is inert until the Rails side ships.** The app reads a key the
-droplet does not send yet, so it renders no image -- exactly today's behavior,
-no regression, but no feature either. `de6bc98` must reach `release/current`
-and the droplet be restarted before a patron sees anything change.
+**Shipped in two halves, app first.** The app reads a key the server had to
+start sending, so between the two the update was inert -- it rendered no image,
+exactly the prior behavior, no regression and no feature. That order was
+deliberate: the reverse would have had the server sending a key no client could
+use. `de6bc98` reached `release/current` the same day and the droplet was
+restarted, so both halves are live.
 
 Verified on the Pixel dev client against local Rails before publishing, as the
 2026-09-04 lesson requires. The first attempt looked like a bug and was not:

@@ -126,7 +126,7 @@ Slug convention:
   1. `bin/load_temple_env <slug> -- (cd vue && npm install && npm run dev)`
   2. Visit `http://localhost:5173` and verify copy/assets match the expected temple.
   3. Repeat with another palette (`VITE_TEMPLE_THEME=temple-2`) to capture approval screenshots. Layout should remain identical; only tokens change.
-- The local Vue server proxies tenant-local API requests to Rails on `http://localhost:4001`. Port `4003` is live production and `4002` is live staging; neither belongs in a public Vue bundle.
+- The local Vue server proxies tenant-local API requests to Rails on `http://localhost:4001`. Port `4003` is live production and `4002` was live staging until staging was disabled 2026-09-05; neither belongs in a public Vue bundle.
 - Document the chosen layout/theme in the temple’s YAML or ops checklist so future deploys keep the same combo.
 
 1. **Author profile YAML**

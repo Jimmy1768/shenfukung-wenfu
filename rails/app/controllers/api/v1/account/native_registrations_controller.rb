@@ -129,14 +129,6 @@ module Api
           }
         end
 
-        def account_action_for(offering)
-          case offering
-          when TempleService then "service"
-          when TempleGathering then "gathering"
-          else "event"
-          end
-        end
-
         def registrant_options
           self_option = {
             scope: "self",
