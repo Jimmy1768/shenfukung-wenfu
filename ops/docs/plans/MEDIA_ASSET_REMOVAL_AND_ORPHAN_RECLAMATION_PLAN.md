@@ -1,7 +1,8 @@
 # Media Asset Removal And Orphan Reclamation Plan
 
-Status: **Phase 1 implemented 2026-09-02** (Director authorized, chose to keep
-the MediaAsset row). Phase 2 not authorized. Two separable pieces of work with
+Status: **Phase 0 complete 2026-09-05. Phase 1 implemented 2026-09-02**
+(Director authorized, chose to keep the MediaAsset row). Phase 2 not
+authorized. Two separable pieces of work with
 different risk profiles; Phase 1 is additive and reversible, Phase 2 can
 permanently destroy customer files and is deliberately gated behind a dry run.
 
@@ -217,13 +218,45 @@ and `gallery/videos/…`, so **the first gallery or gathering upload would have
 returned 403**. It had never fired because the bucket held only hero images.
 Scoping by environment prefix instead of by key root fixes both at once.
 
-The policy now grants `s3:GetObject` on `dev/*`, `staging/*`, `prod/*` and
-`uploads/*`. The last statement is legacy: it keeps staging working, since
-staging still writes unprefixed until its units are applied, and it is deleted
-at step 6.
+The policy granted `s3:GetObject` on `dev/*`, `staging/*`, `prod/*` and
+`uploads/*`. That last statement was legacy, kept only until step 6; it was
+removed 2026-09-05 and the policy is now the three environment prefixes.
 
 **Add to step 6, and to any future environment's setup:** verify the bucket
 policy covers the new prefix *before* moving anything into it.
+
+### Applied 2026-09-05 — steps 5–6 done, Phase 0 complete
+
+- **Step 5.** `S3_OBJECT_PREFIX=prod` set in
+  `/etc/default/shengfukung-wenfu-env`; Puma and Sidekiq restarted; site
+  verified rendering. The step's staging half — `S3_OBJECT_PREFIX=staging` in
+  both staging units — is prepared in `ops/systemd/` but moot on the droplet
+  now that staging is disabled; it applies again only if staging is brought
+  back.
+- **Step 6.** The root-level `uploads/` objects deleted by the Director, and
+  the `PublicReadLegacyUnprefixedUploads` statement removed from the bucket
+  policy. Live images and the site verified 200 afterwards.
+
+**The staging precondition dissolved rather than being met.** Step 6 was
+written to wait until staging wrote prefixed, because until then staging still
+wrote to `uploads/`. Staging was disabled 2026-09-05
+(`shengfukung-wenfu-staging-puma` / `-sidekiq`, `disable --now`), so it writes
+nothing at all and the reason for waiting no longer existed. A precondition can
+stop applying without ever being satisfied; the Director spotted that the
+recorded gate had gone inert while it was being quoted back at him.
+
+**What actually needed checking was different, and it was not in the plan:**
+whether any live row still pointed at a bare `uploads/` key. None did. The
+check that matters before an irreversible delete is *what still references the
+thing*, not the status of the process that used to write it.
+
+**A near-miss worth recording.** The live objects sit at `prod/uploads/…` —
+the migration prepended `prod/` to keys that already began with `uploads/`. So
+the bucket held both `uploads/…` (legacy, 9 objects) and `prod/uploads/…`
+(live, 16 references). These are distinct S3 prefixes and deleting one does not
+touch the other, but they are one folder name apart in the console. A first
+reference scan that matched the substring `uploads/` reported all 16 live rows
+as still-referenced, which was the scan being wrong, not the data.
 
 ## Hardening — one render path, one meaning for file_uid
 
@@ -355,6 +388,9 @@ than an orphan. Destroy the row, let the sweep reclaim.
 - Any change to `Storage::S3Service` itself; it already exposes what is needed.
 
 ## Next Step
+
+Phase 0 is complete: production reads and writes `prod/`, the legacy
+unprefixed objects and their bucket-policy statement are gone.
 
 Phase 1 is done and deployed pending the usual staging/production walk.
 
