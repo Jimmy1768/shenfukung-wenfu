@@ -202,6 +202,52 @@ class NativeAccountResourcesTest < ActionDispatch::IntegrationTest
   # If the temple's EVENT_FALLBACK_TAB image ever leaked into this payload,
   # every image-less row would grow a 132dp band of the same default picture
   # and the list would stop distinguishing anything.
+  # The app renders "<offering title> · <registrant name>", so a blank name
+  # showed as a title with a dangling separator. TempleRegistration resolves
+  # this through six sources ending in 訪客 and never returns blank; the
+  # serializer used to re-implement it with two, and the API served the copy.
+  test "native registration payload resolves registrant name and scope through the model, not a partial copy" do
+    gathering = @temple.temple_gatherings.create!(slug: "gathering-#{SecureRandom.hex(3)}", title: "Nameless Gathering", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 0, currency: "TWD")
+
+    # Neither source the old serializer copy looked at is populated.
+    bare = TempleEventRegistration.create!(temple: @temple, registrable: gathering, user: @user, quantity: 1, unit_price_cents: 0, total_price_cents: 0, currency: "TWD", payment_status: "pending", fulfillment_status: "open", contact_payload: {}, metadata: {})
+
+    dependent = Dependent.create!(english_name: "Scoped Dependent")
+    @user.user_dependents.create!(dependent:, role: "family")
+    # dependent_id present but registrant_scope absent -- the old copy said "self".
+    scoped = TempleEventRegistration.create!(temple: @temple, registrable: gathering, user: @user, quantity: 1, unit_price_cents: 0, total_price_cents: 0, currency: "TWD", payment_status: "pending", fulfillment_status: "open", contact_payload: {}, metadata: { "dependent_id" => dependent.id.to_s })
+
+    get "/api/v1/account/native/registrations", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    rows = response.parsed_body.fetch("registrations").index_by { |r| r.fetch("reference_code") }
+
+    assert_equal @user.english_name, rows.fetch(bare.reload.reference_code).fetch("registrant_name"),
+      "a registration with no name metadata must still resolve a name, never blank"
+    assert_equal "dependent", rows.fetch(scoped.reload.reference_code).fetch("registrant_scope"),
+      "a registration carrying a dependent_id is a dependent registration even with no registrant_scope key"
+  end
+
+  # The list and the registration screen must describe an offering the same
+  # way. They had separate builders with different field sets, so hero_image_url
+  # was added to the list and silently missing from the registration screen.
+  # NativeBaseController#offering_payload is now the only builder; this fails if
+  # a second one reappears.
+  test "the offering shape is identical on the list and the registration screen" do
+    gathering = @temple.temple_gatherings.create!(slug: "gathering-#{SecureRandom.hex(3)}", title: "Shared Shape", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 300, currency: "TWD", hero_image_url: "https://example.test/shape.png", description: "described")
+
+    get "/api/v1/account/native/events", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    from_list = response.parsed_body.fetch("gatherings").find { |row| row.fetch("slug") == gathering.slug }
+
+    get "/api/v1/account/native/registrations/new", params: { temple_slug: @temple.slug, offering: gathering.slug, account_action: "gathering" }, headers: bearer
+    assert_response :success
+    from_form = response.parsed_body.fetch("offering")
+
+    assert_equal from_list.keys.sort, from_form.keys.sort,
+      "both surfaces must build an offering through the same payload"
+    assert_equal "https://example.test/shape.png", from_form.fetch("hero_image_url")
+  end
+
   test "native offering payload carries an offering's own hero image and never the temple event fallback" do
     @temple.update!(hero_images: @temple.hero_images.merge(Temple::EVENT_FALLBACK_TAB => "https://example.test/temple-event-fallback.png"))
 

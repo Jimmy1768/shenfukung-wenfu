@@ -118,17 +118,6 @@ module Api
           offering
         end
 
-        def offering_payload(offering)
-          {
-            id: offering.id,
-            slug: offering.slug,
-            title: offering.title,
-            account_action: account_action_for(offering),
-            price_cents: offering.price_cents,
-            currency: offering.currency
-          }
-        end
-
         def registrant_options
           self_option = {
             scope: "self",

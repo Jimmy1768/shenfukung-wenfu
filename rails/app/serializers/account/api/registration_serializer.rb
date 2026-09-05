@@ -12,8 +12,14 @@ module Account
           reference_code: registration.reference_code,
           offering: offering_payload,
           quantity: registration.quantity,
-          registrant_name: registrant_name,
-          registrant_scope: registration.metadata.to_h["registrant_scope"].presence || "self",
+          # Both delegate to TempleRegistration, which owns the resolution.
+          # This serializer used to carry its own partial copies: the name one
+          # checked two of the model's six sources and returned nil when both
+          # were blank (the app rendered "<title> · "), and the scope one always
+          # fell back to "self", so a dependent registration whose metadata had
+          # lost the key was reported as the account holder.
+          registrant_name: registration.registrant_name,
+          registrant_scope: registration.registrant_scope,
           dependent_id: registration.metadata.to_h["dependent_id"].presence,
           contact_name: registration.contact_payload.to_h["primary_contact"],
           contact_phone: registration.contact_payload.to_h["phone"],
@@ -55,10 +61,6 @@ module Account
         when TempleGathering then "gathering"
         else "event"
         end
-      end
-
-      def registrant_name
-        registration.metadata.to_h["registrant_name"].presence || registration.contact_payload.to_h["primary_contact"].presence
       end
     end
   end

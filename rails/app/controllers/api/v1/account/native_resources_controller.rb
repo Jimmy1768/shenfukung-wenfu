@@ -53,26 +53,6 @@ module Api
 
         private
 
-        def offering_payload(record)
-          {
-            id: record.id,
-            slug: record.slug,
-            title: record.title,
-            account_action: account_action_for(record),
-            price_cents: record.try(:price_cents),
-            currency: record.try(:currency),
-            description: record.try(:description),
-            # The offering's OWN picture only. Never the temple's 活動預設圖片:
-            # in a list every image-less offering would carry the same
-            # fallback, which is decoration rather than information and costs
-            # the row height that pushes the register button off screen. The
-            # detail page still falls back -- one large hero about one event is
-            # worth showing even when it is the temple default.
-            hero_image_url: record.try(:hero_image_url).presence,
-            status: record.try(:timeline_status) || (record.try(:available?) ? "open" : nil)
-          }.compact
-        end
-
         def assistance_params
           params.fetch(:assistance, {}).permit(:registration_id, :channel, :message)
         end

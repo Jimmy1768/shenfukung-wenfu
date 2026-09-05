@@ -107,6 +107,31 @@ module Api
         def render_invalid_request
           render_error("invalid_request", :unprocessable_entity)
         end
+
+        # One shape for an offering across the native API. It lived in two
+        # controllers with different field sets, so a field added to the list
+        # never reached the registration screen -- which is how hero_image_url
+        # came to exist in one and not the other. Requires the including
+        # controller to have Account::RegistrationIntent for account_action_for.
+        def offering_payload(record)
+          {
+            id: record.id,
+            slug: record.slug,
+            title: record.title,
+            account_action: account_action_for(record),
+            price_cents: record.try(:price_cents),
+            currency: record.try(:currency),
+            description: record.try(:description),
+            # The offering's OWN picture only. Never the temple's 活動預設圖片:
+            # in a list every image-less offering would carry the same
+            # fallback, which is decoration rather than information and costs
+            # the row height that pushes the register button off screen. The
+            # detail page still falls back -- one large hero about one event is
+            # worth showing even when it is the temple default.
+            hero_image_url: record.try(:hero_image_url).presence,
+            status: record.try(:timeline_status) || (record.try(:available?) ? "open" : nil)
+          }.compact
+        end
       end
     end
   end
