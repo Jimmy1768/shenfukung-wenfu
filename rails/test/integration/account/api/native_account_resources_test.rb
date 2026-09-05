@@ -198,6 +198,25 @@ class NativeAccountResourcesTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  # The app's offering list shows a picture only when the offering owns one.
+  # If the temple's EVENT_FALLBACK_TAB image ever leaked into this payload,
+  # every image-less row would grow a 132dp band of the same default picture
+  # and the list would stop distinguishing anything.
+  test "native offering payload carries an offering's own hero image and never the temple event fallback" do
+    @temple.update!(hero_images: @temple.hero_images.merge(Temple::EVENT_FALLBACK_TAB => "https://example.test/temple-event-fallback.png"))
+
+    with_image = @temple.temple_gatherings.create!(slug: "gathering-#{SecureRandom.hex(3)}", title: "Pictured Gathering", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 0, currency: "TWD", hero_image_url: "https://example.test/its-own.png")
+    without_image = @temple.temple_gatherings.create!(slug: "gathering-#{SecureRandom.hex(3)}", title: "Plain Gathering", starts_on: Date.current, ends_on: Date.current + 1.day, status: "published", price_cents: 0, currency: "TWD")
+
+    get "/api/v1/account/native/events", params: { temple_slug: @temple.slug }, headers: bearer
+    assert_response :success
+    gatherings = response.parsed_body.fetch("gatherings").index_by { |row| row.fetch("slug") }
+
+    assert_equal "https://example.test/its-own.png", gatherings.fetch(with_image.slug)["hero_image_url"]
+    refute gatherings.fetch(without_image.slug).key?("hero_image_url"),
+      "an offering with no picture of its own must send no hero_image_url, not the temple fallback"
+  end
+
   test "native registration preparation prefills a returning patron's cached arrival_window, same as the web account form" do
     service = @temple.temple_services.create!(slug: "service-#{SecureRandom.hex(3)}", title: "Native Service", status: "published", price_cents: 600, currency: "TWD")
     Registrations::ReusableDefaults.new(user: @user, temple: @temple, offering: service).write!({ "arrival_window" => "上午" })
