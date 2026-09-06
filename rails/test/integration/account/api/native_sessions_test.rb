@@ -9,6 +9,24 @@ class NativeAccountSessionsTest < ActionDispatch::IntegrationTest
     @user = User.create!(email: "native-#{SecureRandom.hex(3)}@example.com", english_name: "Native User", encrypted_password: User.password_hash(@password))
   end
 
+  # The app's own login path. It verified by re-hashing the input and comparing,
+  # which BCrypt's per-call salt makes permanently false -- so this surface would
+  # have broken silently if the bcrypt change had only touched the web sessions
+  # controllers, as the upstream commit did.
+  test "native login accepts a legacy sha256 digest and upgrades it to bcrypt" do
+    @user.update_column(:encrypted_password, User.legacy_password_hash(@password))
+    assert @user.reload.legacy_password_hash?
+
+    post "/api/v1/account/native/login", params: { temple_slug: @temple.slug, session: { email: @user.email, password: @password }, device: { device_id: "ios-upgrade", platform: "ios" } }
+    assert_response :success
+    assert @user.reload.bcrypt_password_hash?, "the native login must upgrade a legacy digest too"
+  end
+
+  test "native login rejects a wrong password against a bcrypt digest" do
+    post "/api/v1/account/native/login", params: { temple_slug: @temple.slug, session: { email: @user.email, password: "wrong" }, device: { device_id: "ios-bad", platform: "ios" } }
+    assert_response :unauthorized
+  end
+
   test "login refresh replay and account-only bootstrap contract" do
     post "/api/v1/account/native/login", params: { temple_slug: @temple.slug, session: { email: @user.email, password: @password }, device: { device_id: "ios-1", platform: "ios" } }
     assert_response :success

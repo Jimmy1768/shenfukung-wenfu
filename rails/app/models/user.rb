@@ -1,5 +1,6 @@
 # frozen_string_literal: true
 
+require "bcrypt"
 require "digest"
 
 class User < ApplicationRecord
@@ -31,8 +32,58 @@ class User < ApplicationRecord
 
   before_validation :normalize_email
 
+  # Passwords are stored as BCrypt. Unsalted SHA-256 digests written by earlier
+  # versions of this template are still accepted at login and transparently
+  # re-hashed to BCrypt on the next successful sign-in, so existing installs
+  # migrate without a reset. New writes are always BCrypt.
+  #
+  # BCrypt salts per call, so password_hash(x) != password_hash(x). Nothing may
+  # verify by re-hashing the input and comparing -- that silently fails every
+  # time. valid_password_and_upgrade! is the only supported entry point, and
+  # every login surface in this app goes through it.
   def self.password_hash(plain_text)
+    BCrypt::Password.create(plain_text.to_s, cost: bcrypt_cost).to_s
+  end
+
+  def self.legacy_password_hash(plain_text)
     Digest::SHA256.hexdigest(plain_text.to_s)
+  end
+
+  def self.bcrypt_cost
+    Rails.env.test? ? BCrypt::Engine::MIN_COST : BCrypt::Engine.cost
+  end
+
+  def valid_password?(plain_text)
+    password = plain_text.to_s
+    return false if password.blank? || encrypted_password.blank?
+
+    if bcrypt_password_hash?
+      BCrypt::Password.new(encrypted_password).is_password?(password)
+    elsif legacy_password_hash?
+      legacy_digest = self.class.legacy_password_hash(password)
+      ActiveSupport::SecurityUtils.secure_compare(legacy_digest, encrypted_password)
+    else
+      false
+    end
+  rescue BCrypt::Errors::InvalidHash
+    false
+  end
+
+  # Single entry point for every login surface: verifies the submitted password
+  # and upgrades a legacy digest in place on success.
+  def valid_password_and_upgrade!(plain_text)
+    return false unless valid_password?(plain_text)
+
+    upgrade_password_hash!(plain_text) if legacy_password_hash?
+    true
+  end
+
+  def legacy_password_hash?
+    encrypted_password.to_s.match?(/\A[0-9a-f]{64}\z/i)
+  end
+
+  def bcrypt_password_hash?
+    encrypted_password.to_s.start_with?("$2a$", "$2b$", "$2y$")
   end
 
   def seeded_metadata
@@ -90,6 +141,10 @@ class User < ApplicationRecord
   end
 
   private
+
+  def upgrade_password_hash!(plain_text)
+    update!(encrypted_password: self.class.password_hash(plain_text))
+  end
 
   def normalize_email
     return unless email.present?

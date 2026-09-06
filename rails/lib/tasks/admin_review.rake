@@ -66,7 +66,7 @@ module AdminReviewTasks
 
     {
       email: user.email,
-      password_matches: user.encrypted_password == User.password_hash(password),
+      password_matches: user.valid_password?(password),
       admin_active: admin.active?,
       admin_role: admin.role,
       temple_slug: temple.slug

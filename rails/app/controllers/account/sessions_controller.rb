@@ -45,20 +45,11 @@ module Account
       user = User.find_by(email: email)
       return false unless user
 
-      hashed = User.password_hash(password)
-
-      secure_compare(user.encrypted_password, hashed)
+      user.valid_password_and_upgrade!(password)
     end
 
     def session_params
       params.fetch(:session, ActionController::Parameters.new).permit(:email, :password)
-    end
-
-    def secure_compare(value, other)
-      return false if value.blank? || other.blank?
-      return false unless value.bytesize == other.bytesize
-
-      ActiveSupport::SecurityUtils.secure_compare(value, other)
     end
 
     def redirect_authenticated_user_with_intent!

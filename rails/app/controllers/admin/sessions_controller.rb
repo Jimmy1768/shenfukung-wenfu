@@ -38,7 +38,7 @@ module Admin
       if user.email == AppConstants::Emails.qa_dummy_admin_email
         qa_dummy_admin_password_matches?(password)
       else
-        secure_compare(user.encrypted_password, User.password_hash(password.to_s))
+        user.valid_password_and_upgrade!(password.to_s)
       end
     end
 

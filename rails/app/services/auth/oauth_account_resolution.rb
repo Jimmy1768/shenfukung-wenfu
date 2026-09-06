@@ -250,10 +250,7 @@ module Auth
     def password_matches?(user, password)
       return false if user.blank? || password.to_s.blank?
 
-      expected = User.password_hash(password)
-      return false unless user.encrypted_password.to_s.bytesize == expected.bytesize
-
-      ActiveSupport::SecurityUtils.secure_compare(user.encrypted_password, expected)
+      user.valid_password_and_upgrade!(password)
     end
 
     def secure_equal?(left, right)

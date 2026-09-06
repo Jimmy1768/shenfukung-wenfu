@@ -59,7 +59,7 @@ class AccountPasswordSettingsTest < ActionDispatch::IntegrationTest
 
     assert_redirected_to account_settings_path
     user.reload
-    assert_equal User.password_hash("Password123!"), user.encrypted_password
+    assert user.valid_password?("Password123!")
     assert_equal false, user.metadata["oauth_seeded"]
     log = SystemAuditLog.order(created_at: :desc).find_by(action: "account.password.added")
     assert_equal user, log.user

@@ -64,7 +64,9 @@ class NativeAccountContractTest < ActionDispatch::IntegrationTest
       password: { password: "NewPassword123!", password_confirmation: "NewPassword123!" }
     }, headers: bearer(access_token)
     assert_response :no_content
-    assert_equal User.password_hash("NewPassword123!"), passwordless_user.reload.encrypted_password
+    # Not a digest comparison: BCrypt salts per call, so password_hash never
+    # returns the same string twice. Verify the password, not the bytes.
+    assert passwordless_user.reload.valid_password?("NewPassword123!")
 
     post "/api/v1/account/native/profile/password", params: {
       temple_slug: @temple.slug,

@@ -79,9 +79,9 @@ module Api
         end
 
         def valid_password?(user, password)
-          return false if user.blank? || password.blank? || user.encrypted_password.blank?
-          expected = User.password_hash(password)
-          user.encrypted_password.bytesize == expected.bytesize && ActiveSupport::SecurityUtils.secure_compare(user.encrypted_password, expected)
+          return false if user.blank? || password.blank?
+
+          user.valid_password_and_upgrade!(password)
         end
       end
     end

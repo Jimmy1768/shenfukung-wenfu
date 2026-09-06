@@ -17,6 +17,45 @@ class AdminSessionsTest < ActionDispatch::IntegrationTest
     assert_response :unprocessable_entity
   end
 
+  test "new passwords are stored as bcrypt, not sha256" do
+    temple = create_temple(slug: "shengfukung-wenfu")
+    admin = create_admin_user(temple:)
+
+    assert admin.reload.bcrypt_password_hash?
+    assert_not admin.legacy_password_hash?
+  end
+
+  test "a legacy sha256 digest still signs in and is upgraded to bcrypt" do
+    temple = create_temple(slug: "shengfukung-wenfu")
+    admin = create_admin_user(temple:)
+    admin.update_column(:encrypted_password, User.legacy_password_hash("Password123!"))
+    assert admin.reload.legacy_password_hash?
+
+    post admin_sessions_path, params: { session: { email: admin.email, password: "Password123!" } }
+    assert_redirected_to admin_dashboard_path
+    assert admin.reload.bcrypt_password_hash?, "a legacy digest must be re-hashed on successful sign in"
+  end
+
+  test "a wrong password neither signs in nor rewrites the legacy digest" do
+    temple = create_temple(slug: "shengfukung-wenfu")
+    admin = create_admin_user(temple:)
+    legacy = User.legacy_password_hash("Password123!")
+    admin.update_column(:encrypted_password, legacy)
+
+    post admin_sessions_path, params: { session: { email: admin.email, password: "wrong" } }
+    assert_response :unprocessable_entity
+    assert_equal legacy, admin.reload.encrypted_password
+  end
+
+  test "a malformed stored digest fails the login rather than raising" do
+    temple = create_temple(slug: "shengfukung-wenfu")
+    admin = create_admin_user(temple:)
+    admin.update_column(:encrypted_password, "not-a-digest")
+
+    post admin_sessions_path, params: { session: { email: admin.email, password: "Password123!" } }
+    assert_response :unprocessable_entity
+  end
+
   test "login page includes responsive viewport metadata" do
     get admin_login_path
 
