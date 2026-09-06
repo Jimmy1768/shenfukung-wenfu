@@ -45,7 +45,11 @@ class MultiTempleEnvLoaderTest < ActiveSupport::TestCase
     assert_equal [@tmp_root.join("etc/default/alpha.env").to_s], dotenv.overloaded
   end
 
-  test "falls back to .env.development when temple file is missing" do
+  # The fallback loads without overloading, so a variable the caller exported
+  # survives. It used to overload, which silently rewrote exported values after
+  # boot -- `bin/review_admin_server` set PGDATABASE to an isolated review
+  # database and got the development one instead.
+  test "falls back to .env.development when temple file is missing, without overloading" do
     write_file(@tmp_root.join(".env"))
     write_file(@tmp_root.join(".env.test"))
     write_file(@tmp_root.join(".env.development"))
@@ -53,7 +57,37 @@ class MultiTempleEnvLoaderTest < ActiveSupport::TestCase
     dotenv = FakeDotenv.new
     MultiTempleEnvLoader.load!(dotenv:, env: {}, rails_env: "test", root: @tmp_root)
 
-    assert_equal [@tmp_root.join(".env.development").to_s], dotenv.overloaded
+    assert_empty dotenv.overloaded, "the generic fallback must not overwrite exported variables"
+    assert_includes dotenv.loaded, @tmp_root.join(".env.development").to_s
+  end
+
+  # The reason the bug mattered, stated as a test: an exported variable must
+  # still be the effective one after the loader has run.
+  test "an exported variable survives the fallback" do
+    write_file(@tmp_root.join(".env.development"), "PGDATABASE=from_env_file")
+
+    env = { "PGDATABASE" => "exported_by_caller" }
+    real = Class.new do
+      def initialize(env) = @env = env
+      def load(path)
+        File.readlines(path, chomp: true).each do |line|
+          key, value = line.split("=", 2)
+          next if key.nil? || value.nil?
+          @env[key] ||= value
+        end
+      end
+      def overload(path)
+        File.readlines(path, chomp: true).each do |line|
+          key, value = line.split("=", 2)
+          next if key.nil? || value.nil?
+          @env[key] = value
+        end
+      end
+    end.new(env)
+
+    MultiTempleEnvLoader.load!(dotenv: real, env:, rails_env: "development", root: @tmp_root)
+
+    assert_equal "exported_by_caller", env["PGDATABASE"]
   end
 
   test "prefers explicit TEMPLE_SLUG env" do

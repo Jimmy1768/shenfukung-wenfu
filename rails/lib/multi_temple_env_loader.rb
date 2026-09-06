@@ -23,13 +23,24 @@ module MultiTempleEnvLoader
     @default_project_root ||= Pathname.new(File.expand_path("../..", __dir__))
   end
 
+  # A temple's own env file overloads, because its whole purpose is to beat the
+  # generic files for that tenant.
+  #
+  # The fallback does NOT overload. It re-reads `.env.development`, which
+  # `load!` has usually already loaded a line earlier, so overloading there
+  # added nothing except clobbering variables the caller had exported --
+  # silently, after boot. That is what made `bin/review_admin_server`'s
+  # `export PGDATABASE=<slug>_review` a no-op: the review server ran
+  # `db:create`, `db:migrate` and `admin_review:prepare` against the real
+  # development database, and no review database was ever created under either
+  # its old or new name.
   def load_temple_override(dotenv, env, root)
     slug = resolved_slug(env, root)
     temple_file = env_file_for(slug, root)
     if temple_file.exist?
       load_file(dotenv, temple_file, overload: true)
     else
-      load_file(dotenv, root.join(".env.development"), overload: true)
+      load_file(dotenv, root.join(".env.development"))
     end
   end
 
