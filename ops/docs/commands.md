@@ -156,17 +156,34 @@ bin/run_smoke_tests
 cd ~/Projects/shengfukung-wenfu
 git fetch origin && git reset --hard origin/release/current
 
-# Only when the gem error below appears -- the plain SSH shell does not always
-# have the gems systemd's `rbenv exec` path finds for Puma:
-#   Could not find rails-7.1.6, puma-... in locally installed gems
+cd rails
+
+# Run from rails/, NOT the repo root -- the Gemfile lives here, and from the
+# root bundler exits with "Could not locate Gemfile". This note said the repo
+# root until 2026-09-06, which went unnoticed because no deploy before then had
+# changed the Gemfile.
+#
+# Needed in two cases:
+#   1. Gemfile/Gemfile.lock changed in this deploy. Not optional -- Puma boots
+#      without the new gem and fails at the first line that requires it.
+#   2. The plain SSH shell does not have the gems systemd's `rbenv exec` path
+#      finds for Puma:
+#        Could not find rails-7.1.6, puma-... in locally installed gems
 bundle install
 
 # Sourcing the env file is what an interactive shell needs and systemd gets for
 # free from EnvironmentFile=. Without it: "Missing JWT_SECRET_KEY in production".
-cd rails
 set -a && source /etc/default/shengfukung-wenfu-env && set +a
 RAILS_ENV=production bin/rails db:migrate          # when there are migrations
 RAILS_ENV=production bin/rails <task>              # any other rake task
+
+# Ad-hoc Ruby against production: put it in a file and scp it. Inlining Ruby in
+# `bin/rails runner "..."` through ssh has to survive both the local and remote
+# shells plus Ruby's own quoting, and silently mangles anything containing
+# quotes, #{} or $ -- it fails as a Ruby syntax error that looks like a code
+# bug rather than a quoting one.
+#   scp check.rb jimmy1768_user@<host>:/tmp/check.rb
+#   ssh ... 'cd ~/Projects/shengfukung-wenfu/rails && set -a && source /etc/default/shengfukung-wenfu-env && set +a && RAILS_ENV=production bin/rails runner /tmp/check.rb; rm -f /tmp/check.rb'
 
 # Frontend, when vue/ changed. No sudo -- /var/www is owned by the deploy user,
 # and building as root leaves files Puma's user cannot replace.
